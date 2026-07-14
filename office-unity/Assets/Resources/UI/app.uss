@@ -1,0 +1,238 @@
+/* ===== Office Quest — HUD do jogo (UI Toolkit) · tema claro moderno ===== */
+:root {
+  --bg: rgb(246,247,249);
+  --surface: rgb(255,255,255);
+  --surface-2: rgb(241,242,244);
+  --surface-3: rgb(233,235,239);
+  --border: rgb(228,230,236);
+  --border-strong: rgb(214,218,224);
+  --text: rgb(20,23,28);
+  --text-2: rgb(91,99,110);
+  --text-3: rgb(139,146,157);
+  --accent: rgb(124,92,255);
+  --accent-hover: rgb(107,73,245);
+  --accent-weak: rgb(239,235,255);
+  --green: rgb(22,163,74);
+  --green-weak: rgb(230,246,236);
+  --amber: rgb(217,138,0);
+  --amber-weak: rgb(251,240,217);
+  --red: rgb(229,72,77);
+  --red-weak: rgb(253,234,234);
+  --teal: rgb(13,148,136);
+  --teal-weak: rgb(217,242,239);
+}
+
+/* base */
+.root { position: absolute; left: 0; top: 0; right: 0; bottom: 0; font-size: 13px; color: var(--text); }
+.hidden { display: none; }
+.col { flex-direction: column; }
+.row { flex-direction: row; align-items: center; }
+.grow { flex-grow: 1; }
+.muted { color: var(--text-2); }
+.faint { color: var(--text-3); }
+.bold { -unity-font-style: bold; }
+
+/* card */
+.card {
+  background-color: var(--surface);
+  border-radius: 12px;
+  border-width: 1px; border-color: var(--border);
+  padding: 14px;
+}
+.card-hi { background-color: var(--surface-2); }
+
+/* text */
+.h1 { font-size: 17px; -unity-font-style: bold; }
+.h2 { font-size: 14px; -unity-font-style: bold; }
+.small { font-size: 12px; }
+.tiny { font-size: 11px; }
+.label-caps { font-size: 10px; -unity-font-style: bold; color: var(--text-3); letter-spacing: 1px; }
+
+/* button */
+.btn {
+  height: 32px; padding-left: 13px; padding-right: 13px;
+  border-radius: 7px; background-color: var(--surface);
+  border-width: 1px; border-color: var(--border-strong);
+  color: var(--text); font-size: 13px; -unity-font-style: bold;
+  -unity-text-align: middle-center; align-items: center; justify-content: center;
+  transition-property: background-color, border-color, scale; transition-duration: 0.1s;
+}
+.btn:hover { background-color: var(--surface-2); }
+.btn:active { scale: 0.98 0.98; }
+.btn-primary { background-color: var(--accent); border-color: var(--accent); color: rgb(255,255,255); }
+.btn-primary:hover { background-color: var(--accent-hover); }
+.btn-ghost { background-color: rgba(0,0,0,0); border-color: rgba(0,0,0,0); color: var(--text-2); }
+.btn-ghost:hover { background-color: var(--surface-2); color: var(--text); }
+.btn-danger { color: var(--red); }
+.btn-danger:hover { background-color: var(--red-weak); border-color: var(--red); }
+.btn-good { background-color: var(--green); border-color: var(--green); color: rgb(255,255,255); }
+.btn-sm { height: 26px; padding-left: 9px; padding-right: 9px; font-size: 12px; }
+.btn-on { background-color: var(--accent); border-color: var(--accent); color: rgb(255,255,255); }
+
+/* badge / chip */
+.badge {
+  height: 20px; padding-left: 8px; padding-right: 8px; border-radius: 10px;
+  background-color: var(--surface-2); color: var(--text-2);
+  font-size: 11px; -unity-font-style: bold; -unity-text-align: middle-center;
+  align-items: center; justify-content: center;
+}
+.badge-Task { background-color: var(--teal-weak); color: var(--teal); }
+.badge-Bug { background-color: var(--red-weak); color: var(--red); }
+.badge-Atendimento { background-color: var(--amber-weak); color: var(--amber); }
+.badge-accent { background-color: var(--accent-weak); color: var(--accent); }
+
+/* avatar */
+.avatar {
+  width: 28px; height: 28px; border-radius: 14px;
+  -unity-text-align: middle-center; color: rgb(255,255,255);
+  font-size: 11px; -unity-font-style: bold;
+  align-items: center; justify-content: center;
+}
+.avatar-lg { width: 40px; height: 40px; border-radius: 20px; font-size: 15px; }
+.avatar-sm { width: 20px; height: 20px; border-radius: 10px; font-size: 9px; }
+
+/* progress */
+.track { height: 8px; border-radius: 5px; background-color: var(--surface-3); overflow: hidden; }
+.track > .fill { height: 8px; border-radius: 5px; background-color: var(--accent); }
+
+/* player card */
+.pcard { position: absolute; left: 14px; top: 14px; width: 300px; }
+.pcard .name { font-size: 16px; -unity-font-style: bold; }
+.pcard .lvl-chip { background-color: var(--accent-weak); color: var(--accent); }
+.divider { height: 1px; background-color: var(--border); margin-top: 10px; margin-bottom: 10px; }
+
+/* hint bar */
+.hint {
+  position: absolute; bottom: 12px; left: 50%; translate: -50% 0;
+  background-color: rgba(255,255,255,0.9); border-radius: 999px;
+  border-width: 1px; border-color: var(--border);
+  padding-left: 16px; padding-right: 16px; height: 30px;
+  -unity-text-align: middle-center; color: var(--text-2); font-size: 11px;
+  align-items: center; justify-content: center;
+}
+
+/* zone banner */
+.banner {
+  position: absolute; top: 14px; left: 50%; translate: -50% 0;
+  background-color: var(--accent); color: rgb(255,255,255);
+  border-radius: 999px; height: 36px; padding-left: 18px; padding-right: 18px;
+  -unity-text-align: middle-center; -unity-font-style: bold; font-size: 13px;
+  align-items: center; justify-content: center;
+}
+
+/* chat compacto — últimas mensagens flutuando; input aparece só ao digitar (Enter) */
+.chat { position: absolute; left: 14px; bottom: 16px; width: 330px; }
+.chatlog { align-items: flex-start; }
+.chatline {
+  flex-direction: row; align-items: flex-start; max-width: 330px;
+  background-color: rgba(255,255,255,0.94);
+  border-radius: 11px; border-width: 1px; border-color: var(--border);
+  padding-top: 5px; padding-bottom: 5px; padding-left: 11px; padding-right: 11px;
+  margin-top: 6px;
+  transition-property: opacity; transition-duration: 0.5s;
+}
+.chatline .author { color: var(--accent); -unity-font-style: bold; font-size: 12px; margin-right: 6px; }
+.chatline .text { color: var(--text); font-size: 12px; white-space: normal; flex-shrink: 1; }
+.chatinput {
+  height: 38px; width: 330px; border-radius: 11px; margin-top: 8px;
+  background-color: rgba(255,255,255,0.98);
+  border-width: 1.5px; border-color: var(--accent);
+  padding-left: 13px; padding-right: 13px; color: var(--text); font-size: 13px;
+}
+.input {
+  height: 34px; border-radius: 8px; background-color: var(--surface-2);
+  border-width: 1px; border-color: var(--border-strong);
+  padding-left: 11px; padding-right: 11px; color: var(--text); font-size: 13px;
+}
+.input:focus { border-color: var(--accent); }
+
+/* toasts */
+.toasts { position: absolute; right: 14px; bottom: 14px; align-items: flex-end; }
+.toast {
+  flex-direction: row; align-items: center;
+  background-color: rgb(27,31,38); color: rgb(243,245,248);
+  border-radius: 10px; padding: 11px 15px; margin-top: 8px;
+  max-width: 340px; font-size: 12.5px;
+}
+.toast .bar { width: 3px; border-radius: 3px; background-color: var(--accent); margin-right: 10px; }
+
+/* online (Tab) */
+.online { position: absolute; right: 14px; top: 14px; width: 250px; max-height: 320px; }
+.online .prow { flex-direction: row; align-items: center; padding-top: 5px; padding-bottom: 5px; }
+
+/* AV bar */
+.avbar {
+  position: absolute; bottom: 52px; left: 50%; translate: -50% 0;
+  flex-direction: row; align-items: center; padding: 8px 12px;
+}
+.avtiles { position: absolute; bottom: 108px; left: 50%; translate: -50% 0; flex-direction: row; }
+.avtile { width: 176px; height: 100px; border-radius: 10px; margin-left: 8px; overflow: hidden; background-color: rgb(0,0,0); }
+
+/* ===== painel deslizante (kanban / horas) ===== */
+.overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: rgba(16,20,26,0.35); }
+.sheet {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 70%; min-width: 720px;
+  background-color: var(--bg); border-left-width: 1px; border-left-color: var(--border);
+  padding: 0;
+}
+.sheet-head { flex-direction: row; align-items: center; padding: 16px 22px; border-bottom-width: 1px; border-bottom-color: var(--border); background-color: var(--surface); }
+.sheet-head .title { font-size: 18px; -unity-font-style: bold; }
+.sheet-body { flex-grow: 1; padding: 18px 22px; }
+
+.board { flex-direction: row; flex-grow: 1; }
+.kcol { width: 220px; margin-right: 12px; background-color: var(--surface-2); border-radius: 12px; padding-bottom: 8px; }
+.kcol-head { flex-direction: row; align-items: center; padding: 11px 12px 7px; }
+.kcol-head .dot { width: 8px; height: 8px; border-radius: 4px; margin-right: 7px; }
+.kcol-head .ctitle { font-size: 12.5px; -unity-font-style: bold; }
+.kcol-head .count { color: var(--text-3); -unity-font-style: bold; margin-left: 6px; }
+.kcol-body { padding-left: 8px; padding-right: 8px; }
+.kcard {
+  background-color: var(--surface); border-radius: 9px;
+  border-width: 1px; border-color: var(--border);
+  padding: 10px; margin-bottom: 7px;
+  transition-property: border-color, translate; transition-duration: 0.1s;
+}
+.kcard:hover { border-color: var(--accent); translate: 0 -1px; }
+.kcard .epicbar { height: 3px; border-radius: 2px; margin-bottom: 7px; }
+.kcard .krow { flex-direction: row; align-items: center; }
+.kcard .code { font-size: 11px; color: var(--text-3); -unity-font-style: bold; }
+.kcard .ktitle { font-size: 12.5px; margin-top: 4px; margin-bottom: 8px; white-space: normal; }
+.kcard .star { color: var(--amber); -unity-font-style: bold; }
+.kcard-dragging { opacity: 0.35; }
+.kcol-drop { background-color: var(--accent-weak); }
+.kcol-drop .kcol-head { color: var(--accent); }
+.drag-ghost {
+  position: absolute; width: 200px; background-color: var(--surface);
+  border-radius: 9px; border-width: 1px; border-color: var(--accent);
+  padding: 10px; opacity: 0.95; rotate: -2deg;
+}
+.drag-ghost .code { font-size: 11px; color: var(--text-3); -unity-font-style: bold; }
+.drag-ghost .ktitle { font-size: 12.5px; margin-top: 4px; white-space: normal; }
+
+/* toolbar do kanban */
+.wtoolbar { flex-direction: row; align-items: center; margin-bottom: 12px; }
+.seg { flex-direction: row; background-color: var(--surface-2); border-radius: 7px; padding: 3px; }
+.seg .segbtn { height: 26px; padding-left: 12px; padding-right: 12px; border-radius: 5px; background-color: rgba(0,0,0,0); border-width: 0; color: var(--text-2); font-size: 12px; -unity-font-style: bold; }
+.seg .segbtn-on { background-color: var(--surface); color: var(--text); }
+.wdrop { min-width: 170px; margin-right: 10px; }
+.wdrop .unity-base-field__input { background-color: var(--surface); border-color: var(--border-strong); border-radius: 7px; border-width: 1px; height: 32px; }
+.wdrop .unity-base-popup-field__text { color: var(--text); font-size: 13px; }
+
+/* timesheet table */
+.trow { flex-direction: row; align-items: center; padding: 9px 12px; border-bottom-width: 1px; border-bottom-color: var(--border); }
+.trow.head { -unity-font-style: bold; color: var(--text-3); font-size: 11px; }
+.stat { background-color: var(--surface); border-radius: 12px; border-width: 1px; border-color: var(--border); padding: 14px 16px; margin-right: 12px; flex-grow: 1; }
+.stat .k { font-size: 11.5px; color: var(--text-3); -unity-font-style: bold; }
+.stat .v { font-size: 22px; -unity-font-style: bold; margin-top: 3px; }
+
+/* login */
+.login { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background-color: var(--bg); align-items: center; justify-content: center; }
+.login .logo { width: 58px; height: 58px; border-radius: 16px; background-color: var(--accent); color: rgb(255,255,255); font-size: 30px; -unity-text-align: middle-center; align-items: center; justify-content: center; }
+.login .title { font-size: 30px; -unity-font-style: bold; margin-top: 14px; }
+.login .sub { color: var(--text-2); margin-top: 4px; margin-bottom: 22px; }
+.login .cards { flex-direction: row; }
+.ucard { width: 160px; background-color: var(--surface); border-radius: 14px; border-width: 1px; border-color: var(--border); padding: 18px; margin-left: 8px; margin-right: 8px; align-items: center; transition-property: border-color, translate; transition-duration: 0.1s; }
+.ucard:hover { border-color: var(--accent); translate: 0 -3px; }
+.ucard .uname { font-size: 14px; -unity-font-style: bold; margin-top: 10px; }
+.ucard .urole { font-size: 12px; color: var(--text-3); }
+.ucard .uxp { font-size: 11.5px; color: var(--accent); -unity-font-style: bold; margin-top: 8px; }

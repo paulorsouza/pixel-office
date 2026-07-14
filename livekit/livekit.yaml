@@ -1,0 +1,12 @@
+# Configuração de desenvolvimento do LiveKit (SFU de áudio/vídeo)
+# NÃO usar estas chaves em produção.
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50100
+  use_external_ip: false
+keys:
+  devkey: devsecret_officequest_32chars_min!
+logging:
+  level: info
