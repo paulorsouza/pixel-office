@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Office Quest — Protótipo Web</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#5c8f3e}
+  #game{position:fixed;inset:0;width:100vw;height:100vh}
+  #game canvas{display:block;image-rendering:pixelated;width:100%!important;height:100%!important}
+  .hint{position:fixed;left:12px;bottom:10px;z-index:10;color:#fff;
+        font:13px/1.4 system-ui,sans-serif;background:#0009;padding:7px 11px;border-radius:9px}
+  .hint b{color:#a7f}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div class="hint"><b>WASD</b> andar · <b>scroll</b> zoom · entre no prédio que o teto some</div>
+<script src="phaser.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

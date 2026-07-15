@@ -1,67 +1,118 @@
-# Office Quest — protótipo do escritório virtual gamificado
+# Office Quest — escritório virtual da Tooq
 
-Protótipo integrado de **escritório virtual + gestão de atividades + controle de horas + gamificação**.
-O backend em C# é a base definitiva do produto; a interface web serve para testar e sentir a
-experiência antes da migração dos clientes para **Unity** (office) e **Tauri** (app de tasks).
+Escritório virtual estilo **Gather.town** integrado com **gestão de atividades + controle de horas +
+gamificação**. O backend em C# é a base definitiva do produto.
 
-## Como rodar
+---
+
+## 🔴 Comece por aqui
+
+| Doc | Pra quê |
+|---|---|
+| **[`CONTEXT.md`](CONTEXT.md)** | **A fonte de verdade.** Estado, decisões, fatos técnicos verificados, o que deu errado e o que fazer a seguir |
+| **[`ASSETS.md`](ASSETS.md)** | Onde estão os assets, o que tem em cada pack e **tudo que já mapeamos** (coordenadas, medidas, gotchas) |
+| [`docs/COMO-RODAR.md`](docs/COMO-RODAR.md) | Subir backend + LiveKit e testar |
+| [`docs/PLANO_CLIENTE_V2.md`](docs/PLANO_CLIENTE_V2.md) | Escopo em fases (escrito p/ Unity; as fases de gameplay/rede/minigames seguem válidas) |
+| [`docs/HANDOFF.md`](docs/HANDOFF.md) | ⚠️ Retrospectiva do cliente Unity — **a ordem de direção dos personagens nele está ERRADA** |
+| [`docs/historico/`](docs/historico/) | ⚠️ Arquivo morto (memória acumulada). Serve pra entender *"por que chegamos aqui"*, não como instrução |
+
+**Em caso de conflito entre docs, `CONTEXT.md` vence.**
+
+---
+
+## Estado (2026-07-15)
+
+| Peça | Estado |
+|---|---|
+| **backend/** — ASP.NET Core (.NET 10) + EF/SQLite + SignalR (porta **5210**) | ✅ Sólido — não refazer |
+| **wwwroot** — app web (kanban, sprints, horas, relatórios, perfil) | ✅ Funciona |
+| **livekit/** — SFU self-hosted (porta **7880**) | ✅ Funciona |
+| **Cliente do jogo** | 🔄 **Sendo recomeçado do zero, em web (Phaser)** |
+| **web-client-poc/** | ⚠️ POC descartável — mas `assets/` é bom e está versionado |
+| **office-unity/** | ⏸️ Pausado |
+| ~~Tauri (app de tasks)~~ | ❌ Cancelado — o app web cobre |
+
+**Por que web e não Unity:** o produto é *"entrar por link"*, e o Unity não faz isso com esta stack
+(WebGL descartado — o SignalR custom e o SDK ffi do LiveKit não rodam nele). Somado a isso: o ciclo
+de trabalho na web é muito melhor e escala melhor pra online. Motivos completos no `CONTEXT.md`.
+
+---
+
+## Rodar
 
 ```powershell
-cd backend/VirtualOffice.Api
-dotnet run
+# 1. LiveKit (opcional — só a call da reunião depende dele)
+& ".\livekit\start-livekit.ps1"    # espere "portHttp: 7880"
+
+# 2. Backend — rodar a DLL (o `dotnet run` detached não persistia)
+.\backend\VirtualOffice.Api\bin\Debug\net10.0\VirtualOffice.Api.dll
 ```
 
-Abra **http://localhost:5210**. Escolha um usuário (sem senha — protótipo).
-Para testar o multiplayer, abra outra janela do navegador (ou aba anônima) e entre com outro usuário.
+Abra **http://localhost:5210**. Sem senha (protótipo). Pra multiplayer, abra outra aba anônima.
+O SQLite (`office.db`) é criado e populado no primeiro boot — **apagar o arquivo reseta tudo**.
 
-O banco é um SQLite (`office.db`) criado e populado automaticamente na primeira execução.
-Para resetar tudo, apague o arquivo `office.db` e rode de novo.
+```bash
+# POC do cliente web (porta 8123) — servidor estático Node, sem dependências
+node web-client-poc/server.js
+```
 
-## O que já funciona
+---
+
+## Estrutura
+
+```
+virtual-office/
+├── CONTEXT.md          ← 🔴 fonte de verdade
+├── ASSETS.md           ← assets: onde estão e o que já mapeamos
+├── README.md
+├── docs/
+│   ├── COMO-RODAR.md · PLANO_CLIENTE_V2.md
+│   ├── HANDOFF.md      ⚠️ dados obsoletos
+│   └── historico/      ⚠️ arquivo morto
+├── backend/VirtualOffice.Api    ✅ API + SignalR + wwwroot (app web)
+├── livekit/                     ✅ SFU
+├── web-client-poc/              ⚠️ POC (aproveitar só assets/)
+└── office-unity/                ⏸️ pausado
+```
+
+**Os packs LimeZu crus (~1,3 GB) NÃO são versionados** — ver `ASSETS.md`. Os recortes que o cliente
+carrega estão versionados em `web-client-poc/assets/`.
+
+---
+
+## O que já funciona (backend + app web)
 
 | Área | Recursos |
 |---|---|
-| **Office 2D** | Mapa com mesas, Sala de Reunião e Café; avatares (WASD/setas); bots circulando; chat por proximidade (bots respondem); modo **compacto** (câmera segue você — conceito "toolbar game") e **expandido** |
-| **Integração** | Entrar na Sala de Reunião **inicia lançamento de horas automático** (fecha ao sair); timer ativo aparece como status no avatar (`🔴 TSK-2`, `📅 Reunião`); skin equipada muda o avatar em tempo real |
-| **Tasks** | Épicos, sprints, tipos (Task/Bug/Atendimento), board kanban com drag & drop, backlog em lista, criação/edição, estimativa vs horas lançadas |
-| **Horas** | Timer na topbar (estilo Clockify), grade semanal, lançamento manual, exclusão |
+| **Tasks** | Épicos, sprints, tipos (Task/Bug/Atendimento), kanban com drag & drop, backlog, criação/edição, estimativa vs horas |
+| **Horas** | Timer estilo Clockify, grade semanal, lançamento manual |
 | **Relatórios** | Horas por dia / categoria / pessoa / épico, período configurável |
-| **Gamificação** | XP por horas (teto diário anti-farm) e por conclusão de atividades; níveis; **drops** com raridade (level-up e sessões de foco 25min+); objetivos com **medalhas automáticas** (ex.: 100h em reuniões); ranking; skins equipáveis; **sala pessoal decorável** |
+| **Gamificação** | XP por horas (teto diário anti-farm) e por conclusão; níveis; **drops** com raridade; objetivos com **medalhas automáticas**; ranking; skins; sala pessoal decorável |
+| **Integração office** | Entrar na Sala de Reunião **inicia lançamento de horas automático**; sentar na própria mesa inicia o timer da task ativa; "fone de reunião" permite circular sem sair da call |
+| **A/V** | LiveKit: mic/câmera/tela; token só é emitido se a pessoa está na reunião |
 
-## Arquitetura
+## Arquitetura do backend
 
 ```
-backend/VirtualOffice.Api    ASP.NET Core (.NET 10) + EF Core (SQLite) + SignalR
-  Models.cs                  Entidades: User, Epic, Sprint, WorkItem, TimeEntry,
-                             XpEvent, ItemDefinition, InventoryItem, RoomItem
-  Game.cs                    Regras de XP/nível, loot table, conquistas
-  OfficeHub.cs               Hub SignalR: presença, movimento, zonas, chat por proximidade
-  BotService.cs              Bots que dão vida ao mapa no protótipo
-  Seed.cs                    Dados de exemplo (usuários, sprint, tasks, horas, itens)
-  Program.cs                 API REST (tasks, timer, horas, relatórios, inventário, sala)
-  wwwroot/                   Frontend do protótipo (HTML/JS puro, sem build)
-    js/office.js             Mapa 2D em canvas
-    js/tasks.js              Kanban / backlog
-    js/timesheet.js          Grade semanal de horas
-    js/reports.js            Relatórios
-    js/profile.js            Perfil, conquistas, inventário, sala pessoal
+backend/VirtualOffice.Api      ASP.NET Core (.NET 10) + EF Core (SQLite) + SignalR
+  Models.cs                    User, Epic, Sprint, WorkItem, TimeEntry, XpEvent,
+                               ItemDefinition, InventoryItem, RoomItem
+  Game.cs                      Regras de XP/nível, loot table, conquistas
+  OfficeHub.cs                 Hub SignalR: presença, movimento, zonas, chat de proximidade
+  OfficeLayout.cs              Planta do escritório — contrato de mapa (server units = 28/tile)
+  LiveKitService.cs            Emite JWT; só se Presence.InMeeting
+  BotService.cs                Bots que dão vida ao mapa
+  Seed.cs                      Dados de exemplo
+  Program.cs                   API REST
+  wwwroot/                     App web (ES modules, sem build)
 ```
 
-## Caminho de evolução (plano completo na sessão de planejamento)
+## Notas conhecidas
 
-1. **Unity (office)**: ✅ **feito** — projeto em [`office-unity/`](office-unity/README.md),
-   consome o mesmo `OfficeHub`/API (web e Unity convivem no mesmo mapa). Arte pixel
-   procedural, sentar (E), emotes (1–4), zoom, animação de caminhada.
-2. **Tauri (tasks)**: o frontend de tasks migra para React/TS no Tauri, mesma API, com timer no tray.
-3. **Áudio/vídeo**: LiveKit self-hosted (o backend só emite tokens e regras de proximidade).
-4. **Auth real**: trocar o header `X-User-Id` por OpenIddict/JWT.
-5. Postgres no lugar do SQLite quando sair do protótipo.
-
-## Notas conhecidas do protótipo
-
-- Autenticação é simbólica (header `X-User-Id`) — não usar fora de ambiente local.
-- Aviso NuGet NU1903 (SQLitePCLRaw): vulnerabilidade conhecida na dependência transitiva do
-  SQLite; some ao migrar para Postgres, ou atualize o pacote quando houver patch.
-- Cores de usuários/épicos passam nas checagens de contraste e daltonismo nos gráficos, mas
-  ficam acima da faixa de luminosidade recomendada para dark mode — reavaliar com o design
-  system definitivo.
+- **Auth é simbólica** (header `X-User-Id`) — não usar fora de ambiente local. Trocar por
+  OpenIddict/JWT antes de qualquer coisa séria.
+- Aviso NuGet **NU1903** (SQLitePCLRaw): vulnerabilidade em dependência transitiva do SQLite;
+  some ao migrar pra Postgres.
+- Postgres deve substituir o SQLite quando sair do protótipo.
+- Cores de usuários/épicos passam em contraste/daltonismo, mas ficam acima da luminosidade
+  recomendada pra dark mode — reavaliar com o design system definitivo.

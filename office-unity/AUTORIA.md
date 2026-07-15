@@ -1,68 +1,91 @@
-# Fazer o mapa à mão — guia do iniciante (Etapa 1)
+# Editar o ambiente à mão — guia do iniciante
 
-Objetivo desta etapa: você **pintar seu primeiro cômodo** e **colocar alguns móveis**, vendo na tela.
-Sem pressa, sem decorar nada — é só seguir os passos. Qualquer travada, me manda print.
+Objetivo: você **pintar cômodos** e **colocar móveis** na sua cena, vendo na tela.
+É pra experimentar sem medo — se quebrar, tem o botão de conserto (seção "SOCORRO" no fim). 🙂
 
-## 0. Preparar as ferramentas (uma vez)
+---
 
-1. No Unity, rode o menu **Office Quest ▸ Prepare Imported Assets** — isso configura a arte sem mexer na cena.
-2. Depois rode **Office Quest ▸ Prepare Manual Authoring**.
-   Isso cria: os tiles (Assets/Tiles), um prefab por móvel (Assets/Prefabs/Furniture) e a cena
-   **Assets/Scenes/MyOffice.unity** quando ela ainda não existir. Se já existir, apenas adiciona camadas
-   ausentes e preserva tudo que você pintou ou posicionou.
+## Atalhos que salvam sua vida (decore só estes 3)
 
-> Os dois comandos agora são seguros para executar novamente: nenhum deles substitui `MyOffice.unity`.
+- **Ctrl+Z** = desfazer (errou? desfaz). **Ctrl+S** = salvar a cena (salve sempre!).
+- **Segurar Shift enquanto pinta** = vira **borracha** (apaga tile).
+- **Scroll** = zoom · **botão do meio do mouse (ou Alt+arrastar)** = mover a vista.
+
+---
+
+## 0. Preparar (uma vez, ou sempre que quiser consertar)
+
+1. Menu **Office Quest ▸ Rebuild** (se ainda não rodou hoje) — importa a arte.
+2. Menu **Office Quest ▸ Prepare Manual Authoring** — cria os tiles, os móveis (prefabs) e a cena
+   **MyOffice.unity**. Rodar de novo **não apaga** o que você pintou; só repõe o que faltar
+   (jogador/câmera/luz/camadas). **Salve antes (Ctrl+S)** se tiver mudança sem salvar.
 
 ## 1. Abrir a cena e a paleta
 
-1. Na janela **Project** (embaixo), abra **Assets/Scenes/MyOffice.unity** (duplo-clique). Esta é a cena
-   principal do projeto e a única que deve receber o mapa definitivo.
-2. No menu do topo: **Window ▸ 2D ▸ Tile Palette**. Vai abrir um painel novo (a "paleta").
-3. No painel da paleta, clique em **Create New Palette** ▸ nome **Office** ▸ salve em `Assets/Palettes`.
-4. Na janela **Project**, abra a pasta **Assets/Tiles** e **arraste os tiles de lá para dentro do painel
-   da paleta** (são poucos e já prontos: `floor_gray`, `floor_wood`, `floor_carpet`, `wall`, `wall_face`).
-   - Esses tiles já têm a colisão certa (chão = passa, parede = bloqueia).
-   - (Opcional, mais pra frente: arrastar `Assets/Art/Rooms/room_builder.png` traz TODOS os tiles do
-     escritório, se você quiser mais variedade de piso.)
+1. Na janela **Project** (embaixo), duplo-clique em **Assets/Scenes/MyOffice.unity**.
+2. Menu do topo: **Window ▸ 2D ▸ Tile Palette** — abre o painel da paleta.
+3. No painel: **Create New Palette** ▸ nome **Office** ▸ salvar em `Assets/Palettes`.
+4. Na janela Project, abra **Assets/Tiles** e **arraste os tiles de lá pra dentro do painel da paleta**
+   (`floor_gray`, `floor_wood`, `floor_carpet`, `wall`, `wall_face`). Já vêm com a colisão certa.
 
-## 2. Pintar o piso (a vitória rápida 🎉)
+## 2. Entender as CAMADAS (importante!)
 
-1. Na janela **Hierarchy** (esquerda), abra **Grid** e clique em **Floor** (é a camada do chão).
-2. No painel da paleta, **clique no tile `floor_gray`** (o piso de escritório cinza).
-3. No painel da paleta, selecione a ferramenta **pincel** (ícone de pincel) — geralmente já vem selecionada.
-4. Vá pra janela **Scene** (não a Game) e **pinte** arrastando o mouse. Deve aparecer o chão.
-   - Zoom: scroll do mouse. Mover a vista: segure o **botão do meio** (ou Alt+arrastar).
-   - Apagar: segure **Shift** enquanto pinta (vira borracha), ou escolha a ferramenta de borracha.
+Na **Hierarchy**, dentro de **Grid**, tem várias camadas. Cada tile vai na camada certa:
 
-## 3. Pintar as paredes (por enquanto simples)
+| Camada | Pra que serve | Colide? |
+|---|---|---|
+| **Floor** | o chão (pisos) | não (você anda) |
+| **Walls** | as paredes | **sim** (bloqueia) |
+| **WallFaces** | a "frente" da parede (decorativo, dá altura) | não |
+| **Decoration** | tapetes, detalhes no chão | não |
+| **Collision** | (avançado) marcar bloqueio invisível | sim |
 
-1. Na Hierarchy, clique na camada **Walls** para a parte superior sólida da parede. Use **WallFaces**
-   para a face visual que aparece voltada para o jogador.
-2. Na paleta, **clique no tile `wall`** (parede branca).
-3. Pinte o contorno do cômodo na janela Scene. (Nesta etapa a parede é um tile só; na **Etapa 2**
-   eu ligo a "parede que se conecta sozinha" com cantos, igual ao exemplo que você mandou.)
+**Regra de ouro:** antes de pintar, **clique na camada certa na Hierarchy**. Piso → Floor. Parede → Walls.
 
-## 4. Colocar móveis
+## 3. Pintar o piso (a vitória rápida 🎉)
+
+1. Na **Hierarchy**, clique em **Floor**.
+2. No painel da paleta, clique no tile **`floor_gray`**.
+3. Na janela **Scene** (não a Game), **pinte** arrastando o mouse. Apareceu o chão!
+
+## 4. Pintar as paredes
+
+1. Na **Hierarchy**, clique em **Walls**.
+2. Na paleta, clique no tile **`wall`**.
+3. Pinte o contorno do cômodo. (Por enquanto é 1 tile só; na próxima etapa eu ligo as paredes que
+   se conectam sozinhas, com cantos, iguais ao exemplo.)
+
+## 5. Colocar móveis
 
 1. Na janela **Project**, abra **Assets/Prefabs/Furniture**.
-2. **Arraste** um móvel (ex.: `desktop`, `chair_up`, `plant_a`, `coffee`) da janela Project **para dentro
-   da janela Scene**, no lugar que quiser.
-3. Ajuste a posição arrastando o móvel na Scene (ele já tem colisão e se ordena por profundidade).
-   - Dica: os móveis "assentam" pela base; encoste-os no chão/parede à vontade.
+2. **Arraste** um móvel (ex.: `desktop`, `chair_up`, `plant_a`, `coffee`) pra dentro da janela **Scene**.
+3. Ajuste a posição arrastando na Scene. Ele já tem colisão e se ordena por profundidade.
 
-## 5. Testar
+## 6. Testar
 
-1. Aperte **Play** (▶ no topo) e ande com **WASD/setas** (se o boneco estiver na cena).
-2. Saiu do Play (▶ de novo) pra continuar editando.
+1. **Ctrl+S** pra salvar. Aperte **Play** (▶). Ande com **WASD/setas** — a câmera segue o boneco.
+2. Aperte **Play** de novo pra sair e continuar editando.
+
+---
+
+## 🆘 SOCORRO — quebrei algo!
+
+- **O jogador sumiu / apaguei a câmera / sumiu uma camada:** salve (Ctrl+S) e rode
+  **Office Quest ▸ Prepare Manual Authoring**. Ele repõe o que faltar **sem apagar seus tiles**.
+- **Apaguei um tile sem querer:** Ctrl+Z.
+- **Pintei na camada errada:** selecione a camada certa e repinte; use Shift pra apagar da errada.
+- **Sumiu tudo / bagunçou demais:** apague o arquivo `Assets/Scenes/MyOffice.unity` na janela Project
+  e rode **Prepare Manual Authoring** — ele cria uma MyOffice novinha (você perde só o que tinha pintado
+  nessa cena).
+
+### O que NÃO apagar (senão precisa reparar)
+O **Grid** e as camadas dentro dele (Floor/Walls/…), o **Main Camera**, o **Global Light** e o **Player**.
+Se apagar algum, é só rodar o reparo acima.
 
 ---
 
 ## O que me mandar
+Um print do seu cômodo. Com isso eu ligo as **paredes autoconectáveis** e a gente segue pros vários
+cômodos e as salas de usuário.
 
-Um print do seu primeiro cômodo pintado. Com isso eu:
-- ligo as **paredes autoconectáveis** (Etapa 2),
-- e a gente parte pros **vários cômodos + salas de usuário**.
-
-> Importante: **edite na `MyOffice.unity`**. `Office.unity` agora é apenas uma demonstração legada e
-> não está mais no Build Settings.
-</content>
+> Edite sempre na **MyOffice.unity** (a `Office.unity` é gerada pelo Rebuild e seria sobrescrita).

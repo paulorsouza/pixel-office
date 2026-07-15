@@ -1,0 +1,41 @@
+# ---------- Build .NET ----------
+**/bin/
+**/obj/
+*.user
+
+# ---------- Dados de runtime ----------
+# office.db é recriado e populado (seed) na primeira execução — apagar reseta tudo
+*.db
+*.db-shm
+*.db-wal
+
+# ---------- Logs ----------
+livekit/*.log
+**/Logs/*.png
+**/Logs/*.log
+
+# ---------- Unity ----------
+# (office-unity tem o seu próprio .gitignore; isto aqui é reforço)
+office-unity/Library/
+office-unity/Temp/
+office-unity/Logs/
+office-unity/UserSettings/
+office-unity/Build/
+office-unity/Builds/
+office-unity/*.csproj
+office-unity/*.sln
+office-unity/.vs/
+
+# ---------- Node ----------
+node_modules/
+package-lock.json
+
+# ---------- Assets ----------
+# Os packs LimeZu crus (~1,3 GB) NÃO são versionados — ver ASSETS.md.
+# Os assets já recortados que o cliente carrega SÃO versionados
+# (web-client-poc/assets/ e futuros client/assets/).
+
+# ---------- SO ----------
+Thumbs.db
+desktop.ini
+.DS_Store
