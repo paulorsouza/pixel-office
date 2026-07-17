@@ -9,8 +9,9 @@ gamificação**. O backend em C# é a base definitiva do produto.
 
 | Doc | Pra quê |
 |---|---|
-| **[`CONTEXT.md`](CONTEXT.md)** | **A fonte de verdade.** Estado, decisões, fatos técnicos verificados, o que deu errado e o que fazer a seguir |
+| **[`CONTEXT.md`](CONTEXT.md)** | **A fonte de verdade.** Estado, como as peças se conectam, decisões de design e próximos passos |
 | **[`ASSETS.md`](ASSETS.md)** | Onde estão os assets, o que tem em cada pack e **tudo que já mapeamos** (coordenadas, medidas, gotchas) |
+| [`client-web/README.md`](client-web/README.md) | Cliente do jogo: schema do mapa + como editar (hardcode e editor in-game) |
 | [`docs/COMO-RODAR.md`](docs/COMO-RODAR.md) | Subir backend + LiveKit e testar |
 | [`docs/PLANO_CLIENTE_V2.md`](docs/PLANO_CLIENTE_V2.md) | Escopo em fases (escrito p/ Unity; as fases de gameplay/rede/minigames seguem válidas) |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | ⚠️ Retrospectiva do cliente Unity — **a ordem de direção dos personagens nele está ERRADA** |
@@ -20,16 +21,15 @@ gamificação**. O backend em C# é a base definitiva do produto.
 
 ---
 
-## Estado (2026-07-15)
+## Estado (2026-07-17)
 
 | Peça | Estado |
 |---|---|
 | **backend/** — ASP.NET Core (.NET 10) + EF/SQLite + SignalR (porta **5210**) | ✅ Sólido — não refazer |
 | **wwwroot** — app web (kanban, sprints, horas, relatórios, perfil) | ✅ Funciona |
 | **livekit/** — SFU self-hosted (porta **7880**) | ✅ Funciona |
-| **Cliente do jogo** | 🔄 **Sendo recomeçado do zero, em web (Phaser)** |
-| **web-client-poc/** | ⚠️ POC descartável — mas `assets/` é bom e está versionado |
-| **office-unity/** | ⏸️ Pausado |
+| **client-web/** — cliente do jogo em Phaser, orientado a dados (mapa = JSON + editor in-game) | ✅ Roda; falta mobiliar/rede |
+| **office-unity/** | ⏸️ Abandonado (arquivo) |
 | ~~Tauri (app de tasks)~~ | ❌ Cancelado — o app web cobre |
 
 **Por que web e não Unity:** o produto é *"entrar por link"*, e o Unity não faz isso com esta stack
@@ -52,8 +52,8 @@ Abra **http://localhost:5210**. Sem senha (protótipo). Pra multiplayer, abra ou
 O SQLite (`office.db`) é criado e populado no primeiro boot — **apagar o arquivo reseta tudo**.
 
 ```bash
-# POC do cliente web (porta 8123) — servidor estático Node, sem dependências
-node web-client-poc/server.js
+# Cliente do jogo (porta 8123) — servidor estático Node, sem dependências
+node client-web/server.js
 ```
 
 ---
@@ -71,12 +71,12 @@ virtual-office/
 │   └── historico/      ⚠️ arquivo morto
 ├── backend/VirtualOffice.Api    ✅ API + SignalR + wwwroot (app web)
 ├── livekit/                     ✅ SFU
-├── web-client-poc/              ⚠️ POC (aproveitar só assets/)
-└── office-unity/                ⏸️ pausado
+├── client-web/                  ✅ cliente do jogo (Phaser, mapa = dado + editor)
+└── office-unity/                ⏸️ abandonado
 ```
 
 **Os packs LimeZu crus (~1,3 GB) NÃO são versionados** — ver `ASSETS.md`. Os recortes que o cliente
-carrega estão versionados em `web-client-poc/assets/`.
+carrega estão versionados em `client-web/assets/`.
 
 ---
 

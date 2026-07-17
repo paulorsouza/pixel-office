@@ -1,6 +1,6 @@
 # ASSETS — onde está tudo e o que já foi explorado
 
-**Atualizado:** 2026-07-15
+**Atualizado:** 2026-07-17
 
 Este doc responde três perguntas: **onde estão os assets**, **o que tem em cada pack**, e
 **o que já mapeamos** (as coordenadas/medidas que custaram caro pra descobrir).
@@ -12,7 +12,7 @@ Este doc responde três perguntas: **onde estão os assets**, **o que tem em cad
 | | Onde | No git? |
 |---|---|---|
 | **Packs crus** (LimeZu, ~1,3 GB) | `C:\Users\prs\Claude Sessions\LimeZu\` (**fora do repo**) | ❌ Não |
-| **Assets recortados** (o que o cliente carrega) | `web-client-poc/assets/` (~1 MB) | ✅ Sim |
+| **Assets recortados** (o que o cliente carrega) | `client-web/assets/` (~1 MB) | ✅ Sim |
 
 **Por quê:** os packs são comprados, **nunca mudam** e são **re-baixáveis do itch.io** com a conta de
 vocês. Versionar 34 mil arquivos deixaria o git lento sem ganho — 95% deles (praia, cemitério, base
@@ -149,30 +149,51 @@ foi construída do zero:
 - **Paleta extraída da placa original:** fundo `#6C6E85` · letras `#E2F2F3` · bisel `#BAD2E0` ·
   contorno `#3A3A50` · brilho do topo `#7C7F96`
 - **Fonte pixel 7×9** desenhada à mão (T, O, Q, B, M, S)
-- **Prontos e versionados:** `web-client-poc/assets/sign_tooq.png` (112×16) e
-  **`web-client-poc/assets/office_tooq.png`** = o `Example_2` com a placa TOOQ BMS colada em (54,238)
+- **Prontos e versionados:** `client-web/assets/world/sign_tooq.png` (112×16) e
+  **`client-web/assets/world/office_tooq.png`** = o `Example_2` com a placa TOOQ BMS colada em (54,238)
 
 ---
 
-## 4. Assets versionados (`web-client-poc/assets/`)
+## 4. Assets versionados (`client-web/assets/`)
 
-Estes já estão recortados, conferidos e prontos pra carregar:
+Organizados em subpastas. O cliente atual (interior orientado a dados) usa `chars/`, `tiles/`,
+`floors/` e `furniture/`; `world/` é o mundo externo (fachada/jardim/telhado), guardado mas ainda
+não plugado.
 
-| Arquivo | O que é |
+| Pasta / arquivo | O que é |
 |---|---|
-| `room_builder.png` | Room builder do Office (256×224) — pisos e paredes |
-| `Adam_run.png`, `Adam_idle_anim.png` | Personagem (24 frames 16×32) |
-| `office_tooq.png` ⭐ | **Fachada da sede TOOQ BMS** (304×288) |
-| `sign_tooq.png` | Placa TOOQ BMS avulsa (112×16) |
-| `office_generic.png`, `office_lime.png` | Prédios originais do pack (referência) |
-| `office_door.png` | Porta animada (672×32 — **frames 48×32**) |
-| `grass.png`, `grass_detail.png` | Grama fill + tufos |
-| `gate.png`, `hedge_top.png`, `hedge_fill.png` | Portão + cerca-viva |
-| `fountain.png`, `bench.png`, `flower1/2.png` | Jardim |
-| `tree1/2.png`, `bush1/2.png` | Vegetação |
-| `roof.png` | Superfície de telhado seamless |
-| `rp_*.png` | Props de telhado (dutos, painel solar, antena, escada) |
-| `house_country.png`, `house_japanese.png` | Casas completas (não usadas no plano atual) |
+| **`chars/`** `Adam_run.png`, `Adam_idle_anim.png` | Personagem (24 frames 16×32) |
+| **`tiles/`** `room_builder.png` | Room builder do Office (256×224) — paredes e estrutura |
+| **`floors/`** `floor_wood/carpet/cream/sage/water.png` | Pisos lisos (Modern Interiors) — ver §3.2 |
+| **`furniture/office/`** `of_1..of_339.png` | Os 339 móveis do Office Revamped (§4.1) |
+| **`world/`** `office_tooq.png` ⭐ | **Fachada da sede TOOQ BMS** (304×288) |
+| `world/sign_tooq.png` | Placa TOOQ BMS avulsa (112×16) |
+| `world/office_generic.png`, `world/office_lime.png` | Prédios originais do pack (referência) |
+| `world/office_door.png` | Porta animada (672×32 — **frames 48×32**) |
+| `world/grass.png`, `world/grass_detail.png` | Grama fill + tufos |
+| `world/gate.png`, `world/hedge_top.png`, `world/hedge_fill.png` | Portão + cerca-viva |
+| `world/fountain.png`, `world/bench.png`, `world/flower1/2.png` | Jardim |
+| `world/tree1/2.png`, `world/bush1/2.png` | Vegetação |
+| `world/roof.png`, `world/rp_*.png` | Telhado seamless + props (dutos, painel solar, antena, escada) |
+| `world/house_country.png`, `world/house_japanese.png` | Casas completas (não usadas no plano atual) |
+
+### 4.1 Móveis do Office (`furniture/office/of_N.png`) — IDs conferidos
+
+Os 339 são fatias de `Modern_Office_Revamped_v1.2/.../4_Modern_Office_singles/16x16/` (arquivo
+`Modern_Office_Singles_N.png` → `of_N`). Vistos na paleta do editor com thumbnail. IDs já conferidos
+visualmente (o resto ainda não foi catalogado peça a peça):
+
+| Peça | ID | Obs |
+|---|---|---|
+| Monitor duplo | `of_227` | vista de cima |
+| Monitor simples | `of_285` | |
+| Cadeira (topo) | `of_286`, `of_287` | vista de cima |
+| Cadeira (lado) | `of_277`, `of_278` | |
+| Mesa em L | `of_260`, `of_265`, `of_291` | estações de trabalho |
+| Vaso de planta | `of_98`, `of_99`, `of_100` | detectados por pixel verde |
+
+⚠️ **Não chute IDs de móvel.** Já erramos várias vezes achando que `of_115/118/120` eram
+cadeiras/plantas (são clipboard/teclado/monitor). Confirme pela thumbnail no editor antes de usar.
 
 ---
 
@@ -214,8 +235,9 @@ $g.InterpolationMode=[System.Drawing.Drawing2D.InterpolationMode]::NearestNeighb
 
 - **Decoração de parede** (quadros, TV, troféus) na parede 3D de tijolo — **nunca foi feita**, e é
   pedido explícito do usuário.
-- **Móveis do escritório** — os 339 do Office Revamped **nunca foram usados**. É o maior pendente
-  (ver `CONTEXT.md` seção 8).
+- **Catalogar os 339 móveis** — só um punhado tem ID confirmado (§4.1); o resto é escolhido pela
+  thumbnail no editor. Um índice peça→nome completo ajudaria a mobiliar mais rápido.
+- **Ancoragem de móveis multi-tile** no editor (bug conhecido — ver `client-web/README.md`).
 - **Character Generator / Portrait Generator** — o usuário opera os `.exe` pra gerar premades do time
   e retratos; depois é só importar.
 - **Identidade visual da Tooq** — a placa está no cinza corporativo do pack. Se a Tooq tem paleta,

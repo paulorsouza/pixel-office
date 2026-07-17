@@ -1,0 +1,182 @@
+{
+  "id": "tooq-office",
+  "name": "Escritório Tooq — Térreo",
+  "tile": 16,
+  "w": 126,
+  "h": 78,
+  "building": {
+    "x": 2,
+    "y": 2,
+    "w": 120,
+    "h": 72,
+    "floor": "wood",
+    "doors": [
+      {
+        "side": "S",
+        "at": 58,
+        "len": 4
+      }
+    ]
+  },
+  "spawn": {
+    "x": 40,
+    "y": 40
+  },
+  "zones": [
+    {
+      "name": "Cozinha",
+      "x": 6,
+      "y": 22,
+      "w": 22,
+      "h": 14,
+      "floor": "sage"
+    },
+    {
+      "name": "Sala de Jogos",
+      "x": 6,
+      "y": 42,
+      "w": 22,
+      "h": 16,
+      "floor": "cream"
+    },
+    {
+      "name": "Lounge",
+      "x": 50,
+      "y": 24,
+      "w": 24,
+      "h": 14,
+      "floor": "sage"
+    },
+    {
+      "name": "Piscina",
+      "x": 88,
+      "y": 42,
+      "w": 28,
+      "h": 22,
+      "floor": "water"
+    },
+    {
+      "name": "Time Alpha",
+      "x": 32,
+      "y": 22,
+      "w": 14,
+      "h": 10,
+      "floor": "gray"
+    },
+    {
+      "name": "Time Beta",
+      "x": 82,
+      "y": 22,
+      "w": 16,
+      "h": 12,
+      "floor": "gray"
+    },
+    {
+      "name": "Time Gama",
+      "x": 48,
+      "y": 44,
+      "w": 16,
+      "h": 10,
+      "floor": "gray"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "p1",
+      "name": "Sala Pessoal 1",
+      "x": 3,
+      "y": 3,
+      "w": 18,
+      "h": 13,
+      "floor": "light",
+      "doors": [
+        {
+          "side": "S",
+          "at": 8,
+          "len": 2
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "Sala Pessoal 2",
+      "x": 22,
+      "y": 3,
+      "w": 18,
+      "h": 13,
+      "floor": "light",
+      "doors": [
+        {
+          "side": "S",
+          "at": 8,
+          "len": 2
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "Sala Pessoal 3",
+      "x": 41,
+      "y": 3,
+      "w": 18,
+      "h": 13,
+      "floor": "light",
+      "doors": [
+        {
+          "side": "S",
+          "at": 8,
+          "len": 2
+        }
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "Sala Pessoal 4",
+      "x": 60,
+      "y": 3,
+      "w": 18,
+      "h": 13,
+      "floor": "light",
+      "doors": [
+        {
+          "side": "S",
+          "at": 8,
+          "len": 2
+        }
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "Sala Pessoal 5",
+      "x": 79,
+      "y": 3,
+      "w": 18,
+      "h": 13,
+      "floor": "light",
+      "doors": [
+        {
+          "side": "S",
+          "at": 8,
+          "len": 2
+        }
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "Sala Pessoal 6",
+      "x": 98,
+      "y": 3,
+      "w": 18,
+      "h": 13,
+      "floor": "light",
+      "doors": [
+        {
+          "side": "S",
+          "at": 8,
+          "len": 2
+        }
+      ]
+    }
+  ],
+  "furniture": []
+}

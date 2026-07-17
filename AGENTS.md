@@ -4,48 +4,41 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 
 ## 🔴 Leitura obrigatória (nesta ordem)
 
-1. **[`CONTEXT.md`](CONTEXT.md)** — **A FONTE DE VERDADE.** Handoff de 2026-07-15: o que existe e
-   funciona, a decisão de engine, os **fatos técnicos verificados**, as tensões de design,
-   **o que deu errado** e a ordem de trabalho recomendada.
-2. **[`ASSETS.md`](ASSETS.md)** — onde estão os assets, o que tem em cada pack e **tudo que já foi
-   mapeado** (coordenadas, tamanhos de frame, paletas, gotchas). **Não re-descubra isso.**
-3. [`docs/PLANO_CLIENTE_V2.md`](docs/PLANO_CLIENTE_V2.md) — escopo em fases (escrito p/ Unity; as
-   fases de gameplay/rede/minigames seguem válidas).
+1. **[`CONTEXT.md`](CONTEXT.md)** — visão geral: o que existe, como as peças se conectam, decisões
+   de design que valem e próximos passos. É o mapa mental do projeto.
+2. **[`ASSETS.md`](ASSETS.md)** — onde estão os assets e **tudo que já foi mapeado** (coordenadas,
+   tamanhos de frame, IDs de móvel, paletas, gotchas). **Não redescubra isso.**
+3. Trabalhando no cliente do jogo: **[`client-web/README.md`](client-web/README.md)** (schema do
+   mapa + como editar) e **[`client-web/TUTORIAL.md`](client-web/TUTORIAL.md)** (Phaser + debug).
 
 ## ⚠️ Não confie nestes (dados obsoletos)
 
 - [`docs/HANDOFF.md`](docs/HANDOFF.md) — retrospectiva do cliente Unity. **A ordem de direção dos
-  personagens está ERRADA** (diz `down/up/left/right`; o certo é `right/up/left/down`).
-- [`docs/historico/`](docs/historico/) — cópia da memória acumulada na era Unity. É **arquivo morto**:
-  serve pra entender *"por que chegamos aqui"*, não como instrução.
+  personagens está ERRADA** (diz `down/up/left/right`; o certo é `right/up/left/down` — ver
+  `ASSETS.md` §3.1).
+- [`docs/historico/`](docs/historico/) — arquivo da era Unity. Serve pra entender *"por que chegamos
+  aqui"*, não como instrução.
 
 **Em caso de conflito, `CONTEXT.md` vence.**
 
-## Estado (2026-07-15)
+## Estado
 
-- **Cliente do jogo será WEB (Phaser)**, não Unity. O produto é "entrar por link" e o Unity não faz
-  isso com esta stack (WebGL descartado — SignalR custom e LiveKit ffi não rodam nele). Detalhes no
-  `CONTEXT.md`.
-- ✅ **Manter:** `backend/` (ASP.NET + SignalR, porta 5210), app web em `backend/.../wwwroot`,
-  `livekit/` (porta 7880).
-- 🔄 **Refazer:** só o cliente do jogo, **do zero**.
-- ⚠️ `web-client-poc/game.js` é **descartável** (reescrito ~11x a palpite, sem arquitetura, sem rede,
-  interior nunca mobiliado). **`web-client-poc/assets/` é bom** — tudo recortado e conferido,
-  inclusive `office_tooq.png` (fachada com a placa **TOOQ BMS**).
-- ⏸️ `office-unity/` pausado.
+- **Cliente do jogo é WEB (Phaser)**, não Unity — o produto é "entrar por link". Detalhes e a
+  justificativa no `CONTEXT.md` §4.
+- ✅ **Backend** (ASP.NET + SignalR, porta 5210), app web em `backend/.../wwwroot`, **LiveKit**
+  (porta 7880) — sólidos, não mexer sem motivo.
+- ✅ **`client-web/`** — cliente Phaser orientado a dados. O escritório é `maps/tooq-office.json`
+  (renderizado por `src/MapRenderer.js`); edita-se na mão ou pelo editor in-game (`E`).
+- ⏸️ `office-unity/` — abandonado, mantido só como arquivo.
 
-## Regras de trabalho (aprendidas na dor — ver seção 8 do CONTEXT.md)
+## Regras de trabalho
 
-1. **Fixe o escopo por escrito antes de codar.** A sessão anterior queimou horas chutando design e
-   reescreveu o cliente ~11 vezes.
-2. **Comece pelo INTERIOR do escritório**, não pelo cenário. As pessoas passam 8h/dia dentro — o
-   interior mobiliado **é o produto**. Fachada/telhado/jardim são enfeite. (Os 339 móveis do pack
-   Office **nunca foram usados**.)
-3. **Não comemore antes de verificar** — e verifique olhando, no navegador.
-4. **Mapa como dado (JSON), não hardcode** — as salas customizáveis pelo dono dependem disso.
-5. **Rede cedo**, não no fim. Dois avatares andando juntos vale mais que qualquer telhado.
-6. Ao testar movimento sozinho, use `scene.input.keyboard.enabled = false` — senão você confunde o
-   usuário jogando com bug (aconteceu).
+1. **Verifique olhando, no navegador**, antes de dar algo como pronto.
+2. **O interior mobiliado é o produto** — fachada/telhado/jardim (em `assets/world/`) são enfeite.
+3. **Mapa como dado (JSON), não hardcode** — edição pelo dono depende disso.
+4. **Rede cedo**, não no fim. Dois avatares andando juntos é o marco.
+5. Ao testar movimento sozinho, `scene.input.keyboard.enabled = false` — senão você confunde o
+   usuário jogando com bug (já aconteceu). **Religue** ao terminar.
 
 ## Rodar
 
@@ -58,12 +51,12 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 ```
 
 ```bash
-# POC web, porta 8123 — estático Node, sem dependências
-node web-client-poc/server.js
+# Cliente do jogo, porta 8123 — estático Node, sem dependências
+node client-web/server.js
 ```
 
 ## Assets
 
-Os packs LimeZu crus (~1,3 GB) ficam **fora do repo**, em `C:\Users\prs\Claude Sessions\LimeZu\`.
-São comprados, nunca mudam e são re-baixáveis do itch.io. **Ver [`ASSETS.md`](ASSETS.md)** — ele tem
-o mapa dos packs e todas as medidas já verificadas.
+Packs LimeZu crus (~1,3 GB) ficam **fora do repo**, em `C:\Users\prs\Claude Sessions\LimeZu\`
+(comprados, re-baixáveis do itch.io). Os recortes que o cliente usa estão versionados em
+`client-web/assets/`. **Ver [`ASSETS.md`](ASSETS.md)** — mapa dos packs + todas as medidas.
