@@ -1,182 +1,597 @@
 {
   "id": "tooq-office",
-  "name": "Escritório Tooq — Térreo",
+  "name": "Escritório Tooq",
+  "subtitle": "Térreo · espaço de trabalho e quintal privado",
+  "kind": "interior",
   "tile": 16,
-  "w": 126,
-  "h": 78,
+  "w": 56,
+  "h": 52,
+  "camera": {
+    "zoom": 2.1,
+    "minZoom": 1.2,
+    "bounds": {
+      "x": 1,
+      "y": 1,
+      "w": 54,
+      "h": 51
+    }
+  },
+  "yard": {
+    "x": 2,
+    "y": 35,
+    "w": 52,
+    "h": 17,
+    "ground": "grass"
+  },
+  "assets": [
+    "grass_detail",
+    "gate",
+    "hedge_top",
+    "hedge_fill",
+    "fountain",
+    "bench",
+    "tree1",
+    "tree2",
+    "bush1",
+    "bush2",
+    "flower1",
+    "flower2",
+    "office_door",
+    "of_98",
+    "of_99",
+    "of_101",
+    "of_103",
+    "of_170",
+    "of_171",
+    "of_175",
+    "of_190",
+    "of_193",
+    "of_200",
+    "of_205",
+    "of_225",
+    "of_227",
+    "of_229",
+    "of_231",
+    "of_233",
+    "of_235",
+    "of_258",
+    "of_306",
+    "of_307",
+    "of_315",
+    "of_316",
+    "of_320",
+    "of_321",
+    "of_323",
+    "of_329",
+    "of_335"
+  ],
   "building": {
     "x": 2,
     "y": 2,
-    "w": 120,
-    "h": 72,
+    "w": 52,
+    "h": 34,
     "floor": "wood",
     "doors": [
       {
         "side": "S",
-        "at": 58,
-        "len": 4
+        "at": 24,
+        "len": 3,
+        "texture": "office_door",
+        "frame": 8
       }
     ]
   },
-  "spawn": {
-    "x": 40,
-    "y": 40
+  "spawns": {
+    "default": {
+      "x": 28,
+      "y": 31
+    },
+    "entrance": {
+      "x": 28,
+      "y": 31
+    },
+    "meeting-area": {
+      "x": 12,
+      "y": 22
+    },
+    "work-area": {
+      "x": 36,
+      "y": 21
+    },
+    "yard-gate": {
+      "x": 28,
+      "y": 49
+    }
   },
   "zones": [
     {
-      "name": "Cozinha",
-      "x": 6,
-      "y": 22,
-      "w": 22,
-      "h": 14,
-      "floor": "sage"
-    },
-    {
-      "name": "Sala de Jogos",
-      "x": 6,
-      "y": 42,
-      "w": 22,
-      "h": 16,
-      "floor": "cream"
-    },
-    {
-      "name": "Lounge",
-      "x": 50,
-      "y": 24,
-      "w": 24,
-      "h": 14,
-      "floor": "sage"
-    },
-    {
-      "name": "Piscina",
-      "x": 88,
-      "y": 42,
+      "id": "open-space",
+      "name": "Time Produto",
+      "x": 22,
+      "y": 5,
       "w": 28,
-      "h": 22,
-      "floor": "water"
+      "h": 15,
+      "floor": "gray"
     },
     {
-      "name": "Time Alpha",
-      "x": 32,
+      "id": "lounge",
+      "name": "Lounge",
+      "x": 5,
       "y": 22,
-      "w": 14,
-      "h": 10,
-      "floor": "gray"
+      "w": 15,
+      "h": 8,
+      "floor": "terra"
     },
     {
-      "name": "Time Beta",
-      "x": 82,
+      "id": "coffee",
+      "name": "Café",
+      "x": 39,
       "y": 22,
-      "w": 16,
-      "h": 12,
-      "floor": "gray"
+      "w": 11,
+      "h": 8,
+      "floor": "terra"
     },
     {
-      "name": "Time Gama",
-      "x": 48,
-      "y": 44,
-      "w": 16,
-      "h": 10,
-      "floor": "gray"
+      "id": "reception",
+      "name": "Recepção",
+      "x": 24,
+      "y": 24,
+      "w": 10,
+      "h": 6,
+      "floor": "light"
     }
   ],
   "rooms": [
     {
-      "id": "p1",
-      "name": "Sala Pessoal 1",
-      "x": 3,
-      "y": 3,
-      "w": 18,
-      "h": 13,
+      "id": "meeting",
+      "name": "Sala de Reunião",
+      "x": 4,
+      "y": 4,
+      "w": 15,
+      "h": 9,
       "floor": "light",
       "doors": [
         {
           "side": "S",
-          "at": 8,
-          "len": 2
+          "at": 6,
+          "len": 3,
+          "texture": "office_door",
+          "frame": 8
         }
       ]
     },
     {
-      "id": "p2",
-      "name": "Sala Pessoal 2",
-      "x": 22,
-      "y": 3,
-      "w": 18,
-      "h": 13,
+      "id": "focus-a",
+      "name": "Sala de Foco",
+      "x": 4,
+      "y": 14,
+      "w": 7,
+      "h": 7,
       "floor": "light",
       "doors": [
         {
           "side": "S",
-          "at": 8,
-          "len": 2
+          "at": 2,
+          "len": 3,
+          "texture": "office_door",
+          "frame": 8
         }
       ]
     },
     {
-      "id": "p3",
-      "name": "Sala Pessoal 3",
-      "x": 41,
-      "y": 3,
-      "w": 18,
-      "h": 13,
+      "id": "focus-b",
+      "name": "Sala de Call",
+      "x": 13,
+      "y": 14,
+      "w": 7,
+      "h": 7,
       "floor": "light",
       "doors": [
         {
           "side": "S",
-          "at": 8,
-          "len": 2
-        }
-      ]
-    },
-    {
-      "id": "p4",
-      "name": "Sala Pessoal 4",
-      "x": 60,
-      "y": 3,
-      "w": 18,
-      "h": 13,
-      "floor": "light",
-      "doors": [
-        {
-          "side": "S",
-          "at": 8,
-          "len": 2
-        }
-      ]
-    },
-    {
-      "id": "p5",
-      "name": "Sala Pessoal 5",
-      "x": 79,
-      "y": 3,
-      "w": 18,
-      "h": 13,
-      "floor": "light",
-      "doors": [
-        {
-          "side": "S",
-          "at": 8,
-          "len": 2
-        }
-      ]
-    },
-    {
-      "id": "p6",
-      "name": "Sala Pessoal 6",
-      "x": 98,
-      "y": 3,
-      "w": 18,
-      "h": 13,
-      "floor": "light",
-      "doors": [
-        {
-          "side": "S",
-          "at": 8,
-          "len": 2
+          "at": 2,
+          "len": 3,
+          "texture": "office_door",
+          "frame": 8
         }
       ]
     }
   ],
-  "furniture": []
+  "furniture": [
+    {
+      "id": "of_170",
+      "x": 8,
+      "y": 6
+    },
+    {
+      "id": "of_171",
+      "x": 14,
+      "y": 6
+    },
+    {
+      "id": "of_258",
+      "x": 11,
+      "y": 9,
+      "solid": true
+    },
+    {
+      "id": "of_101",
+      "x": 8,
+      "y": 10,
+      "solid": true
+    },
+    {
+      "id": "of_103",
+      "x": 15,
+      "y": 10,
+      "solid": true
+    },
+    {
+      "id": "of_225",
+      "x": 7,
+      "y": 17,
+      "solid": true
+    },
+    {
+      "id": "of_306",
+      "x": 7,
+      "y": 19
+    },
+    {
+      "id": "of_229",
+      "x": 16,
+      "y": 17,
+      "solid": true
+    },
+    {
+      "id": "of_307",
+      "x": 16,
+      "y": 19
+    },
+    {
+      "id": "of_225",
+      "x": 26,
+      "y": 10,
+      "solid": true
+    },
+    {
+      "id": "of_227",
+      "x": 33,
+      "y": 10,
+      "solid": true
+    },
+    {
+      "id": "of_233",
+      "x": 40,
+      "y": 10,
+      "solid": true
+    },
+    {
+      "id": "of_235",
+      "x": 47,
+      "y": 10,
+      "solid": true
+    },
+    {
+      "id": "of_306",
+      "x": 26,
+      "y": 12
+    },
+    {
+      "id": "of_307",
+      "x": 33,
+      "y": 12
+    },
+    {
+      "id": "of_315",
+      "x": 40,
+      "y": 12
+    },
+    {
+      "id": "of_316",
+      "x": 47,
+      "y": 12
+    },
+    {
+      "id": "of_229",
+      "x": 26,
+      "y": 16,
+      "solid": true
+    },
+    {
+      "id": "of_231",
+      "x": 33,
+      "y": 16,
+      "solid": true
+    },
+    {
+      "id": "of_320",
+      "x": 40,
+      "y": 16,
+      "solid": true
+    },
+    {
+      "id": "of_321",
+      "x": 47,
+      "y": 16,
+      "solid": true
+    },
+    {
+      "id": "of_315",
+      "x": 26,
+      "y": 18
+    },
+    {
+      "id": "of_316",
+      "x": 33,
+      "y": 18
+    },
+    {
+      "id": "of_306",
+      "x": 40,
+      "y": 18
+    },
+    {
+      "id": "of_307",
+      "x": 47,
+      "y": 18
+    },
+    {
+      "id": "of_200",
+      "x": 9,
+      "y": 25,
+      "solid": true
+    },
+    {
+      "id": "of_205",
+      "x": 16,
+      "y": 25,
+      "solid": true
+    },
+    {
+      "id": "of_193",
+      "x": 12,
+      "y": 28,
+      "solid": true
+    },
+    {
+      "id": "of_98",
+      "x": 6,
+      "y": 27,
+      "offsetY": 10,
+      "solid": true
+    },
+    {
+      "id": "of_99",
+      "x": 19,
+      "y": 27,
+      "offsetY": 10,
+      "solid": true
+    },
+    {
+      "id": "of_258",
+      "x": 28,
+      "y": 28,
+      "solid": true
+    },
+    {
+      "id": "of_101",
+      "x": 31,
+      "y": 26,
+      "solid": true
+    },
+    {
+      "id": "of_323",
+      "x": 49,
+      "y": 18,
+      "solid": true
+    },
+    {
+      "id": "of_329",
+      "x": 41,
+      "y": 27,
+      "solid": true
+    },
+    {
+      "id": "of_335",
+      "x": 47,
+      "y": 27,
+      "solid": true
+    },
+    {
+      "id": "of_175",
+      "x": 44,
+      "y": 27,
+      "solid": true
+    },
+    {
+      "id": "of_190",
+      "x": 44,
+      "y": 29,
+      "solid": true
+    }
+  ],
+  "details": [
+    {
+      "x": 7,
+      "y": 38
+    },
+    {
+      "x": 17,
+      "y": 47,
+      "alpha": 0.7
+    },
+    {
+      "x": 34,
+      "y": 39
+    },
+    {
+      "x": 46,
+      "y": 46,
+      "alpha": 0.65
+    },
+    {
+      "x": 23,
+      "y": 42
+    },
+    {
+      "x": 38,
+      "y": 49,
+      "alpha": 0.7
+    }
+  ],
+  "paths": [
+    {
+      "x": 26,
+      "y": 34,
+      "w": 4,
+      "h": 18,
+      "floor": "light"
+    }
+  ],
+  "hedges": [
+    {
+      "x": 2,
+      "y": 35,
+      "w": 2,
+      "h": 15
+    },
+    {
+      "x": 52,
+      "y": 35,
+      "w": 2,
+      "h": 15
+    },
+    {
+      "x": 2,
+      "y": 50,
+      "w": 24,
+      "h": 2
+    },
+    {
+      "x": 30,
+      "y": 50,
+      "w": 24,
+      "h": 2
+    }
+  ],
+  "props": [
+    {
+      "texture": "gate",
+      "x": 28,
+      "y": 52,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -2,
+        "y": -0.55,
+        "w": 4,
+        "h": 0.55
+      }
+    },
+    {
+      "texture": "fountain",
+      "x": 9,
+      "y": 43.5,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -1.05,
+        "y": -1.2,
+        "w": 2.1,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "bench",
+      "x": 9,
+      "y": 47,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -1.5,
+        "y": -0.55,
+        "w": 3,
+        "h": 0.55
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 47,
+      "y": 43.5,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -1.2,
+        "y": -0.8,
+        "w": 2.4,
+        "h": 0.8
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 47,
+      "y": 48.5,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -1.2,
+        "y": -0.8,
+        "w": 2.4,
+        "h": 0.8
+      }
+    },
+    {
+      "texture": "bush1",
+      "x": 19,
+      "y": 44,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -0.45,
+        "y": -0.55,
+        "w": 0.9,
+        "h": 0.55
+      }
+    },
+    {
+      "texture": "bush2",
+      "x": 37,
+      "y": 44,
+      "originX": 0.5,
+      "originY": 1,
+      "collision": {
+        "x": -0.45,
+        "y": -0.55,
+        "w": 0.9,
+        "h": 0.55
+      }
+    },
+    {
+      "texture": "flower1",
+      "x": 16,
+      "y": 39.5,
+      "originX": 0.5,
+      "originY": 1
+    },
+    {
+      "texture": "flower2",
+      "x": 40,
+      "y": 39.5,
+      "originX": 0.5,
+      "originY": 1
+    }
+  ],
+  "portals": [
+    {
+      "id": "yard-exit",
+      "x": 26,
+      "y": 49,
+      "w": 4,
+      "h": 3,
+      "targetScene": "world",
+      "targetSpawn": "from-office",
+      "label": "Sair pelo portão"
+    }
+  ]
 }

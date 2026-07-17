@@ -1,15 +1,15 @@
 # client-web — cliente do jogo (Office Quest / Tooq)
 
-Escritório virtual 2D top-down em **Phaser 3**, estilo Gather.town. É o cliente oficial do projeto.
+Cliente oficial em **Phaser 3**, acessível por link e sem etapa de build.
 
-O mapa é **dado, não código**: o escritório inteiro está descrito em `maps/tooq-office.json` e
-desenhado por `src/MapRenderer.js`. Você edita o escritório de duas formas — **na mão** (editando o
-JSON) ou **dentro do jogo** (editor de móveis, tecla `E`). As duas gravam o mesmo arquivo.
+A navegação é composta por **várias cenas independentes**. O jogador explora um mundo aberto que
+funciona como hub e escolhe os locais em que quer entrar. Cada local é outro mapa JSON; não existe
+conceito de múltiplos andares na arquitetura atual.
 
-> 📖 Para padrões de Phaser e o fluxo de debug no navegador, veja [`TUTORIAL.md`](TUTORIAL.md).
-> Para medidas de assets já verificadas (não redescobrir), veja [`../ASSETS.md`](../ASSETS.md).
-
----
+> Para editar visualmente no Tiled, veja [`tiled/README.md`](tiled/README.md). Para entender o
+> schema e também editar manualmente, veja [`GUIA-EDICAO.md`](GUIA-EDICAO.md). Para padrões de Phaser e debug, veja
+> [`TUTORIAL.md`](TUTORIAL.md). Para medidas e IDs de assets já conferidos, veja
+> [`../ASSETS.md`](../ASSETS.md).
 
 ## Rodar
 
@@ -17,158 +17,209 @@ JSON) ou **dentro do jogo** (editor de móveis, tecla `E`). As duas gravam o mes
 node server.js          # http://localhost:8123
 ```
 
-Zero instalação: o Phaser está vendorizado (`phaser.min.js`, sem CDN) e o `server.js` usa só
-`http`/`fs` do Node. Com um agente que suporte preview: `preview_start { name: "client-web" }`
-(config em `.claude/launch.json`, porta 8123).
+Phaser 3.80.1 está vendorizado e o servidor estático usa apenas Node.
 
-**Controles:** `WASD`/setas andar · `scroll` zoom · `E` liga/desliga o editor de móveis.
+**Controles:** `WASD`/setas para andar · `E` para entrar/sair · `scroll` para zoom.
 
----
+## O corte vertical atual
 
-## Estrutura
-
+```text
+Quintal Tooq (hub compacto e cercado)
+        │ porta + E
+        ▼
+Escritório Tooq (térreo + quintal privado)
+        │ portão + E
+        └──────────────► Mundo Tooq
 ```
+
+- `maps/scenes.json` registra as cenas e define a inicial.
+- `maps/world.json` descreve o pequeno pátio central, a fachada e o portal de entrada.
+- `maps/tooq-office.json` descreve o interior, a mobília, o quintal privado e o portão de saída.
+- `tiled/maps/*.tmj` são as fontes visuais editáveis; o conversor gera os dois JSONs acima.
+- `src/main.js` mantém um único runtime Phaser e reinicia a cena com o mapa e o spawn de destino.
+- `src/MapRenderer.js` renderiza mundos e interiores a partir dos dados.
+
+## Estrutura relevante
+
+```text
 client-web/
-├── index.html                canvas fullscreen + hint de controles
-├── server.js                 estático Node + POST /api/map/<nome> (salva o mapa)
-├── phaser.min.js             Phaser 3.80.1 vendorizado
+├── index.html
+├── server.js
+├── phaser.min.js
 ├── src/
-│   ├── main.js               config do Phaser + OfficeScene (player, câmera, anims, update)
-│   ├── MapRenderer.js         desenha o mapa a partir do JSON (pisos, zonas, paredes 3D, portas)
-│   └── Editor.js             editor de móveis in-game (paleta HTML + colocar/mover/apagar/salvar)
+│   ├── main.js                 runtime, movimento, câmera, HUD e transições
+│   ├── MapRenderer.js          renderer dos tipos world e interior
+│   └── Editor.js               editor antigo; ainda não ligado ao novo runtime
 ├── maps/
-│   └── tooq-office.json       ← O ESCRITÓRIO (dado). É isto que você edita.
-├── data/
-│   └── furniture-catalog.json lista dos 339 móveis {id,w,h} p/ a paleta do editor
+│   ├── scenes.json             manifesto de cenas
+│   ├── world.json              runtime gerado do hub
+│   └── tooq-office.json        runtime gerado do escritório
+├── tiled/
+│   ├── office-quest.tiled-project
+│   ├── maps/                    fontes .tmj editáveis no Tiled
+│   └── tilesets/                paletas de pisos, paredes, mundo e móveis
+├── tools/
+│   └── tiled-converter.mjs      conversão, validação e atualização das prévias
 └── assets/
-    ├── chars/                 Adam (24 frames 16×32)
-    ├── tiles/                 room_builder.png (paredes/estrutura do Office)
-    ├── floors/                floor_wood/carpet/cream/sage/water.png (pisos lisos)
-    ├── furniture/office/      of_1..of_339.png (móveis do Office Revamped)
-    └── world/                 fachada TOOQ BMS, jardim, telhado — do mundo externo (não usado ainda)
+    ├── chars/
+    ├── tiles/
+    ├── floors/
+    ├── furniture/office/
+    └── world/
 ```
 
----
+## Fluxo de edição no Tiled
 
-## O mapa é dado — schema de `maps/tooq-office.json`
+Abra `tiled/office-quest.tiled-project`, edite e salve o `.tmj`. Depois, na raiz do repositório:
 
-Coordenadas em **tiles** (1 tile = 16px). O renderer resolve `x*16` etc.
+```powershell
+node client-web/tools/tiled-converter.mjs validate all
+node client-web/tools/tiled-converter.mjs from-tiled all
+node client-web/server.js
+```
+
+O runtime continua simples e sem etapa obrigatória de build para o usuário final. A conversão só
+acontece durante o desenvolvimento, quando o mapa visual é alterado. O comando
+`to-tiled all --force` faz o caminho inverso e sobrescreve os TMJs; use apenas para reiniciar a
+fonte visual a partir dos JSONs.
+
+## Manifesto de cenas
+
+`maps/scenes.json` é o ponto de entrada. Para cadastrar um novo local:
 
 ```jsonc
 {
-  "id": "tooq-office",
-  "name": "Escritório Tooq — Térreo",
-  "tile": 16,
-  "w": 126, "h": 78,                 // tamanho do mundo em tiles
-
-  "building": {                       // contorno do prédio: parede de perímetro + porta
-    "x": 2, "y": 2, "w": 120, "h": 72,
-    "floor": "wood",                  // piso base do salão inteiro
-    "doors": [ { "side": "S", "at": 58, "len": 4 } ]
-  },
-
-  "spawn": { "x": 40, "y": 40 },      // onde o player nasce (em tiles)
-
-  "zones": [                          // ÁREAS ABERTAS: só um tapete de piso, SEM parede
-    { "name": "Cozinha", "x": 6, "y": 22, "w": 22, "h": 14, "floor": "sage" }
-  ],
-
-  "rooms": [                          // SALAS FECHADAS: piso + parede fina + porta
-    { "id": "p1", "name": "Sala Pessoal 1", "x": 3, "y": 3, "w": 18, "h": 13,
-      "floor": "light", "doors": [ { "side": "S", "at": 8, "len": 2 } ] }
-  ],
-
-  "furniture": [                      // móveis por cima de tudo (editados pelo editor ou à mão)
-    { "id": "of_227", "x": 30, "y": 40 }
+  "startScene": "world",
+  "scenes": [
+    { "id": "world", "file": "world.json" },
+    { "id": "tooq-office", "file": "tooq-office.json" },
+    { "id": "arcade", "file": "arcade.json" }
   ]
 }
 ```
 
-### Campos
+Os IDs usados em `portals[].targetScene` precisam existir nesse manifesto.
 
-| Campo | O que é |
+## Contrato comum de um mapa
+
+Coordenadas são expressas em tiles; hoje um tile visual tem 16 px.
+
+```jsonc
+{
+  "id": "tooq-office",
+  "name": "Escritório Tooq",
+  "subtitle": "Térreo · espaço de trabalho e quintal privado",
+  "kind": "interior",             // "world" ou "interior"
+  "tile": 16,
+  "w": 56,
+  "h": 52,
+  "camera": {
+    "zoom": 2.1,
+    "minZoom": 1.2,
+    "bounds": { "x": 1, "y": 1, "w": 54, "h": 51 }
+  },
+
+  "spawns": {
+    "default": { "x": 28, "y": 31 },
+    "entrance": { "x": 28, "y": 31 },
+    "yard-gate": { "x": 28, "y": 49 }
+  },
+
+  "portals": [
+    {
+      "id": "yard-exit",
+      "x": 26, "y": 49, "w": 4, "h": 3,
+      "targetScene": "world",
+      "targetSpawn": "from-office",
+      "label": "Sair pelo portão"
+    }
+  ]
+}
+```
+
+O portal é um retângulo sensível ao pé do avatar. Dentro dele, o HUD mostra a ação; `E` faz fade,
+carrega `targetScene` e posiciona o jogador em `targetSpawn`.
+
+`camera.bounds` também usa tiles. Nos mapas cercados, o limite inferior coincide com o portão. O
+runtime calcula um zoom mínimo adicional conforme a janela, impedindo que a câmera revele área vazia
+fora desses limites.
+
+### Campos de interior
+
+| Campo | Uso |
 |---|---|
-| `building` | Contorno do prédio: piso base + parede de perímetro + porta(s). Um por mapa. |
-| `zones[]` | **Área aberta** (cozinha, lounge, piscina, zona de time). Só pinta um tapete de piso e um rótulo. **Não tem parede** — é o estilo Gather de salão aberto. |
-| `rooms[]` | **Sala fechada** (ex: sala pessoal de cada pessoa). Piso + parede fina + porta. `id` é a chave estável. |
-| `furniture[]` | Cada móvel = `{ id, x, y }`. `id` = `of_N` (arquivo `assets/furniture/office/of_N.png`). |
-| `doors[]` | `{ side, at, len }`. `side` = `N`/`S`/`E`/`W`. `at` = offset (em tiles) a partir do canto do rect. `len` = largura do vão. Buraco na parede naquele trecho. |
-| `floor` | Nome lógico → textura (tabela abaixo). |
+| `building` | Piso base, perímetro e portas do interior. |
+| `yard` | Retângulo de terreno externo que pertence à mesma cena do interior. |
+| `zones[]` | Áreas abertas marcadas por outro piso, como lounge, café ou time. |
+| `rooms[]` | Salas fechadas, com paredes e portas próprias. |
+| `furniture[]` | Móveis `{ id, x, y }`; `solid: true` adiciona colisão no footprint. |
+| `assets[]` | IDs carregados apenas para aquela cena. |
 
-### Pisos disponíveis (`floor`)
+Portas usam `{ side, at, len }`, onde `side` é `N`, `S`, `E` ou `W`; `at` é o deslocamento a partir
+do canto e `len` é a largura do vão. Para uma porta visível, use também
+`{ "texture": "office_door", "frame": 8 }`: o renderer encaixa o frame aberto no vão.
 
-| Nome | Textura | Uso típico |
-|---|---|---|
-| `wood` | madeira quente | piso base do salão |
-| `gray` | carpete azul-cinza | zonas de time |
-| `light` | tile creme claro | salas pessoais |
-| `terra` | verde-acinzentado (sage) | lounge/cozinha |
-| `water` | água | piscina |
+Pisos existentes: `wood`, `gray`, `light`, `terra` e `water`.
 
-Para adicionar um piso novo: recorte a textura para `assets/floors/floor_<nome>.png`, carregue no
-`preload` de `main.js` e mapeie o nome em `FLOORS` no topo de `MapRenderer.js`.
+### Campos de mundo
 
-### Paredes
+| Campo | Uso |
+|---|---|
+| `ground` | Textura repetida do terreno. |
+| `paths[]` | Retângulos de caminho usando a mesma paleta de pisos. |
+| `details[]` | Detalhes pequenos do terreno. |
+| `hedges[]` | Cercas visuais que também colidem. |
+| `props[]` | Fachadas, árvores, bancos, flores e outros sprites. Aceita um footprint `collision`. |
+| `collisions[]` | Retângulos de colisão desacoplados do visual. |
 
-Perímetro do prédio e salas usam parede fina (laterais/sul) + **parede norte 3D** de 2 tiles (topo +
-face de tijolo). A face de tijolo é a superfície pensada para pendurar decoração (quadro/TV/troféu) —
-ainda não há móveis de parede colocados. Detalhes das peças em [`../ASSETS.md`](../ASSETS.md) §3.2.
+Os campos externos (`paths`, `details`, `hedges`, `props` e `collisions`) também podem ser usados em
+um mapa `interior` que possua `yard`. Um prop sólido mantém visual e física próximos no JSON:
 
----
+```jsonc
+{
+  "texture": "bench",
+  "x": 9,
+  "y": 47,
+  "originX": 0.5,
+  "originY": 1,
+  "collision": { "x": -1.5, "y": -0.55, "w": 3, "h": 0.55 }
+}
+```
 
-## Como editar o escritório
+Flores e detalhes de grama não têm colisão de propósito. Elementos volumosos devem declarar
+`collision` (props) ou `solid: true` (móveis).
 
-### A) Na mão (hardcode) — para estrutura
+## Criar uma nova cena
 
-Melhor para prédio, zonas, salas e portas. Edite `maps/tooq-office.json` e recarregue o navegador.
-É geometria simples em tiles; use o `spawn` para nascer perto do que está mexendo.
+1. Crie `maps/<id>.json` com um `spawns.default` e dimensões válidas.
+2. Cadastre o arquivo em `maps/scenes.json`.
+3. Adicione um portal de ida na cena de origem e um portal de volta na nova cena.
+4. Coloque os assets em `assets/world/` ou `assets/furniture/office/` e regenere os tilesets.
+5. Teste os dois sentidos no navegador e confira colisões, spawn e prompt de interação.
 
-### B) No jogo (editor de móveis) — para mobília
+Para abrir uma cena perto de um ponto durante debug:
 
-1. Rode, aperte `E`. Abre a paleta à direita (thumbnails dos 339 móveis) e o modo edição.
-2. **Colocar:** clique numa peça na paleta → clique no mapa. `WASD` move a câmera nesse modo.
-3. **Mover/apagar:** botão **Selecionar** → clique numa peça → arraste, ou `Delete`/`Backspace`.
-4. **Salvar:** botão **💾 Salvar** → grava em `maps/tooq-office.json` via `POST /api/map/...`.
-5. `E` de novo sai do editor e devolve a câmera ao player.
+```text
+http://localhost:8123/?scene=tooq-office&spawn=entrance
+```
 
-O editor lê e grava o **mesmo** `maps/tooq-office.json`, então A e B são intercambiáveis.
+Para conferir todos os corpos físicos:
 
----
+```text
+http://localhost:8123/?scene=world&debug=collisions
+http://localhost:8123/?scene=tooq-office&spawn=yard-gate&debug=collisions
+```
 
-## Referência rápida de móveis (`of_N`)
+## Estado e próximos passos
 
-IDs já conferidos visualmente (arquivos `assets/furniture/office/of_N.png`). Os 339 estão na
-paleta do editor com thumbnail — esta lista é só um atalho para os mais usados:
+Esta versão prova o fluxo completo entre cenas e traz uma composição inicial do mundo e do
+escritório. Ainda faltam:
 
-| Peça | ID | Obs |
-|---|---|---|
-| Monitor duplo | `of_227` | vista de cima |
-| Monitor simples | `of_285` | |
-| Cadeira (topo) | `of_286`, `of_287` | vista de cima |
-| Cadeira (lado) | `of_277`, `of_278` | |
-| Mesa em L | `of_260`, `of_265`, `of_291` | estações de trabalho |
-| Vaso de planta | `of_98`, `of_99`, `of_100` | |
+1. Conectar SignalR e isolar presença por `sceneId`; dois avatares na mesma cena é o próximo marco.
+2. Refinar a integração do Tiled com propriedades tipadas e atualização de prévia dentro do editor.
+3. Persistir mapas customizados sem acoplar o cliente a um único escritório.
+4. Adicionar novas cenas de destino ao hub.
+5. Conectar A/V por proximidade com LiveKit depois da presença em rede.
 
----
-
-## Limitações conhecidas (bom saber antes de mobiliar)
-
-- **Ancoragem dos móveis.** `Editor.js._addSprite` posiciona a peça com origem `(0.5, 1)` na base do
-  tile clicado. Peças maiores que 1 tile (mesas, monitores em canvas 32×48) **não encaixam** na grade
-  — o monitor "flutua" e a mesa desalinha. É a melhoria nº 1 do editor: ancorar pelo footprint real de
-  cada peça (usar `w`/`h` do catálogo, snap ao tile). Enquanto não resolvido, compor cenas bonitas com
-  peças multi-tile exige ajuste fino manual.
-- **Sem rede.** O cliente é single-player hoje. Backend (SignalR, porta 5210) e LiveKit existem mas
-  ainda não estão plugados. Contrato de mapa: **28 server units por tile** (`OfficeLayout.cs`).
-- **Sem colisão de móveis.** Só paredes colidem; móveis são decorativos (dá pra andar por cima).
-- **Editor sem flip/rotate nem categoria/busca** na paleta (339 thumbnails soltos).
-
----
-
-## Próximos passos sugeridos
-
-1. Corrigir a ancoragem dos móveis no editor (footprint + snap) — destrava mobiliar de verdade.
-2. Mobiliar o interior (estações de trabalho, cozinha, lounge, salas pessoais).
-3. Plugar rede (SignalR JS) — dois avatares no mesmo mapa.
-4. Decoração de parede na face de tijolo (quadros/TV/troféu).
-5. A/V por proximidade (LiveKit JS).
+O arquivo `Editor.js` foi preservado como referência, mas não participa do runtime. A edição visual
+é feita no Tiled; os JSONs continuam disponíveis para inspeção e ajustes manuais pontuais.

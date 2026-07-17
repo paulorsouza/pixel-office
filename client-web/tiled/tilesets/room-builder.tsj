@@ -1,0 +1,21 @@
+{
+  "columns": 16,
+  "image": "../../assets/tiles/room_builder.png",
+  "imageheight": 224,
+  "imagewidth": 256,
+  "margin": 0,
+  "name": "Office Quest · Paredes",
+  "spacing": 0,
+  "tilecount": 224,
+  "tiledversion": "1.12.2",
+  "tileheight": 16,
+  "tilewidth": 16,
+  "transformations": {
+    "hflip": false,
+    "preferuntransformed": true,
+    "rotate": false,
+    "vflip": false
+  },
+  "type": "tileset",
+  "version": "1.10"
+}

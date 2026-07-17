@@ -141,6 +141,28 @@ this.input.on('wheel', (p, o, dx, dy) => {
 });
 ```
 
+Em cenas cercadas, configure `camera.bounds` no JSON até o portão. O runtime combina o `minZoom`
+configurado com o zoom mínimo necessário para a janela não revelar espaço fora do mapa.
+
+### Colisão como parte dos dados
+
+Props externos declaram o footprint relativo ao ponto de origem:
+
+```jsonc
+{
+  "texture": "tree1",
+  "x": 47,
+  "y": 43.5,
+  "originX": 0.5,
+  "originY": 1,
+  "collision": { "x": -1.2, "y": -0.8, "w": 2.4, "h": 0.8 }
+}
+```
+
+Para móveis internos, `solid: true` cria o footprint padrão nos pés. Use colisão explícita para
+fachadas ou formas com vãos, como a porta do prédio. A rota `?debug=collisions` desenha os corpos
+físicos para conferência visual.
+
 ### Porta animada ⚠️ (o erro que mais custou)
 ```js
 // A folha é 672x32. FRAMES SÃO 48x32 ⇒ 14 frames (NÃO 32x32/21!)
@@ -152,6 +174,10 @@ const open = this.anims.generateFrameNumbers('office_door', { start: 0, end: 8 }
 this.anims.create({ key: 'door-open',  frames: open,                     frameRate: 22, repeat: 0 });
 this.anims.create({ key: 'door-close', frames: open.slice().reverse(),   frameRate: 22, repeat: 0 });
 ```
+
+O mapa interno também reutiliza o frame `8` como porta de vidro estática nos vãos de
+`building.doors` e `rooms[].doors`. O renderer centraliza automaticamente a imagem de 48×32 em um
+vão de três tiles, mantendo a passagem física aberta.
 
 ### Zonas (entrar/sair) — sempre com trava
 ```js
@@ -203,29 +229,33 @@ if (inZone) { this.zoneLock = true; /* ...faz a ação... */ }
 
 ## 6. Arquitetura atual
 
-O cliente já é **orientado a dados**: o mapa é JSON, não código. Três arquivos em `src/`:
+O cliente é **multi-cena e orientado a dados**: os mapas são JSON, não classes Phaser separadas.
 
 ```
-src/
-├── main.js          OfficeScene: preload, player, câmera/zoom, anims, update. Instancia o Editor.
-├── MapRenderer.js    renderMap(scene, map, solids): desenha building/zones/rooms/paredes a partir do JSON.
-└── Editor.js        Editor de móveis in-game (paleta HTML + colocar/mover/apagar + salvar no mapa).
-maps/tooq-office.json  ← o escritório é DADO (schema em README.md)
+src/main.js             runtime, player, câmera, HUD e transições
+src/MapRenderer.js      desenha mapas world/interior a partir do JSON
+src/Editor.js           editor antigo, preservado mas fora do runtime atual
+maps/scenes.json        manifesto e cena inicial
+maps/world.json         hub caminhável
+maps/tooq-office.json   escritório térreo
+tiled/maps/*.tmj        fontes visuais editáveis
+tools/tiled-converter.mjs  gera e valida os JSONs do runtime
 ```
 
 **Onde mexer:**
-- Estrutura do escritório (salas, zonas, portas, pisos) → `maps/tooq-office.json` (schema no README) e,
-  se for lógica de desenho, `MapRenderer.js`.
-- Móveis → editor in-game (`E`) ou o array `furniture` do JSON.
+- Cadastro de cenas → `maps/scenes.json`.
+- Mundo, salas, móveis, colisões e portais → `tiled/maps/*.tmj`, seguido do conversor.
+- JSONs gerados → `maps/world.json` e `maps/tooq-office.json`, úteis para inspeção.
 - Player/câmera/anims/controles → `main.js`.
-- Ferramentas do editor (snap, flip, ancoragem, paleta) → `Editor.js`.
+- Regras de desenho e colisões → `MapRenderer.js`.
 
-**Móvel = `{ id, x, y }`** onde `id` é `of_N`. A ancoragem hoje é ingênua (`origin(0.5,1)` no tile) —
-peças multi-tile desalinham; corrigir isso (usar `w`/`h` do `data/furniture-catalog.json` + snap) é a
-melhoria nº 1 do editor. Ver "Limitações conhecidas" no README.
+**Portal** liga um retângulo da cena atual a `targetScene` + `targetSpawn`. `E` é reservado à
+interação de entrar/sair. **Móvel = `{ id, x, y }`**, onde `id` é `of_N`; use `solid: true` quando a
+peça precisar bloquear o avatar.
 
 **Rede (ainda não plugada):** o backend expõe SignalR e o contrato de mapa (`OfficeLayout.cs`,
-**28 server units por tile**). Usar o cliente **SignalR JS oficial** (não reimplementar à mão).
+**28 server units por tile**). A presença precisa carregar `sceneId` para só renderizar avatares que
+estejam no mesmo mapa. Usar o cliente **SignalR JS oficial** (não reimplementar à mão).
 
 ---
 
@@ -233,6 +263,6 @@ melhoria nº 1 do editor. Ver "Limitações conhecidas" no README.
 
 1. **Verifique no navegador antes de dar como pronto.** "Compilou" não é verificar; olhar é.
 2. **O interior mobiliado é o produto** — fachada/telhado/jardim (em `assets/world/`) são enfeite.
-3. **Mapa é dado.** Prefira editar o JSON / usar o editor a hardcodar geometria em JS.
+3. **Mapa é dado.** Prefira editar o JSON a hardcodar geometria em JS.
 4. **Rede cedo.** Dois avatares andando juntos vale mais que qualquer cenário externo.
 5. **Anote toda medida de asset nova no `../ASSETS.md`.** É o conhecimento caro de recuperar.

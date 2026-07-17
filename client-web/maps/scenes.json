@@ -1,0 +1,13 @@
+{
+  "startScene": "world",
+  "scenes": [
+    {
+      "id": "world",
+      "file": "world.json"
+    },
+    {
+      "id": "tooq-office",
+      "file": "tooq-office.json"
+    }
+  ]
+}

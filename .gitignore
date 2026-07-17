@@ -42,3 +42,7 @@ LimeZu/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# ---------- Tiled ----------
+# Estado pessoal da interface; mapas .tmj, projeto e tilesets são versionados.
+*.tiled-session

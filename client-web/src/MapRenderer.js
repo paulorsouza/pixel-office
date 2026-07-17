@@ -1,88 +1,318 @@
-// MapRenderer — desenha o escritório a partir de DADOS (JSON), estilo Gather:
-//  building  = contorno do prédio (parede fina de perímetro + porta)
-//  zones     = manchas de piso (tapetes) que marcam áreas no SALÃO ABERTO — SEM parede
-//  rooms     = salas fechadas (parede fina + porta)
-// Móveis (do editor) povoam tudo por cima.
+// Renderer de cenas orientado a dados.
+// Cada JSON descreve um mundo ou interior, seus spawns e portais.
 
 const F = (c, r) => r * 16 + c;
 
-// Conjunto de parede fina (cols 7-9) + parede NORTE 3D com face de tijolo (decorável) — ver ../ASSETS.md
-const W = {
+const WALL = {
   TL: F(7, 1), TOP: F(8, 1), TR: F(9, 1),
-  L:  F(7, 2), R:  F(9, 2),
+  L: F(7, 2), R: F(9, 2),
   BL: F(7, 3), BOT: F(8, 3), BR: F(9, 3),
-  N_CAP: F(1, 9), N_FACE: F(1, 10),   // parede norte: topo branco + face de tijolo (pendurar mobília aqui)
+  N_CAP: F(8, 9), N_FACE: F(8, 10),
 };
 
-// Pisos = texturas próprias do Modern Interiors (lisas, não "dungeon"). Nome → chave de textura.
 export const FLOORS = {
-  wood:  'floor_wood',    // tábua de madeira quente (base do salão)
-  gray:  'floor_carpet',  // carpete azul-cinza (zonas de time)
-  light: 'floor_cream',   // tile creme claro (salas)
-  terra: 'floor_sage',    // verde-acinzentado (lounge)
-  water: 'floor_water',   // água (piscina)
+  wood: 'floor_wood',
+  gray: 'floor_carpet',
+  carpet: 'floor_carpet',
+  light: 'floor_cream',
+  cream: 'floor_cream',
+  terra: 'floor_sage',
+  sage: 'floor_sage',
+  water: 'floor_water',
 };
 
-function floorTex(name) { return FLOORS[name] || FLOORS.light; }
+function floorTexture(name) {
+  return FLOORS[name] || FLOORS.light;
+}
 
-// desenha o contorno de um rect: parede NORTE 3D (topo+face de tijolo, 2 tiles) + laterais/sul
-// finas. Pula as portas. A face de tijolo é onde se pendura mobília (quadro/TV/troféu).
-function drawWalls(scene, rect, T, solids) {
-  const L = rect.x + rect.w - 1, B = rect.y + rect.h - 1;
+function addSolidRect(scene, solids, rect, tile) {
+  const zone = scene.add.zone(
+    rect.x * tile,
+    rect.y * tile,
+    rect.w * tile,
+    rect.h * tile,
+  ).setOrigin(0, 0);
+  scene.physics.add.existing(zone, true);
+  solids.add(zone);
+  return zone;
+}
+
+function fillFloor(scene, rect, tile, depth) {
+  return scene.add.tileSprite(
+    rect.x * tile,
+    rect.y * tile,
+    rect.w * tile,
+    rect.h * tile,
+    floorTexture(rect.floor),
+  ).setOrigin(0, 0).setDepth(depth);
+}
+
+function addLabel(scene, rect, tile, subtle = false) {
+  if (!rect.name) return;
+  const labelY = subtle ? rect.y + 0.45 : rect.y + 1.15;
+  scene.add.text(
+    (rect.x + rect.w / 2) * tile,
+    labelY * tile,
+    rect.name,
+    {
+      fontFamily: 'system-ui, sans-serif',
+      fontStyle: 'bold',
+      fontSize: '7px',
+      color: subtle ? '#59617a' : '#252a3b',
+      backgroundColor: subtle ? '#ffffff88' : '#ffffffe0',
+      padding: { x: 3, y: 1 },
+    },
+  ).setOrigin(0.5, 0)
+    .setDepth(subtle ? rect.y * tile + 4 : (rect.y + 2) * tile + 8)
+    .setResolution(3);
+}
+
+function drawWalls(scene, rect, tile, solids) {
+  const right = rect.x + rect.w - 1;
+  const bottom = rect.y + rect.h - 1;
   const doors = new Set();
-  for (const d of (rect.doors || [])) {
-    const len = d.len || 2;
-    for (let i = 0; i < len; i++) {
-      if (d.side === 'N') { doors.add((rect.x + d.at + i) + ',' + rect.y); doors.add((rect.x + d.at + i) + ',' + (rect.y + 1)); }
-      else if (d.side === 'S') doors.add((rect.x + d.at + i) + ',' + B);
-      else if (d.side === 'W') doors.add(rect.x + ',' + (rect.y + d.at + i));
-      else doors.add(L + ',' + (rect.y + d.at + i));
+
+  for (const door of (rect.doors || [])) {
+    const length = door.len || 2;
+    for (let i = 0; i < length; i++) {
+      if (door.side === 'N') {
+        doors.add(`${rect.x + door.at + i},${rect.y}`);
+        doors.add(`${rect.x + door.at + i},${rect.y + 1}`);
+      } else if (door.side === 'S') {
+        doors.add(`${rect.x + door.at + i},${bottom}`);
+      } else if (door.side === 'W') {
+        doors.add(`${rect.x},${rect.y + door.at + i}`);
+      } else {
+        doors.add(`${right},${rect.y + door.at + i}`);
+      }
     }
   }
-  const put = (x, y, f) => {
-    if (doors.has(x + ',' + y)) return;
-    scene.add.image(x * T + 8, y * T + 8, 'tiles', f).setDepth(-9);
-    solids.create(x * T + 8, y * T + 8, null).setVisible(false).body.setSize(T, T);
+
+  const put = (x, y, frame) => {
+    if (doors.has(`${x},${y}`)) return;
+
+    if (y === bottom) {
+      scene.add.rectangle(
+        x * tile,
+        (y + 1) * tile - 2,
+        tile,
+        4,
+        0x202638,
+        0.28,
+      ).setOrigin(0, 0).setDepth(-70);
+    }
+    if (x === rect.x || x === right) {
+      scene.add.rectangle(
+        x === rect.x ? (x + 1) * tile - 2 : x * tile,
+        y * tile,
+        3,
+        tile,
+        0x202638,
+        0.2,
+      ).setOrigin(0, 0).setDepth(-70);
+    }
+
+    scene.add.image(
+      x * tile + tile / 2,
+      y * tile + tile / 2,
+      'tiles',
+      frame,
+    ).setDepth(y * tile + tile);
+    addSolidRect(scene, solids, { x, y, w: 1, h: 1 }, tile);
   };
-  const has3d = B > rect.y + 2;   // só faz face 3D se a sala for alta o bastante
 
-  put(rect.x, rect.y, W.TL); put(L, rect.y, W.TR);
-  put(rect.x, B, W.BL); put(L, B, W.BR);
-  for (let x = rect.x + 1; x <= L - 1; x++) {
-    put(x, rect.y, has3d ? W.N_CAP : W.TOP);           // topo da parede norte
-    if (has3d) put(x, rect.y + 1, W.N_FACE);           // face de tijolo (decorável)
-    put(x, B, W.BOT);                                  // parede sul fina
+  const hasNorthFace = bottom > rect.y + 2;
+  put(rect.x, rect.y, WALL.TL);
+  put(right, rect.y, WALL.TR);
+  put(rect.x, bottom, WALL.BL);
+  put(right, bottom, WALL.BR);
+
+  for (let x = rect.x + 1; x < right; x++) {
+    put(x, rect.y, hasNorthFace ? WALL.N_CAP : WALL.TOP);
+    if (hasNorthFace) put(x, rect.y + 1, WALL.N_FACE);
+    put(x, bottom, WALL.BOT);
   }
-  for (let y = rect.y + 1; y <= B - 1; y++) { put(rect.x, y, W.L); put(L, y, W.R); }
+  for (let y = rect.y + 1; y < bottom; y++) {
+    put(rect.x, y, WALL.L);
+    put(right, y, WALL.R);
+  }
 }
 
-function fillFloor(scene, rect, T, depth) {
-  scene.add.tileSprite(rect.x * T, rect.y * T, rect.w * T, rect.h * T, floorTex(rect.floor))
-    .setOrigin(0, 0).setDepth(depth);
+function drawDoorFixtures(scene, rect, tile) {
+  const right = rect.x + rect.w - 1;
+  const bottom = rect.y + rect.h - 1;
+
+  for (const door of (rect.doors || [])) {
+    if (!door.texture || !scene.textures.exists(door.texture)) continue;
+
+    const length = door.len || 3;
+    let x;
+    let y;
+    let originX = 0.5;
+    let originY = 1;
+
+    if (door.side === 'S') {
+      x = (rect.x + door.at + length / 2) * tile;
+      y = (bottom + 1) * tile;
+    } else if (door.side === 'N') {
+      x = (rect.x + door.at + length / 2) * tile;
+      y = (rect.y + 2) * tile;
+      originY = 1;
+    } else if (door.side === 'W') {
+      x = (rect.x + 1) * tile;
+      y = (rect.y + door.at + length / 2) * tile;
+      originX = 0.5;
+    } else {
+      x = right * tile;
+      y = (rect.y + door.at + length / 2) * tile;
+      originX = 0.5;
+    }
+
+    scene.add.image(x, y, door.texture, door.frame ?? 8)
+      .setOrigin(originX, originY)
+      .setFlipX(Boolean(door.flipX))
+      .setDepth(door.depth ?? y - 1);
+  }
 }
 
-function label(scene, rect, T, subtle) {
-  if (!rect.name) return;
-  scene.add.text((rect.x + rect.w / 2) * T, (rect.y + 0.4) * T, rect.name,
-    { fontFamily: 'monospace', fontSize: '7px', color: subtle ? '#5a607a' : '#2b2f42',
-      backgroundColor: subtle ? '#ffffff66' : '#ffffffcc', padding: { x: 2, y: 1 } })
-    .setOrigin(0.5, 0).setDepth(60).setResolution(3);
+function renderFurniture(scene, map, tile, solids) {
+  for (const item of (map.furniture || [])) {
+    const x = item.x * tile + tile / 2 + (item.offsetX || 0);
+    const y = item.y * tile + tile + (item.offsetY || 0);
+    scene.add.image(x, y, item.id)
+      .setOrigin(item.originX ?? 0.5, item.originY ?? 1)
+      .setFlipX(Boolean(item.flipX))
+      .setDepth(item.depth ?? y);
+
+    if (item.solid) {
+      addSolidRect(scene, solids, {
+        x: item.x - 0.45,
+        y: item.y + 0.15,
+        w: 1.9,
+        h: 0.7,
+      }, tile);
+    }
+  }
 }
 
-export function renderMap(scene, map, solids) {
-  const T = map.tile || 16;
-  const b = map.building;
+function drawHedge(scene, rect, tile) {
+  const horizontal = rect.w >= rect.h;
+  for (let y = 0; y < rect.h; y++) {
+    for (let x = 0; x < rect.w; x++) {
+      const texture = horizontal && y === 0 ? 'hedge_top' : 'hedge_fill';
+      const py = (rect.y + y) * tile + tile / 2;
+      scene.add.image(
+        (rect.x + x) * tile + tile / 2,
+        py,
+        texture,
+      ).setDepth(py);
+    }
+  }
+}
 
-  // 1. piso base do salão
-  if (b) fillFloor(scene, b, T, -12);
-  // 2. tapetes das zonas (áreas abertas, sem parede)
-  for (const z of (map.zones || [])) { fillFloor(scene, z, T, -11); label(scene, z, T, true); }
-  // 3. salas fechadas: piso + parede + rótulo
-  for (const r of (map.rooms || [])) { fillFloor(scene, r, T, -11); }
-  // 4. paredes: perímetro do prédio + salas fechadas
-  if (b) drawWalls(scene, b, T, solids);
-  for (const r of (map.rooms || [])) { drawWalls(scene, r, T, solids); label(scene, r, T, false); }
+function fillGround(scene, rect, tile, texture) {
+  scene.add.tileSprite(
+    rect.x * tile,
+    rect.y * tile,
+    rect.w * tile,
+    rect.h * tile,
+    texture,
+  ).setOrigin(0, 0).setDepth(-100);
+}
 
-  const sp = map.spawn || { x: (b ? b.x + b.w / 2 : 10), y: (b ? b.y + b.h / 2 : 10) };
-  return { spawn: { x: sp.x * T, y: sp.y * T } };
+function renderLandscape(scene, map, solids, groundRect) {
+  const tile = map.tile || 16;
+  fillGround(scene, groundRect, tile, groundRect.ground || map.ground || 'grass');
+
+  for (const detail of (map.details || [])) {
+    scene.add.image(
+      detail.x * tile + tile / 2,
+      detail.y * tile + tile / 2,
+      detail.texture || 'grass_detail',
+    ).setDepth(-95).setAlpha(detail.alpha ?? 0.9);
+  }
+
+  for (const path of (map.paths || [])) fillFloor(scene, path, tile, -90);
+
+  for (const hedge of (map.hedges || [])) {
+    drawHedge(scene, hedge, tile);
+    addSolidRect(scene, solids, hedge, tile);
+  }
+
+  for (const prop of (map.props || [])) {
+    const x = prop.x * tile + (prop.offsetX || 0);
+    const y = prop.y * tile + (prop.offsetY || 0);
+    scene.add.image(x, y, prop.texture)
+      .setOrigin(prop.originX ?? 0.5, prop.originY ?? 1)
+      .setFlipX(Boolean(prop.flipX))
+      .setDepth(prop.depth ?? y);
+
+    if (prop.collision) {
+      addSolidRect(scene, solids, {
+        x: prop.x + (prop.collision.x || 0),
+        y: prop.y + (prop.collision.y || 0),
+        w: prop.collision.w,
+        h: prop.collision.h,
+      }, tile);
+    }
+  }
+
+  for (const collision of (map.collisions || [])) {
+    addSolidRect(scene, solids, collision, tile);
+  }
+}
+
+function renderInterior(scene, map, solids) {
+  const tile = map.tile || 16;
+
+  if (map.yard) renderLandscape(scene, map, solids, map.yard);
+  if (map.building) fillFloor(scene, map.building, tile, -100);
+
+  for (const zone of (map.zones || [])) {
+    fillFloor(scene, zone, tile, -90);
+    scene.add.rectangle(
+      zone.x * tile,
+      zone.y * tile,
+      zone.w * tile,
+      zone.h * tile,
+    ).setOrigin(0, 0).setStrokeStyle(1, 0xffffff, 0.2).setDepth(-89);
+    addLabel(scene, zone, tile, true);
+  }
+  for (const room of (map.rooms || [])) {
+    fillFloor(scene, room, tile, -90);
+  }
+
+  if (map.building) drawWalls(scene, map.building, tile, solids);
+  for (const room of (map.rooms || [])) {
+    drawWalls(scene, room, tile, solids);
+    addLabel(scene, room, tile, false);
+  }
+
+  if (map.building) drawDoorFixtures(scene, map.building, tile);
+  for (const room of (map.rooms || [])) {
+    drawDoorFixtures(scene, room, tile);
+  }
+
+  renderFurniture(scene, map, tile, solids);
+}
+
+function renderWorld(scene, map, solids) {
+  renderLandscape(scene, map, solids, {
+    x: 0,
+    y: 0,
+    w: map.w,
+    h: map.h,
+    ground: map.ground,
+  });
+
+}
+
+export function renderScene(scene, map, solids) {
+  if (map.kind === 'world') renderWorld(scene, map, solids);
+  else renderInterior(scene, map, solids);
+
+  return {
+    spawns: map.spawns || { default: map.spawn || { x: 10, y: 10 } },
+    portals: map.portals || [],
+  };
 }

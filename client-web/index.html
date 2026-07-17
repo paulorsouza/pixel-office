@@ -3,19 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Office Quest — Protótipo Web</title>
+<title>Office Quest — Mundo Tooq</title>
 <style>
+  *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#20222c}
   #game{position:fixed;inset:0;width:100vw;height:100vh}
   #game canvas{display:block;image-rendering:pixelated;width:100%!important;height:100%!important}
-  .hint{position:fixed;left:12px;bottom:10px;z-index:10;color:#fff;
-        font:13px/1.4 system-ui,sans-serif;background:#0009;padding:7px 11px;border-radius:9px}
-  .hint b{color:#a7f}
+  .hud{position:fixed;z-index:20;font-family:Inter,system-ui,sans-serif;pointer-events:none}
+  #scene-card{left:16px;top:16px;display:flex;flex-direction:column;gap:2px;min-width:210px;
+    padding:10px 13px;border:1px solid #ffffff24;border-radius:12px;color:#fff;
+    background:#171923dc;box-shadow:0 10px 28px #0004;backdrop-filter:blur(8px)}
+  #scene-name{font-size:14px;letter-spacing:.01em}
+  #scene-subtitle{font-size:11px;color:#c9cde0}
+  #controls{left:16px;bottom:13px;color:#e8eaff;font-size:12px;background:#171923d9;
+    border:1px solid #ffffff1c;padding:7px 11px;border-radius:9px;box-shadow:0 8px 22px #0003}
+  #controls b{color:#b8a9ff}
+  #portal-prompt{left:50%;bottom:48px;transform:translate(-50%,12px);display:flex;
+    align-items:center;gap:9px;color:#fff;background:#171923ee;border:1px solid #a797ff66;
+    padding:9px 14px;border-radius:12px;box-shadow:0 12px 30px #0006;opacity:0;
+    transition:opacity .15s ease,transform .15s ease}
+  #portal-prompt.on{opacity:1;transform:translate(-50%,0)}
+  #portal-prompt kbd{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;
+    font:700 12px system-ui;color:#fff;background:#6c5cff;box-shadow:inset 0 -2px #0003}
+  #portal-prompt span{font-size:12px;font-weight:650;white-space:nowrap}
 </style>
 </head>
 <body>
 <div id="game"></div>
-<div class="hint"><b>WASD</b> andar · <b>scroll</b> zoom · <b>E</b> editor de móveis</div>
+<div id="scene-card" class="hud">
+  <strong id="scene-name">Carregando…</strong>
+  <span id="scene-subtitle"></span>
+</div>
+<div id="controls" class="hud"><b>WASD</b> andar · <b>E</b> entrar/sair · <b>scroll</b> zoom</div>
+<div id="portal-prompt" class="hud"><kbd>E</kbd><span></span></div>
 <script src="phaser.min.js"></script>
 <script type="module" src="src/main.js"></script>
 </body>

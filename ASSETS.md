@@ -191,6 +191,9 @@ visualmente (o resto ainda não foi catalogado peça a peça):
 |---|---|---|
 | Monitor duplo | `of_227` | vista de cima |
 | Monitor simples | `of_285` | |
+| Estações com computador | `of_225`, `of_227`, `of_229`, `of_231`, `of_233`, `of_235` | conjuntos compactos com monitor/CPU |
+| Mesas equipadas | `of_320`, `of_321` | mesa completa com computador e objetos |
+| Cadeiras de estação | `of_306`, `of_307`, `of_315`, `of_316` | variantes laranja/cinza, usadas atrás das mesas |
 | Cadeira (topo) | `of_286`, `of_287` | vista de cima |
 | Cadeira (lado) | `of_277`, `of_278` | |
 | Mesa em L | `of_260`, `of_265`, `of_291` | estações de trabalho |
@@ -209,6 +212,7 @@ cadeiras/plantas (são clipboard/teclado/monitor). Confirme pela thumbnail no ed
 3. **Renderize ampliado e OLHE** antes de codar. Nunca assuma a grade — foi assim que descobrimos
    que a porta era 48px e não 32.
 4. **Copie pra `assets/`** com um nome curto e versione.
+5. **Atualize a paleta do Tiled:** `node client-web/tools/tiled-converter.mjs assets`.
 
 **Ferramenta:** PowerShell + `System.Drawing` (não precisa instalar nada).
 

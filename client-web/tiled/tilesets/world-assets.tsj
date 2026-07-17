@@ -1,0 +1,558 @@
+{
+  "columns": 0,
+  "grid": {
+    "height": 16,
+    "orientation": "orthogonal",
+    "width": 16
+  },
+  "margin": 0,
+  "name": "Office Quest · Mundo",
+  "objectalignment": "bottom",
+  "spacing": 0,
+  "tilecount": 28,
+  "tiledversion": "1.12.2",
+  "tileheight": 304,
+  "tiles": [
+    {
+      "id": 0,
+      "image": "../../assets/world/bench.png",
+      "imageheight": 16,
+      "imagewidth": 48,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "bench"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 1,
+      "image": "../../assets/world/bush1.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "bush1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 2,
+      "image": "../../assets/world/bush2.png",
+      "imageheight": 32,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "bush2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 3,
+      "image": "../../assets/world/flower1.png",
+      "imageheight": 32,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "flower1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 4,
+      "image": "../../assets/world/flower2.png",
+      "imageheight": 32,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "flower2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 5,
+      "image": "../../assets/world/fountain.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "fountain"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 6,
+      "image": "../../assets/world/gate.png",
+      "imageheight": 32,
+      "imagewidth": 64,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "gate"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 7,
+      "image": "../../assets/world/grass_detail.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "grass_detail"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "detail"
+        }
+      ],
+      "type": "detail"
+    },
+    {
+      "id": 8,
+      "image": "../../assets/world/hedge_fill.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "hedge_fill"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 9,
+      "image": "../../assets/world/hedge_top.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "hedge_top"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 10,
+      "image": "../../assets/world/house_country.png",
+      "imageheight": 256,
+      "imagewidth": 288,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "house_country"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 11,
+      "image": "../../assets/world/house_country2.png",
+      "imageheight": 48,
+      "imagewidth": 176,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "house_country2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 12,
+      "image": "../../assets/world/house_japanese.png",
+      "imageheight": 224,
+      "imagewidth": 240,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "house_japanese"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 13,
+      "image": "../../assets/world/office_generic.png",
+      "imageheight": 288,
+      "imagewidth": 304,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "office_generic"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 14,
+      "image": "../../assets/world/office_lime.png",
+      "imageheight": 304,
+      "imagewidth": 192,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "office_lime"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 15,
+      "image": "../../assets/world/office_tooq.png",
+      "imageheight": 288,
+      "imagewidth": 304,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "office_tooq"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 16,
+      "image": "../../assets/world/roof.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "roof"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 17,
+      "image": "../../assets/world/rp_air_duct_1_roof_prop.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_air_duct_1_roof_prop"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 18,
+      "image": "../../assets/world/rp_air_duct_2_roof_prop.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_air_duct_2_roof_prop"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 19,
+      "image": "../../assets/world/rp_cabin_entrance_roof_prop.png",
+      "imageheight": 64,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_cabin_entrance_roof_prop"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 20,
+      "image": "../../assets/world/rp_roof_prop_1.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_roof_prop_1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 21,
+      "image": "../../assets/world/rp_roof_prop_2.png",
+      "imageheight": 32,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_roof_prop_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 22,
+      "image": "../../assets/world/rp_roof_stairs.png",
+      "imageheight": 80,
+      "imagewidth": 48,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_roof_stairs"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 23,
+      "image": "../../assets/world/rp_shutter_dish_roof_prop.png",
+      "imageheight": 64,
+      "imagewidth": 48,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_shutter_dish_roof_prop"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 24,
+      "image": "../../assets/world/rp_solar_panel_roof_prop.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "rp_solar_panel_roof_prop"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 25,
+      "image": "../../assets/world/sign_tooq.png",
+      "imageheight": 16,
+      "imagewidth": 112,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "sign_tooq"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 26,
+      "image": "../../assets/world/tree1.png",
+      "imageheight": 64,
+      "imagewidth": 64,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "tree1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 27,
+      "image": "../../assets/world/tree2.png",
+      "imageheight": 64,
+      "imagewidth": 64,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "tree2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
+        }
+      ],
+      "type": "prop"
+    }
+  ],
+  "tilewidth": 304,
+  "transformations": {
+    "hflip": true,
+    "preferuntransformed": true,
+    "rotate": false,
+    "vflip": false
+  },
+  "type": "tileset",
+  "version": "1.10"
+}

@@ -27,8 +27,10 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
   justificativa no `CONTEXT.md` §4.
 - ✅ **Backend** (ASP.NET + SignalR, porta 5210), app web em `backend/.../wwwroot`, **LiveKit**
   (porta 7880) — sólidos, não mexer sem motivo.
-- ✅ **`client-web/`** — cliente Phaser orientado a dados. O escritório é `maps/tooq-office.json`
-  (renderizado por `src/MapRenderer.js`); edita-se na mão ou pelo editor in-game (`E`).
+- ✅ **`client-web/`** — cliente Phaser multi-cena orientado a dados. `maps/scenes.json` registra o
+  hub (`world.json`) e os locais (`tooq-office.json`); `src/MapRenderer.js` renderiza os mapas e `E`
+  entra/sai pelos portais. As fontes visuais ficam em `tiled/maps/*.tmj` e são convertidas por
+  `tools/tiled-converter.mjs`; o editor antigo não participa deste runtime.
 - ⏸️ `office-unity/` — abandonado, mantido só como arquivo.
 
 ## Regras de trabalho
