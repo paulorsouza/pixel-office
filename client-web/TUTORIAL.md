@@ -168,7 +168,7 @@ if (inZone) { this.zoneLock = true; /* ...faz a ação... */ }
 
 1. **Ache pelo nome** (os singles têm nome descritivo — muito mais rápido que caçar em folha grande):
    ```bash
-   ls "…/Modern_Exteriors_Complete_Singles_16x16/" | grep -i gate
+   ls "…/LimeZu/exteriores/singles/" | grep -i gate      # ou escritorio/singles, interiores/singles…
    ```
 2. **Meça** antes de usar:
    ```bash

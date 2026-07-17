@@ -27,44 +27,48 @@ versionado.
 
 ## 2. Os packs (comprados) — `C:\Users\prs\Claude Sessions\LimeZu\`
 
-| Pack | Pasta | Peso | Pra quê |
+> **Reorganizados por tema** (2026-07-17). Cada pasta tem um `README.md` próprio; índice geral em
+> `LimeZu/README.md`. Os `.zip` originais estão em `LimeZu/_zips-e-instaladores/` (restauração).
+
+| Tema | Pasta | Peso | Pra quê |
 |---|---|---|---|
-| **Modern Exteriors** ⭐ | `modernexteriors-win` | 233 MB | Grama, árvores, prédios, portões, cercas, jardim, ruas. **6.225 singles** |
-| **Modern Interiors** | `moderninteriors-win` | 156 MB | Interiores, personagens, Character Generator, objetos animados |
-| **Modern Office Revamped** | `Modern_Office_Revamped_v1.2` | 3 MB | Room builder de escritório + **339 móveis** + `6_Office_Designs` (referência) |
-| **Modern UI** | `modernuserinterface-win` | 5 MB | Ícones/molduras pixel |
-| Character Generator 2.0 | `Character Generator 2.0 Linux Build` | 217 MB | `.exe` — **o usuário opera** pra gerar premades/bots |
-| Portrait Generator | `Portrait_Generator_1.5.0_Linux_Build` | 89 MB | `.exe` — retratos dos personagens |
-| _(não usados)_ | `Modern_*_RPG_Maker_*`, `Fantasy Battlers`, `Fungus Cave` | 17 MB | Versões RPG Maker / packs de outro estilo |
+| **Exteriores** (Modern Exteriors) ⭐ | `LimeZu/exteriores/` | 346 MB | Grama, árvores, prédios, portões, cercas, jardim, piscina. **6.225 singles** |
+| **Interiores** (Modern Interiors) | `LimeZu/interiores/` | 220 MB | Room builder de interior, objetos, animados, salas prontas, paletas |
+| **Personagens** (Char. Generator art) | `LimeZu/personagens/` | 91 MB | Partes modulares (Bodies/Eyes/Outfits/Hairstyles/Accessories) + premades |
+| **Escritório** (Office Revamped) ⭐ | `LimeZu/escritorio/` | 5,5 MB | Room builder de escritório + **339 móveis** + `designs/` (referência) |
+| **UI** (Modern UI) | `LimeZu/ui/` | 7,7 MB | Ícones/molduras pixel |
+| **Geradores** (apps) | `LimeZu/geradores/` | 314 MB | Programas `.exe` — **o usuário opera** pra gerar premades e retratos |
+| RPG Maker / não usados | `LimeZu/rpg-maker/`, `LimeZu/nao-usados/` | 20 MB | Versões RPG Maker / packs de outro estilo |
 
 ### Regra de ouro
-**Use SEMPRE a versão 16×16.** A arte é autorada em 16px; as pastas `32x32` e `48x48` são upscale e
-só ocupam espaço (182 MB no Exteriors sozinho).
+**Use SEMPRE a versão 16×16.** A arte é autorada em 16px; as pastas `upscale-32/` e `upscale-48/`
+(dentro de cada tema) são só ampliação e ocupam a maior parte do peso.
 
-### Estrutura útil dentro dos packs
+### Onde achar cada coisa (nova estrutura)
 
 ```
-modernexteriors-win/Modern_Exteriors_16x16/
-├── Modern_Exteriors_Complete_Singles_16x16/   ← 6.225 PNGs com NOME DESCRITIVO (mais fácil de usar)
-├── ME_Theme_Sorter_16x16/                     ← folhas grandes por tema (16_Office, 17_Garden, 1_Terrains_and_Fences…)
-├── Animated_16x16/Animated_sheets_16x16/      ← 456 spritesheets animadas (portas, veículos…)
-└── Autotiles_16x16/
+LimeZu/exteriores/
+├── singles/          ← 6.225 PNGs com NOME DESCRITIVO (ME_Singles_<Tema>_16x16_<Item>_N.png)
+├── theme-sorter/     ← folhas grandes por tema (16_Office, 17_Garden, 1_Terrains_and_Fences…)
+├── animados/         ← spritesheets animadas (porta de escritório, veículos, água…)
+└── autotiles/
 
-moderninteriors-win/
-├── 1_Interiors/16x16/                         ← room builders e temas de interior
-├── 2_Characters/Character_Generator/          ← partes modulares (Bodies/Eyes/Outfits/Hairstyles/Accessories)
-├── 3_Animated_objects/16x16/                  ← impressora, café, monitores…
-└── 6_Home_Designs/                            ← salas prontas (referência visual)
+LimeZu/interiores/
+├── singles/          ← Room_Builder_16x16.png, Interiors_16x16.png, Room_Builder_subfiles/, Theme_Sorter*
+├── animados/         ← impressora, café, monitores…
+└── home-designs/     ← salas prontas (referência visual)
 
-Modern_Office_Revamped_v1.2/
-├── 1_Room_Builder_Office/Room_Builder_Office_16x16.png   ← 256x224 = grade 16x14
-├── 2_.../singles                                          ← 339 móveis de escritório
-└── 6_Office_Designs/Office_Design_1.gif                   ← ⭐ A REFERÊNCIA DE QUALIDADE
+LimeZu/personagens/character-generator-parts/   ← Bodies/Eyes/Outfits/Hairstyles/Accessories + 0_Premade_Characters/
+
+LimeZu/escritorio/
+├── room-builder/Room_Builder_Office_16x16.png   ← 256x224 = grade 16x14
+├── singles/                                       ← 339 móveis (Modern_Office_Singles_N.png)
+└── designs/Office_Design_1.gif                    ← ⭐ A REFERÊNCIA DE QUALIDADE
 ```
 
-**Dica que economiza tempo:** os `Complete_Singles` têm nomes descritivos
-(`ME_Singles_Garden_16x16_Gate_4.png`). Procurar por nome ali é muito mais rápido que caçar célula
-nas folhas grandes.
+**Dica que economiza tempo:** os `singles/` têm nomes descritivos
+(`ME_Singles_Garden_16x16_Gate_4.png`). `ls exteriores/singles/ | grep -i gate` é muito mais rápido
+que caçar célula nas folhas grandes.
 
 ---
 
@@ -98,14 +102,14 @@ rb_1_9    ← topo branco + tijolo
 rb_1_10   ← tijolo + rodapé
 ```
 Variantes: `rb_5_9`+`rb_5_10` (tan B) · `rb_8_9`+`rb_8_10` (branco).
-Só a parede **norte** tem face alta; laterais/sul são finas (igual aos `6_Office_Designs`).
+Só a parede **norte** tem face alta; laterais/sul são finas (igual aos `escritorio/designs/`).
 
 **Pisos** (todos seamless): `rb_13_9` madeira/tan · `rb_10_9` cinza · `rb_10_7` cinza claro ·
 `rb_13_11` terracota.
 
 ### 3.3 Modern Exteriors — coordenadas verificadas
 
-| Item | Arquivo (em `Complete_Singles_16x16/`) | Medida |
+| Item | Arquivo (em `exteriores/singles/`) | Medida |
 |---|---|---|
 | **Grama fill** ⭐ | `ME_Singles_Terrains_and_Fences_16x16_Grass_1_22` | 16×16, **seamless** |
 | Grama tufos | `..._Grass_1_9` | 16×16 (espalhar por cima) |
@@ -128,7 +132,7 @@ Só a parede **norte** tem face alta; laterais/sul são finas (igual aos `6_Offi
 - **Placa:** `(54, 238)`, tamanho 112×16
 
 ### 3.4 Porta de escritório animada ⚠️ (o erro que mais custou)
-`Animated_16x16/Animated_sheets_16x16/Office_Door_1_16x16.png` — folha 672×32
+`exteriores/animados/Animated_sheets_16x16/Office_Door_1_16x16.png` — folha 672×32
 
 - ⚠️ **Frames são 48×32 ⇒ 14 frames.** Fatiar em 32×32 (21 frames) **embaralha tudo** — a porta
   "escorrega" e pisca. Foi exatamente o bug que apareceu.
@@ -179,7 +183,7 @@ não plugado.
 
 ### 4.1 Móveis do Office (`furniture/office/of_N.png`) — IDs conferidos
 
-Os 339 são fatias de `Modern_Office_Revamped_v1.2/.../4_Modern_Office_singles/16x16/` (arquivo
+Os 339 são fatias de `LimeZu/escritorio/singles/` (arquivo
 `Modern_Office_Singles_N.png` → `of_N`). Vistos na paleta do editor com thumbnail. IDs já conferidos
 visualmente (o resto ainda não foi catalogado peça a peça):
 
@@ -199,7 +203,7 @@ cadeiras/plantas (são clipboard/teclado/monitor). Confirme pela thumbnail no ed
 
 ## 5. Receita: como recortar um asset novo
 
-1. **Ache pelo nome** em `Complete_Singles_16x16/` (`ls | grep -i <coisa>`). É mais rápido que caçar
+1. **Ache pelo nome** em `LimeZu/exteriores/singles/` (`ls | grep -i <coisa>`). É mais rápido que caçar
    célula em folha grande.
 2. **Confira o tamanho** antes de usar: `file arquivo.png | grep -oE "[0-9]+ x [0-9]+"`.
 3. **Renderize ampliado e OLHE** antes de codar. Nunca assuma a grade — foi assim que descobrimos
@@ -224,10 +228,10 @@ $g.InterpolationMode=[System.Drawing.Drawing2D.InterpolationMode]::NearestNeighb
 
 ## 6. Referências visuais (o alvo de qualidade)
 
-- **`Modern_Office_Revamped_v1.2/6_Office_Designs/Office_Design_1.gif`** ⭐ — sala de escritório
+- **`LimeZu/escritorio/designs/Office_Design_1.gif`** ⭐ — sala de escritório
   pronta, feita pela LimeZu. É o padrão a atingir: paredes brancas finas, parede norte de tijolo com
   decoração pendurada, piso de tile, mesas com tampo. **Extraia o 1º frame e compare.**
-- `moderninteriors-win/6_Home_Designs/` — salas prontas de outros temas.
+- `LimeZu/interiores/home-designs/` — salas prontas de outros temas.
 
 ---
 
