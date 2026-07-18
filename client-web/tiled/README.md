@@ -3,6 +3,9 @@
 O Tiled é agora o editor visual dos mapas. Os arquivos editáveis ficam em [`maps/`](maps/), e um
 conversor gera os JSONs enxutos que o Phaser já consome em `client-web/maps/`.
 
+Para um exercício completo de expansão do hub — redimensionar o mapa, criar ruas, adicionar
+fachadas e ligar novos interiores — veja [`../GUIA-MUNDO-ABERTO.md`](../GUIA-MUNDO-ABERTO.md).
+
 ```text
 tiled/maps/*.tmj  ── conversor ──►  maps/*.json  ──►  Phaser
      fonte visual                    runtime
@@ -17,9 +20,9 @@ tiled/maps/*.tmj  ── conversor ──►  maps/*.json  ──►  Phaser
    - `maps/world.tmj` — quintal central;
    - `maps/tooq-office.tmj` — escritório e quintal privado.
 
-Os tilesets `Office Quest · Mundo`, `Office Quest · Móveis`, `Office Quest · Pisos` e
-`Office Quest · Paredes` aparecem na visão **Tilesets**. A paleta de móveis contém os 339 recortes
-`of_*` já versionados.
+Os tilesets completos continuam disponíveis, mas o mapa também carrega paletas menores numeradas:
+`01 · Construção`, `02 · Escritório`, `03 · Decoração`, `04 · Exterior` e `05 · Animações`.
+Comece por elas; `Office Quest · Móveis` permanece como catálogo completo dos 339 recortes `of_*`.
 
 ## 2. Regra de fonte da verdade
 
@@ -53,6 +56,20 @@ As camadas numeradas mantêm o desenho e os dados organizados:
 
 As três camadas de prévia estão bloqueadas. A geometria editável continua nos objetos coloridos;
 isso evita transformar o desenho em milhares de tiles difíceis de manter.
+
+### Paletas curadas
+
+| Paleta | Conteúdo |
+|---|---|
+| `01 · Construção · Pisos/Paredes` | Pisos repetíveis e peças do room builder. |
+| `02 · Escritório · Estações` | Mesas, monitores, cadeiras e estações completas. |
+| `03 · Decoração · Escritório` | Plantas, telas, armários, café, lounge e recepção. |
+| `04 · Exterior · Quintal` | Vegetação, fonte, banco, cercas e portão. |
+| `05 · Animações · Decoração` | Objetos animados prontos para o runtime, começando pelo café com vapor. |
+
+A seleção vive em `tiled/palettes.json`. O comando `assets` recria essas paletas preservando os
+IDs usados pelo mapa. Um objeto arrastado de uma paleta curada volta para o mesmo `assetId` do
+catálogo completo.
 
 ## 4. Fluxo diário
 
@@ -105,9 +122,22 @@ Objetos com pequenos ajustes podem ficar fora da grade. O conversor preserva coo
 3. Selecione a camada `10 · Móveis`.
 4. Use a ferramenta de inserir objeto de tile e clique no mapa.
 5. Na visão **Properties**, altere a propriedade herdada `solid` para `true` se o avatar não puder
-   atravessá-lo.
+   atravessá-lo. Para móveis largos, prefira o footprint explícito descrito abaixo.
 
 O tipo `furniture` e o `assetId` são herdados do tileset. Não é necessário digitar o ID novamente.
+
+### Footprint de um móvel
+
+Mesas, sofás e armários multi-tile podem definir a colisão relativa à âncora do objeto:
+
+| Propriedade | Uso |
+|---|---|
+| `collisionX`, `collisionY` | Deslocamento do início da colisão, em tiles. |
+| `collisionW`, `collisionH` | Largura e altura da base física, em tiles. |
+
+Exemplo para uma mesa de três tiles: `collisionX=-1`, `collisionY=0.1`, `collisionW=3` e
+`collisionH=0.8`. Se essas quatro propriedades existirem, elas vencem o footprint genérico de
+`solid`. Cadeiras soltas normalmente não precisam de colisão.
 
 ## 6. Inserir um prop externo
 
@@ -156,12 +186,19 @@ Uma porta é um retângulo da camada `11 · Portas` com classe `door`.
 |---|---|
 | `parent` | `building` ou o ID da sala, por exemplo `meeting`. |
 | `side` | `N`, `S`, `E` ou `W`. |
-| `texture` | Normalmente `office_door`. |
-| `frame` | Frame visual aberto; atualmente `8`. |
+| `texture` | `interior_sliding_door` para salas; `office_door` somente na saída externa. |
+| `frame` | Porta interna aberta = `6`; porta externa aberta = `8`. |
+| `automatic` | Em `extraJson`, faz a porta interna abrir ao aproximar e fechar ao afastar. |
 | `flipX` | Espelha a porta, se necessário. |
 
 A posição e o comprimento do retângulo viram automaticamente `at` e `len`. Ao mover uma porta para
 outra parede, atualize também `side`. A porta deve permanecer encostada na borda do objeto pai.
+As portas internas deslizantes têm dois tiles de largura (`len=2`).
+
+Salas também aceitam `wallStyle` dentro de `extraJson`: `white`, `stone`, `brick` ou `lavender`. O
+corte atual usa painéis `white` nos dois escritórios. Neles, `southWall3d: true` cria uma parede sul
+de dois tiles para embutir a porta de 32 px; a abertura remove as duas células da parede e a porta
+controla a colisão.
 
 ## 9. Colisões, cercas e caminhos
 
@@ -207,7 +244,8 @@ mapa:
 - `cameraMaxZoom`, opcional.
 
 Selecione **Map → Map Properties** para editá-las. Nos mapas cercados, faça o limite terminar no
-portão para não revelar área vazia.
+portão. `cameraMinZoom: 0.8` permite a visão geral atual; o runtime ainda limita o scroll ao ponto em
+que o retângulo inteiro cabe na janela e centraliza as margens automaticamente.
 
 ## 12. Adicionar PNGs à paleta
 
@@ -228,6 +266,9 @@ node client-web/tools/tiled-converter.mjs assets
 
 Os IDs antigos são preservados; assets novos são anexados ao catálogo. Reabra o tileset no Tiled se
 a nova imagem não aparecer imediatamente.
+
+Animações versionadas são cadastradas em `assets/animations/catalog.json`. O Tiled usa o campo
+`preview`, enquanto o Phaser carrega a spritesheet indicada em `path`.
 
 ## 13. Comandos disponíveis
 

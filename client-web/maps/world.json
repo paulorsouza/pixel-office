@@ -8,7 +8,7 @@
   "h": 36,
   "camera": {
     "zoom": 2.15,
-    "minZoom": 1.35,
+    "minZoom": 0.8,
     "bounds": {
       "x": 1,
       "y": 1,

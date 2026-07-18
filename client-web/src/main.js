@@ -1,5 +1,21 @@
 // Office Quest — runtime de cenas Phaser orientado a dados.
-import { renderScene } from './MapRenderer.js';
+import { renderScene, updateAutomaticDoors } from './MapRenderer.js';
+import {
+  createEquipmentMenu,
+  createEquipmentVisual,
+  movementProfile,
+  riderAnimationSpec,
+} from './EquipmentSystem.js';
+import {
+  createCharacterCustomizer,
+  createCharacterVisual,
+  preloadCharacterAssets,
+} from './CharacterSystem.js';
+import {
+  createRoomDecorationEditor,
+  createRoomDecorationStore,
+  preloadRoomDecorationAssets,
+} from './RoomDecorationSystem.js';
 
 const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
@@ -12,13 +28,31 @@ async function fetchJson(path) {
 }
 
 const manifest = await fetchJson('maps/scenes.json');
+const animatedAssets = await fetchJson('assets/animations/catalog.json');
+const equipmentCatalog = await fetchJson('assets/equipment/catalog.json');
+const characterCatalog = await fetchJson('assets/character/catalog.json');
+const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
+const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
 const sceneMaps = Object.fromEntries(await Promise.all(
   manifest.scenes.map(async ({ id, file }) => [id, await fetchJson(`maps/${file}`)]),
 ));
+let roomDecorationEditor = null;
+const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
+const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
+  isBlocked: () => roomDecorationEditor?.isOpen() || false,
+});
+const characterCustomizer = createCharacterCustomizer(characterCatalog);
 const query = new URLSearchParams(location.search);
 const requestedScene = query.get('scene') || location.hash.replace(/^#/, '');
 const initialScene = sceneMaps[requestedScene] ? requestedScene : manifest.startScene;
 const initialSpawn = query.get('spawn') || 'default';
+const equipmentPreview = vehicleEquipment.find(
+  (item) => item.id === query.get('equipmentPreview'),
+) || null;
+const requestedEquipmentDirection = query.get('equipmentDirection');
+const equipmentPreviewDirection = Object.hasOwn(DIR, requestedEquipmentDirection)
+  ? requestedEquipmentDirection
+  : null;
 
 function loadImageOnce(scene, key, path) {
   if (!scene.textures.exists(key)) scene.load.image(key, path);
@@ -43,11 +77,13 @@ class MapScene extends Phaser.Scene {
   init(data = {}) {
     this.currentSceneId = data.sceneId || initialScene;
     this.spawnId = data.spawnId || initialSpawn;
-    this.map = sceneMaps[this.currentSceneId];
+    this.map = decorationStore.mapForScene(this.currentSceneId);
     if (!this.map) throw new Error(`Cena desconhecida: ${this.currentSceneId}`);
   }
 
   preload() {
+    preloadCharacterAssets(this, characterCatalog);
+    preloadRoomDecorationAssets(this, furnitureCatalog);
     if (!this.textures.exists('tiles')) {
       this.load.spritesheet('tiles', 'assets/tiles/room_builder.png', {
         frameWidth: 16,
@@ -59,8 +95,17 @@ class MapScene extends Phaser.Scene {
         frameWidth: 16,
         frameHeight: 32,
       });
+    }
+    if (!this.textures.exists('adam_idle')) {
       this.load.spritesheet('adam_idle', 'assets/chars/Adam_idle_anim.png', {
         frameWidth: 16,
+        frameHeight: 32,
+      });
+    }
+    if (!this.textures.exists('adam_sit')) {
+      const seatedRider = vehicleEquipment.find((item) => item.riderSheet === 'adam_sit');
+      this.load.spritesheet('adam_sit', 'assets/chars/Adam_sit.png', {
+        frameWidth: seatedRider?.riderFrameWidth || 32,
         frameHeight: 32,
       });
     }
@@ -71,6 +116,16 @@ class MapScene extends Phaser.Scene {
     loadImageOnce(this, 'grass', worldAssetPath('grass'));
 
     for (const asset of (this.map.assets || [])) {
+      const animated = animatedAssets[asset];
+      if (animated) {
+        if (!this.textures.exists(asset)) {
+          this.load.spritesheet(asset, animated.path, {
+            frameWidth: animated.frameWidth,
+            frameHeight: animated.frameHeight,
+          });
+        }
+        continue;
+      }
       if (asset === 'office_door') {
         if (!this.textures.exists(asset)) {
           this.load.spritesheet(asset, worldAssetPath(asset), {
@@ -98,6 +153,20 @@ class MapScene extends Phaser.Scene {
       this.map.background || (hasOutdoorArea ? '#5c8f3e' : '#20222c'),
     );
     this.solids = this.physics.add.staticGroup();
+    this.animatedAssets = animatedAssets;
+    for (const asset of (this.map.assets || [])) {
+      const animated = animatedAssets[asset];
+      if (!animated || this.anims.exists(animated.animation)) continue;
+      this.anims.create({
+        key: animated.animation,
+        frames: this.anims.generateFrameNumbers(asset, {
+          start: animated.start,
+          end: animated.end,
+        }),
+        frameRate: animated.frameRate,
+        repeat: animated.repeat,
+      });
+    }
     const { spawns, portals } = renderScene(this, this.map, this.solids);
     this.portals = portals;
 
@@ -109,33 +178,59 @@ class MapScene extends Phaser.Scene {
       DIR.down,
     );
     this.player.body.setSize(10, 8).setOffset(3, 22);
+    this.playerBodyOffsetX = 3;
+    this.setPlayerBodyFrameWidth = (frameWidth) => {
+      const offsetX = Math.round((frameWidth - 10) / 2);
+      if (offsetX === this.playerBodyOffsetX) return;
+      this.player.body.setSize(10, 8).setOffset(offsetX, 22);
+      this.playerBodyOffsetX = offsetX;
+    };
     this.physics.add.collider(this.player, this.solids);
+    this.characterVisual = createCharacterVisual(
+      this,
+      characterCatalog,
+      characterCustomizer,
+      this.player,
+    );
 
     if (query.get('debug') === 'collisions') {
       this.physics.world.createDebugGraphic();
       this.physics.world.drawDebug = true;
     }
 
-    const createAnimation = (key, sheet, start, frameRate) => {
+    const createAnimation = (key, sheet, start, end, frameRate) => {
       if (this.anims.exists(key)) return;
       this.anims.create({
         key,
-        frames: this.anims.generateFrameNumbers(sheet, { start, end: start + 5 }),
+        frames: this.anims.generateFrameNumbers(sheet, { start, end }),
         frameRate,
         repeat: -1,
       });
     };
     for (const [direction, start] of Object.entries(DIR)) {
-      createAnimation(`run-${direction}`, 'adam_run', start, 12);
-      createAnimation(`idle-${direction}`, 'adam_idle', start, 5);
+      createAnimation(`run-${direction}`, 'adam_run', start, start + 5, 12);
+      createAnimation(`idle-${direction}`, 'adam_idle', start, start + 5, 5);
+      for (const equipment of vehicleEquipment) {
+        const animationSpec = riderAnimationSpec(equipment, direction, start);
+        createAnimation(
+          `equipment-${equipment.id}-${direction}`,
+          animationSpec.sheet,
+          animationSpec.start,
+          animationSpec.end,
+          animationSpec.frameRate,
+        );
+      }
     }
 
     this.moveKeys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
     this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+    this.equipmentVisual = createEquipmentVisual(this);
     this.handleInteract = () => {
       if (
         this.activePortal
         && !this.transitioning
+        && !this.roomDecorationEditor?.isOpen()
         && this.time.now >= this.interactionUnlockAt
       ) {
         this.changeScene(this.activePortal);
@@ -145,7 +240,7 @@ class MapScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.interactKey.off('down', this.handleInteract);
     });
-    this.lastDirection = 'down';
+    this.lastDirection = equipmentPreviewDirection || 'down';
     this.activePortal = null;
     this.transitioning = false;
     this.interactionUnlockAt = this.time.now + 450;
@@ -172,14 +267,24 @@ class MapScene extends Phaser.Scene {
     camera.startFollow(this.player, true, 0.12, 0.12);
     this.zoom = this.map.camera?.zoom || 2.2;
     this.applyCameraZoom = (requestedZoom) => {
-      const fitZoom = Math.max(
+      const overviewZoom = Math.min(
         this.scale.gameSize.width / cameraBoundsPx.w,
         this.scale.gameSize.height / cameraBoundsPx.h,
       );
-      const minZoom = Math.max(this.map.camera?.minZoom || 0.75, fitZoom);
+      const minZoom = Math.max(this.map.camera?.minZoom || 0.75, overviewZoom);
       const maxZoom = Math.max(this.map.camera?.maxZoom || 4, minZoom);
       this.zoom = Phaser.Math.Clamp(requestedZoom, minZoom, maxZoom);
       camera.setZoom(this.zoom);
+      const visibleWidth = this.scale.gameSize.width / this.zoom;
+      const visibleHeight = this.scale.gameSize.height / this.zoom;
+      const horizontalMargin = Math.max(0, (visibleWidth - cameraBoundsPx.w) / 2);
+      const verticalMargin = Math.max(0, (visibleHeight - cameraBoundsPx.h) / 2);
+      camera.setBounds(
+        cameraBoundsPx.x - horizontalMargin,
+        cameraBoundsPx.y - verticalMargin,
+        cameraBoundsPx.w + horizontalMargin * 2,
+        cameraBoundsPx.h + verticalMargin * 2,
+      );
     };
     this.applyCameraZoom(this.zoom);
     camera.roundPixels = true;
@@ -195,17 +300,47 @@ class MapScene extends Phaser.Scene {
       this.scale.off('resize', this.handleResize);
     });
 
+    this.roomDecorationEditor = createRoomDecorationEditor(
+      this,
+      this.map,
+      furnitureCatalog,
+      decorationStore,
+      equipmentMenu,
+    );
+    roomDecorationEditor = this.roomDecorationEditor;
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (roomDecorationEditor === this.roomDecorationEditor) roomDecorationEditor = null;
+    });
+    const debugRoom = query.get('decorateRoom');
+    if (debugRoom) this.roomDecorationEditor.open(debugRoom);
+
     window.__scene = this;
+    window.__equipment = equipmentMenu;
+    window.__character = characterCustomizer;
+    window.__decoration = this.roomDecorationEditor;
   }
 
   update() {
-    if (this.transitioning) {
+    this.roomDecorationEditor.updateAvailability(
+      this.player,
+      this.transitioning || equipmentMenu.isOpen(),
+    );
+    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen()) {
       this.player.body.setVelocity(0, 0);
+      this.player.anims.play(`idle-${this.lastDirection}`, true);
+      this.setPlayerBodyFrameWidth(16);
+      this.characterVisual.update(this.lastDirection, 'idle', true, this.time.now);
+      this.equipmentVisual.hide();
       return;
     }
 
     const keys = this.moveKeys;
-    const speed = 112;
+    const profile = movementProfile(
+      equipmentCatalog,
+      equipmentPreview?.id || equipmentMenu.getEquippedId(),
+      this.shiftKey.isDown || Boolean(equipmentPreview),
+    );
+    const speed = profile.speed;
     let vx = 0;
     let vy = 0;
     if (keys.A.isDown || keys.LEFT.isDown) vx = -speed;
@@ -221,10 +356,30 @@ class MapScene extends Phaser.Scene {
     else if (vx > 0) direction = 'right';
     else if (vy < 0) direction = 'up';
     else if (vy > 0) direction = 'down';
-    this.player.anims.play(`${vx || vy ? 'run' : 'idle'}-${direction}`, true);
+    const moving = Boolean(vx || vy);
+    const animation = profile.active
+      ? `equipment-${profile.equipment.id}-${direction}`
+      : `${moving ? 'run' : 'idle'}-${direction}`;
+    this.player.anims.play(animation, true);
+    const riderFrameWidth = profile.active
+      ? riderAnimationSpec(profile.equipment, direction, DIR[direction]).frameWidth
+      : 16;
+    this.setPlayerBodyFrameWidth(riderFrameWidth);
     this.lastDirection = direction;
     this.player.setDepth(this.player.body.bottom);
-
+    const characterPose = profile.active
+      ? (profile.equipment.id === 'motorcycle' ? 'sit' : 'idle')
+      : (moving ? 'walk' : 'idle');
+    this.characterVisual.update(direction, characterPose, moving || profile.active, this.time.now);
+    this.equipmentVisual.update(
+      this.player,
+      profile.equipment,
+      direction,
+      profile.active,
+      moving,
+      this.time.now,
+    );
+    updateAutomaticDoors(this, this.player);
     this.updatePortalInteraction();
   }
 
@@ -247,7 +402,7 @@ class MapScene extends Phaser.Scene {
   }
 
   changeScene(portal) {
-    if (this.transitioning || !sceneMaps[portal.targetScene]) return;
+    if (this.transitioning || this.roomDecorationEditor?.isOpen() || !sceneMaps[portal.targetScene]) return;
     this.transitioning = true;
     showPortalPrompt(null);
     this.cameras.main.once('camerafadeoutcomplete', () => {

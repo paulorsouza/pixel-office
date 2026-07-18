@@ -1,0 +1,1226 @@
+{
+  "columns": 0,
+  "grid": {
+    "height": 16,
+    "orientation": "orthogonal",
+    "width": 16
+  },
+  "margin": 0,
+  "name": "02 · Escritório · Estações",
+  "objectalignment": "bottom",
+  "spacing": 0,
+  "tilecount": 50,
+  "tiledversion": "1.12.2",
+  "tileheight": 48,
+  "tiles": [
+    {
+      "id": 0,
+      "image": "../../assets/furniture/office/of_101.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_101"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 1,
+      "image": "../../assets/furniture/office/of_102.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_102"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 2,
+      "image": "../../assets/furniture/office/of_106.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_106"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 3,
+      "image": "../../assets/furniture/office/of_107.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_107"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 4,
+      "image": "../../assets/furniture/office/of_126.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_126"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 5,
+      "image": "../../assets/furniture/office/of_129.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_129"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 6,
+      "image": "../../assets/furniture/office/of_130.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_130"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 7,
+      "image": "../../assets/furniture/office/of_131.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_131"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 8,
+      "image": "../../assets/furniture/office/of_136.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_136"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 9,
+      "image": "../../assets/furniture/office/of_139.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_139"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 10,
+      "image": "../../assets/furniture/office/of_140.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_140"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 11,
+      "image": "../../assets/furniture/office/of_141.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_141"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 12,
+      "image": "../../assets/furniture/office/of_179.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_179"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 13,
+      "image": "../../assets/furniture/office/of_180.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_180"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 14,
+      "image": "../../assets/furniture/office/of_183.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_183"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 15,
+      "image": "../../assets/furniture/office/of_185.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_185"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 16,
+      "image": "../../assets/furniture/office/of_190.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_190"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 17,
+      "image": "../../assets/furniture/office/of_193.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_193"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 18,
+      "image": "../../assets/furniture/office/of_225.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_225"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 19,
+      "image": "../../assets/furniture/office/of_227.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_227"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 20,
+      "image": "../../assets/furniture/office/of_229.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_229"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 21,
+      "image": "../../assets/furniture/office/of_231.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_231"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 22,
+      "image": "../../assets/furniture/office/of_233.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_233"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 23,
+      "image": "../../assets/furniture/office/of_235.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_235"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 24,
+      "image": "../../assets/furniture/office/of_248.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_248"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 25,
+      "image": "../../assets/furniture/office/of_249.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_249"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 26,
+      "image": "../../assets/furniture/office/of_253.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_253"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 27,
+      "image": "../../assets/furniture/office/of_254.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_254"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 28,
+      "image": "../../assets/furniture/office/of_258.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_258"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 29,
+      "image": "../../assets/furniture/office/of_259.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_259"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 30,
+      "image": "../../assets/furniture/office/of_275.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_275"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 31,
+      "image": "../../assets/furniture/office/of_276.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_276"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 32,
+      "image": "../../assets/furniture/office/of_277.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_277"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 33,
+      "image": "../../assets/furniture/office/of_278.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_278"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 34,
+      "image": "../../assets/furniture/office/of_285.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_285"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 35,
+      "image": "../../assets/furniture/office/of_294.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_294"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 36,
+      "image": "../../assets/furniture/office/of_295.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_295"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 37,
+      "image": "../../assets/furniture/office/of_300.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_300"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 38,
+      "image": "../../assets/furniture/office/of_305.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_305"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 39,
+      "image": "../../assets/furniture/office/of_306.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_306"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 40,
+      "image": "../../assets/furniture/office/of_307.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_307"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 41,
+      "image": "../../assets/furniture/office/of_315.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_315"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 42,
+      "image": "../../assets/furniture/office/of_316.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_316"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 43,
+      "image": "../../assets/furniture/office/of_317.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_317"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 44,
+      "image": "../../assets/furniture/office/of_318.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_318"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 45,
+      "image": "../../assets/furniture/office/of_319.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_319"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 46,
+      "image": "../../assets/furniture/office/of_196.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_196"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 47,
+      "image": "../../assets/furniture/office/of_197.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_197"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 48,
+      "image": "../../assets/furniture/office/of_198.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_198"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 49,
+      "image": "../../assets/furniture/office/of_199.png",
+      "imageheight": 48,
+      "imagewidth": 32,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "of_199"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    }
+  ],
+  "tilewidth": 32,
+  "transformations": {
+    "hflip": true,
+    "preferuntransformed": true,
+    "rotate": false,
+    "vflip": false
+  },
+  "type": "tileset",
+  "version": "1.10"
+}

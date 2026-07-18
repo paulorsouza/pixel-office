@@ -9,7 +9,7 @@
   "name": "Office Quest · Móveis",
   "objectalignment": "bottom",
   "spacing": 0,
-  "tilecount": 339,
+  "tilecount": 340,
   "tiledversion": "1.12.2",
   "tileheight": 48,
   "tiles": [
@@ -8135,6 +8135,30 @@
           "name": "assetId",
           "type": "string",
           "value": "of_339"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "solid",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "type": "furniture"
+    },
+    {
+      "id": 339,
+      "image": "../../assets/animations/coffee-steam-preview.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "anim_coffee"
         },
         {
           "name": "category",

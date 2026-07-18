@@ -1,0 +1,241 @@
+{
+  "walkSpeed": 112,
+  "defaultEquipment": "skate",
+  "slots": [
+    {
+      "id": "earrings",
+      "name": "Brincos",
+      "shortLabel": "BR",
+      "description": "Acessório de orelha"
+    },
+    {
+      "id": "necklace",
+      "name": "Corrente",
+      "shortLabel": "CR",
+      "description": "Acessório de pescoço"
+    },
+    {
+      "id": "bracelet",
+      "name": "Pulseira",
+      "shortLabel": "PL",
+      "description": "Acessório de pulso"
+    },
+    {
+      "id": "mouse",
+      "name": "Mouse",
+      "shortLabel": "MS",
+      "description": "Periférico de precisão"
+    },
+    {
+      "id": "keyboard",
+      "name": "Teclado",
+      "shortLabel": "TC",
+      "description": "Periférico principal"
+    },
+    {
+      "id": "vehicle",
+      "name": "Veículo",
+      "shortLabel": "VC",
+      "description": "Segure Shift para usar"
+    }
+  ],
+  "items": [
+    {
+      "id": "skate",
+      "slot": "vehicle",
+      "icon": "skate",
+      "rarity": "common",
+      "name": "Skate",
+      "shortLabel": "SK",
+      "description": "Ágil e fácil de controlar nos corredores.",
+      "speed": 150,
+      "accent": "#f4b942",
+      "secondary": "#e66b45",
+      "riderSheet": "adam_idle",
+      "frameRate": 5,
+      "trail": 1
+    },
+    {
+      "id": "roller-skates",
+      "slot": "vehicle",
+      "icon": "roller",
+      "rarity": "uncommon",
+      "name": "Patins",
+      "shortLabel": "PT",
+      "description": "Mais rápidos, com passadas curtas e suaves.",
+      "speed": 166,
+      "accent": "#65d6c4",
+      "secondary": "#5577d8",
+      "riderSheet": "adam_idle",
+      "frameRate": 5,
+      "renderLayer": "front",
+      "trail": 2
+    },
+    {
+      "id": "electric-scooter",
+      "slot": "vehicle",
+      "icon": "scooter",
+      "rarity": "rare",
+      "name": "Patinete elétrico",
+      "shortLabel": "PE",
+      "description": "Aceleração estável para atravessar áreas abertas.",
+      "speed": 188,
+      "accent": "#9b82ff",
+      "secondary": "#54c7ec",
+      "riderSheet": "adam_idle",
+      "frameRate": 7,
+      "trail": 3
+    },
+    {
+      "id": "motorcycle",
+      "slot": "vehicle",
+      "icon": "motorcycle",
+      "rarity": "epic",
+      "name": "Moto",
+      "shortLabel": "MT",
+      "description": "A opção mais veloz; exige cuidado em espaços internos.",
+      "speed": 232,
+      "accent": "#ed5d68",
+      "secondary": "#f0c35a",
+      "riderSheet": "adam_sit",
+      "riderDirections": {
+        "right": {
+          "sheet": "adam_sit",
+          "frameWidth": 32,
+          "start": 0,
+          "frameCount": 3
+        },
+        "left": {
+          "sheet": "adam_sit",
+          "frameWidth": 32,
+          "start": 6,
+          "frameCount": 3
+        },
+        "up": {
+          "sheet": "adam_idle",
+          "frameWidth": 16,
+          "start": 6,
+          "frameCount": 6
+        },
+        "down": {
+          "sheet": "adam_idle",
+          "frameWidth": 16,
+          "start": 18,
+          "frameCount": 6
+        }
+      },
+      "frameRate": 5,
+      "trail": 4
+    },
+    {
+      "id": "silver-chain",
+      "slot": "necklace",
+      "icon": "chain",
+      "rarity": "uncommon",
+      "name": "Corrente de prata",
+      "shortLabel": "CP",
+      "description": "Elos claros com acabamento discreto.",
+      "accent": "#d9e4ea",
+      "secondary": "#8295a3"
+    },
+    {
+      "id": "gold-chain",
+      "slot": "necklace",
+      "icon": "chain",
+      "rarity": "epic",
+      "name": "Corrente dourada",
+      "shortLabel": "CD",
+      "description": "Uma peça chamativa para ocasiões especiais.",
+      "accent": "#ffd66b",
+      "secondary": "#b56b2d"
+    },
+    {
+      "id": "pixel-earrings",
+      "slot": "earrings",
+      "icon": "earrings",
+      "rarity": "rare",
+      "name": "Brincos Pixel",
+      "shortLabel": "BP",
+      "description": "Um par luminoso em azul ciano.",
+      "accent": "#6ce4ef",
+      "secondary": "#3271bd"
+    },
+    {
+      "id": "ruby-earrings",
+      "slot": "earrings",
+      "icon": "earrings",
+      "rarity": "epic",
+      "name": "Brincos Rubi",
+      "shortLabel": "BR",
+      "description": "Pedras vermelhas lapidadas em oito bits.",
+      "accent": "#f15b6c",
+      "secondary": "#8e294d"
+    },
+    {
+      "id": "focus-bracelet",
+      "slot": "bracelet",
+      "icon": "bracelet",
+      "rarity": "uncommon",
+      "name": "Pulseira Foco",
+      "shortLabel": "PF",
+      "description": "Pulseira sóbria com detalhe esmeralda.",
+      "accent": "#71d39c",
+      "secondary": "#287263"
+    },
+    {
+      "id": "pulse-bracelet",
+      "slot": "bracelet",
+      "icon": "bracelet",
+      "rarity": "rare",
+      "name": "Pulseira Pulse",
+      "shortLabel": "PP",
+      "description": "Uma faixa tecnológica com brilho violeta.",
+      "accent": "#bb83ff",
+      "secondary": "#6550b8"
+    },
+    {
+      "id": "mechanical-keyboard",
+      "slot": "keyboard",
+      "icon": "keyboard",
+      "rarity": "rare",
+      "name": "Teclado mecânico",
+      "shortLabel": "TM",
+      "description": "Teclas altas e resposta precisa.",
+      "accent": "#efc66c",
+      "secondary": "#5c3e47"
+    },
+    {
+      "id": "compact-keyboard",
+      "slot": "keyboard",
+      "icon": "keyboard",
+      "rarity": "uncommon",
+      "name": "Teclado compacto",
+      "shortLabel": "TC",
+      "description": "Pequeno, leve e ideal para mesas enxutas.",
+      "accent": "#e7e2d4",
+      "secondary": "#7e8297"
+    },
+    {
+      "id": "precision-mouse",
+      "slot": "mouse",
+      "icon": "mouse",
+      "rarity": "uncommon",
+      "name": "Mouse Precision",
+      "shortLabel": "MP",
+      "description": "Formato clássico e sensor confiável.",
+      "accent": "#d8dde8",
+      "secondary": "#596074"
+    },
+    {
+      "id": "rgb-mouse",
+      "slot": "mouse",
+      "icon": "mouse",
+      "rarity": "epic",
+      "name": "Mouse RGB",
+      "shortLabel": "MR",
+      "description": "Iluminação colorida para setups ousados.",
+      "accent": "#59dff0",
+      "secondary": "#c35cff"
+    }
+  ]
+}

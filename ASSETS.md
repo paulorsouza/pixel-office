@@ -11,7 +11,7 @@ Este doc responde três perguntas: **onde estão os assets**, **o que tem em cad
 
 | | Onde | No git? |
 |---|---|---|
-| **Packs crus** (LimeZu, ~1,3 GB) | `C:\Users\prs\Claude Sessions\LimeZu\` (**fora do repo**) | ❌ Não |
+| **Packs crus** (LimeZu, ~815 MB / 99 mil arquivos) | `LimeZu/` (**no workspace, ignorado**) | ❌ Não |
 | **Assets recortados** (o que o cliente carrega) | `client-web/assets/` (~1 MB) | ✅ Sim |
 
 **Por quê:** os packs são comprados, **nunca mudam** e são **re-baixáveis do itch.io** com a conta de
@@ -25,7 +25,7 @@ versionado.
 
 ---
 
-## 2. Os packs (comprados) — `C:\Users\prs\Claude Sessions\LimeZu\`
+## 2. Os packs (comprados) — `LimeZu/`
 
 > **Reorganizados por tema** (2026-07-17). Cada pasta tem um `README.md` próprio; índice geral em
 > `LimeZu/README.md`. Os `.zip` originais estão em `LimeZu/_zips-e-instaladores/` (restauração).
@@ -82,6 +82,26 @@ Tudo abaixo foi **renderizado e conferido visualmente**. **Não chute de novo** 
   (o `docs/HANDOFF.md` e o histórico dizem `down/up/left/right` — **ERRADO**)
 - Velocidades: run ~10-12 fps · idle ~4.5-5 fps
 - Personagens: Adam, Alex, Amelia, Bob × (run / idle_anim / sit)
+- `Adam_sit_16x16.png`: **384×32 = 12 frames de 32×32**, mas possui somente vistas laterais:
+  `right(0-5), left(6-11)`. **Não existem frames sentados de frente/costas.** ⚠️ Apesar do nome
+  `16x16`, não recorte esta folha com `frameWidth: 16`: isso alterna as metades do piloto. A moto
+  usa `Adam_sit.png` na horizontal e os frames `up/down` de `Adam_idle_anim.png` na vertical.
+- Skate e patins reutilizam `Adam_idle_anim.png`, não `Adam_run.png`: a pose estável evita passadas
+  fora da prancha e das botas. No patins, o desenho procedural é uma camada frontal que cobre os
+  sapatos do personagem.
+
+#### Character Generator modular
+
+- Fonte: `LimeZu/personagens/character-generator-parts/`.
+- Ordem de composição oficial: **Body → Eyes → Outfit → Hairstyle → Accessory**.
+- As folhas modulares têm **896×656**; `Bodies` mede **927×656** porque inclui anotações à direita,
+  fora da área útil. Não use a largura total para inferir colunas.
+- Cada célula útil mede **16×32**. Linhas usadas pelo cliente: `idle` em **y=32**, `walk` em
+  **y=64** e `sit` em **y=128**.
+- `idle` e `walk`: 24 frames na ordem `right(0-5), up(6-11), left(12-17), down(18-23)`.
+  `sit`: 12 frames, apenas `right(0-5), left(6-11)`; na vertical o runtime usa `idle`.
+- O cliente carrega a imagem inteira e registra somente esses retângulos como frames nomeados no
+  Phaser. Isso mantém as cinco camadas perfeitamente alinhadas sem gerar centenas de recortes.
 
 ### 3.2 `room_builder.png` (Office) — 256×224 = grade **16 col × 14 lin** @16px
 Notação: `rb_<col>_<lin>` (linha contada do topo).
@@ -96,13 +116,21 @@ BL=rb_7_3   BOT=rb_8_3   BR=rb_9_3
 - Topo≠base e esq≠dir ⇒ **RuleTile automática não resolve** (os vizinhos são idênticos).
   **Pinte por posição** — fica perfeito.
 
-**Parede NORTE 3D** (com volume, decorável com quadros/troféus) — 2 tiles de altura:
+**Parede 3D** (com volume, decorável com quadros/troféus) — 2 tiles de altura:
 ```
-rb_1_9    ← topo branco + tijolo
-rb_1_10   ← tijolo + rodapé
+rb_1_11   ← painel branco superior
+rb_1_12   ← painel branco inferior + rodapé
 ```
-Variantes: `rb_5_9`+`rb_5_10` (tan B) · `rb_8_9`+`rb_8_10` (branco).
-Só a parede **norte** tem face alta; laterais/sul são finas (igual aos `escritorio/designs/`).
+Para encontros laterais, a família ocupa três colunas: `rb_0_*` tem a borda à esquerda,
+`rb_1_*` é o trecho repetível e `rb_2_*` tem a borda à direita. Nos escritórios atuais, a parede
+lateral fina é prolongada pelos dois tiles da parede sul 3D; assim as laterais terminam no mesmo
+rodapé inferior, enquanto os painéis frontais começam um tile para dentro.
+Variantes verificadas: `rb_1_7`+`rb_1_8` (pedra cinza) · `rb_1_9`+`rb_1_10`
+(tijolo marrom) · `rb_1_5`+`rb_1_6` (tijolo lavanda). As antigas coordenadas registradas para
+`white` e `tan` estavam erradas: repetiam o tijolo marrom ou apontavam para transparência.
+Como regra, só a parede **norte** tem face alta; laterais/sul são finas (igual aos
+`escritorio/designs/`). A exceção atual são os dois escritórios: a parede sul recebe a mesma
+composição branca de dois tiles somente para embutir corretamente a porta deslizante de 32 px.
 
 **Pisos** (todos seamless): `rb_13_9` madeira/tan · `rb_10_9` cinza · `rb_10_7` cinza claro ·
 `rb_13_11` terracota.
@@ -160,17 +188,20 @@ foi construída do zero:
 
 ## 4. Assets versionados (`client-web/assets/`)
 
-Organizados em subpastas. O cliente atual (interior orientado a dados) usa `chars/`, `tiles/`,
-`floors/` e `furniture/`; `world/` é o mundo externo (fachada/jardim/telhado), guardado mas ainda
-não plugado.
+Organizados em subpastas. O cliente multi-cena usa `chars/`, `tiles/`, `floors/`, `furniture/`,
+`animations/` e `world/`; somente os recortes necessários ao runtime são versionados.
 
 | Pasta / arquivo | O que é |
 |---|---|
-| **`chars/`** `Adam_run.png`, `Adam_idle_anim.png` | Personagem (24 frames 16×32) |
+| **`chars/`** `Adam_run.png`, `Adam_idle_anim.png` | Personagem (24 frames de 16×32) |
+| **`chars/Adam_sit.png`** | Pose sentada (12 frames de 32×32; ver §3.1) |
+| **`character/`** `catalog.json` + 23 PNGs | Avatar modular: corpos, olhos, roupas, cabelos e acessórios |
+| **`equipment/`** `catalog.json` | Slots, itens, velocidades, poses e camadas dos equipamentos |
 | **`tiles/`** `room_builder.png` | Room builder do Office (256×224) — paredes e estrutura |
 | **`floors/`** `floor_wood/carpet/cream/sage/water.png` | Pisos lisos (Modern Interiors) — ver §3.2 |
 | **`furniture/office/`** `of_1..of_339.png` | Os 339 móveis do Office Revamped (§4.1) |
 | **`world/`** `office_tooq.png` ⭐ | **Fachada da sede TOOQ BMS** (304×288) |
+| **`animations/`** `coffee-steam.png` | Café com vapor, 6 frames de 16×16; metadados em `catalog.json` |
 | `world/sign_tooq.png` | Placa TOOQ BMS avulsa (112×16) |
 | `world/office_generic.png`, `world/office_lime.png` | Prédios originais do pack (referência) |
 | `world/office_door.png` | Porta animada (672×32 — **frames 48×32**) |
@@ -192,15 +223,55 @@ visualmente (o resto ainda não foi catalogado peça a peça):
 | Monitor duplo | `of_227` | vista de cima |
 | Monitor simples | `of_285` | |
 | Estações com computador | `of_225`, `of_227`, `of_229`, `of_231`, `of_233`, `of_235` | conjuntos compactos com monitor/CPU |
-| Mesas equipadas | `of_320`, `of_321` | mesa completa com computador e objetos |
+| Mesas em L para estação | `of_300` (bege), `of_305` (cinza) | base usada no `Office_Design_2` |
+| Equipamento completo de estação | `of_317`, `of_318`, `of_319` | monitor, CPU, teclado e objetos; sobrepor à mesa |
+| Estações de café | `of_320`, `of_321`, `of_322` | máquinas e utensílios sobre bancada |
 | Cadeiras de estação | `of_306`, `of_307`, `of_315`, `of_316` | variantes laranja/cinza, usadas atrás das mesas |
 | Cadeira (topo) | `of_286`, `of_287` | vista de cima |
 | Cadeira (lado) | `of_277`, `of_278` | |
 | Mesa em L | `of_260`, `of_265`, `of_291` | estações de trabalho |
 | Vaso de planta | `of_98`, `of_99`, `of_100` | detectados por pixel verde |
+| Poltronas individuais | `of_196`, `of_197`, `of_198`, `of_199` | usadas no lounge do `Office_Design_1` |
 
 ⚠️ **Não chute IDs de móvel.** Já erramos várias vezes achando que `of_115/118/120` eram
 cadeiras/plantas (são clipboard/teclado/monitor). Confirme pela thumbnail no editor antes de usar.
+
+### 4.2 Animações versionadas
+
+- `anim_coffee` usa `assets/animations/coffee-steam.png`: **96×16**, 6 frames de **16×16**,
+  4 fps e loop contínuo.
+- `coffee-steam-preview.png` é somente a miniatura estática da paleta do Tiled.
+- `assets/animations/catalog.json` é lido tanto pelo preload do Phaser quanto pelo gerador de
+  tilesets; novos itens animados devem ser cadastrados ali.
+- `interior_glass_door` veio de
+  `LimeZu/interiores/animados/spritesheets/animated_door_glass_double.png`: **256×48**, 8 frames de
+  **32×48**. Foi auditada, mas não é usada nas salas porque as folhas articuladas ocupam muito
+  espaço visual.
+- `interior_sliding_door` veio de `animated_door_sliding_glass.png`: **448×32**, 14 frames de
+  **32×32**. Frame 0 = fechada, frame 6 = aberta, frame 13 = fechada novamente. É a porta interna
+  escolhida; as folhas ficam recolhidas nas laterais do vão. A entrada externa continua usando
+  `office_door`. No runtime a porta interna usa `0→6` ao aproximar, `6→0` ao afastar e a colisão do
+  vão acompanha esse ciclo.
+
+### 4.3 Receita de estação usada no mapa
+
+Uma estação coerente com o `Office_Design_2` é composta por três objetos na mesma área:
+
+1. mesa `of_300` ou `of_305`, com footprint de 3×0,8 tiles;
+2. equipamento `of_317`, `of_318` ou `of_319`, na mesma âncora e sem colisão adicional;
+3. cadeira `of_306`, `of_307`, `of_315` ou `of_316`, um ou dois tiles abaixo.
+
+O computador deve ser criado depois da mesa para ficar visualmente por cima. A cadeira permanece
+sem colisão para não prender o avatar em corredores estreitos.
+
+### 4.4 Equipamentos de locomoção
+
+A busca nos packs LimeZu por skate, patins, patinete/scooter, moto e bicicleta não encontrou sprites
+pessoais compatíveis; o pack `Vehicles` contém carros, ônibus, barcos e veículos grandes. Para não
+confundir esses assets com os itens pedidos, a primeira versão desenha os quatro veículos como pixel
+art procedural no Phaser. O único recorte novo do pack é `Adam_sit.png`, auditado acima. Quando
+sprites dedicados forem adquiridos, eles podem substituir o desenho sem alterar o catálogo de
+velocidade nem a interação por Shift.
 
 ---
 

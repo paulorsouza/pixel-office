@@ -59,6 +59,6 @@ node client-web/server.js
 
 ## Assets
 
-Packs LimeZu crus (~1,3 GB) ficam **fora do repo**, em `C:\Users\prs\Claude Sessions\LimeZu\`
-(comprados, re-baixáveis do itch.io). Os recortes que o cliente usa estão versionados em
+Packs LimeZu crus (~815 MB / 99 mil arquivos) ficam em **`LimeZu/`**, dentro do workspace mas
+ignorados pelo Git (comprados, re-baixáveis do itch.io). Os recortes que o cliente usa estão versionados em
 `client-web/assets/`. **Ver [`ASSETS.md`](ASSETS.md)** — mapa dos packs + todas as medidas.

@@ -8,6 +8,13 @@ build.
 > Para level design, comece pelo **Tiled + navegador** usando o fluxo em
 > [`tiled/README.md`](tiled/README.md). VS Code continua recomendado para código, inspeção dos JSONs
 > gerados e ajustes avançados.
+>
+> Para ampliar especificamente o hub com **ruas, fachadas, colisões e novos prédios**, siga o
+> tutorial dedicado [`GUIA-MUNDO-ABERTO.md`](GUIA-MUNDO-ABERTO.md).
+
+> Para apenas decorar uma sala durante o jogo, não abra o Tiled: entre na sala e clique em
+> `Decorar sala`. Esse editor acrescenta, move, espelha e remove somente móveis, salva
+> automaticamente no navegador e mantém a estrutura do mapa intacta.
 
 ## 1. Preparar o ambiente
 

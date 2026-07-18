@@ -16,6 +16,8 @@ const MAPS_DIR = resolve(CLIENT_ROOT, 'maps');
 const TILED_DIR = resolve(CLIENT_ROOT, 'tiled');
 const TILED_MAPS_DIR = resolve(TILED_DIR, 'maps');
 const TILESETS_DIR = resolve(TILED_DIR, 'tilesets');
+const PALETTES_PATH = resolve(TILED_DIR, 'palettes.json');
+const ANIMATIONS_CATALOG_PATH = resolve(CLIENT_ROOT, 'assets/animations/catalog.json');
 
 const TILED_VERSION = '1.12.2';
 const FORMAT_VERSION = '1.10';
@@ -27,6 +29,10 @@ export const FIRST_GID = {
   walls: 1000,
   world: 10000,
   furniture: 100000,
+  officePalette: 200000,
+  decorPalette: 210000,
+  gardenPalette: 220000,
+  animationPalette: 230000,
 };
 
 const SURFACES = [
@@ -64,7 +70,7 @@ const PROP_FIELDS = new Set([
 ]);
 const FURNITURE_FIELDS = new Set([
   'id', 'x', 'y', 'offsetX', 'offsetY', 'originX', 'originY', 'flipX', 'depth',
-  'solid',
+  'solid', 'collision',
 ]);
 const DOOR_FIELDS = new Set(['side', 'at', 'len', 'texture', 'frame', 'flipX', 'depth']);
 const PORTAL_FIELDS = new Set([
@@ -173,6 +179,28 @@ function collectionEntries(directory, category, filter = () => true) {
     .sort((a, b) => a.assetId.localeCompare(b.assetId, 'en', { numeric: true }));
 }
 
+function paletteDefinitions() {
+  const palettes = readJson(PALETTES_PATH).palettes || [];
+  for (const palette of palettes) {
+    if (!FIRST_GID[palette.key]) throw new Error(`Paleta sem faixa de GID: ${palette.key}`);
+  }
+  return palettes;
+}
+
+function animationEntries() {
+  return Object.entries(readJson(ANIMATIONS_CATALOG_PATH))
+    .filter(([, spec]) => (spec.category || 'furniture') === 'furniture')
+    .map(([assetId, spec]) => {
+      const path = resolve(CLIENT_ROOT, spec.preview);
+      return {
+        assetId,
+        category: 'furniture',
+        path,
+        ...pngSize(path),
+      };
+    });
+}
+
 function previousIds(path) {
   if (!existsSync(path)) return new Map();
   const tileset = readJson(path);
@@ -255,7 +283,7 @@ function writeSurfaceTileset() {
     columns: 0,
     grid: { height: 16, orientation: 'orthogonal', width: 16 },
     margin: 0,
-    name: 'Office Quest · Pisos',
+    name: '01 · Construção · Pisos',
     objectalignment: 'bottom',
     spacing: 0,
     tilecount: entries.length,
@@ -286,7 +314,7 @@ function writeWallTileset() {
     imageheight: height,
     imagewidth: width,
     margin: 0,
-    name: 'Office Quest · Paredes',
+    name: '01 · Construção · Paredes',
     spacing: 0,
     tilecount: (width / 16) * (height / 16),
     tiledversion: TILED_VERSION,
@@ -315,12 +343,15 @@ export function generateTilesets() {
     ...entry,
     category: entry.assetId === 'grass_detail' ? 'detail' : 'prop',
   }));
-  const furnitureEntries = collectionEntries(
-    resolve(CLIENT_ROOT, 'assets/furniture/office'),
-    'furniture',
-  );
+  const furnitureEntries = [
+    ...collectionEntries(
+      resolve(CLIENT_ROOT, 'assets/furniture/office'),
+      'furniture',
+    ),
+    ...animationEntries(),
+  ];
 
-  return {
+  const catalogs = {
     surfaces: writeSurfaceTileset(),
     walls: writeWallTileset(),
     world: writeCollectionTileset(
@@ -334,6 +365,24 @@ export function generateTilesets() {
       furnitureEntries,
     ),
   };
+
+  const available = new Map(
+    [...worldEntries, ...furnitureEntries].map((entry) => [entry.assetId, entry]),
+  );
+  for (const palette of paletteDefinitions()) {
+    const entries = palette.assetIds.map((assetId) => {
+      const entry = available.get(assetId);
+      if (!entry) throw new Error(`Asset ${assetId} não existe para a paleta ${palette.name}`);
+      return entry;
+    });
+    catalogs[palette.key] = writeCollectionTileset(
+      resolve(TILESETS_DIR, palette.file),
+      palette.name,
+      entries,
+    );
+  }
+
+  return catalogs;
 }
 
 function gidFor(catalogs, catalogName, assetId, flipX = false) {
@@ -348,8 +397,9 @@ function resolveGid(catalogs, rawGid) {
   const unsigned = rawGid >>> 0;
   const baseGid = unsigned & GID_MASK;
   const flipX = Boolean(unsigned & HORIZONTAL_FLIP);
-  const ranges = ['furniture', 'world', 'walls', 'surfaces'];
-  const catalogName = ranges.find((name) => baseGid >= FIRST_GID[name]);
+  const ranges = Object.entries(FIRST_GID).sort((a, b) => b[1] - a[1]);
+  const match = ranges.find(([, firstGid]) => baseGid >= firstGid);
+  const catalogName = match?.[0];
   if (!catalogName) throw new Error(`GID desconhecido: ${rawGid}`);
   const localId = baseGid - FIRST_GID[catalogName];
   const entry = catalogs[catalogName].byLocalId?.get(localId);
@@ -469,12 +519,22 @@ const WALL = {
   TL: wallFrame(7, 1), TOP: wallFrame(8, 1), TR: wallFrame(9, 1),
   L: wallFrame(7, 2), R: wallFrame(9, 2),
   BL: wallFrame(7, 3), BOT: wallFrame(8, 3), BR: wallFrame(9, 3),
-  N_CAP: wallFrame(8, 9), N_FACE: wallFrame(8, 10),
+};
+const wallFace = (row) => ({
+  cap: wallFrame(1, row),
+  face: wallFrame(1, row + 1),
+});
+const NORTH_WALL = {
+  white: wallFace(11),
+  stone: wallFace(7),
+  brick: wallFace(9),
+  lavender: wallFace(5),
 };
 
 function paintWalls(data, mapWidth, mapHeight, rect) {
   const right = rect.x + rect.w - 1;
   const bottom = rect.y + rect.h - 1;
+  const northWall = NORTH_WALL[rect.wallStyle] || NORTH_WALL.white;
   const gaps = new Set();
   for (const door of rect.doors || []) {
     const len = door.len || 2;
@@ -484,6 +544,7 @@ function paintWalls(data, mapWidth, mapHeight, rect) {
         gaps.add(`${rect.x + door.at + index},${rect.y + 1}`);
       } else if (door.side === 'S') {
         gaps.add(`${rect.x + door.at + index},${bottom}`);
+        if (rect.southWall3d) gaps.add(`${rect.x + door.at + index},${bottom - 1}`);
       } else if (door.side === 'W') {
         gaps.add(`${rect.x},${rect.y + door.at + index}`);
       } else {
@@ -499,14 +560,22 @@ function paintWalls(data, mapWidth, mapHeight, rect) {
   const hasNorthFace = bottom > rect.y + 2;
   put(rect.x, rect.y, WALL.TL);
   put(right, rect.y, WALL.TR);
-  put(rect.x, bottom, WALL.BL);
-  put(right, bottom, WALL.BR);
-  for (let x = rect.x + 1; x < right; x += 1) {
-    put(x, rect.y, hasNorthFace ? WALL.N_CAP : WALL.TOP);
-    if (hasNorthFace) put(x, rect.y + 1, WALL.N_FACE);
-    put(x, bottom, WALL.BOT);
+  if (!rect.southWall3d) {
+    put(rect.x, bottom, WALL.BL);
+    put(right, bottom, WALL.BR);
   }
-  for (let y = rect.y + 1; y < bottom; y += 1) {
+  for (let x = rect.x + 1; x < right; x += 1) {
+    put(x, rect.y, hasNorthFace ? northWall.cap : WALL.TOP);
+    if (hasNorthFace) put(x, rect.y + 1, northWall.face);
+    if (rect.southWall3d) {
+      put(x, bottom - 1, northWall.cap);
+      put(x, bottom, northWall.face);
+    } else {
+      put(x, bottom, WALL.BOT);
+    }
+  }
+  const sideEnd = rect.southWall3d ? bottom + 1 : bottom;
+  for (let y = rect.y + 1; y < sideEnd; y += 1) {
     put(rect.x, y, WALL.L);
     put(right, y, WALL.R);
   }
@@ -557,6 +626,10 @@ function mapTilesets() {
     { firstgid: FIRST_GID.walls, source: '../tilesets/room-builder.tsj' },
     { firstgid: FIRST_GID.world, source: '../tilesets/world-assets.tsj' },
     { firstgid: FIRST_GID.furniture, source: '../tilesets/office-furniture.tsj' },
+    ...paletteDefinitions().map((palette) => ({
+      firstgid: FIRST_GID[palette.key],
+      source: `../tilesets/${palette.file}`,
+    })),
   ];
 }
 
@@ -645,6 +718,7 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
   const furniture = (map.furniture || []).map((item) => {
     const asset = catalogs.furniture.byAsset.get(item.id);
     if (!asset) throw new Error(`Móvel usa asset desconhecido: ${item.id}`);
+    const collision = item.collision || {};
     return tileObject(
       objectId(), 'furniture', item.id, asset,
       gidFor(catalogs, 'furniture', item.id, item.flipX),
@@ -659,6 +733,10 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
         explicitFlipX: Object.hasOwn(item, 'flipX'),
         depth: item.depth,
         solid: item.solid,
+        collisionX: item.collision ? (collision.x || 0) : undefined,
+        collisionY: item.collision ? (collision.y || 0) : undefined,
+        collisionW: collision.w,
+        collisionH: collision.h,
         extraJson: extraJson(item, FURNITURE_FIELDS),
       },
     );
@@ -970,6 +1048,14 @@ export function tiledToRuntime(tiled, catalogs) {
     }
     optional(result, 'depth', values.depth, values);
     optional(result, 'solid', values.solid, values);
+    if (Object.hasOwn(values, 'collisionW') && Object.hasOwn(values, 'collisionH')) {
+      result.collision = {
+        x: values.collisionX || 0,
+        y: values.collisionY || 0,
+        w: values.collisionW,
+        h: values.collisionH,
+      };
+    }
     return result;
   });
 
@@ -1149,6 +1235,7 @@ export function refreshPreviews(requested = 'all') {
 }
 
 function validateMaps(converted, completeSet) {
+  const animations = readJson(ANIMATIONS_CATALOG_PATH);
   const allMaps = completeSet
     ? converted
     : new Map(manifest().scenes.map((scene) => {
@@ -1167,9 +1254,11 @@ function validateMaps(converted, completeSet) {
     }
     for (const assetId of map.assets || []) {
       if (assetId === 'office_door') continue;
-      const path = assetId.startsWith('of_')
-        ? resolve(CLIENT_ROOT, `assets/furniture/office/${assetId}.png`)
-        : resolve(CLIENT_ROOT, `assets/world/${assetId}.png`);
+      const path = animations[assetId]
+        ? resolve(CLIENT_ROOT, animations[assetId].path)
+        : assetId.startsWith('of_')
+          ? resolve(CLIENT_ROOT, `assets/furniture/office/${assetId}.png`)
+          : resolve(CLIENT_ROOT, `assets/world/${assetId}.png`);
       if (!existsSync(path)) throw new Error(`Asset da cena ${sceneId} não existe: ${assetId}`);
     }
   }

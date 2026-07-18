@@ -7,7 +7,18 @@ const WALL = {
   TL: F(7, 1), TOP: F(8, 1), TR: F(9, 1),
   L: F(7, 2), R: F(9, 2),
   BL: F(7, 3), BOT: F(8, 3), BR: F(9, 3),
-  N_CAP: F(8, 9), N_FACE: F(8, 10),
+};
+
+const wallFace = (row) => ({
+  cap: F(1, row),
+  face: F(1, row + 1),
+});
+
+const NORTH_WALL = {
+  white: wallFace(11),
+  stone: wallFace(7),
+  brick: wallFace(9),
+  lavender: wallFace(5),
 };
 
 export const FLOORS = {
@@ -70,6 +81,7 @@ function addLabel(scene, rect, tile, subtle = false) {
 function drawWalls(scene, rect, tile, solids) {
   const right = rect.x + rect.w - 1;
   const bottom = rect.y + rect.h - 1;
+  const northWall = NORTH_WALL[rect.wallStyle] || NORTH_WALL.white;
   const doors = new Set();
 
   for (const door of (rect.doors || [])) {
@@ -80,6 +92,7 @@ function drawWalls(scene, rect, tile, solids) {
         doors.add(`${rect.x + door.at + i},${rect.y + 1}`);
       } else if (door.side === 'S') {
         doors.add(`${rect.x + door.at + i},${bottom}`);
+        if (rect.southWall3d) doors.add(`${rect.x + door.at + i},${bottom - 1}`);
       } else if (door.side === 'W') {
         doors.add(`${rect.x},${rect.y + door.at + i}`);
       } else {
@@ -90,27 +103,6 @@ function drawWalls(scene, rect, tile, solids) {
 
   const put = (x, y, frame) => {
     if (doors.has(`${x},${y}`)) return;
-
-    if (y === bottom) {
-      scene.add.rectangle(
-        x * tile,
-        (y + 1) * tile - 2,
-        tile,
-        4,
-        0x202638,
-        0.28,
-      ).setOrigin(0, 0).setDepth(-70);
-    }
-    if (x === rect.x || x === right) {
-      scene.add.rectangle(
-        x === rect.x ? (x + 1) * tile - 2 : x * tile,
-        y * tile,
-        3,
-        tile,
-        0x202638,
-        0.2,
-      ).setOrigin(0, 0).setDepth(-70);
-    }
 
     scene.add.image(
       x * tile + tile / 2,
@@ -124,21 +116,46 @@ function drawWalls(scene, rect, tile, solids) {
   const hasNorthFace = bottom > rect.y + 2;
   put(rect.x, rect.y, WALL.TL);
   put(right, rect.y, WALL.TR);
-  put(rect.x, bottom, WALL.BL);
-  put(right, bottom, WALL.BR);
+  if (!rect.southWall3d) {
+    put(rect.x, bottom, WALL.BL);
+    put(right, bottom, WALL.BR);
+  }
 
   for (let x = rect.x + 1; x < right; x++) {
-    put(x, rect.y, hasNorthFace ? WALL.N_CAP : WALL.TOP);
-    if (hasNorthFace) put(x, rect.y + 1, WALL.N_FACE);
-    put(x, bottom, WALL.BOT);
+    put(x, rect.y, hasNorthFace ? northWall.cap : WALL.TOP);
+    if (hasNorthFace) put(x, rect.y + 1, northWall.face);
+    if (rect.southWall3d) {
+      put(x, bottom - 1, northWall.cap);
+      put(x, bottom, northWall.face);
+    } else {
+      put(x, bottom, WALL.BOT);
+    }
   }
-  for (let y = rect.y + 1; y < bottom; y++) {
+  const sideEnd = rect.southWall3d ? bottom + 1 : bottom;
+  for (let y = rect.y + 1; y < sideEnd; y++) {
     put(rect.x, y, WALL.L);
     put(right, y, WALL.R);
   }
 }
 
-function drawDoorFixtures(scene, rect, tile) {
+function doorCollision(rect, door) {
+  const right = rect.x + rect.w - 1;
+  const bottom = rect.y + rect.h - 1;
+  const length = door.len || 2;
+
+  if (door.side === 'S') {
+    return { x: rect.x + door.at, y: bottom, w: length, h: 1 };
+  }
+  if (door.side === 'N') {
+    return { x: rect.x + door.at, y: rect.y, w: length, h: 1 };
+  }
+  if (door.side === 'W') {
+    return { x: rect.x, y: rect.y + door.at, w: 1, h: length };
+  }
+  return { x: right, y: rect.y + door.at, w: 1, h: length };
+}
+
+function drawDoorFixtures(scene, rect, tile, solids) {
   const right = rect.x + rect.w - 1;
   const bottom = rect.y + rect.h - 1;
 
@@ -168,31 +185,136 @@ function drawDoorFixtures(scene, rect, tile) {
       originX = 0.5;
     }
 
-    scene.add.image(x, y, door.texture, door.frame ?? 8)
+    const animated = door.automatic ? scene.animatedAssets?.[door.texture] : null;
+    const fixture = animated
+      ? scene.add.sprite(x, y, door.texture, animated.start ?? 0)
+      : scene.add.image(x, y, door.texture, door.frame ?? 8);
+    fixture
       .setOrigin(originX, originY)
       .setFlipX(Boolean(door.flipX))
       .setDepth(door.depth ?? y - 1);
+
+    if (animated) {
+      const collision = doorCollision(rect, door);
+      const blocker = addSolidRect(scene, solids, collision, tile);
+      scene.automaticDoors ||= [];
+      scene.automaticDoors.push({
+        sprite: fixture,
+        blocker,
+        animation: animated.animation,
+        state: 'closed',
+        sensorX: (collision.x + collision.w / 2) * tile,
+        sensorY: (collision.y + collision.h / 2) * tile,
+        openRadius: (door.openRadius ?? 3) * tile,
+        closeRadius: (door.closeRadius ?? 4.25) * tile,
+      });
+    }
   }
 }
 
-function renderFurniture(scene, map, tile, solids) {
-  for (const item of (map.furniture || [])) {
-    const x = item.x * tile + tile / 2 + (item.offsetX || 0);
-    const y = item.y * tile + tile + (item.offsetY || 0);
-    scene.add.image(x, y, item.id)
-      .setOrigin(item.originX ?? 0.5, item.originY ?? 1)
-      .setFlipX(Boolean(item.flipX))
-      .setDepth(item.depth ?? y);
+export function updateAutomaticDoors(scene, player) {
+  const playerX = player.body.center.x;
+  const playerY = player.body.center.y;
 
-    if (item.solid) {
-      addSolidRect(scene, solids, {
-        x: item.x - 0.45,
-        y: item.y + 0.15,
-        w: 1.9,
-        h: 0.7,
-      }, tile);
+  for (const door of (scene.automaticDoors || [])) {
+    const distance = Phaser.Math.Distance.Between(
+      playerX,
+      playerY,
+      door.sensorX,
+      door.sensorY,
+    );
+
+    if (distance <= door.openRadius && (door.state === 'closed' || door.state === 'closing')) {
+      door.state = 'opening';
+      door.blocker.body.enable = false;
+      door.sprite.play(door.animation);
+      door.sprite.once('animationcomplete', () => {
+        if (door.state === 'opening') door.state = 'open';
+      });
+    } else if (distance >= door.closeRadius && (door.state === 'open' || door.state === 'opening')) {
+      door.state = 'closing';
+      door.sprite.playReverse(door.animation);
+      door.sprite.once('animationcomplete', () => {
+        if (door.state !== 'closing') return;
+        door.state = 'closed';
+        door.blocker.body.enable = true;
+      });
     }
   }
+}
+
+export function furnitureCollision(item) {
+  return item.collision || (item.solid ? {
+    x: -0.45,
+    y: 0.15,
+    w: 1.9,
+    h: 0.7,
+  } : null);
+}
+
+function removeFurnitureCollider(record) {
+  if (!record.collider) return;
+  record.solids.remove(record.collider, true, true);
+  record.collider = null;
+}
+
+function createFurnitureCollider(record) {
+  const collision = furnitureCollision(record.item);
+  if (!collision) return null;
+  return addSolidRect(record.scene, record.solids, {
+    x: record.item.x + (collision.x || 0),
+    y: record.item.y + (collision.y || 0),
+    w: collision.w,
+    h: collision.h,
+  }, record.tile);
+}
+
+export function updateFurnitureObject(record, refreshCollision = false) {
+  const { item, display, tile } = record;
+  const x = item.x * tile + tile / 2 + (item.offsetX || 0);
+  const y = item.y * tile + tile + (item.offsetY || 0);
+  display
+    .setPosition(x, y)
+    .setOrigin(item.originX ?? 0.5, item.originY ?? 1)
+    .setFlipX(Boolean(item.flipX))
+    .setDepth(item.depth ?? y);
+  if (refreshCollision) {
+    removeFurnitureCollider(record);
+    record.collider = createFurnitureCollider(record);
+  }
+  return record;
+}
+
+export function createFurnitureObject(scene, item, tile, solids) {
+  const animated = scene.animatedAssets?.[item.id];
+  const display = animated
+    ? scene.add.sprite(0, 0, item.id)
+    : scene.add.image(0, 0, item.id);
+  const record = {
+    scene,
+    item,
+    tile,
+    solids,
+    display,
+    collider: null,
+  };
+  if (animated) display.play(animated.animation);
+  updateFurnitureObject(record, true);
+  scene.furnitureObjects ||= [];
+  scene.furnitureObjects.push(record);
+  return record;
+}
+
+export function destroyFurnitureObject(record) {
+  removeFurnitureCollider(record);
+  record.display.destroy();
+  const objects = record.scene.furnitureObjects || [];
+  record.scene.furnitureObjects = objects.filter((candidate) => candidate !== record);
+}
+
+function renderFurniture(scene, map, tile, solids) {
+  scene.furnitureObjects = [];
+  for (const item of (map.furniture || [])) createFurnitureObject(scene, item, tile, solids);
 }
 
 function drawHedge(scene, rect, tile) {
@@ -288,9 +410,9 @@ function renderInterior(scene, map, solids) {
     addLabel(scene, room, tile, false);
   }
 
-  if (map.building) drawDoorFixtures(scene, map.building, tile);
+  if (map.building) drawDoorFixtures(scene, map.building, tile, solids);
   for (const room of (map.rooms || [])) {
-    drawDoorFixtures(scene, room, tile);
+    drawDoorFixtures(scene, room, tile, solids);
   }
 
   renderFurniture(scene, map, tile, solids);
@@ -308,6 +430,7 @@ function renderWorld(scene, map, solids) {
 }
 
 export function renderScene(scene, map, solids) {
+  scene.automaticDoors = [];
   if (map.kind === 'world') renderWorld(scene, map, solids);
   else renderInterior(scene, map, solids);
 

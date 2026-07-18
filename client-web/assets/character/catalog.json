@@ -1,0 +1,80 @@
+{
+  "storageKey": "office-quest-character-v1",
+  "frame": {
+    "width": 16,
+    "height": 32,
+    "poses": {
+      "idle": { "y": 32, "frames": 24, "frameRate": 5 },
+      "walk": { "y": 64, "frames": 24, "frameRate": 10 },
+      "sit": { "y": 128, "frames": 12, "frameRate": 5 }
+    }
+  },
+  "defaultSelection": {
+    "body": "body-03",
+    "eyes": "eyes-03",
+    "outfit": "outfit-01-03",
+    "hairstyle": "hairstyle-01-03",
+    "accessory": "none"
+  },
+  "categories": [
+    {
+      "id": "body",
+      "name": "Pele",
+      "required": true,
+      "options": [
+        { "id": "body-01", "name": "Pele 1", "path": "assets/character/bodies/body_01.png", "accent": "#ffd0b5" },
+        { "id": "body-03", "name": "Pele 2", "path": "assets/character/bodies/body_03.png", "accent": "#edaa83" },
+        { "id": "body-05", "name": "Pele 3", "path": "assets/character/bodies/body_05.png", "accent": "#b96f50" },
+        { "id": "body-08", "name": "Pele 4", "path": "assets/character/bodies/body_08.png", "accent": "#754331" }
+      ]
+    },
+    {
+      "id": "eyes",
+      "name": "Olhos",
+      "required": true,
+      "options": [
+        { "id": "eyes-01", "name": "Castanhos", "path": "assets/character/eyes/eyes_01.png", "accent": "#5d382d" },
+        { "id": "eyes-03", "name": "Azuis", "path": "assets/character/eyes/eyes_03.png", "accent": "#65b9e8" },
+        { "id": "eyes-05", "name": "Verdes", "path": "assets/character/eyes/eyes_05.png", "accent": "#64b680" },
+        { "id": "eyes-07", "name": "Violetas", "path": "assets/character/eyes/eyes_07.png", "accent": "#a579d2" }
+      ]
+    },
+    {
+      "id": "outfit",
+      "name": "Roupa",
+      "required": true,
+      "options": [
+        { "id": "outfit-01-03", "name": "Casual verde", "path": "assets/character/outfits/outfit_01_03.png", "accent": "#5daf83" },
+        { "id": "outfit-05-02", "name": "Urbano azul", "path": "assets/character/outfits/outfit_05_02.png", "accent": "#4f87b8" },
+        { "id": "outfit-10-03", "name": "Jaqueta vermelha", "path": "assets/character/outfits/outfit_10_03.png", "accent": "#c84f58" },
+        { "id": "outfit-19-03", "name": "Social claro", "path": "assets/character/outfits/outfit_19_03.png", "accent": "#e2d3bd" },
+        { "id": "outfit-31-04", "name": "Tech verde", "path": "assets/character/outfits/outfit_31_04.png", "accent": "#58aa82" }
+      ]
+    },
+    {
+      "id": "hairstyle",
+      "name": "Cabelo",
+      "required": true,
+      "options": [
+        { "id": "hairstyle-01-03", "name": "Curto castanho", "path": "assets/character/hairstyles/hairstyle_01_03.png", "accent": "#76513d" },
+        { "id": "hairstyle-04-04", "name": "Curto dourado", "path": "assets/character/hairstyles/hairstyle_04_04.png", "accent": "#d19b4a" },
+        { "id": "hairstyle-10-02", "name": "Liso preto", "path": "assets/character/hairstyles/hairstyle_10_02.png", "accent": "#34303d" },
+        { "id": "hairstyle-16-05", "name": "Médio cobre", "path": "assets/character/hairstyles/hairstyle_16_05.png", "accent": "#a75a42" },
+        { "id": "hairstyle-24-03", "name": "Longo castanho", "path": "assets/character/hairstyles/hairstyle_24_03.png", "accent": "#6a4637" },
+        { "id": "hairstyle-29-05", "name": "Longo violeta", "path": "assets/character/hairstyles/hairstyle_29_05.png", "accent": "#765690" }
+      ]
+    },
+    {
+      "id": "accessory",
+      "name": "Acessório",
+      "required": false,
+      "options": [
+        { "id": "none", "name": "Nenhum", "path": null, "accent": "#73545a" },
+        { "id": "glasses-03", "name": "Óculos rosa", "path": "assets/character/accessories/glasses_03.png", "accent": "#e453b4" },
+        { "id": "snapback-03", "name": "Boné verde", "path": "assets/character/accessories/snapback_03.png", "accent": "#63a65c" },
+        { "id": "beanie-04", "name": "Gorro azul", "path": "assets/character/accessories/beanie_04.png", "accent": "#4c8fba" },
+        { "id": "backpack-04", "name": "Mochila azul", "path": "assets/character/accessories/backpack_04.png", "accent": "#557fac" }
+      ]
+    }
+  ]
+}

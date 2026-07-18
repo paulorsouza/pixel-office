@@ -107,6 +107,38 @@ for (const [d, s] of Object.entries(DIR)) {
 }
 ```
 
+### Avatar modular e editor de aparência
+
+`CharacterSystem.js` substitui apenas o desenho do jogador: o sprite físico original continua
+invisível e mantém colisão, velocidade e câmera. Cada opção é uma folha completa do Character
+Generator; o runtime registra frames de 16×32 nas linhas descritas por
+`assets/character/catalog.json` e cria um sprite por categoria, nesta ordem:
+
+```text
+body → eyes → outfit → hairstyle → accessory
+```
+
+O mesmo catálogo abastece a aba `Personagem` do menu de `Tab` e as prévias CSS. Não crie offsets
+por cabelo ou roupa: assets do Character Generator já são alinhados e devem permanecer na mesma
+posição. Para depurar sem tocar no storage, leia `window.__character.getSelection()`. Também estão
+expostos `select(categoryId, optionId)`, `setTab('character')`, `randomize()` e `reset()`.
+
+Ao adicionar outra pose, primeiro declare sua linha, quantidade de frames e FPS em `frame.poses`;
+depois ensine `characterFrameSpec()` quando ela deve ser usada. A moto usa `sit` somente de lado,
+pois essa pose não possui frente/costas; na vertical o fallback é `idle`.
+
+### Editor de móveis durante o jogo
+
+`RoomDecorationSystem.js` mantém a personalização do usuário fora do mapa-base. Na abertura da
+cena, `createRoomDecorationStore().mapForScene(sceneId)` clona o JSON convertido e substitui apenas
+os móveis das salas que possuem estado salvo. Durante a edição, os records expostos por
+`MapRenderer.js` permitem mover visual e collider juntos sem reconstruir a cena inteira.
+
+O catálogo fica em `assets/furniture/catalog.json`; inclua nele somente peças autorizadas para o
+usuário. Cada item pode declarar seu footprint `collision`. A validação impede sair da sala,
+bloquear portas e sobrepor móveis. Não estenda esse editor para paredes ou portais: mudanças
+estruturais pertencem ao Tiled e ao conversor.
+
 ### Corpo de colisão nos "pés" (top-down)
 O sprite é 16×32, mas quem colide é só a base:
 ```js
@@ -142,7 +174,51 @@ this.input.on('wheel', (p, o, dx, dy) => {
 ```
 
 Em cenas cercadas, configure `camera.bounds` no JSON até o portão. O runtime combina o `minZoom`
-configurado com o zoom mínimo necessário para a janela não revelar espaço fora do mapa.
+configurado com o zoom necessário para mostrar esses limites inteiros. No extremo do scroll, a cena
+vira uma visão geral; margens recebem a cor de fundo quando a proporção da janela não coincide com a
+do mapa, e o runtime expande os limites virtuais para manter a cena centralizada.
+
+### Loadout RPG e veículo temporário com Shift
+
+O menu, os seis slots, a persistência e o desenho dos veículos vivem em `EquipmentSystem.js`. O
+catálogo separado em `assets/equipment/catalog.json` possui `slots[]` e `items[]`; cada item declara
+seu `slot`. O loop consulta apenas o item equipado em `loadout.vehicle` a cada frame:
+
+```js
+const profile = movementProfile(catalog, menu.getEquippedId(), shiftKey.isDown);
+const speed = profile.speed; // caminhada ou velocidade do equipamento
+```
+
+`profile.active` só é verdadeiro quando existe um item do slot `vehicle` equipado **e** Shift está
+pressionado. Correntes, brincos e periféricos nunca chegam ao perfil de movimento. Esse
+mesmo estado governa velocidade, spritesheet do piloto, veículo e rastro; não espalhe verificações
+independentes de Shift pelo runtime. O menu abre e fecha com `Tab` e não mantém um indicador fixo de
+veículo no HUD. Ao acrescentar um item, cadastre seus
+dados e o slot no JSON. Só veículos precisam de `speed`, pose e desenho em `drawEquipment`.
+Quando o equipamento precisa cobrir parte do personagem, como as botas dos patins, use
+`renderLayer: "front"`; skate e os veículos maiores continuam atrás do piloto. Para veículos que
+deslizam, prefira `riderSheet: "adam_idle"` a reutilizar a corrida, evitando passadas sem contato
+com a prancha ou com as rodas.
+
+Para conferir o estado durante debug, `window.__equipment` expõe `getEquipment()`, `getLoadout()`,
+`select(id)`, `unequip(slotId)`, `clearAll()` e `isOpen()`. A cena continua disponível em
+`window.__scene`.
+
+Para inspecionar um visual continuamente, sem precisar manter Shift pressionado durante uma captura,
+use `?equipmentPreview=<id>`; por exemplo:
+
+```text
+http://localhost:8123/?scene=tooq-office&equipmentPreview=motorcycle
+```
+
+Esse parâmetro só força a ativação para debug e não altera o item salvo pelo jogador.
+Acrescente `&equipmentDirection=up`, `down`, `left` ou `right` para fixar a orientação sem usar o
+teclado durante uma captura.
+
+⚠️ `Adam_sit.png` é a exceção à grade normal: são **12 frames de 32×32**, seis olhando para a
+direita e seis para a esquerda; não há frente/costas. Fatiar em 16×32 alterna as duas metades do
+piloto e faz a moto piscar. O catálogo usa `riderDirections` para manter `Adam_sit` nas laterais e
+substituí-lo pelos frames `up/down` de `Adam_idle_anim.png` na vertical.
 
 ### Colisão como parte dos dados
 
@@ -233,6 +309,8 @@ O cliente é **multi-cena e orientado a dados**: os mapas são JSON, não classe
 
 ```
 src/main.js             runtime, player, câmera, HUD e transições
+src/CharacterSystem.js  avatar modular, editor, frames nomeados e persistência
+src/EquipmentSystem.js  loadout, baú, persistência, velocidade e desenho dos veículos
 src/MapRenderer.js      desenha mapas world/interior a partir do JSON
 src/Editor.js           editor antigo, preservado mas fora do runtime atual
 maps/scenes.json        manifesto e cena inicial
@@ -247,6 +325,8 @@ tools/tiled-converter.mjs  gera e valida os JSONs do runtime
 - Mundo, salas, móveis, colisões e portais → `tiled/maps/*.tmj`, seguido do conversor.
 - JSONs gerados → `maps/world.json` e `maps/tooq-office.json`, úteis para inspeção.
 - Player/câmera/anims/controles → `main.js`.
+- Aparência, catálogo e composição do avatar → `assets/character/catalog.json` + `CharacterSystem.js`.
+- Slots, itens, menu e visuais de locomoção → `assets/equipment/catalog.json` + `EquipmentSystem.js`.
 - Regras de desenho e colisões → `MapRenderer.js`.
 
 **Portal** liga um retângulo da cena atual a `targetScene` + `targetSpawn`. `E` é reservado à

@@ -6184,7 +6184,7 @@
     {
       "name": "cameraMinZoom",
       "type": "float",
-      "value": 1.35
+      "value": 0.8
     },
     {
       "name": "ground",
@@ -6216,6 +6216,22 @@
     {
       "firstgid": 100000,
       "source": "../tilesets/office-furniture.tsj"
+    },
+    {
+      "firstgid": 200000,
+      "source": "../tilesets/palette-office.tsj"
+    },
+    {
+      "firstgid": 210000,
+      "source": "../tilesets/palette-decor.tsj"
+    },
+    {
+      "firstgid": 220000,
+      "source": "../tilesets/palette-garden.tsj"
+    },
+    {
+      "firstgid": 230000,
+      "source": "../tilesets/palette-animations.tsj"
     }
   ],
   "tilewidth": 16,

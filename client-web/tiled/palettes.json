@@ -1,0 +1,50 @@
+{
+  "palettes": [
+    {
+      "key": "officePalette",
+      "file": "palette-office.tsj",
+      "name": "02 · Escritório · Estações",
+      "assetIds": [
+        "of_101", "of_102", "of_106", "of_107",
+        "of_126", "of_129", "of_130", "of_131", "of_136", "of_139", "of_140", "of_141",
+        "of_179", "of_180", "of_183", "of_185", "of_190", "of_193",
+        "of_196", "of_197", "of_198", "of_199",
+        "of_225", "of_227", "of_229", "of_231", "of_233", "of_235",
+        "of_248", "of_249", "of_253", "of_254", "of_258", "of_259",
+        "of_275", "of_276", "of_277", "of_278", "of_285", "of_294", "of_295", "of_300", "of_305",
+        "of_306", "of_307", "of_315", "of_316",
+        "of_317", "of_318", "of_319"
+      ]
+    },
+    {
+      "key": "decorPalette",
+      "file": "palette-decor.tsj",
+      "name": "03 · Decoração · Escritório",
+      "assetIds": [
+        "of_96", "of_97", "of_98", "of_99", "of_100",
+        "of_113", "of_114", "of_115", "of_149", "of_150", "of_151", "of_152",
+        "of_153", "of_154", "of_155", "of_163", "of_164",
+        "of_170", "of_171", "of_172", "of_173", "of_174", "of_175", "of_176",
+        "of_200", "of_201", "of_202", "of_203", "of_204", "of_205",
+        "of_320", "of_321", "of_322", "of_323", "of_324", "of_325", "of_326", "of_327", "of_328",
+        "of_329", "of_330", "of_331", "of_332", "of_333", "of_334", "of_335", "of_336",
+        "of_337", "of_338", "of_339"
+      ]
+    },
+    {
+      "key": "gardenPalette",
+      "file": "palette-garden.tsj",
+      "name": "04 · Exterior · Quintal",
+      "assetIds": [
+        "grass_detail", "gate", "hedge_top", "hedge_fill", "fountain", "bench",
+        "tree1", "tree2", "bush1", "bush2", "flower1", "flower2"
+      ]
+    },
+    {
+      "key": "animationPalette",
+      "file": "palette-animations.tsj",
+      "name": "05 · Animações · Decoração",
+      "assetIds": ["anim_coffee"]
+    }
+  ]
+}

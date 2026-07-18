@@ -31,11 +31,10 @@ node_modules/
 package-lock.json
 
 # ---------- Assets ----------
-# Os packs LimeZu crus (~1,6 GB) NÃO são versionados — ver ASSETS.md.
-# Ficam FORA do repo (sibling Claude Sessions/LimeZu); se aparecer uma cópia
-# dentro do repo, é ignorada aqui. São re-baixáveis do itch.io.
-/LimeZu/
-LimeZu/
+# Os packs LimeZu crus e seus backups locais NÃO são versionados — ver ASSETS.md.
+# O wildcard também protege cópias como /LimeZu 2/ e /LimeZu.zip.
+/LimeZu*/
+/LimeZu*.zip
 # Os assets já recortados que o cliente carrega SÃO versionados (client-web/assets/).
 
 # ---------- SO ----------

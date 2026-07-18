@@ -1,0 +1,38 @@
+{
+  "anim_coffee": {
+    "path": "assets/animations/coffee-steam.png",
+    "preview": "assets/animations/coffee-steam-preview.png",
+    "frameWidth": 16,
+    "frameHeight": 16,
+    "start": 0,
+    "end": 5,
+    "frameRate": 4,
+    "repeat": -1,
+    "animation": "decor-coffee-steam",
+    "category": "furniture"
+  },
+  "interior_glass_door": {
+    "path": "assets/animations/interior-glass-door.png",
+    "preview": "assets/animations/interior-glass-door-preview.png",
+    "frameWidth": 32,
+    "frameHeight": 48,
+    "start": 0,
+    "end": 4,
+    "frameRate": 14,
+    "repeat": 0,
+    "animation": "interior-glass-door-open",
+    "category": "door"
+  },
+  "interior_sliding_door": {
+    "path": "assets/animations/interior-sliding-door.png",
+    "preview": "assets/animations/interior-sliding-door-preview.png",
+    "frameWidth": 32,
+    "frameHeight": 32,
+    "start": 0,
+    "end": 6,
+    "frameRate": 18,
+    "repeat": 0,
+    "animation": "interior-sliding-door-open",
+    "category": "door"
+  }
+}
