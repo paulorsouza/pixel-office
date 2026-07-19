@@ -1,5 +1,6 @@
 // Renderer de cenas orientado a dados.
-// Cada JSON descreve um mundo ou interior, seus spawns e portais.
+// Cada mapa normalizado descreve um mundo ou interior, seus spawns e portais.
+import { createMechanicsRuntime } from './mechanics/index.js';
 
 const F = (c, r) => r * 16 + c;
 
@@ -78,7 +79,7 @@ function addLabel(scene, rect, tile, subtle = false) {
     .setResolution(3);
 }
 
-function drawWalls(scene, rect, tile, solids) {
+function drawWalls(scene, rect, tile, solids, renderVisual = true, createCollisions = true) {
   const right = rect.x + rect.w - 1;
   const bottom = rect.y + rect.h - 1;
   const northWall = NORTH_WALL[rect.wallStyle] || NORTH_WALL.white;
@@ -104,13 +105,15 @@ function drawWalls(scene, rect, tile, solids) {
   const put = (x, y, frame) => {
     if (doors.has(`${x},${y}`)) return;
 
-    scene.add.image(
-      x * tile + tile / 2,
-      y * tile + tile / 2,
-      'tiles',
-      frame,
-    ).setDepth(y * tile + tile);
-    addSolidRect(scene, solids, { x, y, w: 1, h: 1 }, tile);
+    if (renderVisual) {
+      scene.add.image(
+        x * tile + tile / 2,
+        y * tile + tile / 2,
+        'tiles',
+        frame,
+      ).setDepth(y * tile + tile);
+    }
+    if (createCollisions) addSolidRect(scene, solids, { x, y, w: 1, h: 1 }, tile);
   };
 
   const hasNorthFace = bottom > rect.y + 2;
@@ -277,6 +280,7 @@ export function updateFurnitureObject(record, refreshCollision = false) {
     .setPosition(x, y)
     .setOrigin(item.originX ?? 0.5, item.originY ?? 1)
     .setFlipX(Boolean(item.flipX))
+    .setFlipY(Boolean(item.flipY))
     .setDepth(item.depth ?? y);
   if (refreshCollision) {
     removeFurnitureCollider(record);
@@ -289,7 +293,7 @@ export function createFurnitureObject(scene, item, tile, solids) {
   const animated = scene.animatedAssets?.[item.id];
   const display = animated
     ? scene.add.sprite(0, 0, item.id)
-    : scene.add.image(0, 0, item.id);
+    : scene.add.image(0, 0, item.id, item.frame);
   const record = {
     scene,
     item,
@@ -342,31 +346,40 @@ function fillGround(scene, rect, tile, texture) {
   ).setOrigin(0, 0).setDepth(-100);
 }
 
-function renderLandscape(scene, map, solids, groundRect) {
+function renderLandscape(scene, map, solids, groundRect, renderBaseVisuals = true) {
   const tile = map.tile || 16;
-  fillGround(scene, groundRect, tile, groundRect.ground || map.ground || 'grass');
+  if (renderBaseVisuals) {
+    fillGround(scene, groundRect, tile, groundRect.ground || map.ground || 'grass');
+  }
 
   for (const detail of (map.details || [])) {
     scene.add.image(
       detail.x * tile + tile / 2,
       detail.y * tile + tile / 2,
       detail.texture || 'grass_detail',
-    ).setDepth(-95).setAlpha(detail.alpha ?? 0.9);
+      detail.frame,
+    ).setFlipX(Boolean(detail.flipX))
+      .setFlipY(Boolean(detail.flipY))
+      .setDepth(-95)
+      .setAlpha(detail.alpha ?? 0.9);
   }
 
-  for (const path of (map.paths || [])) fillFloor(scene, path, tile, -90);
+  if (renderBaseVisuals) {
+    for (const path of (map.paths || [])) fillFloor(scene, path, tile, -90);
+  }
 
   for (const hedge of (map.hedges || [])) {
-    drawHedge(scene, hedge, tile);
-    addSolidRect(scene, solids, hedge, tile);
+    if (renderBaseVisuals) drawHedge(scene, hedge, tile);
+    if (renderBaseVisuals) addSolidRect(scene, solids, hedge, tile);
   }
 
   for (const prop of (map.props || [])) {
     const x = prop.x * tile + (prop.offsetX || 0);
     const y = prop.y * tile + (prop.offsetY || 0);
-    scene.add.image(x, y, prop.texture)
+    scene.add.image(x, y, prop.texture, prop.frame)
       .setOrigin(prop.originX ?? 0.5, prop.originY ?? 1)
       .setFlipX(Boolean(prop.flipX))
+      .setFlipY(Boolean(prop.flipY))
       .setDepth(prop.depth ?? y);
 
     if (prop.collision) {
@@ -379,19 +392,17 @@ function renderLandscape(scene, map, solids, groundRect) {
     }
   }
 
-  for (const collision of (map.collisions || [])) {
-    addSolidRect(scene, solids, collision, tile);
-  }
 }
 
 function renderInterior(scene, map, solids) {
   const tile = map.tile || 16;
+  const renderBaseVisuals = map.visualMode !== 'tiled';
 
-  if (map.yard) renderLandscape(scene, map, solids, map.yard);
-  if (map.building) fillFloor(scene, map.building, tile, -100);
+  if (map.yard) renderLandscape(scene, map, solids, map.yard, renderBaseVisuals);
+  if (map.building && renderBaseVisuals) fillFloor(scene, map.building, tile, -100);
 
   for (const zone of (map.zones || [])) {
-    fillFloor(scene, zone, tile, -90);
+    if (renderBaseVisuals) fillFloor(scene, zone, tile, -90);
     scene.add.rectangle(
       zone.x * tile,
       zone.y * tile,
@@ -401,12 +412,14 @@ function renderInterior(scene, map, solids) {
     addLabel(scene, zone, tile, true);
   }
   for (const room of (map.rooms || [])) {
-    fillFloor(scene, room, tile, -90);
+    if (renderBaseVisuals) fillFloor(scene, room, tile, -90);
   }
 
-  if (map.building) drawWalls(scene, map.building, tile, solids);
+  if (map.building) {
+    drawWalls(scene, map.building, tile, solids, renderBaseVisuals, renderBaseVisuals);
+  }
   for (const room of (map.rooms || [])) {
-    drawWalls(scene, room, tile, solids);
+    drawWalls(scene, room, tile, solids, renderBaseVisuals, renderBaseVisuals);
     addLabel(scene, room, tile, false);
   }
 
@@ -425,17 +438,112 @@ function renderWorld(scene, map, solids) {
     w: map.w,
     h: map.h,
     ground: map.ground,
-  });
+  }, map.visualMode !== 'tiled');
 
+}
+
+export function tileLayerCollisionRects(layer) {
+  const layerX = layer.x || 0;
+  const layerY = layer.y || 0;
+  const cells = [...(layer.tiles || [])].sort((a, b) => a.y - b.y || a.x - b.x);
+  const rects = [];
+  for (let index = 0; index < cells.length;) {
+    const first = cells[index];
+    let length = 1;
+    while (
+      index + length < cells.length
+      && cells[index + length].y === first.y
+      && cells[index + length].x === first.x + length
+    ) length += 1;
+    rects.push({
+      x: layerX + first.x,
+      y: layerY + first.y,
+      w: length,
+      h: 1,
+    });
+    index += length;
+  }
+  return rects;
+}
+
+function addTileLayerCollisions(scene, solids, layer, tile) {
+  for (const rect of tileLayerCollisionRects(layer)) addSolidRect(scene, solids, rect, tile);
+}
+
+export function renderVisualLayers(scene, map, solids) {
+  const tile = map.tile || 16;
+  scene.visualLayerObjects = [];
+  for (const layer of (map.visualLayers || [])) {
+    if (layer.visible === false) continue;
+    const offsetX = layer.offsetX || 0;
+    const offsetY = layer.offsetY || 0;
+    const layerX = layer.x || 0;
+    const layerY = layer.y || 0;
+    const ySort = Boolean(layer.properties?.ySort);
+    const depthOffset = layer.properties?.depthOffset || 0;
+    const cells = layer.tiles || [];
+    if (layer.properties?.collision) addTileLayerCollisions(scene, solids, layer, tile);
+    const canBatchAsRuns = !ySort && cells.every((cell) => (
+      !cell.flipX
+      && !cell.flipY
+      && !Object.hasOwn(cell, 'frame')
+      && (cell.texture === 'grass' || Object.hasOwn(FLOORS, cell.texture))
+    ));
+    if (canBatchAsRuns) {
+      const sorted = [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
+      for (let index = 0; index < sorted.length;) {
+        const first = sorted[index];
+        let length = 1;
+        while (
+          index + length < sorted.length
+          && sorted[index + length].y === first.y
+          && sorted[index + length].x === first.x + length
+          && sorted[index + length].texture === first.texture
+        ) length += 1;
+        const display = scene.add.tileSprite(
+          (layerX + first.x) * tile + offsetX,
+          (layerY + first.y) * tile + offsetY,
+          length * tile,
+          tile,
+          FLOORS[first.texture] || first.texture,
+        ).setOrigin(0, 0)
+          .setAlpha(layer.opacity ?? 1)
+          .setDepth(layer.depth ?? -85);
+        scene.visualLayerObjects.push(display);
+        index += length;
+      }
+      continue;
+    }
+    for (const cell of cells) {
+      const flatTile = cell.texture === 'tiles'
+        || cell.texture === 'grass'
+        || Object.hasOwn(FLOORS, cell.texture);
+      const texture = FLOORS[cell.texture] || cell.texture;
+      const x = (layerX + cell.x + 0.5) * tile + offsetX;
+      const y = (layerY + cell.y + (flatTile ? 0.5 : 1)) * tile + offsetY;
+      const display = scene.add.image(x, y, texture, cell.frame)
+        .setOrigin(0.5, flatTile ? 0.5 : 1)
+        .setFlipX(Boolean(cell.flipX))
+        .setFlipY(Boolean(cell.flipY))
+        .setAlpha(layer.opacity ?? 1)
+        .setDepth(ySort ? y + depthOffset : (layer.depth ?? -85));
+      scene.visualLayerObjects.push(display);
+    }
+  }
+  return scene.visualLayerObjects;
 }
 
 export function renderScene(scene, map, solids) {
   scene.automaticDoors = [];
   if (map.kind === 'world') renderWorld(scene, map, solids);
   else renderInterior(scene, map, solids);
+  renderVisualLayers(scene, map, solids);
+
+  const mechanics = createMechanicsRuntime(scene, map, { solids });
 
   return {
     spawns: map.spawns || { default: map.spawn || { x: 10, y: 10 } },
-    portals: map.portals || [],
+    portals: mechanics.portals,
+    mechanics,
   };
 }

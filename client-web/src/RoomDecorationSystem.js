@@ -63,6 +63,9 @@ export function normalizePlacedFurniture(catalog, candidate) {
   const item = { id: spec.id, x, y };
   if (candidate.flipX) item.flipX = true;
   if (spec.collision) item.collision = clone(spec.collision);
+  for (const key of ['placementId', 'inventoryItemId', 'ownerId', 'interactionType', 'instanceKey', 'owned']) {
+    if (candidate?.[key] !== undefined) item[key] = candidate[key];
+  }
   return item;
 }
 
@@ -203,7 +206,7 @@ function snapped(value, step) {
   return Math.round(value / step) * step;
 }
 
-export function createRoomDecorationEditor(scene, map, catalog, store, equipmentMenu) {
+export function createRoomDecorationEditor(scene, map, catalog, store, equipmentMenu, gameItems = null) {
   const entry = document.querySelector('#room-decoration-entry');
   const panel = document.querySelector('#room-decoration-panel');
   const close = document.querySelector('#room-decoration-close');
@@ -232,6 +235,8 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   let future = [];
   let gridGraphics = null;
   let boundaryGraphics = null;
+  let subscribedRoomId = null;
+  let loadingRoomId = null;
 
   const setStatus = (message, tone = 'normal') => {
     status.textContent = message;
@@ -239,7 +244,8 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   };
 
   const recordsInRoom = () => (scene.furnitureObjects || []).filter((record) => (
-    activeRoom && furnitureBelongsToRoom(record.item, activeRoom)
+    activeRoom && record.item.owned && record.item.ownerId === gameItems?.userId
+      && furnitureBelongsToRoom(record.item, activeRoom)
   ));
   const captureRoom = () => clone(recordsInRoom().map((record) => record.item));
 
@@ -279,14 +285,17 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
       (activeCategory === 'all' || item.category === activeCategory)
       && (!term || `${item.name} ${item.id}`.toLocaleLowerCase('pt-BR').includes(term))
     ));
-    catalogGrid.innerHTML = items.map((item) => `
+    catalogGrid.innerHTML = items.map((item) => {
+      const count = gameItems?.count(item.id) || 0;
+      return `
       <button class="room-decoration-item${item.id === brushId ? ' active' : ''}" type="button"
         data-decoration-item="${item.id}" aria-pressed="${item.id === brushId}"
-        title="${item.name}">
+        title="${item.name}" ${count ? '' : 'disabled'}>
         <span><img src="${item.path}" alt=""></span>
-        <strong>${item.name}</strong><small>${item.id}</small>
+        <strong>${item.name}</strong><small>${count} no inventário</small>
       </button>
-    `).join('');
+    `;
+    }).join('');
   };
 
   categories.innerHTML = [
@@ -298,8 +307,7 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   `).join('');
   renderCatalog();
 
-  const save = (message = 'Decoração salva neste navegador') => {
-    store.saveRoom(scene.currentSceneId, activeRoom.id, captureRoom());
+  const save = (message = 'Decoração salva no servidor') => {
     setStatus(message, 'saved');
     updateActions();
   };
@@ -336,25 +344,39 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     save('Alteração refeita');
   };
 
-  const removeSelected = () => {
+  const removeSelected = async () => {
     if (!selected) return;
-    const before = captureRoom();
+    if (!selected.item.placementId || !gameItems) return;
+    const record = selected;
     const item = selected.item;
-    destroyFurnitureObject(selected);
+    try {
+      await gameItems.remove(item.placementId);
+    } catch (error) {
+      setStatus(error.message, 'error');
+      return;
+    }
+    destroyFurnitureObject(record);
     map.furniture = (map.furniture || []).filter((candidate) => candidate !== item);
     selected = null;
-    commitBefore(before);
-    save('Móvel removido');
+    renderCatalog();
+    save('Móvel recolhido para o inventário');
   };
 
-  const flipSelected = () => {
+  const flipSelected = async () => {
     if (!selected) return;
-    const before = captureRoom();
+    const previous = Boolean(selected.item.flipX);
     selected.item.flipX = !selected.item.flipX;
     if (!selected.item.flipX) delete selected.item.flipX;
     updateFurnitureObject(selected, true);
-    commitBefore(before);
-    save('Móvel espelhado');
+    try {
+      await gameItems.move(selected.item.placementId, selected.item.x, selected.item.y, Boolean(selected.item.flipX));
+      save('Móvel espelhado');
+    } catch (error) {
+      selected.item.flipX = previous;
+      if (!previous) delete selected.item.flipX;
+      updateFurnitureObject(selected, true);
+      setStatus(error.message, 'error');
+    }
   };
 
   const drawGrid = () => {
@@ -400,10 +422,11 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     panel.hidden = false;
     entry.hidden = true;
     roomName.textContent = room.name || room.id;
-    setStatus('Alterações são salvas automaticamente');
+    setStatus(gameItems?.isOnline() ? 'Alterações são salvas no servidor' : 'Servidor indisponível', gameItems?.isOnline() ? 'normal' : 'error');
     search.value = '';
     renderCatalog();
     drawGrid();
+    loadServerRoom(room.id);
     scene.player.body.setVelocity(0, 0);
     scene.input.keyboard.resetKeys();
     scene.cameras.main.stopFollow();
@@ -434,7 +457,7 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     .sort((a, b) => a.display.depth - b.display.depth)
     .at(-1) || null;
 
-  const pointerDown = (pointer) => {
+  const pointerDown = async (pointer) => {
     if (!open) return;
     if (brushId) {
       const spec = furnitureCatalogItem(catalog, brushId);
@@ -445,11 +468,33 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
         setStatus(validation.reason, 'error');
         return;
       }
-      const before = captureRoom();
+      try {
+        const placed = await gameItems.place(spec.id, scene.currentSceneId, activeRoom.id, item.x, item.y, false);
+        Object.assign(item, {
+          placementId: placed.id,
+          inventoryItemId: placed.itemInstanceId,
+          ownerId: placed.userId,
+          interactionType: placed.definition.interactionType || '',
+          instanceKey: placed.instanceKey,
+          owned: true,
+        });
+      } catch (error) {
+        setStatus(error.message, 'error');
+        renderCatalog();
+        return;
+      }
+      const synchronized = (scene.furnitureObjects || [])
+        .find((candidate) => candidate.item.placementId === item.placementId);
+      if (synchronized) {
+        selectRecord(synchronized);
+        renderCatalog();
+        save(`${spec.name} adicionado`);
+        return;
+      }
       map.furniture.push(item);
       const record = createFurnitureObject(scene, item, map.tile || 16, scene.solids);
-      commitBefore(before);
       selectRecord(record);
+      renderCatalog();
       save(`${spec.name} adicionado`);
       return;
     }
@@ -489,13 +534,25 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     updateActions();
   };
 
-  const pointerUp = () => {
+  const pointerUp = async () => {
     if (!dragging) return;
     dragging.record.display.setTint(0xffd37a);
     if (dragging.changed) {
       updateFurnitureObject(dragging.record, true);
-      commitBefore(dragging.before);
-      save('Posição atualizada');
+      try {
+        await gameItems.move(
+          dragging.record.item.placementId,
+          dragging.record.item.x,
+          dragging.record.item.y,
+          Boolean(dragging.record.item.flipX),
+        );
+        save('Posição atualizada');
+      } catch (error) {
+        const previous = dragging.before.find((item) => item.placementId === dragging.record.item.placementId);
+        if (previous) Object.assign(dragging.record.item, previous);
+        updateFurnitureObject(dragging.record, true);
+        setStatus(error.message, 'error');
+      }
     }
     dragging = null;
   };
@@ -538,13 +595,24 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
 
   const openAvailableRoom = () => openEditor();
   const chooseSelectTool = () => setBrush(null);
-  const resetRoom = () => {
-    const before = captureRoom();
-    const base = store.resetRoom(scene.currentSceneId, activeRoom.id);
-    commitBefore(before);
-    rebuildRoom(base);
-    setStatus('Sala restaurada para a decoração original', 'saved');
-    updateActions();
+  const resetRoom = async () => {
+    const records = [...recordsInRoom()];
+    if (!records.length) return;
+    resetButton.disabled = true;
+    try {
+      await Promise.all(records.map((record) => gameItems.remove(record.item.placementId)));
+      for (const record of records) {
+        map.furniture = map.furniture.filter((item) => item !== record.item);
+        destroyFurnitureObject(record);
+      }
+      selectRecord(null);
+      renderCatalog();
+      save('Todos os seus móveis foram recolhidos');
+    } catch (error) {
+      setStatus(error.message, 'error');
+    } finally {
+      resetButton.disabled = false;
+    }
   };
 
   entry.onclick = openAvailableRoom;
@@ -562,6 +630,66 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   scene.input.on('pointerdown', pointerDown);
   scene.input.on('pointermove', pointerMove);
   scene.input.on('pointerup', pointerUp);
+
+  const findPlacement = (id) => (scene.furnitureObjects || [])
+    .find((record) => record.item.placementId === id);
+  const addServerPlacement = (placement) => {
+    if (findPlacement(placement.id)) return;
+    const item = normalizePlacedFurniture(catalog, {
+      id: placement.definition.catalogKey,
+      x: placement.x,
+      y: placement.y,
+      flipX: placement.flipX,
+      placementId: placement.id,
+      inventoryItemId: placement.itemInstanceId,
+      ownerId: placement.userId,
+      interactionType: placement.definition.interactionType || '',
+      instanceKey: placement.instanceKey,
+      owned: true,
+    });
+    if (!item) return;
+    map.furniture.push(item);
+    createFurnitureObject(scene, item, map.tile || 16, scene.solids);
+    updateActions();
+  };
+  const moveServerPlacement = (placement) => {
+    const record = findPlacement(placement.id);
+    if (!record || record === dragging?.record) return;
+    record.item.x = placement.x;
+    record.item.y = placement.y;
+    record.item.flipX = Boolean(placement.flipX);
+    if (!record.item.flipX) delete record.item.flipX;
+    updateFurnitureObject(record, true);
+  };
+  const removeServerPlacement = ({ id }) => {
+    const record = findPlacement(id);
+    if (!record) return;
+    map.furniture = map.furniture.filter((item) => item !== record.item);
+    if (selected === record) selected = null;
+    destroyFurnitureObject(record);
+    updateActions();
+  };
+  const onInventory = () => renderCatalog();
+  const onPlaced = (event) => addServerPlacement(event.detail);
+  const onMoved = (event) => moveServerPlacement(event.detail);
+  const onRemoved = (event) => removeServerPlacement(event.detail);
+  gameItems?.events.addEventListener('inventory', onInventory);
+  gameItems?.events.addEventListener('FurniturePlaced', onPlaced);
+  gameItems?.events.addEventListener('FurnitureMoved', onMoved);
+  gameItems?.events.addEventListener('FurnitureRemoved', onRemoved);
+
+  const loadServerRoom = (roomId) => {
+    if (!gameItems || roomId === loadingRoomId) return;
+    loadingRoomId = roomId;
+    gameItems.joinRoom(scene.currentSceneId, roomId)
+      .then((placements) => {
+        subscribedRoomId = roomId;
+        placements.forEach(addServerPlacement);
+        updateActions();
+      })
+      .catch((error) => setStatus(error.message, 'error'))
+      .finally(() => { if (loadingRoomId === roomId) loadingRoomId = null; });
+  };
 
   const destroy = () => {
     closeEditor();
@@ -581,6 +709,10 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     scene.input.off('pointerdown', pointerDown);
     scene.input.off('pointermove', pointerMove);
     scene.input.off('pointerup', pointerUp);
+    gameItems?.events.removeEventListener('inventory', onInventory);
+    gameItems?.events.removeEventListener('FurniturePlaced', onPlaced);
+    gameItems?.events.removeEventListener('FurnitureMoved', onMoved);
+    gameItems?.events.removeEventListener('FurnitureRemoved', onRemoved);
   };
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, destroy);
 
@@ -596,6 +728,9 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
       }
       const tile = map.tile || 16;
       availableRoom = roomAtPoint(map, player.body.center.x / tile, player.body.center.y / tile);
+      if (gameItems && availableRoom && availableRoom.id !== subscribedRoomId && availableRoom.id !== loadingRoomId) {
+        loadServerRoom(availableRoom.id);
+      }
       entry.hidden = blocked || !availableRoom;
       if (availableRoom) entry.textContent = `✦ Decorar ${availableRoom.name || availableRoom.id}`;
       return availableRoom;

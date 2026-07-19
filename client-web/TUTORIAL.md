@@ -8,7 +8,7 @@ o escritório, veja [`README.md`](README.md); este doc é sobre **codar** o clie
 ## 1. O ciclo de trabalho
 
 ```
-edita src/*.js ou maps/*.json  →  recarrega o navegador  →  OLHA  →  corrige
+edita src/*.js ou salva tiled/maps/*.tmj  →  navegador atualiza  →  OLHA  →  corrige
 ```
 Segundos, não minutos — é a razão da stack ser web e não Unity.
 
@@ -22,23 +22,11 @@ node server.js       # http://localhost:8123
 
 ---
 
-## 2. "Tem MCP pra Phaser?" — Não, e você não precisa
+## 2. O navegador é a superfície de inspeção
 
-Procurei no registry: **não existe MCP para Phaser** (nem pra game engines em geral).
-
-**Mas o MCP do navegador já é o MCP da engine.** No Unity precisávamos de um MCP porque o editor é
-uma caixa-preta. Aqui, o navegador **é** a superfície de inspeção — e ele dá tudo que um "MCP de
-engine" daria:
-
-| O que você quer | Ferramenta do navegador |
-|---|---|
-| Rodar o jogo | `preview_start { name: "client-web" }` |
-| **Ver** | `computer { action: "screenshot" }` |
-| Dirigir (clicar, teclar) | `computer { action: "left_click" / "type" / "key" }` |
-| **Inspecionar o estado do jogo** | `javascript_tool` — lê/escreve qualquer coisa em runtime |
-| Erros | `read_console_messages { onlyErrors: true }` |
-| Assets carregando (404?) | `read_network_requests { urlPattern: "..." }` |
-| Testar responsivo | `resize_window` |
+Phaser não precisa de um editor separado durante a execução. Use DevTools ou a automação de
+navegador disponível na sessão para tirar screenshots, pressionar controles, ler o DOM, conferir o
+console e inspecionar requests. Sempre valide tanto o estado técnico quanto o resultado visual.
 
 **O truque que destrava tudo:** exponha a cena num global.
 
@@ -129,15 +117,82 @@ pois essa pose não possui frente/costas; na vertical o fallback é `idle`.
 
 ### Editor de móveis durante o jogo
 
-`RoomDecorationSystem.js` mantém a personalização do usuário fora do mapa-base. Na abertura da
-cena, `createRoomDecorationStore().mapForScene(sceneId)` clona o JSON convertido e substitui apenas
-os móveis das salas que possuem estado salvo. Durante a edição, os records expostos por
-`MapRenderer.js` permitem mover visual e collider juntos sem reconstruir a cena inteira.
+`RoomDecorationSystem.js` mantém a personalização do usuário fora do mapa-base. O mapa carregado do
+Tiled é clonado sem aplicar o antigo estado local; quando o jogador entra numa sala,
+`GameItemsSystem.js` busca as colocações persistidas e cria uma camada de móveis possuídos sobre o
+cenário. Os records expostos por `MapRenderer.js` permitem mover visual e collider juntos sem
+reconstruir a cena inteira.
 
-O catálogo fica em `assets/furniture/catalog.json`; inclua nele somente peças autorizadas para o
-usuário. Cada item pode declarar seu footprint `collision`. A validação impede sair da sala,
-bloquear portas e sobrepor móveis. Não estenda esse editor para paredes ou portais: mudanças
-estruturais pertencem ao Tiled e ao conversor.
+O catálogo visual fica em `assets/furniture/catalog.json`; possuir o catálogo **não concede o item**.
+O editor habilita o cartão somente quando `/api/game/inventory` contém uma instância com
+`location=inventory`. Colocar chama `POST /api/game/furniture`; mover/espelhar chama `PATCH`; remover
+chama `DELETE` e devolve a instância ao estoque. Cada item pode declarar seu footprint `collision`.
+A validação impede sair da sala, bloquear portas e sobrepor móveis.
+
+Não grave decoração em `localStorage` e não aceite o layout inteiro enviado pelo cliente: a API é
+autoritativa e cada operação altera uma única instância dentro de uma transação. Não estenda esse
+editor para paredes ou portais; mudanças estruturais pertencem ao Tiled e ao carregador direto.
+
+### Inventário persistente e SignalR
+
+O cliente oficial do SignalR está vendorizado em `lib/signalr.min.js`. `GameItemsSystem.js` concentra
+REST, cache do inventário e eventos; outros módulos não devem montar `fetch` ou conexão paralela.
+
+```text
+GameItemDefinition  catálogo/InteractionType
+        │ 1:N
+GameItemInstance    unidade única + dono + location
+        │ 0:1
+FurniturePlacement  sceneId + roomId + posição + flipX
+```
+
+Localizações válidas: `inventory`, `placed` e `chest`. `ContainerPlacementId` aponta para o baú
+quando a unidade está guardada. Ao entrar numa sala, invoque `JoinGame(userId, sceneId, roomId)`;
+ao sair/trocar, invoque `LeaveGameRoom`.
+
+Eventos atuais:
+
+- `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved` — atualizam a camada da sala;
+- `InventoryChanged` — recarrega o estoque do usuário;
+- `ChestChanged` — invalida a janela de baú;
+- `WorkSessionChanged` — informa início/fim do contador.
+
+O evento pode chegar antes da resposta HTTP da mesma ação. Sempre deduplique por `placementId`.
+
+### Interações de mobília
+
+`FurnitureInteractionSystem.js` resolve o `interactionType` recebido do backend. Ele possui handlers
+separados para `kanban`, `chest`, `workstation` e `seat`; adicione comportamentos novos ali em vez de
+testar `of_N` em `main.js`.
+
+- quadro: lê `/api/workitems` e grava `/api/me/active-task`;
+- baú: usa `/api/game/chests/{placementId}` e transferências `deposit`/`withdraw`;
+- estação: usa `/api/game/workstations/{placementId}/start` e `/stop`;
+- cadeira: procura uma estação pertencente ao jogador a até `2,75` tiles.
+
+Interação de móvel tem prioridade sobre portal quando ambos estão próximos. `E` deve chamar o
+sistema de móveis primeiro e só então trocar de cena.
+
+### Registro extensível de mecânicas
+
+`src/mechanics/index.js` é o ponto de composição do gameplay orientado a dados. O carregador não
+precisa conhecer cada mecânica: uma classe inédita de objeto do Tiled chega em `map.entities[]` e o
+runtime procura um handler com o mesmo nome. Cada handler pode oferecer `preload`, `validate` e
+`create`; a instância retornada pode oferecer `update` e `destroy`.
+
+Colisões e portais já usam esse ciclo, inclusive quando vêm dos arrays legados. Para uma mecânica
+nova, registre o módulo em `mechanics/index.js` e forneça um template `.tj`. Não coloque regras
+específicas em `MapRenderer.js`: ele deve continuar responsável apenas pelo desenho genérico.
+
+Tile layers não reservadas chegam em `visualLayers[]`. `MapRenderer.renderVisualLayers` desenha os
+tiles conhecidos com `depth`, `opacity`, `visible` e `properties.ySort`, permitindo criar novas
+camadas visuais sem mudar código.
+
+### Salvamento ao vivo do Tiled
+
+`server.js` observa mapas, tilesets e templates do Tiled. Depois de um debounce curto, ele carrega e
+valida o projeto diretamente, sem escrever runtime intermediário. `DevMapSync.js` recebe o resultado
+por SSE: sucesso recarrega a cena aberta; erro mostra a causa.
 
 ### Corpo de colisão nos "pés" (top-down)
 O sprite é 16×32, mas quem colide é só a base:
@@ -177,6 +232,10 @@ Em cenas cercadas, configure `camera.bounds` no JSON até o portão. O runtime c
 configurado com o zoom necessário para mostrar esses limites inteiros. No extremo do scroll, a cena
 vira uma visão geral; margens recebem a cor de fundo quando a proporção da janela não coincide com a
 do mapa, e o runtime expande os limites virtuais para manter a cena centralizada.
+
+No `world`, sem um limite explícito, o carregador calcula o retângulo a partir do canvas e dos objetos
+visíveis do Tiled. A câmera segue o avatar até objetos em coordenadas negativas ou além de `Width` e
+`Height`; as tile layers, porém, só crescem depois de **Map → Resize Map**.
 
 ### Loadout RPG e veículo temporário com Shift
 
@@ -298,44 +357,51 @@ if (inZone) { this.zoneLock = true; /* ...faz a ação... */ }
 | Zona dispara em loop | Falta a trava (`zoneLock`) |
 | Tudo travando | Milhares de `add.image` → use `tileSprite` |
 
-**Primeiro reflexo sempre:** `read_console_messages { onlyErrors: true }` e
-`read_network_requests` (404 de asset é campeão).
+**Primeiro reflexo sempre:** console do navegador e painel Network; 404 de asset continua sendo o
+erro mais comum.
 
 ---
 
 ## 6. Arquitetura atual
 
-O cliente é **multi-cena e orientado a dados**: os mapas são JSON, não classes Phaser separadas.
+O cliente é **multi-cena e orientado a dados**: os mapas são arquivos do Tiled, não classes Phaser
+separadas.
 
 ```
 src/main.js             runtime, player, câmera, HUD e transições
 src/CharacterSystem.js  avatar modular, editor, frames nomeados e persistência
 src/EquipmentSystem.js  loadout, baú, persistência, velocidade e desenho dos veículos
-src/MapRenderer.js      desenha mapas world/interior a partir do JSON
+src/GameItemsSystem.js  API de inventário/mobília, cache e SignalR
+src/FurnitureInteractionSystem.js  kanban, baú, cadeira e estação
+src/RoomDecorationSystem.js editor de instâncias possuídas por sala
+src/TiledRuntimeLoader.js lê TMJ, TSJ e templates diretamente
+src/MapRenderer.js      desenha mapas world/interior a partir dos dados normalizados
 src/Editor.js           editor antigo, preservado mas fora do runtime atual
 maps/scenes.json        manifesto e cena inicial
-maps/world.json         hub caminhável
-maps/tooq-office.json   escritório térreo
-tiled/maps/*.tmj        fontes visuais editáveis
-tools/tiled-converter.mjs  gera e valida os JSONs do runtime
+tiled/maps/*.tmj        mapas carregados pelo jogo
+tiled/tilesets/*.tsj    tilesets externos carregados pelo jogo
+maps/*.json             snapshots legados para migração/testes
+tools/tiled-converter.mjs  ferramenta de migração e diagnóstico
 ```
 
 **Onde mexer:**
 - Cadastro de cenas → `maps/scenes.json`.
-- Mundo, salas, móveis, colisões e portais → `tiled/maps/*.tmj`, seguido do conversor.
-- JSONs gerados → `maps/world.json` e `maps/tooq-office.json`, úteis para inspeção.
+- Mundo, salas, móveis, colisões e portais → `tiled/maps/*.tmj`; basta salvar.
+- Tilesets novos → `.tsj` externo referenciado pelo próprio mapa, sem cadastro no conversor.
 - Player/câmera/anims/controles → `main.js`.
 - Aparência, catálogo e composição do avatar → `assets/character/catalog.json` + `CharacterSystem.js`.
 - Slots, itens, menu e visuais de locomoção → `assets/equipment/catalog.json` + `EquipmentSystem.js`.
+- Estoque, colocações e sincronização → `GameItemsSystem.js` + endpoints `/api/game/*`.
+- UI e regras de interação de móveis → `FurnitureInteractionSystem.js`.
 - Regras de desenho e colisões → `MapRenderer.js`.
 
-**Portal** liga um retângulo da cena atual a `targetScene` + `targetSpawn`. `E` é reservado à
-interação de entrar/sair. **Móvel = `{ id, x, y }`**, onde `id` é `of_N`; use `solid: true` quando a
-peça precisar bloquear o avatar.
+**Portal** liga um retângulo da cena atual a `targetScene` + `targetSpawn`. `E` usa o móvel interativo
+mais próximo antes do portal. Móvel de cenário do Tiled continua `{ id, x, y }`; móvel do jogador
+também carrega `placementId`, `inventoryItemId`, `ownerId`, `interactionType` e `instanceKey`.
 
-**Rede (ainda não plugada):** o backend expõe SignalR e o contrato de mapa (`OfficeLayout.cs`,
-**28 server units por tile**). A presença precisa carregar `sceneId` para só renderizar avatares que
-estejam no mesmo mapa. Usar o cliente **SignalR JS oficial** (não reimplementar à mão).
+**Rede parcial:** SignalR já sincroniza inventário e mobília por `sceneId` + `roomId`. A presença de
+avatares ainda usa o fluxo legado e precisa carregar `sceneId` para só renderizar jogadores do mesmo
+mapa. O contrato legado continua em `OfficeLayout.cs`, com **28 server units por tile**.
 
 ---
 
@@ -343,6 +409,7 @@ estejam no mesmo mapa. Usar o cliente **SignalR JS oficial** (não reimplementar
 
 1. **Verifique no navegador antes de dar como pronto.** "Compilou" não é verificar; olhar é.
 2. **O interior mobiliado é o produto** — fachada/telhado/jardim (em `assets/world/`) são enfeite.
-3. **Mapa é dado.** Prefira editar o JSON a hardcodar geometria em JS.
-4. **Rede cedo.** Dois avatares andando juntos vale mais que qualquer cenário externo.
-5. **Anote toda medida de asset nova no `../ASSETS.md`.** É o conhecimento caro de recuperar.
+3. **Mapa é dado.** Edite `.tmj`/`.tsj`; JSON em `maps/` é snapshot legado.
+4. **Inventário é autoritativo no backend.** Nunca derive quantidade do catálogo visual.
+5. **Rede cedo.** Mobília já converge; dois avatares por cena é o próximo marco.
+6. **Anote toda medida de asset nova no `../ASSETS.md`.** É o conhecimento caro de recuperar.

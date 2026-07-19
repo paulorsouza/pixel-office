@@ -98,3 +98,41 @@ public class RoomItem
     public int X { get; set; }
     public int Y { get; set; }
 }
+
+// Inventário do cliente Phaser. As tabelas antigas acima continuam atendendo o
+// protótipo/backoffice; estas entidades modelam cada unidade física de um item.
+public class GameItemDefinition
+{
+    public int Id { get; set; }
+    public string CatalogKey { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Category { get; set; } = "";
+    public string IconPath { get; set; } = "";
+    public string InteractionType { get; set; } = "";
+}
+
+public class GameItemInstance
+{
+    public int Id { get; set; }
+    public string InstanceKey { get; set; } = Guid.NewGuid().ToString("N");
+    public int UserId { get; set; }
+    public int DefinitionId { get; set; }
+    // inventory | placed | chest
+    public string Location { get; set; } = "inventory";
+    public int? ContainerPlacementId { get; set; }
+    public DateTime AcquiredUtc { get; set; } = DateTime.UtcNow;
+    public string StateJson { get; set; } = "{}";
+}
+
+public class FurniturePlacement
+{
+    public int Id { get; set; }
+    public int ItemInstanceId { get; set; }
+    public int UserId { get; set; }
+    public string SceneId { get; set; } = "";
+    public string RoomId { get; set; } = "";
+    public double X { get; set; }
+    public double Y { get; set; }
+    public bool FlipX { get; set; }
+    public string StateJson { get; set; } = "{}";
+}

@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { dirname, extname, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { mapMechanicEntities, mechanicsRegistry } from '../src/mechanics/index.js';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 export const CLIENT_ROOT = resolve(SCRIPT_DIR, '..');
@@ -60,6 +61,7 @@ const ROOT_FIELDS = new Set([
   'id', 'name', 'subtitle', 'kind', 'tile', 'w', 'h', 'camera', 'background',
   'ground', 'yard', 'assets', 'building', 'spawns', 'zones', 'rooms',
   'furniture', 'details', 'paths', 'hedges', 'props', 'collisions', 'portals',
+  'entities', 'visualLayers', 'visualMode',
 ]);
 
 const RECT_FIELDS = new Set(['id', 'name', 'x', 'y', 'w', 'h', 'floor', 'ground', 'doors']);
@@ -75,6 +77,14 @@ const FURNITURE_FIELDS = new Set([
 const DOOR_FIELDS = new Set(['side', 'at', 'len', 'texture', 'frame', 'flipX', 'depth']);
 const PORTAL_FIELDS = new Set([
   'id', 'x', 'y', 'w', 'h', 'targetScene', 'targetSpawn', 'label',
+]);
+const ENTITY_FIELDS = new Set([
+  'id', 'type', 'name', 'x', 'y', 'w', 'h', 'shape', 'points', 'assetId',
+  'flipX', 'rotation', 'visible', 'layer', 'properties',
+]);
+const BUILTIN_OBJECT_TYPES = new Set([
+  'building', 'yard', 'zone', 'room', 'door', 'path', 'hedge', 'collision',
+  'detail', 'prop', 'furniture', 'spawn', 'portal', 'camera',
 ]);
 
 function ensureDirectories() {
@@ -385,6 +395,30 @@ export function generateTilesets() {
   return catalogs;
 }
 
+export function loadTilesetCatalogs() {
+  const required = [
+    'surfaces.tsj',
+    'room-builder.tsj',
+    'world-assets.tsj',
+    'office-furniture.tsj',
+    ...paletteDefinitions().map((palette) => palette.file),
+  ];
+  if (required.some((file) => !existsSync(resolve(TILESETS_DIR, file)))) {
+    return generateTilesets();
+  }
+
+  const readCatalog = (file) => catalogFromTileset(readJson(resolve(TILESETS_DIR, file)));
+  const wallTileset = readJson(resolve(TILESETS_DIR, 'room-builder.tsj'));
+  const catalogs = {
+    surfaces: readCatalog('surfaces.tsj'),
+    walls: { tilecount: wallTileset.tilecount },
+    world: readCatalog('world-assets.tsj'),
+    furniture: readCatalog('office-furniture.tsj'),
+  };
+  for (const palette of paletteDefinitions()) catalogs[palette.key] = readCatalog(palette.file);
+  return catalogs;
+}
+
 function gidFor(catalogs, catalogName, assetId, flipX = false) {
   const entry = catalogs[catalogName].byAsset.get(assetId);
   if (!entry) throw new Error(`Asset não encontrado no tileset ${catalogName}: ${assetId}`);
@@ -417,6 +451,7 @@ function objectLayer(id, name, role, color, objects, options = {}) {
     color,
     draworder: 'topdown',
     id,
+    locked: options.locked ?? false,
     name,
     objects,
     opacity: options.opacity ?? 1,
@@ -436,7 +471,7 @@ function tileLayer(id, name, role, width, height, data, options = {}) {
     locked: options.locked ?? true,
     name,
     opacity: options.opacity ?? 1,
-    properties: properties({ oqRole: role }),
+    properties: properties({ oqRole: role, ...(options.properties || {}) }),
     type: 'tilelayer',
     visible: options.visible ?? true,
     width,
@@ -606,6 +641,147 @@ function previewHedges(map, catalogs) {
   return data;
 }
 
+function visualTilesFromData(data, width, catalogs) {
+  const tiles = [];
+  for (let index = 0; index < data.length; index += 1) {
+    const gid = data[index];
+    if (!gid) continue;
+    tiles.push(visualTile(
+      gid,
+      index % width,
+      Math.floor(index / width),
+      catalogs,
+    ));
+  }
+  return tiles;
+}
+
+export function makeMapEditable(map, catalogs) {
+  const baseIds = new Set(['base-floors', 'base-walls', 'base-hedges']);
+  const currentLayers = map.visualLayers || [];
+  if (map.visualMode === 'tiled' && [...baseIds].every((id) => (
+    currentLayers.some((layer) => layer.id === id)
+  ))) {
+    const normalized = {
+      ...map,
+      visualLayers: currentLayers.map((layer) => (
+        layer.id === 'base-walls' || layer.id === 'base-hedges'
+          ? { ...layer, properties: { ...(layer.properties || {}), collision: true } }
+          : layer
+      )),
+    };
+    delete normalized.paths;
+    delete normalized.hedges;
+    return normalized;
+  }
+
+  const baseLayers = [
+    {
+      id: 'base-floors',
+      name: '🎨 00 · CHÃO E RUAS — EDITE COM O PINCEL',
+      width: map.w,
+      height: map.h,
+      depth: -100,
+      tiles: visualTilesFromData(previewFloors(map, catalogs), map.w, catalogs),
+    },
+    {
+      id: 'base-walls',
+      name: '🎨 01 · PAREDES — EDITE COM O PINCEL',
+      width: map.w,
+      height: map.h,
+      depth: -80,
+      tiles: visualTilesFromData(previewWalls(map), map.w, catalogs),
+      properties: { ySort: true, depthOffset: 8, collision: true },
+    },
+    {
+      id: 'base-hedges',
+      name: '🎨 02 · CERCAS — EDITE COM O PINCEL',
+      width: map.w,
+      height: map.h,
+      depth: -75,
+      tiles: visualTilesFromData(previewHedges(map, catalogs), map.w, catalogs),
+      properties: { ySort: true, collision: true },
+    },
+  ];
+  const customLayers = currentLayers.filter((layer) => (
+    !baseIds.has(layer.id) && layer.id !== 'free-draw'
+  ));
+  const editable = {
+    ...map,
+    visualMode: 'tiled',
+    visualLayers: [...baseLayers, ...customLayers],
+  };
+  delete editable.paths;
+  delete editable.hedges;
+  return editable;
+}
+
+function shiftMapItem(item, offsetX, offsetY) {
+  if (!item) return item;
+  return {
+    ...item,
+    ...(Number.isFinite(item.x) ? { x: cleanNumber(item.x + offsetX) } : {}),
+    ...(Number.isFinite(item.y) ? { y: cleanNumber(item.y + offsetY) } : {}),
+  };
+}
+
+export function expandMapCanvas(map, width, height, catalogs) {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < map.w || height < map.h) {
+    throw new Error(`Canvas inválido: use dimensões inteiras iguais ou maiores que ${map.w}×${map.h}`);
+  }
+  const editable = makeMapEditable(map, catalogs);
+  const offsetX = Math.floor((width - editable.w) / 2);
+  const offsetY = Math.floor((height - editable.h) / 2);
+  const shifted = {
+    ...editable,
+    w: width,
+    h: height,
+    camera: {
+      ...(editable.camera || {}),
+      minZoom: Math.min(editable.camera?.minZoom ?? 0.75, 0.35),
+    },
+  };
+  delete shifted.camera.bounds;
+
+  for (const field of ['building', 'yard']) {
+    if (editable[field]) shifted[field] = shiftMapItem(editable[field], offsetX, offsetY);
+  }
+  for (const field of [
+    'zones', 'rooms', 'furniture', 'details', 'props', 'collisions', 'portals', 'entities',
+  ]) {
+    if (editable[field]) {
+      shifted[field] = editable[field].map((item) => shiftMapItem(item, offsetX, offsetY));
+    }
+  }
+  if (editable.spawns) {
+    shifted.spawns = Object.fromEntries(Object.entries(editable.spawns).map(([id, spawn]) => (
+      [id, shiftMapItem(spawn, offsetX, offsetY)]
+    )));
+  }
+
+  shifted.visualLayers = editable.visualLayers.map((layer) => {
+    const tiles = (layer.tiles || []).map((cell) => ({
+      ...cell,
+      x: cell.x + offsetX,
+      y: cell.y + offsetY,
+    }));
+    if (layer.id === 'base-floors' && editable.kind === 'world') {
+      const floorByCell = new Map();
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) floorByCell.set(`${x},${y}`, { x, y, texture: 'grass' });
+      }
+      for (const cell of tiles) floorByCell.set(`${cell.x},${cell.y}`, cell);
+      return { ...layer, width, height, tiles: [...floorByCell.values()] };
+    }
+    return { ...layer, width, height, tiles };
+  });
+
+  // Depois de assado em tile layers, estes retângulos só duplicariam o desenho e a colisão.
+  delete shifted.paths;
+  delete shifted.hedges;
+  return shifted;
+}
+
 function doorGeometry(parent, door, tile) {
   const len = door.len || 3;
   if (door.side === 'N') {
@@ -631,6 +807,107 @@ function mapTilesets() {
       source: `../tilesets/${palette.file}`,
     })),
   ];
+}
+
+function entityProperties(entity) {
+  return {
+    ...extraFields(entity, ENTITY_FIELDS),
+    ...(entity.properties || {}),
+    id: entity.id,
+    assetId: entity.assetId,
+    oqSourceLayer: entity.layer,
+  };
+}
+
+function entityObject(entity, objectId, tile, catalogs) {
+  const type = entity.type;
+  if (!type) throw new Error(`Entidade ${entity.id || objectId} não possui type`);
+  const values = entityProperties(entity);
+  let object;
+
+  if (entity.assetId) {
+    const catalogName = catalogs.furniture.byAsset.has(entity.assetId) ? 'furniture' : 'world';
+    const asset = catalogs[catalogName].byAsset.get(entity.assetId);
+    if (!asset) throw new Error(`Entidade ${entity.id} usa asset desconhecido: ${entity.assetId}`);
+    object = tileObject(
+      objectId,
+      type,
+      entity.name || entity.id,
+      asset,
+      gidFor(catalogs, catalogName, entity.assetId, entity.flipX),
+      (entity.x + 0.5) * tile,
+      (entity.y + 1) * tile,
+      values,
+    );
+  } else {
+    const geometry = entity.shape === 'point'
+      ? { x: entity.x * tile, y: entity.y * tile, point: true }
+      : {
+          x: entity.x * tile,
+          y: entity.y * tile,
+          width: (entity.w || 0) * tile,
+          height: (entity.h || 0) * tile,
+        };
+    object = makeObject(objectId, type, entity.name || entity.id, geometry, values);
+    if (entity.shape === 'ellipse') object.ellipse = true;
+    if (entity.shape === 'polygon') {
+      object.polygon = (entity.points || []).map((point) => ({
+        x: point.x * tile,
+        y: point.y * tile,
+      }));
+    }
+  }
+
+  object.rotation = entity.rotation || 0;
+  object.visible = entity.visible !== false;
+  return object;
+}
+
+function visualCellGid(cell, catalogs) {
+  let gid;
+  if (cell.texture === 'tiles') gid = FIRST_GID.walls + Number(cell.frame || 0);
+  else if (catalogs.surfaces.byAsset.has(cell.texture)) gid = gidFor(catalogs, 'surfaces', cell.texture);
+  else {
+    const catalogName = catalogs.furniture.byAsset.has(cell.texture) ? 'furniture' : 'world';
+    gid = gidFor(catalogs, catalogName, cell.texture);
+  }
+  return cell.flipX ? ((gid | HORIZONTAL_FLIP) >>> 0) : gid;
+}
+
+function visualLayerToTiled(layer, id, map, catalogs) {
+  const width = layer.width || map.w;
+  const height = layer.height || map.h;
+  const data = Array(width * height).fill(0);
+  for (const cell of (layer.tiles || [])) {
+    const x = Math.round(cell.x);
+    const y = Math.round(cell.y);
+    if (x < 0 || y < 0 || x >= width || y >= height) continue;
+    data[y * width + x] = visualCellGid(cell, catalogs);
+  }
+  const tiled = tileLayer(
+    id,
+    layer.name || layer.id || 'Camada visual',
+    'visual',
+    width,
+    height,
+    data,
+    {
+      locked: false,
+      opacity: layer.opacity ?? 1,
+      visible: layer.visible !== false,
+      properties: {
+        id: layer.id,
+        depth: layer.depth,
+        editorOnly: layer.editorOnly,
+        ...(layer.properties || {}),
+      },
+    },
+  );
+  tiled.x = layer.x || 0;
+  tiled.y = layer.y || 0;
+  if (layer.offsetX) tiled.offsetx = layer.offsetX;
+  if (layer.offsetY) tiled.offsety = layer.offsetY;
+  return tiled;
 }
 
 export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
@@ -792,23 +1069,89 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
     objectId(), 'camera', 'Limite da câmera', rectGeometry(map.camera.bounds, tile),
   )] : [];
 
-  const layers = [
-    tileLayer(layerId(), '00 · Prévia dos pisos (não editar)', 'previewFloors', map.w, map.h, previewFloors(map, catalogs)),
-    objectLayer(layerId(), '01 · Prédio e quintal', 'structures', '#4c9aff', structures, { opacity: 0.45 }),
-    objectLayer(layerId(), '02 · Caminhos', 'paths', '#e7c873', paths, { opacity: 0.55 }),
-    objectLayer(layerId(), '03 · Zonas abertas', 'zones', '#70d6c7', zones, { opacity: 0.45 }),
-    objectLayer(layerId(), '04 · Salas', 'rooms', '#f4a261', rooms, { opacity: 0.45 }),
-    tileLayer(layerId(), '05 · Prévia das cercas (não editar)', 'previewHedges', map.w, map.h, previewHedges(map, catalogs)),
-    objectLayer(layerId(), '06 · Cercas', 'hedges', '#4f772d', hedges, { opacity: 0.35 }),
-    tileLayer(layerId(), '07 · Prévia das paredes (não editar)', 'previewWalls', map.w, map.h, previewWalls(map)),
-    objectLayer(layerId(), '08 · Detalhes', 'details', '#9ef01a', details),
-    objectLayer(layerId(), '09 · Props do mundo', 'props', '#52b788', props),
-    objectLayer(layerId(), '10 · Móveis', 'furniture', '#ffd166', furniture),
-    objectLayer(layerId(), '11 · Portas', 'doors', '#00b4d8', doors, { opacity: 0.6 }),
-    objectLayer(layerId(), '12 · Colisões', 'collisions', '#ef233c', collisions, { opacity: 0.55 }),
-    objectLayer(layerId(), '13 · Spawns e portais', 'navigation', '#c77dff', navigation, { opacity: 0.7 }),
-    objectLayer(layerId(), '14 · Limite da câmera', 'camera', '#ffffff', camera, { opacity: 0.35 }),
+  const entities = (map.entities || []).map((entity) => entityObject(
+    entity,
+    objectId(),
+    tile,
+    catalogs,
+  ));
+  const visualLayerSources = [...(map.visualLayers || [])];
+  if (!visualLayerSources.some((layer) => layer.id === 'free-draw')) {
+    visualLayerSources.push({
+      id: 'free-draw',
+      name: '✏ 16 · DESENHO LIVRE — PINTE AQUI',
+      width: map.w,
+      height: map.h,
+      depth: -85,
+      editorOnly: true,
+      tiles: [],
+    });
+  }
+  const visualLayers = visualLayerSources.map((layer) => visualLayerToTiled(
+    layer,
+    layerId(),
+    map,
+    catalogs,
+  ));
+
+  const structuresLayer = objectLayer(layerId(), '✥ 01 · Prédio e quintal — OBJETOS', 'structures', '#4c9aff', structures, { opacity: 0.45 });
+  const pathsLayer = objectLayer(layerId(), '✥ 02 · Caminhos — OBJETOS', 'paths', '#e7c873', paths, { opacity: 0.55 });
+  const zonesLayer = objectLayer(layerId(), '✥ 03 · Zonas abertas — OBJETOS', 'zones', '#70d6c7', zones, { opacity: 0.45 });
+  const roomsLayer = objectLayer(layerId(), '✥ 04 · Salas — OBJETOS', 'rooms', '#f4a261', rooms, { opacity: 0.45 });
+  const hedgesLayer = objectLayer(layerId(), '✥ 06 · Cercas e colisões — OBJETOS', 'hedges', '#4f772d', hedges, { opacity: 0.35 });
+  const detailsLayer = objectLayer(layerId(), '✥ 08 · Detalhes — OBJETOS', 'details', '#9ef01a', details);
+  const propsLayer = objectLayer(layerId(), '✥ 09 · Props do mundo — OBJETOS', 'props', '#52b788', props);
+  const furnitureLayer = objectLayer(layerId(), '✥ 10 · Móveis — OBJETOS', 'furniture', '#ffd166', furniture);
+  const doorsLayer = objectLayer(layerId(), '✥ 11 · Portas — OBJETOS', 'doors', '#00b4d8', doors, { opacity: 0.6 });
+  const collisionsLayer = objectLayer(layerId(), '✥ 12 · Colisões — OBJETOS', 'collisions', '#ef233c', collisions, { opacity: 0.55 });
+  const navigationLayer = objectLayer(layerId(), '✥ 13 · Spawns e portais — OBJETOS', 'navigation', '#c77dff', navigation, { opacity: 0.7 });
+  const cameraLayer = objectLayer(layerId(), '🔒 14 · Limite da câmera — NÃO DESBLOQUEIE SEM NECESSIDADE', 'camera', '#ffffff', camera, {
+      locked: true,
+      opacity: 0.35,
+    });
+  const mechanicsLayer = objectLayer(layerId(), '✥ 15 · Mecânicas — OBJETOS', 'mechanics', '#ff70a6', entities, { opacity: 0.75 });
+  const objectLayers = [
+    structuresLayer,
+    pathsLayer,
+    zonesLayer,
+    roomsLayer,
+    hedgesLayer,
+    detailsLayer,
+    propsLayer,
+    furnitureLayer,
+    doorsLayer,
+    collisionsLayer,
+    navigationLayer,
+    cameraLayer,
+    mechanicsLayer,
   ];
+  const emptyEditableRoles = new Set([
+    'details', 'props', 'furniture', 'collisions', 'navigation', 'mechanics',
+  ]);
+  const nativeObjectLayers = objectLayers.filter((layer) => (
+    layer.objects.length > 0 || emptyEditableRoles.has(propertyMap(layer).oqRole)
+  ));
+  const layers = map.visualMode === 'tiled'
+    ? [...visualLayers, ...nativeObjectLayers]
+    : [
+        tileLayer(layerId(), '🔒 00 · PRÉVIA DOS PISOS — NÃO EDITAR', 'previewFloors', map.w, map.h, previewFloors(map, catalogs)),
+        structuresLayer,
+        pathsLayer,
+        zonesLayer,
+        roomsLayer,
+        tileLayer(layerId(), '🔒 05 · PRÉVIA DAS CERCAS — NÃO EDITAR', 'previewHedges', map.w, map.h, previewHedges(map, catalogs)),
+        hedgesLayer,
+        tileLayer(layerId(), '🔒 07 · PRÉVIA DAS PAREDES — NÃO EDITAR', 'previewWalls', map.w, map.h, previewWalls(map)),
+        detailsLayer,
+        propsLayer,
+        furnitureLayer,
+        doorsLayer,
+        collisionsLayer,
+        navigationLayer,
+        cameraLayer,
+        mechanicsLayer,
+        ...visualLayers,
+      ];
 
   const rootExtra = extraJson(map, ROOT_FIELDS);
   return {
@@ -827,6 +1170,7 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
       name: map.name,
       subtitle: map.subtitle,
       kind: map.kind,
+      visualMode: map.visualMode,
       runtimeFile,
       cameraZoom: map.camera?.zoom,
       cameraMinZoom: map.camera?.minZoom,
@@ -847,16 +1191,126 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
   };
 }
 
-function allObjects(tiled) {
+function mergeTemplateProperties(base = [], overrides = []) {
+  const merged = new Map(base.map((item) => [item.name, item]));
+  for (const item of overrides) merged.set(item.name, item);
+  return [...merged.values()];
+}
+
+function resolveTemplateObject(object, sourcePath) {
+  if (!object.template) return object;
+  const templatePath = resolve(dirname(sourcePath), object.template);
+  const template = readJson(templatePath);
+  if (template.type !== 'template' || !template.object) {
+    throw new Error(`Template Tiled inválido: ${templatePath}`);
+  }
+  return {
+    ...template.object,
+    ...object,
+    properties: mergeTemplateProperties(template.object.properties, object.properties),
+  };
+}
+
+function allObjectRecords(tiled, sourcePath) {
   const result = [];
   const visit = (layers) => {
     for (const layer of layers || []) {
-      if (layer.type === 'objectgroup') result.push(...(layer.objects || []));
+      if (layer.type === 'objectgroup') {
+        const layerProps = propertyMap(layer);
+        for (const sourceObject of (layer.objects || [])) {
+          const object = resolveTemplateObject(sourceObject, sourcePath);
+          result.push({
+            object,
+            layer: layerProps.oqRole || layer.name,
+          });
+        }
+      }
       if (layer.type === 'group') visit(layer.layers);
     }
   };
   visit(tiled.layers);
   return result;
+}
+
+function allObjects(tiled, sourcePath) {
+  return allObjectRecords(tiled, sourcePath).map((record) => record.object);
+}
+
+function allTileLayerRecords(tiled) {
+  const result = [];
+  let order = 0;
+  const visit = (layers) => {
+    for (const layer of layers || []) {
+      if (layer.type === 'tilelayer') result.push({ layer, order: order++ });
+      if (layer.type === 'group') visit(layer.layers);
+    }
+  };
+  visit(tiled.layers);
+  return result;
+}
+
+function visualTile(rawGid, x, y, catalogs) {
+  const unsigned = rawGid >>> 0;
+  const baseGid = unsigned & GID_MASK;
+  const flipX = Boolean(unsigned & HORIZONTAL_FLIP);
+  if (baseGid >= FIRST_GID.walls && baseGid < FIRST_GID.world) {
+    return { x, y, texture: 'tiles', frame: baseGid - FIRST_GID.walls, ...(flipX ? { flipX: true } : {}) };
+  }
+  const asset = resolveGid(catalogs, rawGid);
+  return {
+    x,
+    y,
+    texture: asset.assetId,
+    ...(asset.flipX ? { flipX: true } : {}),
+  };
+}
+
+function visualLayersFromTiled(tiled, catalogs) {
+  const previews = new Set(['previewFloors', 'previewHedges', 'previewWalls']);
+  return allTileLayerRecords(tiled)
+    .filter(({ layer }) => !previews.has(propertyMap(layer).oqRole))
+    .map(({ layer, order }) => {
+      const values = propertyMap(layer);
+      const tiles = [];
+      const readData = (data, width, startX = 0, startY = 0) => {
+        for (let index = 0; index < (data || []).length; index += 1) {
+          const gid = data[index];
+          if (!gid) continue;
+          tiles.push(visualTile(
+            gid,
+            startX + (index % width),
+            startY + Math.floor(index / width),
+            catalogs,
+          ));
+        }
+      };
+      if (layer.chunks) {
+        for (const chunk of layer.chunks) readData(chunk.data, chunk.width, chunk.x, chunk.y);
+      } else {
+        readData(layer.data, layer.width || tiled.width);
+      }
+      if (values.editorOnly && tiles.length === 0) return null;
+      const customProperties = Object.fromEntries(Object.entries(values).filter(([key]) => (
+        key !== 'oqRole' && key !== 'id' && key !== 'depth' && key !== 'editorOnly'
+      )));
+      const result = {
+        id: values.id || layer.name,
+        name: layer.name,
+        width: layer.width || tiled.width,
+        height: layer.height || tiled.height,
+        depth: values.depth ?? (-85 + order / 1000),
+        tiles,
+      };
+      if (layer.x) result.x = layer.x;
+      if (layer.y) result.y = layer.y;
+      if (layer.offsetx) result.offsetX = layer.offsetx;
+      if (layer.offsety) result.offsetY = layer.offsety;
+      if (layer.opacity !== undefined && layer.opacity !== 1) result.opacity = layer.opacity;
+      if (layer.visible === false) result.visible = false;
+      if (Object.keys(customProperties).length) result.properties = customProperties;
+      return result;
+    })
+    .filter(Boolean);
 }
 
 function objectType(object) {
@@ -910,13 +1364,24 @@ function appendAsset(assets, assetId) {
   if (assetId && !assets.includes(assetId)) assets.push(assetId);
 }
 
-export function tiledToRuntime(tiled, catalogs) {
+export function tiledToRuntime(tiled, catalogs, sourcePath) {
   const mapProps = propertyMap(tiled);
   if (mapProps.oqSchema !== 'office-quest@1') {
     throw new Error(`Schema Tiled não suportado: ${mapProps.oqSchema || '(ausente)'}`);
   }
   const tile = tiled.tilewidth || 16;
-  const objects = allObjects(tiled);
+  const resolvedSourcePath = sourcePath || tiledPath(mapProps.id);
+  const objectRecords = allObjectRecords(tiled, resolvedSourcePath);
+  const objects = objectRecords.map((record) => record.object);
+  const layerByObject = new Map(objectRecords.map((record) => [record.object, record.layer]));
+  const cameraLayerRecords = objectRecords.filter((record) => record.layer === 'camera');
+  if (
+    cameraLayerRecords.length > 1
+    || cameraLayerRecords.some(({ object }) => objectType(object) !== 'camera')
+  ) {
+    throw new Error('Limite da câmera inválido: a camada 14 deve conter somente um retângulo camera');
+  }
+  const visualLayers = visualLayersFromTiled(tiled, catalogs);
   const effectiveType = (object) => {
     const explicit = objectType(object);
     if (explicit) return explicit;
@@ -924,6 +1389,57 @@ export function tiledToRuntime(tiled, catalogs) {
     return resolveGid(catalogs, object.gid).category || '';
   };
   const byType = (type) => objects.filter((object) => effectiveType(object) === type);
+
+  const entities = objects
+    .filter((object) => {
+      const type = effectiveType(object);
+      return type && !BUILTIN_OBJECT_TYPES.has(type);
+    })
+    .map((object) => {
+      const values = propertyMap(object);
+      const type = effectiveType(object);
+      const customProperties = {
+        ...parseExtra(values),
+        ...Object.fromEntries(Object.entries(values).filter(([key]) => (
+          key !== 'id' && key !== 'assetId' && key !== 'extraJson' && key !== 'oqSourceLayer'
+        ))),
+      };
+      const result = {
+        id: values.id || object.name || `${type}-${object.id}`,
+        type,
+        x: cleanNumber(object.x / tile),
+        y: cleanNumber(object.y / tile),
+        layer: values.oqSourceLayer || layerByObject.get(object),
+      };
+      if (object.name && object.name !== result.id) result.name = object.name;
+      if (object.gid) {
+        const asset = assetFromObject(object, values, catalogs);
+        result.x = cleanNumber(object.x / tile - 0.5);
+        result.y = cleanNumber(object.y / tile - 1);
+        result.w = cleanNumber(object.width / tile);
+        result.h = cleanNumber(object.height / tile);
+        result.shape = 'tile';
+        result.assetId = asset.assetId;
+        if (asset.flipX) result.flipX = true;
+      } else if (object.point) {
+        result.shape = 'point';
+      } else {
+        result.w = cleanNumber(object.width / tile);
+        result.h = cleanNumber(object.height / tile);
+        if (object.ellipse) result.shape = 'ellipse';
+        if (object.polygon) {
+          result.shape = 'polygon';
+          result.points = object.polygon.map((point) => ({
+            x: cleanNumber(point.x / tile),
+            y: cleanNumber(point.y / tile),
+          }));
+        }
+      }
+      if (object.rotation) result.rotation = object.rotation;
+      if (object.visible === false) result.visible = false;
+      if (Object.keys(customProperties).length) result.properties = customProperties;
+      return result;
+    });
 
   const structureFrom = (object, type) => {
     if (!object) return undefined;
@@ -1088,6 +1604,16 @@ export function tiledToRuntime(tiled, catalogs) {
   if (Object.hasOwn(mapProps, 'cameraMinZoom')) camera.minZoom = mapProps.cameraMinZoom;
   if (Object.hasOwn(mapProps, 'cameraMaxZoom')) camera.maxZoom = mapProps.cameraMaxZoom;
   if (cameraObject) camera.bounds = rectFromObject(cameraObject, tile);
+  if (camera.bounds && (
+    camera.bounds.x < 0
+    || camera.bounds.y < 0
+    || camera.bounds.w <= 0
+    || camera.bounds.h <= 0
+    || camera.bounds.x + camera.bounds.w > tiled.width
+    || camera.bounds.y + camera.bounds.h > tiled.height
+  )) {
+    throw new Error('Limite da câmera inválido: o retângulo precisa permanecer dentro do mapa');
+  }
 
   let previousAssets;
   try {
@@ -1099,6 +1625,14 @@ export function tiledToRuntime(tiled, catalogs) {
   for (const detail of details) appendAsset(requiredAssets, detail.texture || 'grass_detail');
   for (const prop of props) appendAsset(requiredAssets, prop.texture);
   for (const item of furniture) appendAsset(requiredAssets, item.id);
+  for (const entity of entities) appendAsset(requiredAssets, entity.assetId);
+  for (const layer of visualLayers) {
+    for (const cell of layer.tiles) {
+      if (cell.texture !== 'tiles' && !catalogs.surfaces.byAsset.has(cell.texture)) {
+        appendAsset(requiredAssets, cell.texture);
+      }
+    }
+  }
   for (const door of [building, ...rooms].flatMap((parent) => parent?.doors || [])) appendAsset(requiredAssets, door.texture);
   if (hedges.length) {
     appendAsset(requiredAssets, 'hedge_top');
@@ -1120,6 +1654,7 @@ export function tiledToRuntime(tiled, catalogs) {
   };
   if (Object.keys(camera).length) result.camera = camera;
   optional(result, 'background', mapProps.background, mapProps);
+  optional(result, 'visualMode', mapProps.visualMode, mapProps);
   if (mapProps.kind === 'world') result.ground = mapProps.ground || 'grass';
   if (yard) result.yard = yard;
   if (assets.length) result.assets = assets;
@@ -1134,6 +1669,8 @@ export function tiledToRuntime(tiled, catalogs) {
   if (props.length) result.props = props;
   if (collisions.length) result.collisions = collisions;
   if (portals.length) result.portals = portals;
+  if (entities.length) result.entities = entities;
+  if (visualLayers.length) result.visualLayers = visualLayers;
   return result;
 }
 
@@ -1153,43 +1690,88 @@ function tiledPath(sceneId) {
   return resolve(TILED_MAPS_DIR, `${sceneId}.tmj`);
 }
 
+function runtimeFile(scene) {
+  return scene.runtimeFile || `${scene.id}.json`;
+}
+
 export function toTiled(requested = 'all', force = false) {
   const catalogs = generateTilesets();
   for (const scene of sceneTargets(requested)) {
-    const source = resolve(MAPS_DIR, scene.file);
+    const file = runtimeFile(scene);
+    const source = resolve(MAPS_DIR, file);
     const destination = tiledPath(scene.id);
     if (existsSync(destination) && !force) {
       throw new Error(`${relative(CLIENT_ROOT, destination)} já existe; use --force para sobrescrever`);
     }
     const map = readJson(source);
-    writeJson(destination, runtimeToTiled(map, catalogs, scene.file));
+    writeJson(destination, runtimeToTiled(map, catalogs, file));
     console.log(`Tiled criado: ${posixPath(relative(CLIENT_ROOT, destination))}`);
   }
 }
 
-export function fromTiled(requested = 'all') {
+export function makeEditable(requested = 'all') {
   const catalogs = generateTilesets();
+  const converted = new Map();
+  const outputs = [];
+  for (const scene of sceneTargets(requested)) {
+    const file = runtimeFile(scene);
+    const runtimePath = resolve(MAPS_DIR, file);
+    const destination = tiledPath(scene.id);
+    const editable = makeMapEditable(readJson(runtimePath), catalogs);
+    const tiled = runtimeToTiled(editable, catalogs, file);
+    const restored = tiledToRuntime(tiled, catalogs, destination);
+    converted.set(scene.id, restored);
+    outputs.push({ scene, runtimePath, destination, tiled, restored });
+  }
+  validateMaps(converted, requested === 'all');
+  for (const output of outputs) {
+    writeJson(output.runtimePath, output.restored);
+    writeJson(output.destination, output.tiled);
+    console.log(`Mapa editável criado: ${posixPath(relative(CLIENT_ROOT, output.destination))}`);
+  }
+}
+
+export function expandCanvas(sceneId, width, height) {
+  if (!sceneId || sceneId === 'all') throw new Error('Informe uma cena para expandir, por exemplo: world');
+  const catalogs = generateTilesets();
+  const scene = sceneTargets(sceneId)[0];
+  const file = runtimeFile(scene);
+  const runtimePath = resolve(MAPS_DIR, file);
+  const destination = tiledPath(scene.id);
+  const expanded = expandMapCanvas(readJson(runtimePath), width, height, catalogs);
+  const tiled = runtimeToTiled(expanded, catalogs, file);
+  const restored = tiledToRuntime(tiled, catalogs, destination);
+  const converted = new Map([[scene.id, restored]]);
+  validateMaps(converted, false);
+  writeJson(runtimePath, restored);
+  writeJson(destination, tiled);
+  console.log(`Canvas expandido para ${width}×${height}: ${posixPath(relative(CLIENT_ROOT, destination))}`);
+}
+
+export function fromTiled(requested = 'all') {
+  const catalogs = loadTilesetCatalogs();
   const converted = new Map();
   for (const scene of sceneTargets(requested)) {
     const source = tiledPath(scene.id);
     if (!existsSync(source)) throw new Error(`Mapa Tiled não encontrado: ${source}`);
-    const map = tiledToRuntime(readJson(source), catalogs);
+    const map = tiledToRuntime(readJson(source), catalogs, source);
     if (map.id !== scene.id) throw new Error(`ID do TMJ (${map.id}) difere do manifesto (${scene.id})`);
     converted.set(scene.id, map);
   }
   validateMaps(converted, requested === 'all');
   for (const scene of sceneTargets(requested)) {
-    const destination = resolve(MAPS_DIR, scene.file);
+    const destination = resolve(MAPS_DIR, runtimeFile(scene));
     writeJson(destination, converted.get(scene.id));
     console.log(`Runtime atualizado: ${posixPath(relative(CLIENT_ROOT, destination))}`);
   }
 }
 
 export function roundTrip(requested = 'all') {
-  const catalogs = generateTilesets();
+  const catalogs = loadTilesetCatalogs();
   for (const scene of sceneTargets(requested)) {
-    const original = readJson(resolve(MAPS_DIR, scene.file));
-    const tiled = runtimeToTiled(original, catalogs, scene.file);
+    const file = runtimeFile(scene);
+    const original = readJson(resolve(MAPS_DIR, file));
+    const tiled = runtimeToTiled(original, catalogs, file);
     const restored = tiledToRuntime(tiled, catalogs);
     if (JSON.stringify(canonical(original)) !== JSON.stringify(canonical(restored))) {
       throw new Error(`Round-trip alterou o mapa ${scene.id}`);
@@ -1199,10 +1781,11 @@ export function roundTrip(requested = 'all') {
 }
 
 export function validateTiled(requested = 'all') {
-  const catalogs = generateTilesets();
+  const catalogs = loadTilesetCatalogs();
   const converted = new Map();
   for (const scene of sceneTargets(requested)) {
-    const map = tiledToRuntime(readJson(tiledPath(scene.id)), catalogs);
+    const source = tiledPath(scene.id);
+    const map = tiledToRuntime(readJson(source), catalogs, source);
     converted.set(scene.id, map);
   }
   validateMaps(converted, requested === 'all');
@@ -1210,12 +1793,12 @@ export function validateTiled(requested = 'all') {
 }
 
 export function refreshPreviews(requested = 'all') {
-  const catalogs = generateTilesets();
+  const catalogs = loadTilesetCatalogs();
   for (const scene of sceneTargets(requested)) {
     const path = tiledPath(scene.id);
     const tiled = readJson(path);
-    const runtime = tiledToRuntime(tiled, catalogs);
-    const fresh = runtimeToTiled(runtime, catalogs, scene.file);
+    const runtime = tiledToRuntime(tiled, catalogs, path);
+    const fresh = runtimeToTiled(runtime, catalogs, runtimeFile(scene));
     const freshByRole = new Map(fresh.layers.map((layer) => [propertyMap(layer).oqRole, layer]));
     tiled.layers = tiled.layers.map((layer) => {
       const role = propertyMap(layer).oqRole;
@@ -1240,7 +1823,7 @@ function validateMaps(converted, completeSet) {
     ? converted
     : new Map(manifest().scenes.map((scene) => {
       const selected = converted.get(scene.id);
-      return [scene.id, selected || readJson(resolve(MAPS_DIR, scene.file))];
+      return [scene.id, selected || readJson(resolve(MAPS_DIR, runtimeFile(scene)))];
     }));
   for (const [sceneId, map] of converted) {
     if (!map.id || !map.kind || !map.w || !map.h) throw new Error(`Mapa incompleto: ${sceneId}`);
@@ -1261,6 +1844,13 @@ function validateMaps(converted, completeSet) {
           : resolve(CLIENT_ROOT, `assets/world/${assetId}.png`);
       if (!existsSync(path)) throw new Error(`Asset da cena ${sceneId} não existe: ${assetId}`);
     }
+    for (const entity of mapMechanicEntities(map)) {
+      const handler = mechanicsRegistry.get(entity.type);
+      if (!handler) {
+        throw new Error(`Cena ${sceneId}: mecânica sem handler registrado: ${entity.type} (${entity.id || entity.name})`);
+      }
+      handler.validate?.(entity, map);
+    }
   }
 }
 
@@ -1270,6 +1860,8 @@ Conversor Tiled ↔ Office Quest
 
 Uso:
   node client-web/tools/tiled-converter.mjs assets
+  node client-web/tools/tiled-converter.mjs make-editable [all|scene-id]
+  node client-web/tools/tiled-converter.mjs expand-canvas <scene-id> <largura> <altura>
   node client-web/tools/tiled-converter.mjs to-tiled [all|scene-id] [--force]
   node client-web/tools/tiled-converter.mjs from-tiled [all|scene-id]
   node client-web/tools/tiled-converter.mjs refresh-preview [all|scene-id]
@@ -1287,6 +1879,14 @@ async function main() {
   if (command === 'assets') {
     generateTilesets();
     console.log('Tilesets atualizados.');
+    return;
+  }
+  if (command === 'make-editable') {
+    makeEditable(requested);
+    return;
+  }
+  if (command === 'expand-canvas') {
+    expandCanvas(requested, Number(flags[0]), Number(flags[1]));
     return;
   }
   if (command === 'to-tiled') {

@@ -3,8 +3,8 @@
 Cliente oficial em **Phaser 3**, acessível por link e sem etapa de build.
 
 A navegação é composta por **várias cenas independentes**. O jogador explora um mundo aberto que
-funciona como hub e escolhe os locais em que quer entrar. Cada local é outro mapa JSON; não existe
-conceito de múltiplos andares na arquitetura atual.
+funciona como hub e escolhe os locais em que quer entrar. Cada local é outro mapa do Tiled; não
+existe conceito de múltiplos andares na arquitetura atual.
 
 > Para editar visualmente no Tiled, veja [`tiled/README.md`](tiled/README.md). Para entender o
 > schema e também editar manualmente, veja [`GUIA-EDICAO.md`](GUIA-EDICAO.md). Para padrões de Phaser e debug, veja
@@ -19,7 +19,7 @@ node server.js          # http://localhost:8123
 
 Phaser 3.80.1 está vendorizado e o servidor estático usa apenas Node.
 
-**Controles:** `WASD`/setas para andar · `E` para entrar/sair · `Tab` para equipamentos · segure
+**Controles:** `WASD`/setas para andar · `E` para interagir ou entrar/sair · `Tab` para equipamentos · segure
 `Shift` para usar o equipamento selecionado · `scroll` para zoom. Dentro de uma sala decorável,
 use o botão `Decorar sala` para abrir o editor de móveis.
 
@@ -29,7 +29,7 @@ no Tiled, criar ruas, posicionar fachadas, configurar colisões e conectar novos
 ## O corte vertical atual
 
 ```text
-Quintal Tooq (hub compacto e cercado)
+Mundo Tooq (hub aberto 96×72, expansível no Tiled)
         │ porta + E
         ▼
 Escritório Tooq (térreo + quintal privado)
@@ -38,9 +38,10 @@ Escritório Tooq (térreo + quintal privado)
 ```
 
 - `maps/scenes.json` registra as cenas e define a inicial.
-- `maps/world.json` descreve o pequeno pátio central, a fachada e o portal de entrada.
-- `maps/tooq-office.json` descreve o interior, a mobília, o quintal privado e o portão de saída.
-- `tiled/maps/*.tmj` são as fontes visuais editáveis; o conversor gera os dois JSONs acima.
+- `tiled/maps/world.tmj` descreve o pequeno pátio central, a fachada e o portal de entrada.
+- `tiled/maps/tooq-office.tmj` descreve o interior, a mobília, o quintal e o portão de saída.
+- `src/TiledRuntimeLoader.js` lê mapas, tilesets externos e templates diretamente no navegador.
+- Ao salvar no Tiled, o servidor valida o projeto e recarrega o jogo; nenhum runtime é gerado.
 - `src/main.js` mantém um único runtime Phaser e reinicia a cena com o mapa e o spawn de destino.
 - `src/MapRenderer.js` renderiza mundos e interiores a partir dos dados.
 
@@ -51,23 +52,29 @@ client-web/
 ├── index.html
 ├── server.js
 ├── phaser.min.js
+├── lib/signalr.min.js          cliente SignalR oficial vendorizado
 ├── src/
 │   ├── main.js                 runtime, movimento, câmera, HUD e transições
 │   ├── CharacterSystem.js      avatar modular, editor, frames e persistência
 │   ├── EquipmentSystem.js      loadout, inventário, velocidades e visuais
 │   ├── RoomDecorationSystem.js editor de móveis por sala e persistência
+│   ├── GameItemsSystem.js       REST, cache de inventário e SignalR
+│   ├── FurnitureInteractionSystem.js kanban, baú, cadeira e estação
+│   ├── DevMapSync.js           feedback e recarga após salvar no Tiled
+│   ├── TiledRuntimeLoader.js   carregamento direto de TMJ, TSJ e templates
+│   ├── mechanics/              registro e handlers reutilizáveis de gameplay
 │   ├── MapRenderer.js          renderer dos tipos world e interior
 │   └── Editor.js               editor antigo; ainda não ligado ao novo runtime
 ├── maps/
 │   ├── scenes.json             manifesto de cenas
-│   ├── world.json              runtime gerado do hub
-│   └── tooq-office.json        runtime gerado do escritório
+│   ├── world.json              snapshot legado para migração/testes
+│   └── tooq-office.json        snapshot legado para migração/testes
 ├── tiled/
 │   ├── office-quest.tiled-project
 │   ├── maps/                    fontes .tmj editáveis no Tiled
 │   └── tilesets/                paletas de pisos, paredes, mundo e móveis
 ├── tools/
-│   └── tiled-converter.mjs      conversão, validação e atualização das prévias
+│   └── tiled-converter.mjs      migração e diagnóstico; não participa do runtime
 └── assets/
     ├── furniture/catalog.json  catálogo curado do editor de salas
     ├── character/catalog.json   opções e grade do avatar modular
@@ -81,18 +88,16 @@ client-web/
 
 ## Fluxo de edição no Tiled
 
-Abra `tiled/office-quest.tiled-project`, edite e salve o `.tmj`. Depois, na raiz do repositório:
+Na raiz do repositório, inicie uma vez:
 
 ```powershell
-node client-web/tools/tiled-converter.mjs validate all
-node client-web/tools/tiled-converter.mjs from-tiled all
 node client-web/server.js
 ```
 
-O runtime continua simples e sem etapa obrigatória de build para o usuário final. A conversão só
-acontece durante o desenvolvimento, quando o mapa visual é alterado. O comando
-`to-tiled all --force` faz o caminho inverso e sobrescreve os TMJs; use apenas para reiniciar a
-fonte visual a partir dos JSONs.
+Abra `tiled/office-quest.tiled-project`, edite e salve. O servidor valida todos os arquivos usados e
+o navegador recarrega quando necessário. Erros aparecem sobre o jogo. O Phaser consome `.tmj`,
+`.tsj` e `.tj` diretamente, sem build e sem conversão. Os comandos `to-tiled` e `from-tiled`
+continuam apenas para migração de snapshots antigos e podem sobrescrever trabalho visual.
 
 ## Manifesto de cenas
 
@@ -102,9 +107,9 @@ fonte visual a partir dos JSONs.
 {
   "startScene": "world",
   "scenes": [
-    { "id": "world", "file": "world.json" },
-    { "id": "tooq-office", "file": "tooq-office.json" },
-    { "id": "arcade", "file": "arcade.json" }
+    { "id": "world", "file": "tiled/maps/world.tmj" },
+    { "id": "tooq-office", "file": "tiled/maps/tooq-office.tmj" },
+    { "id": "arcade", "file": "tiled/maps/arcade.tmj" }
   ]
 }
 ```
@@ -151,10 +156,11 @@ Coordenadas são expressas em tiles; hoje um tile visual tem 16 px.
 O portal é um retângulo sensível ao pé do avatar. Dentro dele, o HUD mostra a ação; `E` faz fade,
 carrega `targetScene` e posiciona o jogador em `targetSpawn`.
 
-`camera.bounds` também usa tiles. Nos mapas cercados, o limite inferior coincide com o portão. O
-runtime combina `minZoom` com o zoom necessário para caber esses limites inteiros na janela. Isso
-permite uma visão geral ampla pelo scroll; quando a proporção da janela é diferente da proporção do
-mapa, o fundo da cena ocupa margens centralizadas.
+`camera.bounds` também usa tiles e continua disponível para cenas fechadas. Quando ele não existe,
+como no `world`, a câmera usa `w` e `h` como base e amplia o limite automaticamente para incluir
+objetos visíveis posicionados além das bordas. Redimensionar o mapa no Tiled continua sendo o modo
+correto de criar chão editável; mover somente objetos para fora do canvas cria uma extensão com a cor
+de fundo. O runtime combina `minZoom` com o zoom necessário para caber esses limites na janela.
 
 ### Campos de interior
 
@@ -185,6 +191,8 @@ Pisos existentes: `wood`, `gray`, `light`, `terra` e `water`.
 | `hedges[]` | Cercas visuais que também colidem. |
 | `props[]` | Fachadas, árvores, bancos, flores e outros sprites. Aceita um footprint `collision`. |
 | `collisions[]` | Retângulos de colisão desacoplados do visual. |
+| `entities[]` | Mecânicas extensíveis vindas de classes de objeto do Tiled. |
+| `visualLayers[]` | Tile layers livres, renderizadas com profundidade, visibilidade e opacidade. |
 
 Os campos externos (`paths`, `details`, `hedges`, `props` e `collisions`) também podem ser usados em
 um mapa `interior` que possua `yard`. Um prop sólido mantém visual e física próximos no JSON:
@@ -212,19 +220,39 @@ prévia do Tiled e metadados ficam em `assets/animations/`.
 Quando os pés do avatar estão dentro de uma entrada de `rooms[]`, aparece `Decorar <sala>`. O modo
 de decoração pausa o avatar, enquadra a sala e abre um catálogo curado de mesas, estações,
 assentos, armazenamento e decoração. Clique num item e depois no chão para adicioná-lo; escolha
-`Mover` para selecionar e arrastar. Também é possível espelhar, remover, desfazer e refazer.
+`Mover` para selecionar e arrastar. Também é possível espelhar ou recolher o item.
 
 O editor trabalha em uma grade de meio tile e rejeita móveis fora do piso útil, sobre outro móvel
 ou na área de circulação das portas. Colisões são criadas, movidas e removidas junto com a peça,
-sem recarregar a cena. As alterações são salvas automaticamente no `localStorage`, sob a chave
-`office-quest-room-decoration-v1`, isoladas por `sceneId` e `roomId`. `Restaurar sala` apaga a
-personalização daquela sala e reaplica a decoração do mapa-base.
+sem recarregar a cena. Cada unidade é persistida no backend com identidade própria, dono,
+`sceneId` e `roomId`. Colocar consome uma unidade disponível; `Recolher seus móveis` devolve as
+instâncias à mochila. Não existe mais catálogo infinito nem persistência de decoração no navegador.
 
 Este recurso edita **apenas móveis**. Paredes, portas, pisos, ruas, portais, câmera e dimensões
 continuam sendo level design no Tiled. Assim, o `.tmj` permanece a fonte estrutural e a decoração do
-usuário é uma camada sobre o JSON convertido. `createRoomDecorationStore` já possui o callback
-`onSave`; ele é o ponto previsto para trocar o armazenamento local por uma API/SignalR quando a
-decoração precisar ser compartilhada entre usuários.
+usuário é uma camada sobre os dados carregados do Tiled. A API é a fonte de verdade e eventos
+SignalR atualizam colocações, movimentos e remoções nas outras sessões da mesma sala.
+
+### Mobílias interativas
+
+O catálogo associa comportamentos por `InteractionType`, sem colocar IDs no loop principal:
+
+- `kanban`: abre o quadro e permite escolher a atividade ativa;
+- `chest`: mostra itens guardados e transfere unidades entre baú e inventário;
+- `workstation`: inicia/encerra o contador persistido de uma atividade;
+- `seat`: procura um computador/estação próximo e abre o fluxo de trabalho ao sentar.
+
+O backend expõe `/api/game/inventory`, `/api/game/furniture`, rotas de baú e rotas de estação.
+O cliente usa `?userId=1` por padrão no protótipo; esse cabeçalho deverá ser substituído pela
+identidade autenticada quando login e autorização forem conectados.
+
+Cada item do backend possui `InstanceKey`, dono e `Location`. Uma colocação referencia exatamente
+uma instância; portanto, ter duas cadeiras gera dois registros independentes. As operações de
+colocar e recolher são transacionais e a API rejeita reutilização da mesma unidade.
+
+SignalR assina os grupos `game:user:<id>` e `game:room:<scene>:<room>`. Os eventos de inclusão,
+movimento, remoção, inventário, baú e sessão de trabalho atualizam outras abas sem reload. Isso não
+inclui presença de avatares: essa parte continua no fluxo legado do backend.
 
 ## Loadout e equipamentos
 
@@ -305,11 +333,11 @@ http://localhost:8123/?scene=tooq-office&spawn=yard-gate&debug=collisions
 ## Estado e próximos passos
 
 Esta versão prova o fluxo completo entre cenas e traz uma composição inicial do mundo e do
-escritório. Ainda faltam:
+escritório, além do primeiro ciclo persistente de propriedade e interação de móveis. Ainda faltam:
 
-1. Conectar SignalR e isolar presença por `sceneId`; dois avatares na mesma cena é o próximo marco.
+1. Isolar presença/movimento de avatares por `sceneId`; o SignalR de mobília já está conectado.
 2. Refinar a integração do Tiled com propriedades tipadas e atualização de prévia dentro do editor.
-3. Levar a decoração de salas do armazenamento local para backend/SignalR com permissão por dono.
+3. Adicionar compra/drop de móveis e permissões compartilhadas de decoração por sala.
 4. Adicionar novas cenas de destino ao hub.
 5. Conectar A/V por proximidade com LiveKit depois da presença em rede.
 

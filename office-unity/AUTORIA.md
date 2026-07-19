@@ -1,5 +1,7 @@
 # Editar o ambiente à mão — guia do iniciante
 
+> **TUTORIAL ARQUIVADO DO UNITY.** Para o fluxo atual, use `../client-web/GUIA-EDICAO.md`.
+
 Objetivo: você **pintar cômodos** e **colocar móveis** na sua cena, vendo na tela.
 É pra experimentar sem medo — se quebrar, tem o botão de conserto (seção "SOCORRO" no fim). 🙂
 

@@ -1,5 +1,7 @@
 # Novo cliente do jogo — reconstrução do zero
 
+> **PLANO ARQUIVADO.** A reconstrução vigente aconteceu em `../client-web/`, não neste projeto.
+
 > Arquitetura nova, encostada no **pipeline 2D real do Unity** (import pelo editor,
 > Tilemap, Pixel Perfect Camera, Light2D). Substitui o cliente antigo, que carregava
 > arte em runtime e misturava estilos — a causa-raiz do visual ruim (ver `HANDOFF.md`).

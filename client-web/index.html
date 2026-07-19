@@ -29,6 +29,18 @@
   #portal-prompt kbd{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;
     font:700 12px system-ui;color:#fff;background:#6c5cff;box-shadow:inset 0 -2px #0003}
   #portal-prompt span{font-size:12px;font-weight:650;white-space:nowrap}
+  #map-sync-status{position:fixed;left:50%;top:14px;z-index:80;display:grid;min-width:min(430px,calc(100vw - 28px));
+    max-width:min(680px,calc(100vw - 28px));transform:translateX(-50%);grid-template-columns:1fr auto;gap:3px 12px;
+    padding:10px 38px 10px 12px;border:3px solid #2b1b20;color:#fff0d8;background:#503538;
+    box-shadow:inset 2px 2px #82544a,4px 5px #160f13aa;font-family:Inter,system-ui,sans-serif}
+  #map-sync-status strong{font-size:10px;text-transform:uppercase}#map-sync-status span{grid-column:1/-1;font-size:9px;line-height:1.4}
+  #map-sync-status button{position:absolute;right:6px;top:6px;width:24px;height:24px;border:2px solid #2b1b20;color:#ffe8ca;background:#7b4842;cursor:pointer}
+  #map-sync-status[data-tone="syncing"]{border-color:#d1a052}#map-sync-status[data-tone="saved"]{border-color:#78b56a}
+  #map-sync-status[data-tone="error"]{border-color:#e6655b;background:#572b30}
+  #map-load-error{position:fixed;left:50%;top:50%;z-index:100;display:grid;width:min(620px,calc(100vw - 32px));
+    transform:translate(-50%,-50%);gap:9px;padding:18px;border:4px solid #e6655b;color:#ffe8d8;background:#572b30;
+    box-shadow:inset 2px 2px #8d4b4d,7px 8px #100a0dcc;font-family:Inter,system-ui,sans-serif}
+  #map-load-error strong{font-size:14px;text-transform:uppercase}#map-load-error span{font-size:11px;line-height:1.5}
 
   #equipment-menu{left:50%;top:50%;width:min(900px,calc(100vw - 32px));max-height:calc(100vh - 32px);
     transform:translate(-50%,-50%);overflow:auto;padding:0;border:4px solid #2b1b20;
@@ -218,6 +230,7 @@
     padding:5px;border:3px solid #342329;color:#ebd1b7;background:#453038;box-shadow:inset 0 0 0 2px #60434a,2px 2px #140e11;
     cursor:pointer;overflow:hidden}
   .room-decoration-item:hover,.room-decoration-item.active{border-color:#d79257;background:#5c3b3a}
+  .room-decoration-item:disabled{opacity:.38;filter:grayscale(.7);cursor:not-allowed}
   .room-decoration-item span{display:grid;width:64px;height:66px;place-items:center}
   .room-decoration-item img{max-width:48px;max-height:64px;image-rendering:pixelated;transform:scale(1.8)}
   .room-decoration-item strong{z-index:1;width:100%;overflow:hidden;color:#ffe9c9;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
@@ -245,6 +258,26 @@
     #character-panel-view{grid-template-columns:1fr}.character-preview-panel{min-height:360px}.character-controls-panel{min-height:350px}
     #character-controls{max-height:none}
   }
+  #furniture-interaction-panel{position:fixed;inset:50% auto auto 50%;z-index:55;width:min(920px,calc(100vw - 32px));max-height:min(680px,calc(100vh - 32px));
+    transform:translate(-50%,-50%);overflow:hidden;border:4px solid #26191d;border-radius:10px;color:#ffe9c9;background:#37252b;
+    box-shadow:0 18px 70px #120d10cc;font-family:'Press Start 2P',monospace}
+  .interaction-header{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:3px solid #281a1f;background:#4d3137}
+  .interaction-header h2{margin:0;color:#f3c478;font-size:14px}.interaction-header p{margin:6px 0 0;color:#cba68c;font-size:8px}
+  #furniture-interaction-close{width:34px;height:34px;border:3px solid #26191d;color:#ffe9c9;background:#744a49;font:inherit}
+  #furniture-interaction-content{max-height:570px;overflow:auto;padding:12px}
+  .interaction-message{padding:24px;text-align:center;color:#d8b89d;font-size:9px}.interaction-message.error{color:#ff9e91}
+  .interaction-kanban{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px;min-width:720px}
+  .interaction-kanban section,.interaction-chest section{padding:7px;border:2px solid #2a1b20;background:#2c1e23}
+  .interaction-kanban h3,.interaction-chest h3{margin:0 0 8px;color:#e7b76d;font-size:8px}
+  .interaction-kanban button,.workstation-tasks button,.interaction-chest button{display:flex;width:100%;gap:6px;flex-direction:column;margin:5px 0;padding:8px;border:2px solid #352126;color:#ead4bd;background:#5b3c40;text-align:left;font:inherit}
+  .interaction-kanban button:hover:not(:disabled),.interaction-kanban button.selected,.workstation-tasks button:hover,.interaction-chest button:hover{border-color:#efbc68;background:#704a46}
+  .interaction-kanban small,.workstation-tasks small,.interaction-chest small{color:#e8b86f;font-size:7px}.interaction-kanban strong,.workstation-tasks strong,.interaction-chest strong{font-size:8px;line-height:1.45}
+  .interaction-kanban em,.interaction-chest em{color:#8f7166;font-size:7px;font-style:normal}
+  .interaction-chest{display:grid;grid-template-columns:1fr 1fr;gap:10px}.interaction-chest button{display:grid;grid-template-columns:44px 1fr;align-items:center}
+  .interaction-chest img{max-width:40px;max-height:40px;image-rendering:pixelated}.interaction-chest button span{display:flex;min-width:0;flex-direction:column;gap:5px}
+  .workstation-timer{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:12px;border:2px solid #2a1b20;background:#2c1e23}.workstation-timer span{font-size:24px}.workstation-timer strong{font-size:9px;flex:1}
+  .workstation-timer button{padding:8px;border:2px solid #2b1c20;color:#ffe4c3;background:#774443;font:inherit;font-size:7px}.workstation-tasks{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  @media(max-width:650px){.interaction-chest,.workstation-tasks{grid-template-columns:1fr}}
   @media(max-width:440px){
     #scene-card{max-width:calc(100vw - 32px)}#controls{display:none}
     .equipment-menu-header{padding:9px}.equipment-title-emblem{display:none}.equipment-menu-header h2{font-size:15px}
@@ -285,12 +318,16 @@
     <span id="room-decoration-count">0 móveis</span>
     <strong id="room-decoration-selection">Nenhum móvel selecionado</strong>
   </div>
-  <div id="room-decoration-status" role="status">Alterações são salvas automaticamente</div>
+  <div id="room-decoration-status" role="status">Alterações são salvas no servidor</div>
   <footer class="room-decoration-footer">
     <span>Arraste no chão · grade de meio bloco</span>
-    <button id="room-decoration-reset" type="button">Restaurar sala</button>
+    <button id="room-decoration-reset" type="button">Recolher seus móveis</button>
   </footer>
 </aside>
+<section id="furniture-interaction-panel" class="interactive" aria-label="Interação com móvel" hidden>
+  <header class="interaction-header"><div><h2 id="furniture-interaction-title">Móvel</h2><p id="furniture-interaction-subtitle"></p></div><button id="furniture-interaction-close" type="button" aria-label="Fechar">×</button></header>
+  <div id="furniture-interaction-content"></div>
+</section>
 <section id="equipment-menu" class="hud interactive" aria-label="Equipamentos e inventário" hidden>
   <header class="equipment-menu-header">
     <div class="equipment-menu-title">
@@ -351,6 +388,7 @@
   </footer>
 </section>
 <script src="phaser.min.js"></script>
+<script src="lib/signalr.min.js"></script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

@@ -32,6 +32,8 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
   entra/sai pelos portais. As fontes visuais ficam em `tiled/maps/*.tmj` e são convertidas por
   `tools/tiled-converter.mjs`; o editor antigo não participa deste runtime.
 - ⏸️ `office-unity/` — abandonado, mantido só como arquivo.
+- ✅ **Inventário/mobília** — instâncias únicas persistidas no backend; editor consome estoque,
+  interações de kanban/baú/estação e sincronização SignalR por sala. Ver `CONTEXT.md` §4.
 
 ## Regras de trabalho
 
@@ -48,8 +50,9 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 # LiveKit (opcional)
 & ".\livekit\start-livekit.ps1"
 
-# Backend, porta 5210 — rodar a DLL (o `dotnet run` detached não persistia)
-.\backend\VirtualOffice.Api\bin\Debug\net10.0\VirtualOffice.Api.dll
+# Backend, porta 5210 — execute nessa pasta para o office.db ficar previsível
+Push-Location .\backend\VirtualOffice.Api
+.\bin\Debug\net10.0\VirtualOffice.Api.dll
 ```
 
 ```bash

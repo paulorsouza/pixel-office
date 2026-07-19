@@ -1,0 +1,338 @@
+{
+  "columns": 0,
+  "grid": {
+    "height": 16,
+    "orientation": "orthogonal",
+    "width": 16
+  },
+  "margin": 0,
+  "name": "08 · Cercas externas",
+  "objectalignment": "bottom",
+  "spacing": 0,
+  "tilecount": 26,
+  "tiledversion": "1.12.2",
+  "tileheight": 16,
+  "tiles": [
+    {
+      "id": 0,
+      "image": "../../assets/world/fences/metal_bottom_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_bottom_left" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 1,
+      "image": "../../assets/world/fences/metal_bottom_middle.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_bottom_middle" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 2,
+      "image": "../../assets/world/fences/metal_bottom_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_bottom_right" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 3,
+      "image": "../../assets/world/fences/metal_inner_corner_1.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_inner_corner_1" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 4,
+      "image": "../../assets/world/fences/metal_inner_corner_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_inner_corner_2" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 5,
+      "image": "../../assets/world/fences/metal_inner_corner_3.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_inner_corner_3" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 6,
+      "image": "../../assets/world/fences/metal_inner_corner_4.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_inner_corner_4" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 7,
+      "image": "../../assets/world/fences/metal_middle_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_middle_left" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 8,
+      "image": "../../assets/world/fences/metal_middle_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_middle_right" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 9,
+      "image": "../../assets/world/fences/metal_pass.png",
+      "imageheight": 16,
+      "imagewidth": 48,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_pass" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 10,
+      "image": "../../assets/world/fences/metal_top_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_top_left" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 11,
+      "image": "../../assets/world/fences/metal_top_middle.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_top_middle" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 12,
+      "image": "../../assets/world/fences/metal_top_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_metal_top_right" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 13,
+      "image": "../../assets/world/fences/wood_metal_bottom_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_bottom_left" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 14,
+      "image": "../../assets/world/fences/wood_metal_bottom_middle.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_bottom_middle" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 15,
+      "image": "../../assets/world/fences/wood_metal_bottom_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_bottom_right" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 16,
+      "image": "../../assets/world/fences/wood_metal_inner_corner_1.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_inner_corner_1" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 17,
+      "image": "../../assets/world/fences/wood_metal_inner_corner_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_inner_corner_2" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 18,
+      "image": "../../assets/world/fences/wood_metal_inner_corner_3.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_inner_corner_3" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 19,
+      "image": "../../assets/world/fences/wood_metal_inner_corner_4.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_inner_corner_4" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 20,
+      "image": "../../assets/world/fences/wood_metal_middle_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_middle_left" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 21,
+      "image": "../../assets/world/fences/wood_metal_middle_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_middle_right" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 22,
+      "image": "../../assets/world/fences/wood_metal_pass.png",
+      "imageheight": 16,
+      "imagewidth": 48,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_pass" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 23,
+      "image": "../../assets/world/fences/wood_metal_top_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_top_left" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 24,
+      "image": "../../assets/world/fences/wood_metal_top_middle.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_top_middle" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 25,
+      "image": "../../assets/world/fences/wood_metal_top_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        { "name": "assetId", "type": "string", "value": "fence_wood_metal_top_right" },
+        { "name": "category", "type": "string", "value": "prop" },
+        { "name": "family", "type": "string", "value": "wood_metal" }
+      ],
+      "type": "prop"
+    }
+  ],
+  "tilewidth": 48,
+  "transformations": {
+    "hflip": false,
+    "preferuntransformed": true,
+    "rotate": false,
+    "vflip": false
+  },
+  "type": "tileset",
+  "version": "1.10"
+}

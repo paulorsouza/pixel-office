@@ -1,5 +1,7 @@
 # Conectar o Claude ao Unity (MCP) — mcp-unity (Node)
 
+> **ARQUIVADO.** O cliente atual é Phaser e é validado diretamente no navegador.
+
 Usa o **mcp-unity** (CoderGamester), servidor em Node. Objetivo: numa **sessão nova** do Claude Code,
 eu passo a **enxergar e dirigir o Unity direto** (inspecionar cena/console, rodar comandos) — fim do
 trabalho às cegas.

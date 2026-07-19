@@ -1,6 +1,6 @@
 # CONTEXT — Office Quest (escritório virtual da Tooq)
 
-**Atualizado:** 2026-07-17
+**Atualizado:** 2026-07-19
 
 Visão geral pragmática do projeto: o que é, o que existe, como as peças se conectam e para onde vai.
 Detalhes vivem em docs específicos (linkados no fim) — aqui é o mapa mental.
@@ -26,7 +26,7 @@ Unity (ver §4).
 
 | Peça | Onde | Estado |
 |---|---|---|
-| **Backend C#** | `backend/VirtualOffice.Api` | ✅ ASP.NET + EF/SQLite + SignalR. Porta **5210**. Subir pelo `.dll` em `bin\Debug\net10.0\` (o `dotnet run` detached não persistia). |
+| **Backend C#** | `backend/VirtualOffice.Api` | ✅ ASP.NET + EF/SQLite + SignalR. Porta **5210**. Execute a DLL dentro dessa pasta para manter `office.db` previsível. |
 | **App web** (tasks/horas) | `backend/.../wwwroot` | ✅ Kanban, sprints, horas, relatórios, perfil. ES modules, sem build. |
 | **LiveKit** | `livekit/` | ✅ SFU self-hosted, porta **7880**. Token só se `Presence.InMeeting`. |
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
@@ -40,7 +40,9 @@ Unity (ver §4).
 Phaser 3 (vendorizado, sem CDN). **As cenas são dados**, não código: o manifesto
 `maps/scenes.json` registra os mapas e `src/MapRenderer.js` desenha tanto mundos quanto interiores.
 O runtime troca de mapa e spawn pelos portais. O level design é feito visualmente no **Tiled**;
-`tools/tiled-converter.mjs` converte os `.tmj` para os JSONs enxutos do runtime. A decoração de
+`src/TiledRuntimeLoader.js` lê `.tmj`, `.tsj` e templates diretamente no navegador. `server.js`
+observa os salvamentos, valida todo o projeto e recarrega a cena, sem gerar arquivo intermediário.
+A decoração de
 móveis feita pelo usuário é uma camada separada, aplicada em tempo real por sala; o editor antigo
 foi preservado apenas como referência.
 
@@ -48,13 +50,34 @@ foi preservado apenas como referência.
 client-web/src/main.js          runtime de cenas, player, câmera, HUD e portais
 client-web/src/MapRenderer.js   desenha world/interior a partir do JSON
 client-web/src/CharacterSystem.js  avatar modular, editor e persistência
-client-web/src/RoomDecorationSystem.js  móveis por sala, validação e persistência
+client-web/src/RoomDecorationSystem.js  editor de móveis, validação e integração com estoque
+client-web/src/GameItemsSystem.js       API de inventário/mobília + cliente SignalR
+client-web/src/FurnitureInteractionSystem.js  kanban, baú, cadeira e estação
+client-web/src/mechanics/             registro e handlers extensíveis de gameplay
+client-web/src/DevMapSync.js          feedback e recarga do Tiled ao vivo
+client-web/src/TiledRuntimeLoader.js  TMJ/TSJ/templates → contrato do renderer no navegador
 client-web/maps/scenes.json     manifesto e cena inicial
-client-web/maps/world.json      hub caminhável
-client-web/maps/tooq-office.json  escritório térreo
 client-web/tiled/maps/*.tmj       fontes visuais editáveis no Tiled
-client-web/tools/tiled-converter.mjs  conversor bidirecional + validação
+client-web/tiled/tilesets/*.tsj   tilesets externos carregados diretamente
+client-web/maps/*.json            snapshots legados para migração e testes
+client-web/tools/tiled-converter.mjs  ferramenta de migração/diagnóstico, fora do fluxo diário
 ```
+
+### Contrato de itens do Phaser
+
+O backend mantém as tabelas antigas `ItemDefinition`, `InventoryItem` e `RoomItem` para o
+app/backoffice legado. **Não use essas tabelas para novas mecânicas do Phaser.** A trilha atual é:
+
+```text
+GameItemDefinition  definição do catálogo + InteractionType
+GameItemInstance    unidade única, dono e localização
+FurniturePlacement  instância colocada, sceneId/roomId/x/y/flipX
+```
+
+`GameInventorySeed.EnsureSchemaAsync` cria o schema aditivo em bancos SQLite existentes; não há
+migration EF formal ainda. `GameInventorySeed.RunAsync` cadastra os 37 recortes curados e estoque
+inicial. Endpoints atuais: `/api/game/inventory`, `/api/game/rooms/{scene}/{room}/furniture`,
+`/api/game/furniture`, `/api/game/chests/*` e `/api/game/workstations/*`.
 
 **Schema do mapa, referência de campos e limitações conhecidas:**
 👉 [`client-web/README.md`](client-web/README.md).
@@ -81,13 +104,23 @@ trabalho na web é incomparável: roda, olha no navegador, corrige em segundos. 
 C#, app web, LiveKit. **Refez-se:** só o cliente do jogo.
 
 **Mapa como dado, não hardcode.** O roadmap pede salas customizáveis pelo dono — só funciona se o
-mapa for dado. A fonte visual é o `.tmj` do Tiled; o conversor gera o JSON consumido pelo renderer.
-O round-trip é testado para não perder campos do contrato atual.
+mapa for dado. `.tmj`, `.tsj` e `.tj` são a fonte e são consumidos diretamente pelo navegador; não
+há JSON gerado no fluxo diário. O carregador transporta classes novas como entidades genéricas,
+tile layers livres como camadas visuais e tilesets externos sem cadastro prévio no conversor. Cada
+comportamento é um handler registrado, em vez de outro caso especial no renderer. Salvar no Tiled
+valida o projeto e atualiza o jogo automaticamente; erros aparecem sobre o jogo.
+
+No modo `visualMode: "tiled"`, chão/ruas, paredes e cercas são tile layers nativas e desbloqueadas,
+não prévias procedurais. Paredes e cercas derivam colisão diretamente dos tiles pintados. O hub
+`world` usa um canvas de 96×72 tiles e não possui objeto manual de limite de câmera. O limite aberto
+acompanha qualquer redimensionamento feito em **Map → Resize Map** e também cresce quando um objeto
+visível é colocado além das bordas do canvas; assim a câmera continua seguindo o avatar até áreas em
+coordenadas negativas ou maiores que o mapa original.
 
 **Fachada bonita + interior grande (não roof-reveal).** Roof-reveal (entrar = remover o teto) amarra
 o tamanho do interior ao do telhado ⇒ laje cinza feia em interior grande. Os prédios lindos do Modern
 Exteriors são **fachadas em 3/4**, não telhados top-down. Padrão escolhido: fachada por fora +
-entrar ⇒ interior grande (estilo Pokémon/Stardew). A fachada **TOOQ BMS** já está pronta
+entrar ⇒ interior grande (estilo Pokémon/Stardew). A fachada **TOOQ** já está pronta
 (`assets/world/office_tooq.png`).
 
 **Sem múltiplos andares.** A unidade de navegação é a cena. Cada prédio/local aponta para um mapa
@@ -95,16 +128,16 @@ independente, com spawn de entrada e portal de retorno. O escritório atual é a
 
 **Estrutura de mundo:**
 ```
-Quintal central compacto (hub)
+Mundo aberto editável (hub 96×72, expansível no Tiled)
         ├── Escritório Tooq (cena térrea)
         ├── Local/cena futura A
         └── Local/cena futura B
 ```
 
-**Primeiro corte implementado:** quintal central → porta da fachada → escritório + quintal privado
-→ portão → hub. Objetos volumosos carregam footprints de colisão no JSON; os limites de câmera são
-dados e terminam nos portões. O mesmo contrato de `portals[]` e `spawns` permite acrescentar novas
-cenas sem criar outra classe Phaser.
+**Primeiro corte implementado:** mundo aberto → porta da fachada → escritório + quintal privado →
+portão → hub. Objetos volumosos carregam footprints de colisão no JSON. Cenas fechadas podem manter
+limites de câmera explícitos; no hub a câmera usa toda a dimensão do mapa. O mesmo contrato de
+`portals[]` e `spawns` permite acrescentar novas cenas sem criar outra classe Phaser.
 
 **Equipamentos implementados:** `Tab` abre um loadout RPG persistente com seis slots (veículo,
 corrente, brincos, pulseira, teclado e mouse) e um baú com os itens disponíveis. Clicar no baú equipa
@@ -125,12 +158,29 @@ RPG. `assets/character/catalog.json` é a fonte de opções e frames; `src/Chara
 validação, `localStorage`, UI e sprites sobrepostos. Caminhada, idle, moto e os outros equipamentos
 continuam usando o mesmo corpo físico invisível para não duplicar colisão ou câmera.
 
-**Decoração de salas implementada (primeira versão local):** dentro de uma sala declarada em
-`rooms[]`, o usuário pode abrir um catálogo RPG, adicionar, selecionar, arrastar, espelhar e remover
-móveis com encaixe de meio tile, undo/redo e restauração do mapa-base. Limites da sala, passagem das
-portas, sobreposição e colisões físicas são atualizados durante a edição. A personalização fica no
-`localStorage`, separada por cena e sala; paredes, pisos, portas, portais e ruas continuam exclusivos
-do Tiled. O store expõe um ponto de gravação para a futura persistência compartilhada por API/SignalR.
+**Inventário e decoração persistentes:** cada unidade de mobília é uma instância única no backend,
+com dono e localização (`inventory`, `placed` ou `chest`). O editor mostra apenas o estoque real,
+consome a instância ao colocar e devolve a mesma unidade ao recolher. Posição, espelhamento, cena e
+sala são persistidos atomicamente; SignalR replica inclusão, movimento e remoção para todos que
+estão na mesma sala. O Tiled continua fornecendo estrutura e cenário-base, enquanto a decoração do
+jogador é uma camada de dados separada. A chave antiga de `localStorage` não participa mais do runtime.
+O seed cria duas unidades de cada item curado para cada usuário humano, apenas para validar a
+economia; não é uma regra definitiva de balanceamento. O cliente usa `X-User-Id`/`?userId=` no
+protótipo e precisa migrar para autenticação real antes de produção.
+
+**Interações de mobília:** definições declaram um `InteractionType`, resolvido por um registro
+extensível no cliente. `of_171` abre o kanban e escolhe a atividade ativa; `of_176` funciona como
+baú e transfere instâncias; estações/computadores iniciam e encerram lançamentos de horas. Cadeiras
+procuram uma estação próxima e só abrem o fluxo de trabalho quando há uma composição válida.
+`FurnitureInteractionSystem.js` contém o registro de handlers. Hoje `of_171` é `kanban`, `of_176`
+é `chest`, `of_225/227/229/231/233/235/317/318/319` são `workstation`, e as poltronas/cadeiras
+curadas são `seat`. O armário servidor é um placeholder visual de baú até entrar um asset melhor.
+
+**Rede implementada nesta fatia:** `GameItemsSystem.js` usa o cliente SignalR oficial vendorizado em
+`client-web/lib/signalr.min.js`. `JoinGame(userId, sceneId, roomId)` assina os grupos do usuário e
+da sala; `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved`, `InventoryChanged`,
+`ChestChanged` e `WorkSessionChanged` mantêm sessões abertas convergentes. Isso sincroniza mobília,
+não avatares: presença/movimento ainda precisa ganhar isolamento por `sceneId`.
 
 **Área-piloto de design:** o escritório foi compactado para 48×44 tiles e agora tem recepção, dois
 escritórios fechados, open space, lounge, café e quintal privado. O Tiled expõe paletas curadas por
@@ -156,14 +206,14 @@ paredes, pisos, móveis, exteriores, porta animada):
 
 ## 6. Próximos passos
 
-1. **Plugar rede por cena** (SignalR JS + `sceneId` + contrato de 28/tile). Dois avatares na mesma
-   cena é o próximo marco; jogadores em cenas diferentes não devem ser renderizados juntos.
-2. **Refinar o pipeline Tiled** (propriedades tipadas, preview automática e footprint por móvel).
-3. **Persistir e sincronizar decoração de salas** no backend, com dono/permissões e versão.
+1. **Plugar presença de avatares por cena.** O SignalR JS e os grupos de sala já existem para
+   mobília; agora `Join/Move/Presence` precisam carregar `sceneId`. Dois avatares no mesmo mapa é o marco.
+2. **Adicionar handlers das próximas mecânicas** e seus templates tipados no Tiled.
+3. **Evoluir a economia de itens** com compra, drops, preços e permissões de sala.
 4. **Adicionar a segunda cena de destino** ao hub para provar que a arquitetura cresce além do
    escritório.
 5. **A/V por proximidade** (LiveKit JS), depois da presença em rede.
-6. **Polimento visual e conteúdo** do escritório, preservando o mapa como JSON.
+6. **Polimento visual e conteúdo** do escritório, preservando o mapa como dados do Tiled.
 
 ---
 
@@ -171,6 +221,8 @@ paredes, pisos, móveis, exteriores, porta animada):
 
 - A Tooq tem **paleta/identidade visual**? Dá pra tingir placa e detalhes em vez do cinza genérico.
 - Quantas pessoas **simultâneas** o v1 precisa aguentar?
+- Quem pode decorar cada sala: só dono, time ou administradores? Hoje somente o dono da instância
+  consegue alterá-la, usando identidade simbólica do protótipo.
 
 ---
 

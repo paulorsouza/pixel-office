@@ -1,5 +1,7 @@
 # Office Quest Unity — contexto atual do client
 
+> **ARQUIVADO EM 2026-07.** Este não é mais o contexto atual do produto. Leia `../CONTEXT.md`.
+
 Atualizado em 2026-07-13. Este é o contexto de continuidade para qualquer pessoa ou agente que trabalhe no client Unity.
 
 ## Decisão principal

@@ -1,5 +1,7 @@
 # Office Quest — cliente Unity
 
+> **ARQUIVADO.** O produto atual usa `../client-web/` com Phaser. Não implemente recursos novos aqui.
+
 Cliente do escritório virtual em Unity 2D. Consome **o mesmo backend** do protótipo web
 (`../backend/VirtualOffice.Api`): quem estiver no navegador e quem estiver no Unity
 se veem no mesmo mapa, com o mesmo chat e as mesmas regras de horas/XP.

@@ -145,6 +145,10 @@ composição branca de dois tiles somente para embutir corretamente a porta desl
 | Árvores | `ME_Singles_Camping_16x16_Tree_N` | 64×64 |
 | Arbustos | `ME_Singles_Garden_16x16_Bush_N` | 16×16 |
 | **Portão** ⭐ | `ME_Singles_Garden_16x16_Gate_4` | **64×32** (duplo, ornamentado). Gate_1/2 = 48×32 |
+| Portão metálico externo | `animados/Animated_sheets_16x16/Railing_Gate_1.png` | folha 1120×48, **14 frames de 80×48**; frame 0 fechado, frame 6 aberto |
+| Cancelas de veículos | `ME_Singles_Police_Station_16x16_Automatic_Barrier_1..4` | horizontais 80×32; verticais 32×80 |
+| Cerca modular de metal | `24_Additional_Houses_Fence_2_*` | 13 peças; módulos 16×16 e passagem 48×16 |
+| Cerca modular metal/madeira | `24_Additional_Houses_Fence_4_*` | 13 peças; módulos 16×16 e passagem 48×16 |
 | Cerca-viva | `..._Grass_Wall_1_2` (topo) + `..._Grass_Wall_1_8` (miolo) | 16×16 cada |
 | Fonte | `ME_Singles_Garden_16x16_Fountain_1_1` | 32×48 |
 | Banco | `..._Big_Bench_Horizontal` | 48×16 |
@@ -175,14 +179,14 @@ composição branca de dois tiles somente para embutir corretamente a porta desl
 - Props: `Air_Duct_1/2` 32×32 · `Solar_Panel` 32×48 · `Shutter_Dish` 48×64 · `Roof_Stairs` 48×80 ·
   `Cabin_Entrance` 32×64
 
-### 3.6 Placa TOOQ BMS (feita à mão) ✅
+### 3.6 Placa TOOQ (feita à mão) ✅
 As placas do pack **vêm com texto** e as letras **T, Q, B, S não existem** em nenhuma delas. Então
 foi construída do zero:
 - **Paleta extraída da placa original:** fundo `#6C6E85` · letras `#E2F2F3` · bisel `#BAD2E0` ·
   contorno `#3A3A50` · brilho do topo `#7C7F96`
-- **Fonte pixel 7×9** desenhada à mão (T, O, Q, B, M, S)
+- **Fonte pixel 7×9** desenhada à mão; a versão atual usa somente T, O e Q.
 - **Prontos e versionados:** `client-web/assets/world/sign_tooq.png` (112×16) e
-  **`client-web/assets/world/office_tooq.png`** = o `Example_2` com a placa TOOQ BMS colada em (54,238)
+  **`client-web/assets/world/office_tooq.png`** = o `Example_2` com a placa TOOQ colada em (54,238)
 
 ---
 
@@ -200,13 +204,18 @@ Organizados em subpastas. O cliente multi-cena usa `chars/`, `tiles/`, `floors/`
 | **`tiles/`** `room_builder.png` | Room builder do Office (256×224) — paredes e estrutura |
 | **`floors/`** `floor_wood/carpet/cream/sage/water.png` | Pisos lisos (Modern Interiors) — ver §3.2 |
 | **`furniture/office/`** `of_1..of_339.png` | Os 339 móveis do Office Revamped (§4.1) |
-| **`world/`** `office_tooq.png` ⭐ | **Fachada da sede TOOQ BMS** (304×288) |
+| **`world/`** `office_tooq.png` ⭐ | **Fachada da sede TOOQ** (304×288) |
 | **`animations/`** `coffee-steam.png` | Café com vapor, 6 frames de 16×16; metadados em `catalog.json` |
-| `world/sign_tooq.png` | Placa TOOQ BMS avulsa (112×16) |
+| `world/sign_tooq.png` | Placa TOOQ avulsa (112×16) |
 | `world/office_generic.png`, `world/office_lime.png` | Prédios originais do pack (referência) |
 | `world/office_door.png` | Porta animada (672×32 — **frames 48×32**) |
 | `world/grass.png`, `world/grass_detail.png` | Grama fill + tufos |
 | `world/gate.png`, `world/hedge_top.png`, `world/hedge_fill.png` | Portão + cerca-viva |
+| `world/gates/garden_gate_1..4.png` | Família completa de portões externos; 1–3 = 48×32, 4 = 64×32 |
+| `world/gates/railing_gate_open/closed.png` | Estados estáticos auditados do portão metálico de 80×48 |
+| `world/gates/automatic_barrier_1..4.png` | Cancelas externas nas quatro orientações do pack |
+| `world/fences/metal_*.png` | Família modular de cerca metálica cinza: 13 peças |
+| `world/fences/wood_metal_*.png` | Família modular metal/madeira: 13 peças |
 | `world/fountain.png`, `world/bench.png`, `world/flower1/2.png` | Jardim |
 | `world/tree1/2.png`, `world/bush1/2.png` | Vegetação |
 | `world/roof.png`, `world/rp_*.png` | Telhado seamless + props (dutos, painel solar, antena, escada) |
@@ -263,6 +272,22 @@ Uma estação coerente com o `Office_Design_2` é composta por três objetos na 
 
 O computador deve ser criado depois da mesa para ficar visualmente por cima. A cadeira permanece
 sem colisão para não prender o avatar em corredores estreitos.
+
+### 4.3.1 IDs com interação no inventário persistente
+
+`GameInventorySeed.cs` transforma estes recortes em definições de item. O comportamento não fica no
+renderer; ele chega ao cliente como `InteractionType`:
+
+| Interação | IDs atuais | Comportamento |
+|---|---|---|
+| `kanban` | `of_171` | Abre o quadro e permite escolher a atividade ativa. |
+| `chest` | `of_176` | Guarda e retira instâncias; **placeholder visual de baú**. |
+| `workstation` | `of_225`, `227`, `229`, `231`, `233`, `235`, `317`, `318`, `319` | Inicia/encerra horas de uma atividade. |
+| `seat` | `of_196`–`199`, `306`, `307`, `315`, `316` | Procura uma estação a até 2,75 tiles e abre o fluxo de trabalho. |
+
+Ao trocar um asset interativo, atualize juntos `assets/furniture/catalog.json`,
+`GameInventorySeed.cs` e esta tabela. Não use o ID visual como regra de negócio dentro de
+`main.js` ou `MapRenderer.js`.
 
 ### 4.4 Equipamentos de locomoção
 

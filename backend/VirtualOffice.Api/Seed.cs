@@ -7,7 +7,12 @@ public static class Seed
     public static async Task RunAsync(AppDb db)
     {
         await db.Database.EnsureCreatedAsync();
-        if (await db.Users.AnyAsync()) return;
+        await GameInventorySeed.EnsureSchemaAsync(db);
+        if (await db.Users.AnyAsync())
+        {
+            await GameInventorySeed.RunAsync(db);
+            return;
+        }
 
         var paulo = new User { Name = "Paulo", Role = "Tech Lead", Color = "#7c5cff", Xp = 2650 };
         var marina = new User { Name = "Marina", Role = "Dev Backend", Color = "#f472b6", Xp = 1900 };
@@ -159,5 +164,6 @@ public static class Seed
         }
         await db.SaveChangesAsync();
         _ = pauloInv;
+        await GameInventorySeed.RunAsync(db);
     }
 }

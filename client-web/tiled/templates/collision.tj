@@ -1,0 +1,12 @@
+{
+  "object": {
+    "height": 16,
+    "name": "Nova colisão",
+    "opacity": 1,
+    "rotation": 0,
+    "type": "collision",
+    "visible": true,
+    "width": 16
+  },
+  "type": "template"
+}

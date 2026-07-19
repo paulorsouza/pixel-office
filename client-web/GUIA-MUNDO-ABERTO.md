@@ -8,25 +8,28 @@ Você não precisa alterar o Phaser para usar os pisos e assets já cadastrados.
 
 ```text
 Tiled: tiled/maps/world.tmj
-          ↓ validate / from-tiled
-Runtime: maps/world.json
-          ↓ Ctrl+R
-Jogo no navegador
+          + tilesets/*.tsj
+          ↓ salvar
+Validação local → recarga automática → jogo no navegador
 ```
+
+Mobília colocada no mundo pelo Tiled é cenário fixo. O estoque persistente e o editor do jogador
+atuam em salas declaradas e mantêm suas instâncias fora do `.tmj`; não use o inventário para ruas,
+fachadas, cercas ou mobiliário urbano estrutural.
 
 ## 1. A regra que evita perder trabalho
 
-Edite [`tiled/maps/world.tmj`](tiled/maps/world.tmj), não `maps/world.json`. O `.tmj` é a fonte
-visual; o JSON é gerado pelo conversor e pode ser sobrescrito.
+Edite [`tiled/maps/world.tmj`](tiled/maps/world.tmj). O `.tmj` e os `.tsj` referenciados são a
+fonte carregada diretamente pelo jogo; `maps/world.json` é apenas um snapshot legado.
 
-Também não edite estas camadas bloqueadas:
+O desenho existente está em três tile layers nativas e desbloqueadas:
 
-- `00 · Prévia dos pisos`;
-- `05 · Prévia das cercas`;
-- `07 · Prévia das paredes`.
+- `🎨 00 · CHÃO E RUAS`;
+- `🎨 01 · PAREDES`;
+- `🎨 02 · CERCAS`.
 
-Elas são regeneradas por `refresh-preview`. Ruas são desenhadas como objetos na camada
-`02 · Caminhos`; prédios, árvores e outras imagens ficam em `09 · Props do mundo`.
+Edite-as diretamente com o pincel e a borracha. Prédios, árvores e outras imagens continuam como
+objetos movíveis em `09 · Props do mundo`; móveis ficam em `10 · Móveis`.
 
 > Nunca use `to-tiled --force` para atualizar uma prévia. Esse comando reconstrói o mapa inteiro a
 > partir do JSON e pode descartar seu trabalho visual.
@@ -46,8 +49,8 @@ Em outro terminal, a partir de `E:\workspace\pixel-office`, deixe o cliente roda
 node client-web/server.js
 ```
 
-O jogo estará em `http://localhost:8123/#world`. O servidor não recarrega sozinho; depois de gerar
-o mapa, use `Ctrl+R` no navegador.
+O jogo estará em `http://localhost:8123/#world`. Ao salvar um mapa válido, o servidor valida os
+arquivos do Tiled e o navegador recarrega a cena automaticamente.
 
 ## 3. Entender a escala
 
@@ -80,32 +83,23 @@ composição existente.
 
 Depois do redimensionamento:
 
-1. selecione a camada `14 · Limite da câmera`;
-2. redimensione o retângulo de classe `camera` para abranger somente a área que deve ser revelada;
-3. mova ou estenda as cercas da camada `06 · Cercas` para a nova borda;
+1. redimensione o mapa; no mundo aberto a câmera acompanha automaticamente as novas dimensões;
+2. pinte a nova área na camada `🎨 00 · CHÃO E RUAS`;
+3. pinte ou apague as cercas na camada `🎨 02 · CERCAS`;
 4. remova a cerca antiga exatamente onde a nova rua deve continuar.
 
-O fundo de grama é preenchido automaticamente. Não é necessário pintar cada tile.
+Ao aumentar o mapa, os tiles novos começam vazios. Use o preenchimento do Tiled na camada `🎨 00`
+para cobrir rapidamente a nova área com grama.
 
-Para conferir as prévias depois de salvar:
-
-```powershell
-node client-web/tools/tiled-converter.mjs refresh-preview world
-```
-
-Se o Tiled avisar que o arquivo mudou fora do editor, aceite recarregá-lo.
+Paredes e cercas pintadas geram a própria colisão. Não existe retângulo separado para manter
+sincronizado; apagar o tile libera a passagem.
 
 ## 5. Criar uma rua com os pisos atuais
 
-O modo mais seguro é duplicar um caminho existente:
-
-1. selecione a camada `02 · Caminhos`;
-2. escolha a ferramenta **Select Objects** (`S`);
-3. clique num caminho existente e duplique com `Ctrl+D`;
-4. arraste o novo retângulo para o local desejado;
-5. redimensione pelas alças, mantendo a grade ligada;
-6. no painel **Properties**, confirme que a classe é `path`;
-7. escolha a propriedade `floor`.
+1. selecione `🎨 00 · CHÃO E RUAS`;
+2. escolha o piso desejado na paleta `01 · Construção`;
+3. use **Stamp Brush** (`B`), **Bucket Fill** (`F`) e a borracha para desenhar a rua;
+4. salve e confira o resultado no navegador.
 
 Pisos disponíveis:
 
@@ -117,12 +111,11 @@ Pisos disponíveis:
 | `wood` | madeira | deck e passarela |
 | `water` | água | lago decorativo, sem colisão automática |
 
-Um `path` é sempre atravessável. Não coloque colisão sobre a rua.
+Tiles de piso são atravessáveis. Não coloque colisão sobre a rua.
 
 ### Formar curvas e cruzamentos
 
-O formato atual usa retângulos, então uma rua em `L` é feita com dois objetos `path` sobrepostos.
-Um cruzamento em `T` usa três retângulos ou um caminho principal mais um ramal.
+Como a rua agora é pintada tile a tile, curvas e cruzamentos podem ter qualquer formato.
 
 ```text
             ramal 5 tiles
@@ -133,52 +126,19 @@ Um cruzamento em `T` usa três retângulos ou um caminho principal mais um ramal
 
 Sobreposição de caminhos é permitida. Deixe ambos com o mesmo `floor` para a emenda desaparecer.
 
-### Limitação atual
-
-As camadas de piso visíveis são prévias geradas. O conversor ainda não preserva uma rua pintada
-tile por tile com curvas, faixas e meios-fios. Portanto:
-
-- use retângulos para planejar circulação agora;
-- use props pequenos para placas, postes e decoração lateral;
-- não pinte manualmente na camada `00 · Prévia dos pisos`;
-- para ruas urbanas com autotile, será necessário evoluir o schema para uma camada de tiles real.
-
 ## 6. Adicionar um piso de asfalto novo
 
-Esta é uma extensão opcional e exige uma pequena alteração única no código. O PNG central deve ser
-**seamless, 16×16 e sem bordas**.
+O PNG deve ser **seamless, 16×16 e sem bordas**. Não é necessário alterar JavaScript ou conversor:
 
-1. Copie o tile para `client-web/assets/floors/floor_road.png`.
-2. Em `src/main.js`, inclua `road` na lista de pisos carregados:
+1. copie o tile para `client-web/assets/floors/floor_road.png`;
+2. no Tiled, use **File → New → New Tileset** e marque **Collection of Images**;
+3. adicione `floor_road.png` e salve como `client-web/tiled/tilesets/my-roads.tsj`;
+4. em `world.tmj`, use **Map → Add External Tileset** e escolha `my-roads.tsj`;
+5. pinte o novo tile em `🎨 00 · CHÃO E RUAS` e salve.
 
-   ```js
-   ['wood', 'carpet', 'cream', 'sage', 'water', 'road']
-   ```
-
-3. Em `src/MapRenderer.js`, acrescente ao objeto `FLOORS`:
-
-   ```js
-   road: 'floor_road',
-   ```
-
-4. Em `tools/tiled-converter.mjs`, acrescente em `SURFACES`:
-
-   ```js
-   { id: 'road', path: 'assets/floors/floor_road.png' },
-   ```
-
-5. No mesmo arquivo, acrescente `road: 'road'` em `FLOOR_ALIASES`.
-6. Regenere os tilesets:
-
-   ```powershell
-   node client-web/tools/tiled-converter.mjs assets
-   ```
-
-7. Reabra o tileset `01 · Construção · Pisos` no Tiled.
-8. Use `floor = road` nos objetos da camada `02 · Caminhos`.
-
-Se o tile possuir uma borda, ela será repetida a cada 16 px e a rua ficará quadriculada. Confira o
-PNG ampliado antes de cadastrá-lo.
+O `.tmj` passa a referenciar o novo `.tsj`; o carregador encontra a imagem e a entrega ao Phaser
+automaticamente. Se o tile possuir uma borda, ela será repetida a cada 16 px e a rua ficará
+quadriculada. Confira o PNG ampliado antes de cadastrá-lo.
 
 ## 7. Colocar uma estrutura já cadastrada
 
@@ -241,21 +201,14 @@ Os PNGs crus ficam em `LimeZu/exteriores/singles/`. Use sempre a versão 16×16.
 2. abra o PNG e confira tamanho, transparência e ponto da porta;
 3. copie somente o PNG escolhido para `client-web/assets/world/`;
 4. dê um nome curto, sem espaço ou acento, como `arcade_front.png`;
-5. execute:
+5. crie ou abra um tileset externo **Collection of Images** em `client-web/tiled/tilesets/`;
+6. use **Tileset → Add Tiles** para adicionar `arcade_front.png`;
+7. no tile, defina `class = prop` e a propriedade string `assetId = arcade_front`;
+8. adicione esse tileset externo ao `world.tmj` e insira o objeto em `09 · Props do mundo`.
 
-   ```powershell
-   node client-web/tools/tiled-converter.mjs assets
-   ```
-
-6. reabra `Office Quest · Mundo` no Tiled;
-7. arraste `arcade_front` para `09 · Props do mundo`.
-
-O nome sem `.png` vira o `assetId` automaticamente. O conversor também inclui o asset na lista do
-mapa quando ele é usado.
-
-Para fazê-lo aparecer na paleta curta `04 · Exterior · Quintal`, inclua seu ID em
-`client-web/tiled/palettes.json`, dentro de `gardenPalette.assetIds`, e execute `assets` novamente.
-Isso é opcional; o catálogo completo já contém todos os PNGs de `assets/world/`.
+O runtime lê a referência externa e carrega a imagem sem cadastro em código. Se você quiser incluir
+o asset nas paletas oficiais geradas do projeto, ainda pode atualizar `tiled/palettes.json` e rodar
+o comando legado `assets`, mas isso não é necessário para usar um tileset próprio.
 
 Registre em `ASSETS.md` o arquivo de origem, tamanho e finalidade do novo recorte.
 
@@ -297,28 +250,19 @@ O padrão do projeto é: a fachada permanece no mundo e o interior vive em outra
 7. cadastre a cena em `client-web/maps/scenes.json`:
 
    ```json
-   { "id": "arcade", "file": "arcade.json" }
+   { "id": "arcade", "file": "tiled/maps/arcade.tmj" }
    ```
 
-8. salve e converta todas as cenas.
+8. salve; o servidor valida e recarrega a cena automaticamente.
 
 Os IDs devem coincidir exatamente: nome do `.tmj`, `id` do mapa, `targetScene` e entrada do
 manifesto.
 
-## 10. Converter e testar
+## 10. Salvar e testar
 
-Depois de salvar o `.tmj`:
-
-```powershell
-# Valida sem alterar o runtime.
-node client-web/tools/tiled-converter.mjs validate all
-
-# Atualiza pisos/cercas/paredes visíveis no Tiled.
-node client-web/tools/tiled-converter.mjs refresh-preview world
-
-# Gera os JSONs usados pelo jogo.
-node client-web/tools/tiled-converter.mjs from-tiled all
-```
+Com `node client-web/server.js` rodando, salvar o `.tmj` ou `.tsj` já valida o projeto e recarrega o
+jogo. Aguarde a confirmação `Mapa atualizado` no navegador. Se houver erro, corrija a mensagem
+exibida e salve novamente.
 
 Abra a cena diretamente:
 
@@ -341,10 +285,10 @@ Trabalhe em cortes pequenos para ser fácil descobrir qual edição causou um pr
 
 1. aumente o mapa e a câmera;
 2. faça somente as ruas principais;
-3. converta e caminhe;
+3. salve e caminhe;
 4. posicione as fachadas;
 5. adicione colisões deixando as portas livres;
-6. converta e use `debug=collisions`;
+6. salve e use `debug=collisions`;
 7. adicione árvores, bancos, placas, postes e detalhes;
 8. crie portais e interiores;
 9. teste ida e volta;
@@ -357,29 +301,27 @@ mundo**. Ela prova o fluxo inteiro antes de multiplicar o trabalho.
 
 | Sintoma | Causa provável |
 |---|---|
-| A rua não aparece no jogo | faltou `from-tiled` ou a classe não é `path` |
-| A rua voltou ao visual antigo no Tiled | faltou `refresh-preview` |
-| O trabalho sumiu | foi usado `to-tiled --force` depois de editar o `.tmj` |
+| A rua não aparece no jogo | a camada `🎨 00` não foi salva ou o salvamento mostrou erro |
+| Consigo ver, mas não pintar | está selecionada uma camada de objetos; selecione uma camada `🎨` |
+| O mapa não abre após salvar | há uma referência, classe ou propriedade inválida; leia o aviso no jogo |
 | O piso sempre fica claro | `floor` inválido; o renderer usa `light` como fallback |
 | O prédio aparece, mas o avatar o atravessa | faltou footprint ou camada `12 · Colisões` |
 | A porta está desenhada, mas não entra | porta visual não é portal; crie classe `portal` |
 | O portal não valida | `targetScene` ou `targetSpawn` não existe |
 | O avatar nasce preso | spawn está dentro de colisão ou em cima da parede |
-| A câmera mostra vazio | bounds não foram ajustados depois de redimensionar |
-| O PNG novo não aparece no Tiled | faltou executar `assets` e reabrir o tileset |
+| A câmera mostra vazio | a área nova ainda não foi preenchida na camada `🎨 00` |
+| O PNG novo não aparece no jogo | o `.tsj` não foi adicionado ao mapa, ou o `.tsj`/`.tmj` não foi salvo |
 
 ## 13. Checklist final
 
 - [ ] O `.tmj` foi salvo.
-- [ ] Nenhuma camada de prévia foi editada manualmente.
-- [ ] A rua está na camada `02 · Caminhos` e usa classe `path`.
+- [ ] A rua foi pintada na camada `🎨 00 · CHÃO E RUAS`.
+- [ ] Paredes e cercas foram pintadas nas camadas `🎨 01` e `🎨 02`.
 - [ ] Existe espaço para o avatar e para os veículos.
 - [ ] Props grandes têm colisão apenas na base.
 - [ ] Portas acessíveis possuem um vão real entre colisões.
 - [ ] Todo portal tem spawn válido no destino e caminho de volta.
 - [ ] O limite da câmera cobre a nova área sem revelar vazio.
-- [ ] `validate all` passou.
-- [ ] `from-tiled all` foi executado.
+- [ ] O navegador confirmou `Mapa atualizado` sem erro.
 - [ ] A cena foi testada normalmente e com `debug=collisions`.
 - [ ] Assets novos foram registrados no `ASSETS.md`.
-

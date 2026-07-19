@@ -1,107 +1,177 @@
-# Como subir tudo manualmente e testar
+# Como subir e testar o Office Quest
 
-## 0. LiveKit (áudio/vídeo/tela — precisa estar no ar para a call funcionar)
+Este é o roteiro atual do cliente **web Phaser**. O cliente Unity está arquivado e não participa do
+produto nem dos testes novos.
 
-Num terminal:
+## 1. Backend obrigatório
 
-```powershell
-& "C:\Users\prs\Claude Sessions\virtual-office\livekit\start-livekit.ps1"
-```
-
-Espere `starting LiveKit server ... portHttp: 7880`. Deixe aberto.
-Sem ele o escritório funciona normal, só a call da reunião que não conecta
-(o app avisa e fica tentando de novo).
-
-## 1. Backend (obrigatório, é ele que liga tudo)
-
-Abra um terminal (PowerShell) e rode:
+Abra um PowerShell na raiz do repositório:
 
 ```powershell
-cd "C:\Users\prs\Claude Sessions\virtual-office\backend\VirtualOffice.Api"
-dotnet run
+Push-Location .\backend\VirtualOffice.Api
+dotnet build
+.\bin\Debug\net10.0\VirtualOffice.Api.dll
 ```
 
-Espere aparecer `Now listening on: http://localhost:5210`. Deixe esse terminal aberto.
+Espere o backend responder em `http://localhost:5210` e deixe o terminal aberto. Executar dentro
+dessa pasta mantém o SQLite em `backend/VirtualOffice.Api/office.db`.
 
-- Os dados ficam no arquivo `office.db` (SQLite) nessa pasta — sobrevivem a reinícios.
-- **Para resetar tudo do zero**: pare o servidor (Ctrl+C), apague `office.db` e rode de novo
-  (o seed recria usuários, sprint, tasks e inventário).
+O primeiro boot cria usuários, tasks, catálogo de itens e duas instâncias de cada móvel curado para
+cada usuário humano. Para zerar tudo, pare o backend, faça uma cópia se necessário, apague
+`office.db` e execute novamente.
 
-## 2. Cliente web (tasks + horas + gamificação + office 2D)
+Abra `http://localhost:5210` para usar o app administrativo de kanban, horas, relatórios e perfil.
 
-Abra no navegador: **http://localhost:5210**
+## 2. Cliente Phaser
 
-Escolha um usuário (sem senha). Abas: Office, Tasks, Horas, Relatórios, Perfil.
+Em outro terminal, na raiz:
 
-## 3. Cliente Unity (o jogo do escritório)
+```powershell
+node client-web/server.js
+```
 
-1. Abra o **Unity Hub** → projeto `office-unity` (já está adicionado; se não estiver:
-   Add → Add project from disk → `C:\Users\prs\Claude Sessions\virtual-office\office-unity`)
-2. Com o projeto aberto, aperte **Play** (qualquer cena serve, até vazia — o jogo se monta sozinho)
-3. Escolha um usuário na tela de login
+Abra:
 
-Controles: **WASD/setas** andar · **E** sentar/levantar · **F** fone (na reunião) ·
-**T** minhas atividades (iniciar timer, avançar status) · **H** minhas horas da semana ·
-**1–4** emotes · **Enter** chat · **Scroll** zoom · **Tab** (segurar) quem está online
+```text
+http://localhost:8123/#world
+```
 
-O timer ativo aparece na barra superior esquerda com botão **Parar** — é o mesmo timer
-do web (iniciar num cliente reflete no outro). Kanban completo, relatórios e a sala
-pessoal continuam no web (`http://localhost:5210`).
+O servidor não possui dependências npm. Ele também observa `.tmj`, `.tsj` e `.tj`: salvar no Tiled
+valida o projeto e recarrega a cena aberta.
 
-### Salas de dev + task ativa + sentar rastreia horas (novo)
+O jogador padrão é o usuário `1`. Para outro inventário:
 
-Cada dev tem uma **sala própria num canto do mapa** com mesa nominal, cadeira e um
-**quadro kanban** na parede. A HUD mostra sua **task ativa** no topo-esquerdo.
+```text
+http://localhost:8123/?userId=2#world
+```
 
-1. Vá até a sua sala (a placa mostra "Sala de <você>").
-2. Chegue perto do **quadro kanban** e aperte **E** → abre a lista das suas tasks;
-   clique **★ Ativar** na que você vai trabalhar (só tasks no seu nome, não concluídas).
-3. **Sente na sua mesa** (E na cadeira da sua sala) → começa a contar horas nessa task
-   automaticamente (status 🔴 CÓDIGO sobre seu avatar).
-4. **Levante** (andar ou E) → fecha o lançamento e credita as horas + XP.
-5. Confira em **H** (horas) ou na aba Horas do web que o tempo entrou na task certa.
+Essa identidade é apenas de protótipo e vira o header `X-User-Id`. Não é autenticação segura.
 
-Cada usuário já vem com uma task ativa default (dá pra trocar no kanban).
+## 3. Controles atuais
 
-> Menu extra no editor: **OfficeQuest → Capturar screenshots** roda uma verificação
-> automática (entra em Play sozinho, fotografa e fecha).
+- `WASD` ou setas: andar;
+- `E`: usar o móvel próximo ou entrar/sair por um portal;
+- `Tab`: abrir equipamentos e customização;
+- `Shift`: usar o veículo equipado;
+- `1`–`4`: equipar veículo rapidamente;
+- `0`: guardar veículo;
+- scroll: zoom;
+- `Esc`: fechar menus e interações.
 
-## Roteiro de teste sugerido (a integração é o produto)
+Dentro de uma sala declarada em `rooms[]`, aparece `Decorar <sala>`.
 
-1. **Multiplayer web+Unity**: entre como Paulo no Unity e como Marina no navegador
-   (ou duas janelas do navegador) — vocês se veem no mesmo mapa, com os bots circulando.
-2. **Chat por proximidade**: aproxime os avatares e converse; afaste e veja que a
-   mensagem não chega. Bots respondem se estiverem perto.
-3. **Reunião automática**: entre na Sala de Reunião (canto superior direito) com
-   qualquer cliente → banner "EM REUNIÃO" → saia → vá em **Horas** no web: o
-   lançamento de reunião apareceu sozinho, com XP ganho.
-   - **Fone de reunião 🎧**: dentro da sala, clique em "🎧 Pegar fone e circular"
-     (web) ou aperte **F** (Unity) → saia da sala andando: você continua na
-     reunião (horas contando, chat com quem está na sala, fone visível no avatar).
-     Só sai ao clicar "🔴 Soltar fone" (ou **F** de novo) — se estiver fora da
-     sala, o lançamento fecha nesse momento. Pegar fone fora da sala é recusado.
-   - **Call de verdade (mic/câmera/tela)**: com o LiveKit rodando (passo 0),
-     ao entrar na reunião aparece a **barra da call** embaixo — botões de
-     microfone, câmera e compartilhar tela. Abra duas janelas do navegador com
-     usuários diferentes, entre na sala com os dois e converse. A call segue
-     você com o fone e cai sozinha quando você sai da reunião. Se o navegador
-     bloquear o som, clique em "🔊 Ativar áudio" na barra. No Unity: mesmos
-     botões na barra inferior (a tela compartilhada é a janela do jogo).
-4. **Timer ↔ office**: no web, abra uma task no board e clique ▶ — o status
-   "🔴 TSK-x" aparece sobre o seu avatar (no Unity vira "[REC] TSK-x"). Pare o
-   timer e veja o XP subir (timers de 25min+ têm chance de drop).
-5. **Kanban**: arraste uma task sua para "Concluído" → toast de XP (+50) e,
-   se subir de nível, drop de item.
-6. **Gamificação**: aba **Perfil** — objetivos com progresso, medalhas, ranking,
-   inventário; equipe outra skin e veja o avatar mudar de roupa em tempo real
-   nos dois clientes; decore sua sala pessoal e salve.
-7. **Relatórios**: horas por dia/categoria/pessoa/épico dos últimos 14 dias.
+## 4. Testar inventário e decoração
 
-## Problemas comuns
+1. Entre no `Escritório Tooq` pelo portal do mundo.
+2. Caminhe para `Escritório A` ou `Escritório B`.
+3. Clique em `Decorar Escritório A/B`.
+4. Confira que cada cartão mostra uma quantidade, por exemplo `2 no inventário`.
+5. Escolha um móvel e clique numa posição válida do piso.
+6. Feche e reabra a página: a unidade deve continuar na mesma posição.
+7. Mova e espelhe o item; a alteração deve persistir.
+8. Selecione `Remover` ou `Recolher seus móveis`: a mesma unidade deve voltar ao estoque.
+
+O editor não altera o `.tmj`. Pisos, paredes, portas, ruas e portais continuam sendo level design no
+Tiled. Móveis do Tiled são cenário-base; móveis colocados pelo jogador são instâncias persistidas.
+
+## 5. Testar móveis interativos
+
+As interações exigem que o jogador possua e posicione a peça.
+
+### Kanban
+
+1. Coloque `Quadro de planejamento` (`of_171`).
+2. Feche o editor, aproxime-se e pressione `E`.
+3. Selecione uma task não concluída no seu nome.
+4. A mensagem `Atividade ativa atualizada` confirma a escolha.
+
+### Baú
+
+1. Coloque `Armário servidor` (`of_176`), usado temporariamente como visual de baú.
+2. Pressione `E` perto dele.
+3. Guarde uma unidade disponível; ela deve sair do editor.
+4. Retire a unidade; ela deve voltar ao inventário.
+
+### Cadeira e estação
+
+1. Coloque uma estação/computador e uma cadeira a até `2,75` tiles dela.
+2. Pressione `E` perto da cadeira ou da estação.
+3. Escolha uma atividade: o backend abre um `TimeEntry` e o status vira `🔴 CÓDIGO`.
+4. Abra novamente e use `Encerrar contador`.
+5. Confira o lançamento em `http://localhost:5210`, na área de horas.
+
+Uma cadeira sem computador próximo explica que a composição está incompleta em vez de iniciar horas.
+
+## 6. Testar sincronização SignalR
+
+1. Abra duas janelas com o mesmo usuário e a mesma sala:
+
+   ```text
+   http://localhost:8123/?userId=1#tooq-office
+   ```
+
+2. Entre no mesmo escritório nas duas e abra o editor.
+3. Coloque ou mova uma peça na primeira janela.
+4. A segunda deve refletir inclusão, movimento e remoção sem recarregar.
+5. Guarde/retire um item no baú e confira a atualização do estoque.
+
+Os eventos atuais são `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved`,
+`InventoryChanged`, `ChestChanged` e `WorkSessionChanged`. Eles sincronizam mobília e inventário;
+avatares Phaser ainda não possuem presença por cena.
+
+## 7. URLs úteis de desenvolvimento
+
+```text
+# Abrir uma cena
+http://localhost:8123/?scene=world
+http://localhost:8123/?scene=tooq-office&spawn=entrance
+
+# Mostrar colisões
+http://localhost:8123/?scene=tooq-office&debug=collisions
+
+# Abrir diretamente o editor de uma sala
+http://localhost:8123/?decorateRoom=office-a#tooq-office
+
+# Prévia das interações (combinar com decorateRoom para carregar as instâncias)
+http://localhost:8123/?decorateRoom=office-a&interactionPreview=kanban#tooq-office
+http://localhost:8123/?decorateRoom=office-a&interactionPreview=chest#tooq-office
+http://localhost:8123/?decorateRoom=office-a&interactionPreview=workstation#tooq-office
+
+# Prévia de equipamento
+http://localhost:8123/?scene=tooq-office&equipmentPreview=motorcycle&equipmentDirection=up
+```
+
+## 8. LiveKit opcional
+
+O cliente Phaser ainda não integrou A/V, mas o app web antigo continua usando LiveKit:
+
+```powershell
+& ".\livekit\start-livekit.ps1"
+```
+
+Espere a porta HTTP `7880`. Sem LiveKit, mapa, inventário, decoração e horas funcionam normalmente.
+
+## 9. Verificação antes de entregar
+
+```powershell
+node --test client-web/tools/*.test.mjs
+dotnet build backend/VirtualOffice.Api/VirtualOffice.Api.csproj
+git diff --check
+```
+
+Além dos testes, abra o cliente, leia o console e confira visualmente o fluxo alterado. Ao controlar
+o avatar por automação, desative `scene.input.keyboard.enabled` somente durante o teste e religue ao
+terminar.
+
+## 10. Problemas comuns
 
 | Sintoma | Causa/solução |
 |---|---|
-| `address already in use` ao rodar o backend | Já existe um rodando — feche o outro terminal (ou `Get-Process dotnet \| Stop-Process`) |
-| Unity mostra "Backend não respondeu" | O passo 1 não está rodando; suba o backend e ele reconecta sozinho (tenta a cada 3s) |
-| Reiniciou o backend com o Unity aberto | O web reconecta sozinho; no Unity, saia do Play e entre de novo |
-| Quer testar drops rápido | Deixe um timer rodando 25+ min ou conclua tasks para acumular XP |
+| Editor abre com `0 no inventário` | Backend parado, usuário inexistente ou CORS/porta incorreta. Confira `http://localhost:5210/api/game/inventory` com `X-User-Id`. |
+| `address already in use` | Já existe backend ou cliente rodando nessa porta; encerre o processo anterior. |
+| O mapa abre, mas mobília não persiste | O Phaser funciona offline, porém a API é a fonte de verdade; suba o backend. |
+| Móvel do Tiled não pode ser arrastado no editor do jogo | Correto: ele é cenário-base. Só instâncias possuídas são editáveis pelo jogador. |
+| Outro usuário vê o móvel, mas não consegue editá-lo | Correto: a API valida o dono da instância. Permissões compartilhadas ainda não existem. |
+| Cadeira não abre a estação | Posicione um item `workstation` a no máximo `2,75` tiles. |
+| Já existe um contador ativo | Encerre o timer no app web ou na estação antes de iniciar outro. |
+| Build mostra `NU1903` | Alerta conhecido de `SQLitePCLRaw`; não quebra o protótipo, mas deve ser resolvido antes de produção. |

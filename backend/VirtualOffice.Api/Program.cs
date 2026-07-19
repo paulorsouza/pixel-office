@@ -9,6 +9,10 @@ builder.Services.AddDbContextFactory<AppDb>(o => o.UseSqlite("Data Source=office
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddHostedService<BotService>();
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
 
 var app = builder.Build();
 
@@ -19,6 +23,7 @@ await using (var db = await app.Services.GetRequiredService<IDbContextFactory<Ap
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.UseCors();
 app.MapHub<OfficeHub>("/hub/office");
 
 var api = app.MapGroup("/api");
@@ -558,7 +563,219 @@ api.MapPut("/room", async (RoomLayout layout, HttpRequest req, IDbContextFactory
     return Results.Ok();
 });
 
+// ---------- inventário unitário e mobília do cliente Phaser ----------
+api.MapGet("/game/inventory", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    var placements = await db.FurniturePlacements.Where(x => x.UserId == uid)
+        .ToDictionaryAsync(x => x.ItemInstanceId);
+    var items = await db.GameItemInstances.Where(x => x.UserId == uid)
+        .Join(db.GameItemDefinitions, x => x.DefinitionId, d => d.Id, (x, d) => new { x, d })
+        .ToListAsync();
+    return Results.Ok(items.Select(row => new
+    {
+        row.x.Id, row.x.InstanceKey, row.x.Location, row.x.ContainerPlacementId, row.x.AcquiredUtc,
+        definition = new
+        {
+            row.d.Id, row.d.CatalogKey, row.d.Name, row.d.Category,
+            row.d.IconPath, row.d.InteractionType,
+        },
+        placement = placements.TryGetValue(row.x.Id, out var p) ? new
+        {
+            p.Id, p.SceneId, p.RoomId, p.X, p.Y, p.FlipX,
+        } : null,
+    }));
+});
+
+api.MapGet("/game/rooms/{sceneId}/{roomId}/furniture", async (
+    string sceneId, string roomId, IDbContextFactory<AppDb> f) =>
+{
+    await using var db = await f.CreateDbContextAsync();
+    var rows = await db.FurniturePlacements
+        .Where(x => x.SceneId == sceneId && x.RoomId == roomId)
+        .Join(db.GameItemInstances, p => p.ItemInstanceId, i => i.Id, (p, i) => new { p, i })
+        .Join(db.GameItemDefinitions, row => row.i.DefinitionId, d => d.Id, (row, d) => new { row.p, row.i, d })
+        .ToListAsync();
+    return Results.Ok(rows.Select(row => FurniturePayload(row.p, row.i, row.d)));
+});
+
+api.MapPost("/game/furniture", async (
+    PlaceFurniture dto, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    if (string.IsNullOrWhiteSpace(dto.SceneId) || string.IsNullOrWhiteSpace(dto.RoomId))
+        return Results.BadRequest(new { error = "Cena e sala são obrigatórias" });
+    await using var db = await f.CreateDbContextAsync();
+    await using var tx = await db.Database.BeginTransactionAsync();
+    var item = await db.GameItemInstances.FirstOrDefaultAsync(x => x.Id == dto.InventoryItemId && x.UserId == uid);
+    if (item is null) return Results.NotFound(new { error = "Item não encontrado" });
+    if (item.Location != "inventory") return Results.Conflict(new { error = "Este item não está disponível no inventário" });
+    var definition = await db.GameItemDefinitions.FindAsync(item.DefinitionId);
+    if (definition is null) return Results.BadRequest(new { error = "Definição inválida" });
+    var placement = new FurniturePlacement
+    {
+        ItemInstanceId = item.Id, UserId = uid,
+        SceneId = dto.SceneId.Trim()[..Math.Min(80, dto.SceneId.Trim().Length)],
+        RoomId = dto.RoomId.Trim()[..Math.Min(80, dto.RoomId.Trim().Length)],
+        X = Math.Clamp(dto.X, -1000, 1000), Y = Math.Clamp(dto.Y, -1000, 1000), FlipX = dto.FlipX,
+    };
+    db.FurniturePlacements.Add(placement);
+    item.Location = "placed";
+    await db.SaveChangesAsync();
+    await tx.CommitAsync();
+    var payload = FurniturePayload(placement, item, definition);
+    await hub.Clients.Group(OfficeHub.RoomGroup(placement.SceneId, placement.RoomId)).SendAsync("FurniturePlaced", payload);
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("InventoryChanged");
+    return Results.Created($"/api/game/furniture/{placement.Id}", payload);
+});
+
+api.MapPatch("/game/furniture/{id:int}", async (
+    int id, MoveFurniture dto, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    var placement = await db.FurniturePlacements.FirstOrDefaultAsync(x => x.Id == id && x.UserId == uid);
+    if (placement is null) return Results.NotFound();
+    placement.X = Math.Clamp(dto.X, -1000, 1000);
+    placement.Y = Math.Clamp(dto.Y, -1000, 1000);
+    placement.FlipX = dto.FlipX;
+    await db.SaveChangesAsync();
+    var item = await db.GameItemInstances.FindAsync(placement.ItemInstanceId);
+    var definition = item is null ? null : await db.GameItemDefinitions.FindAsync(item.DefinitionId);
+    if (item is null || definition is null) return Results.BadRequest();
+    var payload = FurniturePayload(placement, item, definition);
+    await hub.Clients.Group(OfficeHub.RoomGroup(placement.SceneId, placement.RoomId)).SendAsync("FurnitureMoved", payload);
+    return Results.Ok(payload);
+});
+
+api.MapDelete("/game/furniture/{id:int}", async (
+    int id, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    await using var tx = await db.Database.BeginTransactionAsync();
+    var placement = await db.FurniturePlacements.FirstOrDefaultAsync(x => x.Id == id && x.UserId == uid);
+    if (placement is null) return Results.NotFound();
+    var item = await db.GameItemInstances.FindAsync(placement.ItemInstanceId);
+    if (item is null) return Results.BadRequest();
+    var sceneId = placement.SceneId;
+    var roomId = placement.RoomId;
+    db.FurniturePlacements.Remove(placement);
+    item.Location = "inventory";
+    item.ContainerPlacementId = null;
+    await db.SaveChangesAsync();
+    await tx.CommitAsync();
+    await hub.Clients.Group(OfficeHub.RoomGroup(sceneId, roomId)).SendAsync("FurnitureRemoved", new { id });
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("InventoryChanged");
+    return Results.NoContent();
+});
+
+api.MapGet("/game/chests/{placementId:int}", async (
+    int placementId, HttpRequest req, IDbContextFactory<AppDb> f) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    if (!await IsOwnedInteraction(db, placementId, uid, "chest")) return Results.NotFound();
+    var rows = await db.GameItemInstances.Where(x => x.UserId == uid && x.ContainerPlacementId == placementId)
+        .Join(db.GameItemDefinitions, x => x.DefinitionId, d => d.Id, (x, d) => new
+        {
+            x.Id, x.InstanceKey, x.Location,
+            definition = new { d.Id, d.CatalogKey, d.Name, d.Category, d.IconPath, d.InteractionType },
+        }).ToListAsync();
+    return Results.Ok(rows);
+});
+
+api.MapPost("/game/chests/{placementId:int}/{action}", async (
+    int placementId, string action, ChestTransfer dto, HttpRequest req,
+    IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    if (!await IsOwnedInteraction(db, placementId, uid, "chest")) return Results.NotFound();
+    var item = await db.GameItemInstances.FirstOrDefaultAsync(x => x.Id == dto.InventoryItemId && x.UserId == uid);
+    if (item is null) return Results.NotFound(new { error = "Item não encontrado" });
+    if (action == "deposit" && item.Location == "inventory")
+    {
+        item.Location = "chest";
+        item.ContainerPlacementId = placementId;
+    }
+    else if (action == "withdraw" && item.Location == "chest" && item.ContainerPlacementId == placementId)
+    {
+        item.Location = "inventory";
+        item.ContainerPlacementId = null;
+    }
+    else return Results.Conflict(new { error = "O item não está na origem esperada" });
+    await db.SaveChangesAsync();
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("InventoryChanged");
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("ChestChanged", new { placementId });
+    return Results.Ok();
+});
+
+api.MapPost("/game/workstations/{placementId:int}/start", async (
+    int placementId, WorkstationStart dto, HttpRequest req,
+    IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    if (!await IsOwnedInteraction(db, placementId, uid, "workstation")) return Results.NotFound();
+    var user = await db.Users.FindAsync(uid);
+    var workItemId = dto.WorkItemId ?? user?.ActiveWorkItemId;
+    var workItem = workItemId is int id ? await db.WorkItems.FindAsync(id) : null;
+    if (workItem is null || workItem.Status == WorkItemStatus.Done)
+        return Results.BadRequest(new { error = "Escolha uma atividade disponível" });
+    if (await db.TimeEntries.AnyAsync(x => x.UserId == uid && x.EndUtc == null))
+        return Results.Conflict(new { error = "Já existe um contador ativo" });
+    if (user is not null) user.ActiveWorkItemId = workItem.Id;
+    var entry = new TimeEntry
+    {
+        UserId = uid, WorkItemId = workItem.Id, Category = "task",
+        Note = $"Estação #{placementId}: {workItem.Code}", StartUtc = DateTime.UtcNow,
+    };
+    db.TimeEntries.Add(entry);
+    await db.SaveChangesAsync();
+    await hub.Clients.All.SendAsync("Status", new { userId = uid, status = $"🔴 {workItem.Code}" });
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("WorkSessionChanged", new
+    {
+        active = true, entryId = entry.Id, workItemId = workItem.Id,
+        workItem.Code, workItem.Title, entry.StartUtc,
+    });
+    return Results.Ok(new
+    {
+        entryId = entry.Id, workItemId = workItem.Id,
+        workItem.Code, workItem.Title, entry.StartUtc,
+    });
+});
+
+api.MapPost("/game/workstations/stop", async (
+    HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    var entry = await db.TimeEntries.Where(x => x.UserId == uid && x.EndUtc == null)
+        .OrderByDescending(x => x.StartUtc).FirstOrDefaultAsync();
+    if (entry is null) return Results.NotFound(new { error = "Nenhum contador ativo" });
+    entry.EndUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+    await hub.Clients.All.SendAsync("Status", new { userId = uid, status = "" });
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("WorkSessionChanged", new { active = false, entry.Id, entry.EndUtc });
+    return Results.Ok(new { entry.Id, entry.EndUtc });
+});
+
 app.Run();
+
+static object FurniturePayload(FurniturePlacement p, GameItemInstance i, GameItemDefinition d) => new
+{
+    p.Id, p.ItemInstanceId, p.UserId, p.SceneId, p.RoomId, p.X, p.Y, p.FlipX,
+    definition = new { d.Id, d.CatalogKey, d.Name, d.Category, d.IconPath, d.InteractionType },
+    instanceKey = i.InstanceKey,
+};
+
+static async Task<bool> IsOwnedInteraction(AppDb db, int placementId, int userId, string interaction) =>
+    await db.FurniturePlacements.Where(p => p.Id == placementId && p.UserId == userId)
+        .Join(db.GameItemInstances, p => p.ItemInstanceId, i => i.Id, (p, i) => i)
+        .Join(db.GameItemDefinitions, i => i.DefinitionId, d => d.Id, (i, d) => d)
+        .AnyAsync(d => d.InteractionType == interaction);
 
 record WorkItemCreate(string Title, string? Description, WorkItemType Type, int? EpicId, int? SprintId, int? AssigneeId, double? EstimateHours);
 record WorkItemPatch(string? Title, string? Description, WorkItemStatus? Status, int? EpicId, int? SprintId, int? AssigneeId, double? EstimateHours);
@@ -567,3 +784,7 @@ record ManualEntry(DateTime Date, int Minutes, int? WorkItemId, string? Category
 record RoomLayout(List<RoomPlacement> Items);
 record RoomPlacement(int ItemDefinitionId, int X, int Y);
 record SetActiveTask(int? WorkItemId);
+record PlaceFurniture(int InventoryItemId, string SceneId, string RoomId, double X, double Y, bool FlipX);
+record MoveFurniture(double X, double Y, bool FlipX);
+record ChestTransfer(int InventoryItemId);
+record WorkstationStart(int? WorkItemId);

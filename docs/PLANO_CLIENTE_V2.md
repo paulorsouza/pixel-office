@@ -1,5 +1,11 @@
 # Plano — Recriação do Cliente Unity (v2)
 
+> **DOCUMENTO HISTÓRICO.** O cliente oficial agora é `client-web/` em Phaser; não execute este plano
+> como instrução atual. Consulte `CONTEXT.md`. No cliente web já existem: Tiled direto, múltiplas
+> cenas, avatar modular (parte da F10), editor de salas com instâncias únicas no backend e
+> sincronização SignalR de mobília (núcleo da F9). Presença de avatares e A/V no Phaser continuam
+> pendentes. As fases abaixo servem apenas como referência de ideias de produto.
+
 **Data:** 2026-07-13
 **Objetivo:** refazer o cliente Unity do zero com a qualidade visual dos exemplos do
 [Modern Office da LimeZu](https://limezu.itch.io/modernoffice), usando os packs comprados.

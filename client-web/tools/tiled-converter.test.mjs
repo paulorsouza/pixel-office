@@ -2,17 +2,26 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import test from 'node:test';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import {
+  loadTiledMap,
+  loadTiledSceneMaps,
+  tiledContentCameraBounds,
+} from '../src/TiledRuntimeLoader.js';
 
 import {
   CLIENT_ROOT,
   FIRST_GID,
+  expandMapCanvas,
   generateTilesets,
+  makeMapEditable,
   runtimeToTiled,
   tiledToRuntime,
 } from './tiled-converter.mjs';
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
+const fileFetchJson = async (url) => readJson(fileURLToPath(url));
 const manifest = readJson(resolve(CLIENT_ROOT, 'maps/scenes.json'));
 const palettes = readJson(resolve(CLIENT_ROOT, 'tiled/palettes.json')).palettes;
 const animations = readJson(resolve(CLIENT_ROOT, 'assets/animations/catalog.json'));
@@ -22,7 +31,7 @@ const furnitureCatalog = readJson(resolve(CLIENT_ROOT, 'assets/furniture/catalog
 const clientIndexSource = readFileSync(resolve(CLIENT_ROOT, 'index.html'), 'utf8');
 const rendererSource = readFileSync(resolve(CLIENT_ROOT, 'src/MapRenderer.js'), 'utf8');
 const rendererModule = await import(
-  `data:text/javascript;base64,${Buffer.from(rendererSource).toString('base64')}`
+  `${pathToFileURL(resolve(CLIENT_ROOT, 'src/MapRenderer.js')).href}?test=${Date.now()}`
 );
 const equipmentSource = readFileSync(resolve(CLIENT_ROOT, 'src/EquipmentSystem.js'), 'utf8');
 const equipmentModule = await import(
@@ -35,6 +44,317 @@ const characterModule = await import(
 const decorationModule = await import(
   `${pathToFileURL(resolve(CLIENT_ROOT, 'src/RoomDecorationSystem.js')).href}?test=${Date.now()}`
 );
+const mechanicsModule = await import(
+  `${pathToFileURL(resolve(CLIENT_ROOT, 'src/mechanics/MechanicsRegistry.js')).href}?test=${Date.now()}`
+);
+
+test('registro de mecânicas recebe entidades novas sem alterar o renderer', () => {
+  const registry = new mechanicsModule.MechanicsRegistry();
+  registry.register('meetingZone', { create: () => ({}) });
+  assert.equal(registry.has('meetingZone'), true);
+  assert.deepEqual(registry.types(), ['meetingZone']);
+  assert.throws(
+    () => registry.register('meetingZone', { create: () => ({}) }),
+    /já registrada/,
+  );
+});
+
+test('colisões e portais antigos são normalizados como mecânicas', () => {
+  const entities = mechanicsModule.mapMechanicEntities({
+    entities: [{ id: 'custom', type: 'meetingZone' }],
+    collisions: [{ x: 1, y: 2, w: 3, h: 1 }],
+    portals: [{ id: 'exit', x: 4, y: 5, w: 2, h: 2, targetScene: 'world' }],
+  });
+  assert.deepEqual(entities.map((entity) => entity.type), ['meetingZone', 'collision', 'portal']);
+  assert.equal(mechanicsModule.mechanicsRegistry.has('collision'), true);
+  assert.equal(mechanicsModule.mechanicsRegistry.has('portal'), true);
+});
+
+test('classe desconhecida do Tiled atravessa o conversor como entidade genérica', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  const tiled = runtimeToTiled(original, catalogs, 'world.json');
+  tiled.layers.push({
+    color: '#ff70a6',
+    draworder: 'topdown',
+    id: tiled.nextlayerid++,
+    name: 'Gameplay · Reuniões',
+    objects: [{
+      height: 48,
+      id: tiled.nextobjectid++,
+      name: 'daily-room',
+      opacity: 1,
+      properties: [{ name: 'channel', type: 'string', value: 'daily' }],
+      rotation: 0,
+      type: 'meetingZone',
+      visible: true,
+      width: 64,
+      x: 160,
+      y: 96,
+    }],
+    opacity: 1,
+    type: 'objectgroup',
+    visible: true,
+    x: 0,
+    y: 0,
+  });
+
+  const restored = tiledToRuntime(tiled, catalogs);
+  assert.deepEqual(restored.entities, [{
+    id: 'daily-room',
+    type: 'meetingZone',
+    x: 10,
+    y: 6,
+    layer: 'Gameplay · Reuniões',
+    w: 4,
+    h: 3,
+    properties: { channel: 'daily' },
+  }]);
+});
+
+test('entidades genéricas preservam propriedades no round-trip', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  original.entities = [{
+    id: 'standup',
+    type: 'meetingZone',
+    x: 3,
+    y: 4,
+    w: 5,
+    h: 2,
+    layer: 'gameplay-meetings',
+    properties: { channel: 'daily', capacity: 8 },
+  }];
+  const restored = tiledToRuntime(runtimeToTiled(original, catalogs, 'world.json'), catalogs);
+  assert.deepEqual(restored.entities, original.entities);
+});
+
+test('tile layer criada no Tiled vira camada visual renderizável', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  delete original.visualMode;
+  delete original.visualLayers;
+  original.camera.bounds = { x: 1, y: 1, w: original.w - 2, h: original.h - 1 };
+  const tiled = runtimeToTiled(original, catalogs, 'world.json');
+  const data = Array(tiled.width * tiled.height).fill(0);
+  data[2 * tiled.width + 1] = FIRST_GID.surfaces + catalogs.surfaces.byAsset.get('wood').localId;
+  data[2 * tiled.width + 2] = FIRST_GID.walls + 24;
+  data[2 * tiled.width + 3] = FIRST_GID.furniture + catalogs.furniture.byAsset.get('of_317').localId;
+  tiled.layers.push({
+    data,
+    height: tiled.height,
+    id: tiled.nextlayerid++,
+    name: 'Decoração especial',
+    opacity: 0.8,
+    properties: [
+      { name: 'depth', type: 'int', value: -40 },
+      { name: 'ySort', type: 'bool', value: true },
+    ],
+    type: 'tilelayer',
+    visible: true,
+    width: tiled.width,
+    x: 0,
+    y: 0,
+  });
+
+  const restored = tiledToRuntime(tiled, catalogs);
+  assert.deepEqual(restored.visualLayers, [{
+    id: 'Decoração especial',
+    name: 'Decoração especial',
+    width: tiled.width,
+    height: tiled.height,
+    depth: -40,
+    tiles: [
+      { x: 1, y: 2, texture: 'wood' },
+      { x: 2, y: 2, texture: 'tiles', frame: 24 },
+      { x: 3, y: 2, texture: 'of_317' },
+    ],
+    opacity: 0.8,
+    properties: { ySort: true },
+  }]);
+  assert.ok(restored.assets.includes('of_317'));
+});
+
+test('mapa gerado oferece uma camada livre editável sem poluir o runtime vazio', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  delete original.visualMode;
+  delete original.visualLayers;
+  original.camera.bounds = { x: 1, y: 1, w: original.w - 2, h: original.h - 1 };
+  const tiled = runtimeToTiled(original, catalogs, 'world.json');
+  const freeDraw = tiled.layers.find((layer) => (
+    layer.properties?.some((property) => property.name === 'id' && property.value === 'free-draw')
+  ));
+
+  assert.ok(freeDraw, 'a camada de desenho livre precisa existir');
+  assert.match(freeDraw.name, /DESENHO LIVRE/);
+  assert.equal(freeDraw.type, 'tilelayer');
+  assert.equal(freeDraw.locked, false);
+  assert.ok(freeDraw.data.every((gid) => gid === 0));
+
+  const camera = tiled.layers.find((layer) => (
+    layer.properties?.some((property) => property.name === 'oqRole' && property.value === 'camera')
+  ));
+  assert.equal(camera.locked, true);
+  assert.equal(camera.objects.length, 1);
+
+  const restored = tiledToRuntime(tiled, catalogs);
+  assert.equal(restored.visualLayers, undefined);
+
+  freeDraw.data[3 * tiled.width + 2] = (
+    FIRST_GID.surfaces + catalogs.surfaces.byAsset.get('wood').localId
+  );
+  const painted = tiledToRuntime(tiled, catalogs);
+  assert.deepEqual(painted.visualLayers, [{
+    id: 'free-draw',
+    name: freeDraw.name,
+    width: tiled.width,
+    height: tiled.height,
+    depth: -85,
+    tiles: [{ x: 2, y: 3, texture: 'wood' }],
+  }]);
+});
+
+test('camada da câmera rejeita objetos extras e limites fora do mapa', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  original.camera.bounds = { x: 1, y: 1, w: original.w - 2, h: original.h - 1 };
+  const tiled = runtimeToTiled(original, catalogs, 'world.json');
+  const camera = tiled.layers.find((layer) => (
+    layer.properties?.some((property) => property.name === 'oqRole' && property.value === 'camera')
+  ));
+
+  camera.objects.push({
+    height: 16,
+    id: tiled.nextobjectid++,
+    name: 'objeto acidental',
+    rotation: 0,
+    visible: true,
+    width: 16,
+    x: 0,
+    y: 0,
+  });
+  assert.throws(() => tiledToRuntime(tiled, catalogs), /somente um retângulo camera/);
+
+  camera.objects.pop();
+  camera.objects[0].x = -16;
+  assert.throws(() => tiledToRuntime(tiled, catalogs), /permanecer dentro do mapa/);
+});
+
+test('câmera do mundo inclui automaticamente objetos colocados fora do canvas', () => {
+  const bounds = tiledContentCameraBounds({
+    width: 10,
+    height: 8,
+    tilewidth: 16,
+    tileheight: 16,
+  }, [{
+    object: { x: -32, y: 16, width: 64, height: 48, visible: true },
+    asset: { width: 64, height: 48, originX: 0.5, originY: 1 },
+  }, {
+    object: { x: 500, y: 500, width: 16, height: 16, visible: false },
+    asset: { width: 16, height: 16, originX: 0.5, originY: 1 },
+  }], 2);
+
+  assert.deepEqual(bounds, { x: -6, y: -4, w: 16, h: 12 });
+});
+
+test('modo editável transforma o visual procedural em tile layers desbloqueadas', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  const editable = makeMapEditable(original, catalogs);
+  const tiled = runtimeToTiled(editable, catalogs, 'world.json');
+  const roles = tiled.layers.flatMap((layer) => (
+    layer.properties?.filter((property) => property.name === 'oqRole').map((property) => property.value) || []
+  ));
+  const visualLayers = tiled.layers.filter((layer) => roles && (
+    layer.properties?.some((property) => property.name === 'oqRole' && property.value === 'visual')
+  ));
+
+  assert.equal(editable.visualMode, 'tiled');
+  assert.deepEqual(editable.visualLayers.slice(0, 3).map((layer) => layer.id), [
+    'base-floors',
+    'base-walls',
+    'base-hedges',
+  ]);
+  assert.ok(editable.visualLayers[0].tiles.length > 0);
+  assert.equal(editable.visualLayers[1].properties.collision, true);
+  assert.equal(editable.visualLayers[2].properties.collision, true);
+  assert.equal(roles.some((role) => role.startsWith('preview')), false);
+  assert.ok(visualLayers.every((layer) => layer.locked === false));
+
+  const restored = tiledToRuntime(tiled, catalogs);
+  assert.deepEqual(restored, editable);
+});
+
+test('canvas ampliado centraliza o mundo e deixa a câmera seguir o tamanho do mapa', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  const expanded = expandMapCanvas(original, 96, 72, catalogs);
+  const offsetX = Math.floor((96 - original.w) / 2);
+  const offsetY = Math.floor((72 - original.h) / 2);
+  const floors = expanded.visualLayers.find((layer) => layer.id === 'base-floors');
+
+  assert.equal(expanded.w, 96);
+  assert.equal(expanded.h, 72);
+  assert.equal(expanded.camera.bounds, undefined);
+  assert.equal(expanded.camera.minZoom, 0.35);
+  assert.equal(expanded.spawns.default.x, original.spawns.default.x + offsetX);
+  assert.equal(expanded.spawns.default.y, original.spawns.default.y + offsetY);
+  assert.equal(floors.tiles.length, 96 * 72);
+  assert.equal(expanded.paths, undefined);
+  assert.equal(expanded.hedges, undefined);
+
+  const restored = tiledToRuntime(runtimeToTiled(expanded, catalogs, 'world.json'), catalogs);
+  assert.deepEqual(restored, expanded);
+});
+
+test('colisão de tile layer acompanha exatamente os tiles pintados', () => {
+  assert.deepEqual(rendererModule.tileLayerCollisionRects({
+    x: 2,
+    y: 3,
+    tiles: [
+      { x: 1, y: 4 },
+      { x: 2, y: 4 },
+      { x: 5, y: 4 },
+      { x: 0, y: 6 },
+    ],
+  }), [
+    { x: 3, y: 7, w: 2, h: 1 },
+    { x: 7, y: 7, w: 1, h: 1 },
+    { x: 2, y: 9, w: 1, h: 1 },
+  ]);
+});
+
+test('instância de template do Tiled herda classe e propriedades', () => {
+  const catalogs = generateTilesets();
+  const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
+  const tiled = runtimeToTiled(original, catalogs, 'world.json');
+  const navigation = tiled.layers.find((layer) => (
+    layer.properties?.some((property) => property.name === 'oqRole' && property.value === 'navigation')
+  ));
+  navigation.objects.push({
+    id: tiled.nextobjectid++,
+    properties: [
+      { name: 'id', type: 'string', value: 'template-portal' },
+      { name: 'targetScene', type: 'string', value: 'tooq-office' },
+    ],
+    template: '../templates/portal.tj',
+    x: 160,
+    y: 96,
+  });
+
+  const restored = tiledToRuntime(tiled, catalogs);
+  assert.deepEqual(restored.portals.at(-1), {
+    id: 'template-portal',
+    x: 10,
+    y: 6,
+    w: 3,
+    h: 2,
+    targetScene: 'tooq-office',
+    targetSpawn: 'default',
+    label: 'Entrar',
+  });
+});
 
 test('catálogo de decoração é curado, categorizado e usa assets versionados', () => {
   assert.ok(furnitureCatalog.items.length >= 30);
@@ -295,6 +615,9 @@ test('todos os PNGs referenciados pelos tilesets existem', () => {
     'room-builder.tsj',
     'world-assets.tsj',
     'office-furniture.tsj',
+    'palette-gates.tsj',
+    'palette-access-control.tsj',
+    'palette-fences.tsj',
     ...palettes.map((palette) => palette.file),
   ].map((file) => resolve(CLIENT_ROOT, 'tiled/tilesets', file));
   for (const tilesetPath of tilesetPaths) {
@@ -306,15 +629,112 @@ test('todos os PNGs referenciados pelos tilesets existem', () => {
   }
 });
 
+test('runtime direto aceita um tileset externo novo sem cadastro no conversor', async () => {
+  const files = new Map([
+    ['https://example.test/maps/custom.tmj', {
+      type: 'map',
+      tilewidth: 16,
+      tileheight: 16,
+      width: 1,
+      height: 1,
+      properties: [
+        { name: 'id', type: 'string', value: 'custom' },
+        { name: 'name', type: 'string', value: 'Custom' },
+        { name: 'kind', type: 'string', value: 'world' },
+        { name: 'visualMode', type: 'string', value: 'tiled' },
+        { name: 'ground', type: 'string', value: 'grass' },
+      ],
+      tilesets: [{ firstgid: 1, source: '../tilesets/custom.tsj' }],
+      layers: [
+        {
+          type: 'tilelayer',
+          name: 'Minha camada',
+          width: 1,
+          height: 1,
+          data: [1],
+        },
+        {
+          type: 'objectgroup',
+          name: 'navigation',
+          objects: [{
+            id: 1,
+            name: 'default',
+            type: 'spawn',
+            point: true,
+            x: 8,
+            y: 16,
+          }],
+        },
+      ],
+    }],
+    ['https://example.test/tilesets/custom.tsj', {
+      type: 'tileset',
+      name: 'Custom',
+      tilewidth: 16,
+      tileheight: 16,
+      tilecount: 1,
+      columns: 0,
+      tiles: [{
+        id: 0,
+        image: '../assets/custom-road.png',
+        imagewidth: 16,
+        imageheight: 16,
+        properties: [
+          { name: 'assetId', type: 'string', value: 'custom-road' },
+          { name: 'category', type: 'string', value: 'surface' },
+        ],
+      }],
+    }],
+  ]);
+  const map = await loadTiledMap('https://example.test/maps/custom.tmj', {
+    fetchJson: async (url) => files.get(url),
+  });
+
+  assert.deepEqual(map.visualLayers[0].tiles, [
+    { x: 0, y: 0, texture: 'custom-road' },
+  ]);
+  assert.deepEqual(map.tiledTextures, [{
+    key: 'custom-road',
+    url: 'https://example.test/assets/custom-road.png',
+    type: 'image',
+  }]);
+});
+
 for (const scene of manifest.scenes) {
   test(`round-trip preserva ${scene.id}`, () => {
     const catalogs = generateTilesets();
-    const original = readJson(resolve(CLIENT_ROOT, 'maps', scene.file));
-    const tiled = runtimeToTiled(original, catalogs, scene.file);
+    const runtimeFile = scene.runtimeFile || `${scene.id}.json`;
+    const original = readJson(resolve(CLIENT_ROOT, 'maps', runtimeFile));
+    const tiled = runtimeToTiled(original, catalogs, runtimeFile);
     const restored = tiledToRuntime(tiled, catalogs);
     assert.deepEqual(restored, original);
   });
+
+  test(`runtime direto carrega ${scene.id}`, async () => {
+    const direct = await loadTiledMap(pathToFileURL(resolve(CLIENT_ROOT, scene.file)).href, {
+      fetchJson: fileFetchJson,
+    });
+    assert.equal(direct.id, scene.id);
+    assert.ok(direct.kind);
+    assert.ok(direct.spawns.default);
+    assert.ok(direct.visualLayers.length > 0);
+    assert.match(direct.tiledSource, new RegExp(`${scene.id}\\.tmj$`));
+    assert.ok(direct.tiledTextures.length > 0);
+    if (direct.kind === 'world') {
+      assert.ok(direct.camera?.bounds);
+      assert.ok(direct.camera.bounds.w >= direct.w);
+      assert.ok(direct.camera.bounds.h >= direct.h);
+    }
+  });
 }
+
+test('runtime direto valida manifesto, portais e spawns em conjunto', async () => {
+  const maps = await loadTiledSceneMaps(manifest, {
+    baseUrl: pathToFileURL(resolve(CLIENT_ROOT, 'index.html')).href,
+    fetchJson: fileFetchJson,
+  });
+  assert.deepEqual(Object.keys(maps), manifest.scenes.map((scene) => scene.id));
+});
 
 test('objeto novo herdado da paleta vira móvel e preserva flip', () => {
   const catalogs = generateTilesets();

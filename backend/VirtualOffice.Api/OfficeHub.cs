@@ -5,6 +5,9 @@ namespace VirtualOffice.Api;
 
 public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub> hubContext) : Hub
 {
+    public static string UserGroup(int userId) => $"game:user:{userId}";
+    public static string RoomGroup(string sceneId, string roomId) => $"game:room:{sceneId}:{roomId}";
+
     private static readonly string[] BotReplies =
     [
         "Boa! 👍", "Depois me chama numa call rapidinha?", "Tô terminando uma task aqui...",
@@ -55,10 +58,21 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
             DeskY = desk?.DeskY ?? -1,
         };
         Presence.Players[Context.ConnectionId] = state;
+        await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
 
         await Clients.Caller.SendAsync("Snapshot", Presence.Players.Values);
         await Clients.Others.SendAsync("PlayerJoined", state);
     }
+
+    /// <summary>Assina somente os eventos de inventário e da sala do cliente Phaser.</summary>
+    public async Task JoinGame(int userId, string sceneId, string roomId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
+        await Groups.AddToGroupAsync(Context.ConnectionId, RoomGroup(sceneId, roomId));
+    }
+
+    public Task LeaveGameRoom(string sceneId, string roomId) =>
+        Groups.RemoveFromGroupAsync(Context.ConnectionId, RoomGroup(sceneId, roomId));
 
     public async Task Move(double x, double y, string dir)
     {

@@ -13,4 +13,16 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<ItemDefinition> ItemDefinitions => Set<ItemDefinition>();
     public DbSet<InventoryItem> Inventory => Set<InventoryItem>();
     public DbSet<RoomItem> RoomItems => Set<RoomItem>();
+    public DbSet<GameItemDefinition> GameItemDefinitions => Set<GameItemDefinition>();
+    public DbSet<GameItemInstance> GameItemInstances => Set<GameItemInstance>();
+    public DbSet<FurniturePlacement> FurniturePlacements => Set<FurniturePlacement>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<GameItemDefinition>().HasIndex(x => x.CatalogKey).IsUnique();
+        modelBuilder.Entity<GameItemInstance>().HasIndex(x => x.InstanceKey).IsUnique();
+        modelBuilder.Entity<FurniturePlacement>().HasIndex(x => x.ItemInstanceId).IsUnique();
+        modelBuilder.Entity<FurniturePlacement>()
+            .HasIndex(x => new { x.SceneId, x.RoomId });
+    }
 }

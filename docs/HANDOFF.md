@@ -1,5 +1,8 @@
 # Office Quest — Handoff / Documentação do Projeto
 
+> **ARQUIVO HISTÓRICO DA ERA UNITY.** Não use como contexto operacional. O cliente oficial é
+> `client-web/`; comece por `CONTEXT.md`. A ordem de direções descrita aqui também está obsoleta.
+
 > Documento de entrega para **recomeçar o cliente do jogo do zero**.
 > Escrito em 2026-07-10. Cobre o que existe, os conceitos, onde estão os assets,
 > uma avaliação honesta do que não funcionou e recomendações concretas.

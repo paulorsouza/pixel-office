@@ -16,6 +16,11 @@ import {
   createRoomDecorationStore,
   preloadRoomDecorationAssets,
 } from './RoomDecorationSystem.js';
+import { preloadMechanics } from './mechanics/index.js';
+import { createDevMapSync } from './DevMapSync.js';
+import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
+import { createGameItemsClient } from './GameItemsSystem.js';
+import { createFurnitureInteractionSystem } from './FurnitureInteractionSystem.js';
 
 const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
@@ -27,15 +32,29 @@ async function fetchJson(path) {
   return response.json();
 }
 
+function showBootstrapMapError(error) {
+  const root = document.createElement('div');
+  root.id = 'map-load-error';
+  root.innerHTML = '<strong>Não foi possível abrir o mapa do Tiled</strong><span></span>';
+  root.querySelector('span').textContent = error?.message || String(error);
+  document.body.append(root);
+}
+
 const manifest = await fetchJson('maps/scenes.json');
 const animatedAssets = await fetchJson('assets/animations/catalog.json');
 const equipmentCatalog = await fetchJson('assets/equipment/catalog.json');
 const characterCatalog = await fetchJson('assets/character/catalog.json');
 const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
+const gameItems = createGameItemsClient();
+await gameItems.initialize();
 const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
-const sceneMaps = Object.fromEntries(await Promise.all(
-  manifest.scenes.map(async ({ id, file }) => [id, await fetchJson(`maps/${file}`)]),
-));
+let sceneMaps;
+try {
+  sceneMaps = await loadTiledSceneMaps(manifest);
+} catch (error) {
+  showBootstrapMapError(error);
+  throw error;
+}
 let roomDecorationEditor = null;
 const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
@@ -50,9 +69,11 @@ const equipmentPreview = vehicleEquipment.find(
   (item) => item.id === query.get('equipmentPreview'),
 ) || null;
 const requestedEquipmentDirection = query.get('equipmentDirection');
+const interactionPreview = query.get('interactionPreview');
 const equipmentPreviewDirection = Object.hasOwn(DIR, requestedEquipmentDirection)
   ? requestedEquipmentDirection
   : null;
+createDevMapSync(() => window.__scene?.currentSceneId);
 
 function loadImageOnce(scene, key, path) {
   if (!scene.textures.exists(key)) scene.load.image(key, path);
@@ -77,13 +98,15 @@ class MapScene extends Phaser.Scene {
   init(data = {}) {
     this.currentSceneId = data.sceneId || initialScene;
     this.spawnId = data.spawnId || initialSpawn;
-    this.map = decorationStore.mapForScene(this.currentSceneId);
+    // O Tiled fornece a estrutura/base; móveis do jogador chegam separadamente pela API.
+    this.map = JSON.parse(JSON.stringify(sceneMaps[this.currentSceneId]));
     if (!this.map) throw new Error(`Cena desconhecida: ${this.currentSceneId}`);
   }
 
   preload() {
     preloadCharacterAssets(this, characterCatalog);
     preloadRoomDecorationAssets(this, furnitureCatalog);
+    preloadMechanics(this, this.map);
     if (!this.textures.exists('tiles')) {
       this.load.spritesheet('tiles', 'assets/tiles/room_builder.png', {
         frameWidth: 16,
@@ -115,7 +138,32 @@ class MapScene extends Phaser.Scene {
     }
     loadImageOnce(this, 'grass', worldAssetPath('grass'));
 
+    const directTiledKeys = new Set();
+    for (const descriptor of (this.map.tiledTextures || [])) {
+      if (
+        descriptor.key === 'tiles'
+        || descriptor.key === 'office_door'
+        || animatedAssets[descriptor.key]
+      ) continue;
+      if (this.textures.exists(descriptor.key)) {
+        directTiledKeys.add(descriptor.key);
+        continue;
+      }
+      if (descriptor.type === 'spritesheet') {
+        this.load.spritesheet(descriptor.key, descriptor.url, {
+          frameWidth: descriptor.frameWidth,
+          frameHeight: descriptor.frameHeight,
+          margin: descriptor.margin || 0,
+          spacing: descriptor.spacing || 0,
+        });
+      } else {
+        this.load.image(descriptor.key, descriptor.url);
+      }
+      directTiledKeys.add(descriptor.key);
+    }
+
     for (const asset of (this.map.assets || [])) {
+      if (directTiledKeys.has(asset)) continue;
       const animated = animatedAssets[asset];
       if (animated) {
         if (!this.textures.exists(asset)) {
@@ -167,8 +215,9 @@ class MapScene extends Phaser.Scene {
         repeat: animated.repeat,
       });
     }
-    const { spawns, portals } = renderScene(this, this.map, this.solids);
+    const { spawns, portals, mechanics } = renderScene(this, this.map, this.solids);
     this.portals = portals;
+    this.mechanicsRuntime = mechanics;
 
     const spawn = spawns[this.spawnId] || spawns.default || Object.values(spawns)[0];
     this.player = this.physics.add.sprite(
@@ -226,7 +275,8 @@ class MapScene extends Phaser.Scene {
     this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.equipmentVisual = createEquipmentVisual(this);
-    this.handleInteract = () => {
+    this.handleInteract = async () => {
+      if (this.furnitureInteractions && await this.furnitureInteractions.interact()) return;
       if (
         this.activePortal
         && !this.transitioning
@@ -306,6 +356,7 @@ class MapScene extends Phaser.Scene {
       furnitureCatalog,
       decorationStore,
       equipmentMenu,
+      gameItems,
     );
     roomDecorationEditor = this.roomDecorationEditor;
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -314,18 +365,38 @@ class MapScene extends Phaser.Scene {
     const debugRoom = query.get('decorateRoom');
     if (debugRoom) this.roomDecorationEditor.open(debugRoom);
 
+    this.furnitureInteractions = createFurnitureInteractionSystem(
+      this,
+      this.map,
+      gameItems,
+      equipmentMenu,
+    );
+    this.interactionPreviewPending = interactionPreview;
+
     window.__scene = this;
     window.__equipment = equipmentMenu;
     window.__character = characterCustomizer;
     window.__decoration = this.roomDecorationEditor;
+    window.__gameItems = gameItems;
+    window.__furnitureInteractions = this.furnitureInteractions;
   }
 
-  update() {
+  update(time, delta) {
+    this.mechanicsRuntime.update(time, delta);
     this.roomDecorationEditor.updateAvailability(
       this.player,
-      this.transitioning || equipmentMenu.isOpen(),
+      this.transitioning || equipmentMenu.isOpen() || this.furnitureInteractions.isOpen(),
     );
-    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen()) {
+    this.activeFurniturePrompt = this.furnitureInteractions.update(
+      this.player,
+      this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),
+    );
+    if (this.interactionPreviewPending && this.furnitureInteractions.openForType(this.interactionPreviewPending)) {
+      this.roomDecorationEditor.close();
+      this.interactionPreviewPending = null;
+    }
+    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen() || this.furnitureInteractions.isOpen()) {
+      showPortalPrompt(null);
       this.player.body.setVelocity(0, 0);
       this.player.anims.play(`idle-${this.lastDirection}`, true);
       this.setPlayerBodyFrameWidth(16);
@@ -381,6 +452,7 @@ class MapScene extends Phaser.Scene {
     );
     updateAutomaticDoors(this, this.player);
     this.updatePortalInteraction();
+    showPortalPrompt(this.activeFurniturePrompt || this.activePortal);
   }
 
   updatePortalInteraction() {
@@ -396,7 +468,6 @@ class MapScene extends Phaser.Scene {
 
     if (portal?.id !== this.activePortal?.id) {
       this.activePortal = portal;
-      showPortalPrompt(portal);
     }
 
   }

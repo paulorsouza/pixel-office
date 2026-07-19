@@ -1,5 +1,7 @@
 # Próxima sessão — começar por aqui
 
+> **HANDOFF ARQUIVADO.** Não comece por este arquivo; a fonte atual é `../CONTEXT.md`.
+
 Handoff de 2026-07-14. Estamos executando o `virtual-office/PLANO_CLIENTE_V2.md` em modo
 "recomeçar do zero". O bloqueio da sessão passada foi o **MCP do Unity**. Este doc destrava.
 

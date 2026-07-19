@@ -3,11 +3,11 @@
   "scenes": [
     {
       "id": "world",
-      "file": "world.json"
+      "file": "tiled/maps/world.tmj"
     },
     {
       "id": "tooq-office",
-      "file": "tooq-office.json"
+      "file": "tiled/maps/tooq-office.tmj"
     }
   ]
 }

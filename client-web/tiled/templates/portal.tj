@@ -1,0 +1,34 @@
+{
+  "object": {
+    "height": 32,
+    "name": "Novo portal",
+    "opacity": 1,
+    "properties": [
+      {
+        "name": "id",
+        "type": "string",
+        "value": "new-portal"
+      },
+      {
+        "name": "label",
+        "type": "string",
+        "value": "Entrar"
+      },
+      {
+        "name": "targetScene",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "targetSpawn",
+        "type": "string",
+        "value": "default"
+      }
+    ],
+    "rotation": 0,
+    "type": "portal",
+    "visible": true,
+    "width": 48
+  },
+  "type": "template"
+}
