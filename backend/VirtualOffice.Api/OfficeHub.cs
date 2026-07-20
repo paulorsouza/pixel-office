@@ -1,7 +1,20 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace VirtualOffice.Api;
+
+public record ChessMoveDto(int From, int To, string? Promo);
+
+// Estado de uma partida de xadrez por tabuleiro (em memória; protótipo single-instance).
+public class ChessMatch
+{
+    public string? WhiteConn;   // connectionId de quem senta de brancas
+    public string? BlackConn;
+    public string? WhiteName;
+    public string? BlackName;
+    public readonly List<ChessMoveDto> Moves = new();
+}
 
 public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub> hubContext) : Hub
 {
@@ -15,8 +28,17 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
         "Consegui fechar a TSK-7 finalmente 🎉", "Esse sprint tá puxado, hein",
     ];
 
+    // Identidade da conexão: o JWT validado vence; o argumento só vale como fallback de dev.
+    private int? ResolveUser(int fallback)
+    {
+        if (Context.User?.FindFirst("uid")?.Value is string s && int.TryParse(s, out var id)) return id;
+        return AuthOptions.DevBypass ? fallback : null;
+    }
+
     public async Task Join(int userId)
     {
+        if (ResolveUser(userId) is not int resolved) return;
+        userId = resolved;
         await using var db = await dbFactory.CreateDbContextAsync();
         var user = await db.Users.FindAsync(userId);
         if (user is null) return;
@@ -67,12 +89,91 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
     /// <summary>Assina somente os eventos de inventário e da sala do cliente Phaser.</summary>
     public async Task JoinGame(int userId, string sceneId, string roomId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
+        if (ResolveUser(userId) is not int resolved) return;
+        await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(resolved));
         await Groups.AddToGroupAsync(Context.ConnectionId, RoomGroup(sceneId, roomId));
     }
 
     public Task LeaveGameRoom(string sceneId, string roomId) =>
         Groups.RemoveFromGroupAsync(Context.ConnectionId, RoomGroup(sceneId, roomId));
+
+    /// <summary>Cena atual do avatar no mundo Phaser. Os clientes filtram o render por cena.</summary>
+    public async Task SetScene(string sceneId)
+    {
+        if (!Presence.Players.TryGetValue(Context.ConnectionId, out var p)) return;
+        p.Scene = sceneId ?? "";
+        await Clients.All.SendAsync("PlayerScene", new { key = p.Key, scene = p.Scene });
+    }
+
+    // ---------- xadrez em rede ----------
+    private static readonly ConcurrentDictionary<string, ChessMatch> ChessMatches = new();
+    public static string ChessGroup(string boardId) => $"chess:{boardId}";
+
+    private static object SeatsPayload(ChessMatch m) => new
+    {
+        white = m.WhiteConn != null, black = m.BlackConn != null,
+        whiteName = m.WhiteName, blackName = m.BlackName,
+    };
+
+    public async Task JoinChess(string boardId)
+    {
+        if (string.IsNullOrWhiteSpace(boardId)) return;
+        var name = Presence.Players.TryGetValue(Context.ConnectionId, out var p) ? p.Name : "Jogador";
+        var m = ChessMatches.GetOrAdd(boardId, _ => new ChessMatch());
+        await Groups.AddToGroupAsync(Context.ConnectionId, ChessGroup(boardId));
+
+        string? color = null;
+        lock (m)
+        {
+            if (m.WhiteConn == Context.ConnectionId) color = "w";
+            else if (m.BlackConn == Context.ConnectionId) color = "b";
+            else if (m.WhiteConn is null) { m.WhiteConn = Context.ConnectionId; m.WhiteName = name; color = "w"; }
+            else if (m.BlackConn is null) { m.BlackConn = Context.ConnectionId; m.BlackName = name; color = "b"; }
+        }
+        await Clients.Caller.SendAsync("ChessState", new { boardId, color, moves = m.Moves, seats = SeatsPayload(m) });
+        await Clients.Group(ChessGroup(boardId)).SendAsync("ChessSeats", new { boardId, seats = SeatsPayload(m) });
+    }
+
+    public async Task ChessMove(string boardId, int from, int to, string? promo)
+    {
+        if (!ChessMatches.TryGetValue(boardId, out var m)) return;
+        bool ok;
+        lock (m)
+        {
+            // só o jogador da vez (paridade dos lances) pode mover
+            var whiteToMove = m.Moves.Count % 2 == 0;
+            var seat = whiteToMove ? m.WhiteConn : m.BlackConn;
+            ok = seat == Context.ConnectionId && from is >= 0 and < 64 && to is >= 0 and < 64;
+            if (ok) m.Moves.Add(new ChessMoveDto(from, to, promo));
+        }
+        if (ok)
+            await Clients.Group(ChessGroup(boardId)).SendAsync("ChessMoved", new { boardId, from, to, promo });
+    }
+
+    public async Task ChessReset(string boardId)
+    {
+        if (!ChessMatches.TryGetValue(boardId, out var m)) return;
+        lock (m) m.Moves.Clear();
+        await Clients.Group(ChessGroup(boardId)).SendAsync("ChessReset", new { boardId });
+    }
+
+    public async Task LeaveChess(string boardId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, ChessGroup(boardId));
+        if (ChessMatches.TryGetValue(boardId, out var m)) await FreeChessSeat(m, boardId);
+    }
+
+    private async Task FreeChessSeat(ChessMatch m, string boardId)
+    {
+        bool changed = false;
+        lock (m)
+        {
+            if (m.WhiteConn == Context.ConnectionId) { m.WhiteConn = null; m.WhiteName = null; changed = true; }
+            if (m.BlackConn == Context.ConnectionId) { m.BlackConn = null; m.BlackName = null; changed = true; }
+        }
+        if (changed)
+            await hubContext.Clients.Group(ChessGroup(boardId)).SendAsync("ChessSeats", new { boardId, seats = SeatsPayload(m) });
+    }
 
     public async Task Move(double x, double y, string dir)
     {
@@ -225,6 +326,11 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        // libera assentos de xadrez ocupados por esta conexão
+        foreach (var (boardId, match) in ChessMatches)
+            if (match.WhiteConn == Context.ConnectionId || match.BlackConn == Context.ConnectionId)
+                await FreeChessSeat(match, boardId);
+
         if (Presence.Players.TryRemove(Context.ConnectionId, out var p))
         {
             if (p.AutoEntryId != null)

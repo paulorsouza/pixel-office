@@ -1,0 +1,26 @@
+{
+	# Sem domínio: Caddy usa uma CA interna (certificado self-signed).
+	# O navegador vai avisar até você confiar na CG do Caddy (ver docs/DEPLOY_DOCKER.md).
+	auto_https disable_redirects
+}
+
+# Produto principal: o game (Phaser) na raiz, com API/hub/auth proxiados para o backend
+# na MESMA origem (assim o cliente fala /api sem CORS e o SignalR faz upgrade de WebSocket).
+localhost {
+	tls internal
+	@backend path /api/* /hub/* /auth/*
+	reverse_proxy @backend backend:8080
+	reverse_proxy game:80
+}
+
+# App web de tarefas/horas (wwwroot do backend), origem própria.
+localhost:8443 {
+	tls internal
+	reverse_proxy backend:8080
+}
+
+# LiveKit — sinalização wss (a mídia trafega direto pelas portas UDP do serviço livekit).
+localhost:7443 {
+	tls internal
+	reverse_proxy livekit:7880
+}

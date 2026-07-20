@@ -1,10 +1,14 @@
 // Wrapper de API + helpers de UI compartilhados.
 export const API = {
   uid: null,
+  token: null, // JWT de acesso quando autenticado via Google
   async req(method, url, body) {
+    const auth = API.token
+      ? { Authorization: `Bearer ${API.token}` }
+      : { "X-User-Id": API.uid ?? "" }; // fallback de dev
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json", "X-User-Id": API.uid ?? "" },
+      headers: { "Content-Type": "application/json", ...auth },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     if (!res.ok) {

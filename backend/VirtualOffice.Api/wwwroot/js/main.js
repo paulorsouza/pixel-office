@@ -17,32 +17,89 @@ const PAGES = {
   profile: { title: "Perfil", sub: "nível, conquistas e itens", render: renderProfile },
 };
 
+// ---------- sessão (Google/JWT) ----------
+const Session = {
+  data: null,
+  load() { try { return JSON.parse(localStorage.getItem("oq_auth") || "null"); } catch { return null; } },
+  save(s) { s ? localStorage.setItem("oq_auth", JSON.stringify(s)) : localStorage.removeItem("oq_auth"); Session.data = s; },
+  decode(access) {
+    try {
+      const p = access.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(atob(p.padEnd(p.length + ((4 - (p.length % 4)) % 4), "=")));
+    } catch { return null; }
+  },
+  fromTokens(access, refresh, expiresIn) {
+    const p = Session.decode(access) || {};
+    return { access, refresh, expiresAt: Date.now() + (Number(expiresIn) || 1800) * 1000, uid: p.uid ? Number(p.uid) : null };
+  },
+  // Captura tokens de /auth/google/callback (…#access_token=…) e limpa a URL.
+  captureFragment() {
+    if (location.hash.length < 2) return;
+    const f = new URLSearchParams(location.hash.slice(1));
+    if (f.get("access_token")) {
+      Session.save(Session.fromTokens(f.get("access_token"), f.get("refresh_token"), f.get("expires_in")));
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  },
+  async freshToken() {
+    const s = Session.data;
+    if (!s?.access) return null;
+    if (Date.now() < s.expiresAt - 60_000) return s.access;
+    if (!s.refresh) { Session.save(null); return null; }
+    const res = await fetch("/auth/refresh", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: s.refresh }),
+    });
+    if (!res.ok) { Session.save(null); return null; }
+    const b = await res.json();
+    Session.save(Session.fromTokens(b.access_token, b.refresh_token, b.expires_in));
+    return Session.data.access;
+  },
+};
+
 export const App = {
   me: null,
   users: [],
   hub: null,
 
   async init() {
+    Session.captureFragment();
+    Session.data = Session.load();
+    if (Session.data?.access) {
+      const token = await Session.freshToken();
+      if (token) { API.token = token; try { await App.boot(); return; } catch { Session.save(null); API.token = null; } }
+    }
     const uid = localStorage.getItem("uid");
     if (uid) { API.uid = uid; try { await App.boot(); return; } catch { localStorage.removeItem("uid"); } }
     await App.showLogin();
   },
 
   async showLogin() {
-    const users = await API.get("/api/users");
+    const cfg = await API.get("/auth/config").catch(() => ({ googleEnabled: false, devBypass: true }));
     const el = document.getElementById("login");
     el.className = "login";
     el.innerHTML = "";
-    el.append(
-      h("div", { class: "logo-lg" }, "◆"),
-      h("h1", {}, "Office Quest"),
-      h("p", {}, "Escolha quem você é para entrar"),
-      h("div", { class: "cards" }, users.map((u) =>
-        h("div", { class: "ucard", onclick: () => App.login(u.id) },
-          avatar(u, "lg"),
-          h("b", {}, u.name),
-          h("span", {}, u.role),
-          h("div", { class: "lvl" }, `⭐ ${u.xp} XP`)))));
+    el.append(h("div", { class: "logo-lg" }, "◆"), h("h1", {}, "Office Quest"));
+
+    if (cfg.googleEnabled) {
+      el.append(
+        h("p", {}, "Entre com sua conta Tooq"),
+        h("button", { class: "btn primary", onclick: () => App.googleLogin() }, "Entrar com Google"));
+    }
+    // Em dev (ou sem Google configurado), mantém o seletor simbólico de usuário.
+    if (cfg.devBypass || !cfg.googleEnabled) {
+      const users = await API.get("/api/users");
+      el.append(
+        h("p", {}, cfg.googleEnabled ? "ou entre como (dev):" : "Escolha quem você é para entrar"),
+        h("div", { class: "cards" }, users.map((u) =>
+          h("div", { class: "ucard", onclick: () => App.login(u.id) },
+            avatar(u, "lg"), h("b", {}, u.name), h("span", {}, u.role),
+            h("div", { class: "lvl" }, `⭐ ${u.xp} XP`)))));
+    }
+  },
+
+  googleLogin() {
+    location.href = `/auth/google/login?return=${encodeURIComponent(location.origin + "/")}`;
   },
 
   login(uid) {
@@ -50,7 +107,20 @@ export const App = {
     localStorage.setItem("uid", API.uid);
     App.boot();
   },
-  logout() { localStorage.removeItem("uid"); location.reload(); },
+  async logout() {
+    const s = Session.data;
+    Session.save(null);
+    localStorage.removeItem("uid");
+    if (s?.refresh) {
+      try {
+        await fetch("/auth/logout", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: s.refresh }),
+        });
+      } catch { /* best-effort */ }
+    }
+    location.reload();
+  },
 
   async boot() {
     App.me = await API.get("/api/me");
@@ -93,11 +163,14 @@ export const App = {
   // hub compartilhado (presença + chat do jogo)
   async connectHub() {
     if (App.hub) return;
-    App.hub = new signalR.HubConnectionBuilder().withUrl("/hub/office").withAutomaticReconnect().build();
+    App.hub = new signalR.HubConnectionBuilder()
+      .withUrl("/hub/office", API.token ? { accessTokenFactory: () => Session.freshToken() } : {})
+      .withAutomaticReconnect().build();
     // handlers específicos são registrados pelas páginas chat/meeting
     try {
       await App.hub.start();
-      await App.hub.invoke("Join", Number(API.uid));
+      // com token o servidor deriva o usuário do JWT; o argumento é fallback de dev
+      await App.hub.invoke("Join", Number(API.uid) || 0);
     } catch { App.hub = null; }
   },
 

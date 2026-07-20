@@ -1,0 +1,11 @@
+# Mantém apenas o runtime do jogo. tiled/, maps/, assets/, src/, lib/ são NECESSÁRIOS
+# (os .tmj são carregados no navegador em runtime).
+*.md
+tools/
+node_modules/
+.git/
+server.js
+**/*bkp*.tmj
+_*.html
+Dockerfile
+.dockerignore

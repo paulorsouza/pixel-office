@@ -47,6 +47,9 @@ public static class GameInventorySeed
 
     public static async Task EnsureSchemaAsync(AppDb db)
     {
+        // Schema aditivo específico de SQLite (AUTOINCREMENT). No Postgres o
+        // EnsureCreated já cria estas tabelas a partir do modelo EF.
+        if (db.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) != true) return;
         await db.Database.ExecuteSqlRawAsync("""
             CREATE TABLE IF NOT EXISTS "GameItemDefinitions" (
               "Id" INTEGER NOT NULL CONSTRAINT "PK_GameItemDefinitions" PRIMARY KEY AUTOINCREMENT,

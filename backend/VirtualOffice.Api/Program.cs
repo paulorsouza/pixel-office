@@ -1,35 +1,103 @@
+using System.Security.Claims;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using VirtualOffice.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContextFactory<AppDb>(o => o.UseSqlite("Data Source=office.db"));
+AuthOptions.Configure(builder.Configuration);
+
+// Provider por config: sqlite (dev, default) ou postgres (produção).
+var dbProvider = builder.Configuration["Database:Provider"] ?? "sqlite";
+var dbConn = builder.Configuration.GetConnectionString("Default");
+builder.Services.AddDbContextFactory<AppDb>(o =>
+{
+    if (dbProvider.Equals("postgres", StringComparison.OrdinalIgnoreCase))
+        o.UseNpgsql(dbConn ?? "Host=localhost;Database=officequest;Username=postgres;Password=postgres");
+    else
+        o.UseSqlite(dbConn ?? "Data Source=office.db");
+});
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddHostedService<BotService>();
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
-    .AllowAnyOrigin()
-    .AllowAnyHeader()
-    .AllowAnyMethod()));
+builder.Services.AddDataProtection();
+
+// Autenticação: valida o JWT próprio da app (HS256). O X-User-Id só sobrevive via DevBypass.
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false; // mantém as claims "uid"/"role" com o nome original
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = AuthOptions.JwtIssuer,
+            ValidAudience = AuthOptions.JwtAudience,
+            IssuerSigningKey = AuthOptions.SigningKey,
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+            NameClaimType = "name",
+            RoleClaimType = "role",
+        };
+        // SignalR entrega o token via querystring (?access_token=) no handshake do WebSocket.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var token = ctx.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(token) && ctx.HttpContext.Request.Path.StartsWithSegments("/hub"))
+                    ctx.Token = token;
+                return Task.CompletedTask;
+            },
+        };
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", p => p.RequireClaim("role", nameof(UserRole.Admin)));
+    options.AddPolicy("Manager", p => p.RequireClaim("role", nameof(UserRole.Manager), nameof(UserRole.Admin)));
+});
+
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+{
+    if (AuthOptions.AllowedOrigins.Length > 0)
+        policy.WithOrigins(AuthOptions.AllowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    else
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); // dev: sem credenciais/cookies
+}));
 
 var app = builder.Build();
 
 LiveKitService.Configure(app.Configuration);
 
 await using (var db = await app.Services.GetRequiredService<IDbContextFactory<AppDb>>().CreateDbContextAsync())
+{
     await Seed.RunAsync(db);
+    await AuthSchema.EnsureAsync(db);
+}
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHub<OfficeHub>("/hub/office");
+app.MapAuthEndpoints();
 
 var api = app.MapGroup("/api");
+// Em produção (DevBypass=false), toda a API exige token; em dev deixamos aberto p/ o X-User-Id.
+if (!AuthOptions.DevBypass) api.RequireAuthorization();
 
-static int? UserId(HttpRequest req) =>
-    int.TryParse(req.Headers["X-User-Id"], out var id) ? id : null;
+// Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
+static int? UserId(HttpRequest req)
+{
+    if (req.HttpContext.User?.FindFirst("uid")?.Value is string s && int.TryParse(s, out var id)) return id;
+    if (AuthOptions.DevBypass && int.TryParse(req.Headers["X-User-Id"], out var dev)) return dev;
+    return null;
+}
 
 static object LevelInfo(int xp)
 {
@@ -493,6 +561,22 @@ api.MapPost("/av/token", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
     return Results.Ok(new { url = LiveKitService.Url, token, room = "meeting", identity });
 });
 
+// A/V por proximidade: uma sala LiveKit por cena; o cliente assina/ajusta por distância.
+// Diferente de /av/token, não exige estar na zona de reunião — basta estar autenticado no mundo.
+api.MapPost("/av/proximity-token", async (ProximityTokenRequest dto, HttpRequest req, IDbContextFactory<AppDb> f) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    var scene = new string((dto.SceneId ?? "").Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
+    if (scene.Length == 0) return Results.BadRequest(new { error = "Cena obrigatória" });
+    await using var db = await f.CreateDbContextAsync();
+    var user = await db.Users.FindAsync(uid);
+    if (user is null) return Results.NotFound();
+    var room = $"proximity-{scene}";
+    var identity = $"{uid}-{Guid.NewGuid():N}"[..16];
+    var token = LiveKitService.CreateToken(identity, user.Name, room);
+    return Results.Ok(new { url = LiveKitService.Url, token, room, identity });
+});
+
 // ---------- gamificação: inventário, skins, sala ----------
 api.MapGet("/inventory", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
 {
@@ -784,6 +868,7 @@ record ManualEntry(DateTime Date, int Minutes, int? WorkItemId, string? Category
 record RoomLayout(List<RoomPlacement> Items);
 record RoomPlacement(int ItemDefinitionId, int X, int Y);
 record SetActiveTask(int? WorkItemId);
+record ProximityTokenRequest(string? SceneId);
 record PlaceFurniture(int InventoryItemId, string SceneId, string RoomId, double X, double Y, bool FlipX);
 record MoveFurniture(double X, double Y, bool FlipX);
 record ChestTransfer(int InventoryItemId);

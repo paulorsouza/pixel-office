@@ -1,6 +1,6 @@
 # CONTEXT — Office Quest (escritório virtual da Tooq)
 
-**Atualizado:** 2026-07-19
+**Atualizado:** 2026-07-20
 
 Visão geral pragmática do projeto: o que é, o que existe, como as peças se conectam e para onde vai.
 Detalhes vivem em docs específicos (linkados no fim) — aqui é o mapa mental.
@@ -26,11 +26,13 @@ Unity (ver §4).
 
 | Peça | Onde | Estado |
 |---|---|---|
-| **Backend C#** | `backend/VirtualOffice.Api` | ✅ ASP.NET + EF/SQLite + SignalR. Porta **5210**. Execute a DLL dentro dessa pasta para manter `office.db` previsível. |
+| **Backend C#** | `backend/VirtualOffice.Api` | ✅ ASP.NET + EF + SignalR. Porta **5210**. SQLite (dev) ou **Postgres** (`Database:Provider`). |
+| **Auth** | `backend/.../Auth.cs`, `AuthEndpoints.cs` | ✅ Login Google (OIDC) + JWT próprio; papéis Member/Manager/Admin. `X-User-Id` sobrevive só via `Auth:DevBypass` (dev). Ver [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md). |
 | **App web** (tasks/horas) | `backend/.../wwwroot` | ✅ Kanban, sprints, horas, relatórios, perfil. ES modules, sem build. |
-| **LiveKit** | `livekit/` | ✅ SFU self-hosted, porta **7880**. Token só se `Presence.InMeeting`. |
+| **LiveKit** | `livekit/` (local) ou **LiveKit Cloud** | ✅ SFU. Local (LAN) ou Cloud (entre redes). URL vem do backend (`LiveKit:Url`). |
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
-| **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. É onde o trabalho de cliente acontece. |
+| **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez. |
+| **Deploy** | `docker-compose.yml`, `run-beta.ps1` | ✅ Produção (Docker+Postgres+Caddy) e beta local via túnel. Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md), [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md). |
 | Cliente Unity (antigo) | `office-unity/` | ⏸️ Abandonado (ver §4). Mantido só como arquivo. |
 
 ---
@@ -192,6 +194,36 @@ afastar e habilita/desabilita a colisão junto com a animação. Sofás modulare
 lounge em favor das poltronas vistas no `Office_Design_1`; `office_door` ficou restrita à transição
 externa.
 
+**Presença + voz por proximidade (feito):** o cliente Phaser conecta o hub de presença
+(`PresenceSystem.js`), renderiza avatares remotos interpolados (filtro de cena no cliente) e
+sincroniza `Join/Move/SetScene`. A voz é LiveKit por cena (`ProximityVoice.js`), com volume por
+distância e vídeo/tela sob demanda; a URL do LiveKit vem do backend. Detalhes e caveats:
+[`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
+
+**Reunião conta horas + xadrez (ligados a salas existentes, de forma aditiva):** ⚠️ **lição
+aprendida** — o mapa do escritório é trabalho manual (quintal, portas animadas, mobília); mexer nele
+é **sempre aditivo, nunca regenerar** (uma regeneração cega foi revertida do backup). Hoje: o
+**Escritório B** está marcado como sala de reunião (`meeting:true` no `extraJson`) → entrar dispara o
+lançamento de horas; e há **um objeto `type=chess`** no lounge → mecânica `chess` (tabuleiro DOM em
+rede, `src/chess/engine.js` validada por perft). As **8 salas pessoais** ficaram para o dono desenhar
+no Tiled (é o fluxo do projeto).
+
+**Auth (login-only por enquanto):** OIDC do Google + JWT próprio, escopo só `openid email profile`
+(sem Calendar ainda — é flip de config `Auth:Scopes`+`OfflineAccess`). `Auth:DevBypass=true` mantém o
+`X-User-Id` vivo em dev; produção = `false` + credenciais Google. Passo a passo (inclusive sem admin
+no Workspace): [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md).
+
+**Deploy — produção (Docker) e beta (túnel):**
+- **Docker** (`docker-compose.yml`): Postgres + backend + game (nginx) + LiveKit + Caddy (TLS). O
+  backend suporta Postgres via `Database:Provider` (no Postgres o `EnsureCreated` cria o schema; os
+  scripts aditivos de SQLite são pulados). Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md).
+- **Beta sem Docker** (`run-beta.ps1`): Caddy nativo (origem única `:8080`) + Cloudflare Tunnel expõem
+  a máquina sem port-forward. **A/V entre redes exige um relay público** — voz por túnel com LiveKit
+  local **não funciona** (UDP não passa em túnel HTTP); a beta usa **LiveKit Cloud** (chaves em
+  `deploy/beta.env`, gitignored). Ver [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md).
+- **Cliente mesma-origem**: `resolveApiBase` (auth.js) usa `location.origin` fora da porta de dev
+  `:8123`, então o game atrás do proxy/túnel fala `/api` na própria origem (sem CORS).
+
 ---
 
 ## 5. Assets
@@ -206,13 +238,16 @@ paredes, pisos, móveis, exteriores, porta animada):
 
 ## 6. Próximos passos
 
-1. **Plugar presença de avatares por cena.** O SignalR JS e os grupos de sala já existem para
-   mobília; agora `Join/Move/Presence` precisam carregar `sceneId`. Dois avatares no mesmo mapa é o marco.
+1. ✅ **Presença de avatares por cena** — feito. `PresenceSystem.js` conecta o hub, sincroniza
+   `Join/Move/SetScene` e renderiza avatares remotos interpolados (filtro de cena no cliente).
+   Ver [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
 2. **Adicionar handlers das próximas mecânicas** e seus templates tipados no Tiled.
 3. **Evoluir a economia de itens** com compra, drops, preços e permissões de sala.
 4. **Adicionar a segunda cena de destino** ao hub para provar que a arquitetura cresce além do
    escritório.
-5. **A/V por proximidade** (LiveKit JS), depois da presença em rede.
+5. ✅ **A/V por proximidade** (LiveKit JS) — feito. `ProximityVoice.js`: sala por cena, volume
+   por distância, mic/câmera/tela sob demanda. Falta o switch automático para a sala fixa na
+   zona de reunião e a sincronização da skin modular dos avatares remotos (ver o doc).
 6. **Polimento visual e conteúdo** do escritório, preservando o mapa como dados do Tiled.
 
 ---
@@ -234,6 +269,10 @@ paredes, pisos, móveis, exteriores, porta animada):
   novos interiores pelo Tiled.
 - [`client-web/tiled/README.md`](client-web/tiled/README.md) — operação do editor visual Tiled.
 - [`client-web/TUTORIAL.md`](client-web/TUTORIAL.md) — padrões de Phaser + debug no navegador.
+- [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md) — auth Google + JWT, permissões, passo a passo do OAuth.
+- [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md) — presença em rede + A/V por proximidade.
+- [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md) — build de produção completo (Docker/Postgres/Caddy).
+- [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md) — beta na sua máquina, acessível de fora (Cloudflare Tunnel).
 - [`ASSETS.md`](ASSETS.md) — onde estão os assets e todas as medidas verificadas.
 - `docs/PLANO_CLIENTE_V2.md` — plano em fases (F0-F10). Foi escrito p/ Unity; as fases de
   gameplay/rede/minigames seguem válidas como referência de escopo.

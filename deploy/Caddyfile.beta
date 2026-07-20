@@ -1,0 +1,25 @@
+# Beta local sem Docker: uma origem só (game + API) servida em http://localhost:8080.
+# O cloudflared tunela ESTA porta e adiciona o HTTPS público. Como game e API ficam
+# na mesma origem, não há CORS e o SignalR faz upgrade de WebSocket normalmente.
+#
+# OFFICE_GAME_ROOT deve apontar para a pasta client-web (o run-beta.ps1 já define).
+
+:8080 {
+	# API, SignalR e auth → backend .NET (:5210)
+	handle /api/* {
+		reverse_proxy localhost:5210
+	}
+	handle /hub/* {
+		reverse_proxy localhost:5210
+	}
+	handle /auth/* {
+		reverse_proxy localhost:5210
+	}
+
+	# resto -> arquivos estaticos do game (Phaser). Aspas por causa do espaco no caminho.
+	handle {
+		root * "{$OFFICE_GAME_ROOT}"
+		try_files {path} /index.html
+		file_server
+	}
+}

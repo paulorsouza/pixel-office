@@ -32,7 +32,7 @@ export async function renderChat(view) {
     const el = document.getElementById("chat-log");
     if (el) { el.append(chatLine(m)); el.scrollTop = el.scrollHeight; }
   });
-  try { await App.hub.invoke("Join", Number(API.uid)); } catch {}
+  try { await App.hub.invoke("Join", Number(API.uid) || 0); } catch {}
 
   function send(inp) {
     const t = inp.value.trim(); if (!t) return;

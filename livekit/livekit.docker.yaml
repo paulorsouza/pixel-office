@@ -1,0 +1,11 @@
+# Configuração do LiveKit para o build Docker. As chaves vêm do env LIVEKIT_KEYS.
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50100
+  # Em um servidor Linux com IP público, troque para true (ou defina node_ip).
+  # No Docker Desktop (Windows/Mac) a mídia UDP é limitada — ver docs/DEPLOY_DOCKER.md.
+  use_external_ip: false
+logging:
+  level: info

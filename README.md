@@ -64,6 +64,18 @@ kanban, baú, estação de trabalho e sincronização; sem ele o mapa abre, mas 
 
 ---
 
+## Produção (Docker)
+
+Build completo (Postgres + backend + game + LiveKit + Caddy/TLS) em um comando:
+
+```bash
+cp .env.example .env   # ajuste POSTGRES_PASSWORD e JWT_KEY
+docker compose up --build
+# game em https://localhost · app web em https://localhost:8443
+```
+
+Passo a passo, TLS self-signed e hardening: [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md).
+
 ## Estrutura
 
 ```
@@ -117,8 +129,9 @@ backend/VirtualOffice.Api      ASP.NET Core (.NET 10) + EF Core (SQLite) + Signa
 
 ## Notas conhecidas
 
-- **Auth é simbólica** (header `X-User-Id`) — não usar fora de ambiente local. Trocar por
-  OpenIddict/JWT antes de qualquer coisa séria.
+- **Auth**: login com Google Workspace + JWT próprio (ver [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md)).
+  O antigo `X-User-Id` sobrevive só como fallback de dev (`Auth:DevBypass=true`); em produção
+  defina `DevBypass=false` + credenciais Google. Calendar/Meet são o próximo incremento.
 - O cliente Phaser usa `userId=1` por padrão; use `?userId=2` para testar outro inventário.
 - SignalR já sincroniza **mobília e inventário** por sala. Presença de avatares por cena continua
   sendo o próximo marco de rede.

@@ -1,0 +1,79 @@
+# Build de produção do Office Quest.
+# Sobe: Postgres, backend (.NET), game (Phaser/nginx), LiveKit e Caddy (proxy + TLS).
+# Caddy unifica o game + API na mesma origem (https://localhost), o app web em :8443
+# e o LiveKit (wss) em :7443, todos com certificado self-signed (sem domínio).
+# Antes: copie .env.example para .env e ajuste os segredos. Ver docs/DEPLOY_DOCKER.md.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend/VirtualOffice.Api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__Provider: postgres
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # --- auth ---
+      Auth__DevBypass: "${AUTH_DEV_BYPASS}"
+      Auth__JwtKey: "${JWT_KEY}"
+      Auth__AllowedOrigins__0: "https://localhost"
+      Auth__AllowedOrigins__1: "https://localhost:8443"
+      Auth__HostedDomain: "${GOOGLE_HOSTED_DOMAIN}"
+      Auth__GoogleClientId: "${GOOGLE_CLIENT_ID}"
+      Auth__GoogleClientSecret: "${GOOGLE_CLIENT_SECRET}"
+      Auth__GoogleRedirectUri: "https://localhost/auth/google/callback"
+      # --- livekit (URL é a que o navegador usa; media via portas do serviço livekit) ---
+      LiveKit__Url: "wss://localhost:7443"
+      LiveKit__ApiKey: "${LIVEKIT_API_KEY}"
+      LiveKit__ApiSecret: "${LIVEKIT_API_SECRET}"
+    restart: unless-stopped
+
+  game:
+    build: ./client-web
+    restart: unless-stopped
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+    volumes:
+      - ./livekit/livekit.docker.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7881:7881"               # RTC/TCP (fallback)
+      - "50000-50100:50000-50100/udp"  # mídia WebRTC (UDP)
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on: [backend, game, livekit]
+    ports:
+      - "443:443"     # game + API (mesma origem)
+      - "8443:8443"   # app web (kanban/horas)
+      - "7443:7443"   # LiveKit (wss / sinalização)
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

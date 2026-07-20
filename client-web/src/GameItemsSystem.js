@@ -1,3 +1,5 @@
+import { auth, resolveApiBase } from './auth.js';
+
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export function placementToFurniture(placement) {
@@ -17,8 +19,9 @@ export function placementToFurniture(placement) {
 
 export function createGameItemsClient(options = {}) {
   const query = new URLSearchParams(location.search);
-  const apiBase = (options.apiBase || query.get('api') || 'http://localhost:5210').replace(/\/$/, '');
-  const userId = Number(options.userId || query.get('userId') || query.get('user') || 1);
+  const apiBase = options.apiBase ? String(options.apiBase).replace(/\/$/, '') : resolveApiBase();
+  // Com token, a identidade vem do JWT; sem token (dev), do ?userId= ou default 1.
+  const userId = Number(options.userId || auth.userId() || query.get('userId') || query.get('user') || 1);
   const events = new EventTarget();
   let inventory = [];
   let connection = null;
@@ -26,12 +29,14 @@ export function createGameItemsClient(options = {}) {
   let online = false;
 
   async function request(path, init = {}) {
+    const token = await auth.token();
     const response = await fetch(`${apiBase}${path}`, {
       ...init,
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': String(userId),
+        // Bearer quando autenticado; X-User-Id continua como fallback de dev.
+        ...(token ? { Authorization: `Bearer ${token}` } : { 'X-User-Id': String(userId) }),
         ...(init.headers || {}),
       },
     });
@@ -61,7 +66,10 @@ export function createGameItemsClient(options = {}) {
   async function connectRealtime() {
     if (!window.signalR || connection) return;
     connection = new window.signalR.HubConnectionBuilder()
-      .withUrl(`${apiBase}/hub/office`, { withCredentials: false })
+      .withUrl(`${apiBase}/hub/office`, {
+        withCredentials: false,
+        accessTokenFactory: () => auth.token(),
+      })
       .withAutomaticReconnect()
       .build();
     for (const eventName of ['FurniturePlaced', 'FurnitureMoved', 'FurnitureRemoved']) {

@@ -16,6 +16,8 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<GameItemDefinition> GameItemDefinitions => Set<GameItemDefinition>();
     public DbSet<GameItemInstance> GameItemInstances => Set<GameItemInstance>();
     public DbSet<FurniturePlacement> FurniturePlacements => Set<FurniturePlacement>();
+    public DbSet<GoogleCredential> GoogleCredentials => Set<GoogleCredential>();
+    public DbSet<AppRefreshToken> AppRefreshTokens => Set<AppRefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,5 +26,8 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<FurniturePlacement>().HasIndex(x => x.ItemInstanceId).IsUnique();
         modelBuilder.Entity<FurniturePlacement>()
             .HasIndex(x => new { x.SceneId, x.RoomId });
+        modelBuilder.Entity<User>().HasIndex(x => x.GoogleSubject);
+        modelBuilder.Entity<GoogleCredential>().HasIndex(x => x.UserId).IsUnique();
+        modelBuilder.Entity<AppRefreshToken>().HasIndex(x => x.TokenHash);
     }
 }

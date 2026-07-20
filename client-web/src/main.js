@@ -21,6 +21,8 @@ import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
 import { createFurnitureInteractionSystem } from './FurnitureInteractionSystem.js';
+import { createPresence } from './PresenceSystem.js';
+import { createProximityVoice } from './ProximityVoice.js';
 
 const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
@@ -47,6 +49,10 @@ const characterCatalog = await fetchJson('assets/character/catalog.json');
 const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
 const gameItems = createGameItemsClient();
 await gameItems.initialize();
+const presence = createPresence({ userId: gameItems.userId });
+await presence.initialize();
+const proximityVoice = createProximityVoice({ presence });
+await proximityVoice.initialize();
 const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
 let sceneMaps;
 try {
@@ -379,6 +385,19 @@ class MapScene extends Phaser.Scene {
     window.__decoration = this.roomDecorationEditor;
     window.__gameItems = gameItems;
     window.__furnitureInteractions = this.furnitureInteractions;
+    window.__presence = presence;
+
+    // presença em rede: avatares remotos nesta cena + voz por proximidade
+    presence.attach(this, this.currentSceneId, this.player);
+    proximityVoice.attachScene(this.currentSceneId);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => presence.detach());
+
+    // sala de reunião: entrar dispara o lançamento de horas (SetZone no backend)
+    // marca-se com id "meeting" ou a flag extraJson meeting:true numa sala existente
+    const meetingRoom = (this.map.rooms || []).find((room) => room.meeting || room.id === 'meeting');
+    this.meetingRect = meetingRoom
+      ? { x: meetingRoom.x * tile, y: meetingRoom.y * tile, w: meetingRoom.w * tile, h: meetingRoom.h * tile }
+      : null;
   }
 
   update(time, delta) {
@@ -395,13 +414,17 @@ class MapScene extends Phaser.Scene {
       this.roomDecorationEditor.close();
       this.interactionPreviewPending = null;
     }
-    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen() || this.furnitureInteractions.isOpen()) {
+    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen() || this.furnitureInteractions.isOpen() || this.chessOpen) {
       showPortalPrompt(null);
       this.player.body.setVelocity(0, 0);
       this.player.anims.play(`idle-${this.lastDirection}`, true);
       this.setPlayerBodyFrameWidth(16);
       this.characterVisual.update(this.lastDirection, 'idle', true, this.time.now);
       this.equipmentVisual.hide();
+      presence.updateLocal(this.player.x, this.player.y, this.lastDirection);
+      presence.interpolate(delta);
+      proximityVoice.update();
+      this.syncMeetingZone();
       return;
     }
 
@@ -453,6 +476,10 @@ class MapScene extends Phaser.Scene {
     updateAutomaticDoors(this, this.player);
     this.updatePortalInteraction();
     showPortalPrompt(this.activeFurniturePrompt || this.activePortal);
+    presence.updateLocal(this.player.x, this.player.y, direction);
+    presence.interpolate(delta);
+    proximityVoice.update();
+    this.syncMeetingZone();
   }
 
   updatePortalInteraction() {
@@ -470,6 +497,13 @@ class MapScene extends Phaser.Scene {
       this.activePortal = portal;
     }
 
+  }
+
+  syncMeetingZone() {
+    const r = this.meetingRect;
+    const inside = !!r && this.player.x >= r.x && this.player.x <= r.x + r.w
+      && this.player.y >= r.y && this.player.y <= r.y + r.h;
+    presence.setZone(inside ? 'meeting' : '');
   }
 
   changeScene(portal) {

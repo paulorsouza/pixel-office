@@ -1,0 +1,9 @@
+bin/
+obj/
+*.db
+*.db-shm
+*.db-wal
+Properties/launchSettings.json
+appsettings.Development.json
+Dockerfile
+.dockerignore

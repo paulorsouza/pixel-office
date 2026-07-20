@@ -9,6 +9,17 @@
 *.db-shm
 *.db-wal
 
+# ---------- Docker / segredos ----------
+.env
+deploy/beta.env
+# binários baixados (caddy/cloudflared) — não versionar
+deploy/*.exe
+**/cloudflared.exe
+**/caddy.exe
+# artefatos de dados do Caddy/Postgres se algum dia forem montados em bind local
+deploy/caddy_data/
+deploy/caddy_config/
+
 # ---------- Logs ----------
 livekit/*.log
 **/Logs/*.png

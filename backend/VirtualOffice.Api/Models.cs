@@ -5,6 +5,9 @@ public enum WorkItemStatus { Backlog, Todo, InProgress, Review, Done }
 public enum ItemKind { Skin, Furniture, Medal }
 public enum Rarity { Common, Rare, Epic, Legendary }
 
+// Papel de permissão da aplicação (independe de Role, que é o cargo decorativo).
+public enum UserRole { Member, Manager, Admin }
+
 public class User
 {
     public int Id { get; set; }
@@ -15,6 +18,34 @@ public class User
     public bool IsBot { get; set; }
     // task que o dev escolheu como "ativa" — o timer da mesa conta horas nela
     public int? ActiveWorkItemId { get; set; }
+
+    // ---- identidade (Google Workspace) ----
+    // 'sub' do Google: chave de vínculo estável (e-mail pode mudar, sub não).
+    public string? GoogleSubject { get; set; }
+    public string? Email { get; set; }
+    public UserRole AppRole { get; set; } = UserRole.Member;
+}
+
+// Token offline do Google por usuário — usado depois para Calendar/Meet.
+// RefreshToken guardado cifrado (nunca em texto puro).
+public class GoogleCredential
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string RefreshTokenEnc { get; set; } = "";
+    public string Scopes { get; set; } = "";
+    public DateTime UpdatedUtc { get; set; }
+}
+
+// Refresh token da PRÓPRIA aplicação (rotativo, revogável). Guardado só o hash.
+public class AppRefreshToken
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string TokenHash { get; set; } = "";
+    public DateTime ExpiresUtc { get; set; }
+    public DateTime CreatedUtc { get; set; }
+    public DateTime? RevokedUtc { get; set; }
 }
 
 public class Epic

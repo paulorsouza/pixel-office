@@ -12,6 +12,7 @@ public class PlayerState
     public double X { get; set; }
     public double Y { get; set; }
     public string Dir { get; set; } = "down";
+    public string Scene { get; set; } = "";       // cena do mundo Phaser onde o avatar está
     public string Zone { get; set; } = "";       // "" | "meeting" | "coffee"
     public string Status { get; set; } = "";     // ex.: "🔴 TSK-12"
     public bool IsBot { get; set; }
