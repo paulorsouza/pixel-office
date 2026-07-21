@@ -27,9 +27,44 @@ public class PlayerState
     public string AutoKind { get; set; } = "";    // "meeting" | "desk" — qual estado abriu o auto-timer
 }
 
+/// <summary>
+/// Estado efêmero com dono dentro de uma cena: assento ocupado, porta trancada,
+/// sala reservada. Não é derivável das posições (é uma disputa) nem precisa
+/// sobreviver ao processo — some quando o dono cai. Persistir é caso de banco.
+/// </summary>
+public record SceneClaim(
+    string Key,        // connectionId do dono
+    int UserId,
+    string Name,
+    string Kind,       // "seat" | "door-lock" | "room"
+    string EntityId,
+    string? Data);
+
 public static class Presence
 {
     public static readonly ConcurrentDictionary<string, PlayerState> Players = new();
+
+    /// <summary>sceneId -> entityId -> dono</summary>
+    public static readonly ConcurrentDictionary<string,
+        ConcurrentDictionary<string, SceneClaim>> SceneClaims = new();
+
+    public static ConcurrentDictionary<string, SceneClaim> ClaimsIn(string sceneId)
+        => SceneClaims.GetOrAdd(sceneId ?? "", _ => new());
+
+    /// <summary>Solta tudo que a conexão segura numa cena. Devolve o que saiu.</summary>
+    public static List<SceneClaim> ReleaseAllFor(string connectionId, string sceneId)
+    {
+        var released = new List<SceneClaim>();
+        if (string.IsNullOrEmpty(sceneId)) return released;
+        var claims = ClaimsIn(sceneId);
+        foreach (var (entityId, claim) in claims)
+        {
+            if (claim.Key != connectionId) continue;
+            if (claims.TryRemove(entityId, out var gone)) released.Add(gone);
+        }
+        if (claims.IsEmpty) SceneClaims.TryRemove(sceneId, out _);
+        return released;
+    }
 
     public static IEnumerable<PlayerState> Near(PlayerState from, double radiusPx = 190)
         => Players.Values.Where(p =>

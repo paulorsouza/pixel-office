@@ -105,6 +105,20 @@ isso (WebGL não roda `MiniSignalR` nem o SDK ffi do LiveKit ⇒ viraria app des
 trabalho na web é incomparável: roda, olha no navegador, corrige em segundos. **Mantém-se:** backend
 C#, app web, LiveKit. **Refez-se:** só o cliente do jogo.
 
+**Onde cada estado mora (3 camadas).** Teste: *dois clientes com os mesmos dados chegam sozinhos
+à mesma conclusão?*
+1. **Derivado** — sim: não existe estado no servidor. As **portas automáticas** são função pura das
+   posições (que a presença já replica), assim como o volume da voz e os prompts de proximidade.
+   Antes a porta olhava só o avatar local, e o colega atravessava porta fechada.
+2. **Efêmero com dono** — não, mas morre com a sessão: `ClaimEntity`/`ReleaseEntity` no hub
+   (`Presence.SceneClaims`, por cena). Hoje: **assento**, **porta trancada**, **reserva de sala**.
+   Recusa disputa, um claim por `kind` por conexão e **libera sozinho** ao trocar de cena ou cair.
+3. **Persistente** — não e precisa sobreviver ao processo: banco (mobília, inventário, horas, xadrez).
+
+Evitar o reflexo de "põe no servidor": derivar é de graça e nunca dessincroniza. O canal de claims
+usa grupo SignalR por cena, mas a **presença segue global** de propósito — a lista de online do app
+web depende disso.
+
 **Mapa como dado, não hardcode.** O roadmap pede salas customizáveis pelo dono — só funciona se o
 mapa for dado. `.tmj`, `.tsj` e `.tj` são a fonte e são consumidos diretamente pelo navegador; não
 há JSON gerado no fluxo diário. O carregador transporta classes novas como entidades genéricas,

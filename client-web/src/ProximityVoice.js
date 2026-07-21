@@ -49,6 +49,8 @@ export function createProximityVoice(options = {}) {
     onLeave: async () => { enabled = false; releasePin(); await disconnect(); },
     // devolve o fone ao suporte na cena e garante o unpin mesmo sem cena ativa
     onReleaseHeadset: () => { options.onReleaseHeadset?.(); releasePin(); },
+    onToggleLock: () => options.onToggleLock?.(locationRoom?.id),
+    onToggleReserve: () => options.onToggleReserve?.(locationRoom?.id),
     listDevices: (kind) => LK()?.Room.getLocalDevices(kind, kind !== 'audiooutput') ?? [],
     activeDevice: (kind) => room?.getActiveDevice?.(kind) || '',
     switchDevice: async (kind, deviceId) => {
@@ -298,11 +300,17 @@ export function createProximityVoice(options = {}) {
     return presence.peersInScene().filter((p) => !inVoice.has(p.userId));
   }
 
-  // rótulo do canal atual para a HUD
+  // rótulo do canal atual para a HUD (+ estado com dono da sala: trava e reserva)
   function channelInfo() {
-    if (pinnedRoom) return { kind: 'room', name: pinnedRoom.name || 'Sala de reunião', pinned: true };
-    if (connectedRoomId) return { kind: 'room', name: locationRoom?.name || 'Sala', pinned: false };
-    return { kind: 'open', name: 'Área aberta', pinned: false };
+    // controles de sala valem para a sala em que o avatar está de fato, não a fixada pelo fone
+    const roomState = locationRoom ? (options.roomState?.(locationRoom.id) || {}) : {};
+    if (pinnedRoom) {
+      return { kind: 'room', name: pinnedRoom.name || 'Sala de reunião', pinned: true, ...roomState };
+    }
+    if (connectedRoomId) {
+      return { kind: 'room', name: locationRoom?.name || 'Sala', pinned: false, ...roomState };
+    }
+    return { kind: 'open', name: 'Área aberta', pinned: false, locked: null, reserved: null };
   }
 
   function refresh() {
@@ -367,6 +375,8 @@ export function createProximityVoice(options = {}) {
       refresh();
       // pessoas entrando/saindo da cena atualizam o painel mesmo sem evento LiveKit
       presence?.events?.addEventListener('change', refresh);
+      // trava/reserva de sala chegam pelo canal de claims
+      presence?.events?.addEventListener('claims', refresh);
     },
     // chamado no create() de cada cena
     attachScene(sceneId) {
@@ -389,6 +399,8 @@ export function createProximityVoice(options = {}) {
     pinToRoom,
     releasePin,
     isPinned: () => Boolean(pinnedRoom),
+    // o HUD da reunião é o único lugar com toasts; outras mecânicas reaproveitam
+    toast: (message, options) => hud.toast(message, options),
     update() { applyProximity(); reconcile(false); },
     async shutdown() { await disconnect(); },
   };

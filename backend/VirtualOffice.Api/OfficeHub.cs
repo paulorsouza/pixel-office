@@ -20,6 +20,9 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
 {
     public static string UserGroup(int userId) => $"game:user:{userId}";
     public static string RoomGroup(string sceneId, string roomId) => $"game:room:{sceneId}:{roomId}";
+    // só para o canal de claims: a presença (Snapshot/PlayerMoved) segue global de
+    // propósito — a lista de "online" do app web depende do broadcast para todos.
+    public static string SceneGroup(string sceneId) => $"game:scene:{sceneId}";
 
     private static readonly string[] BotReplies =
     [
@@ -115,8 +118,85 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
     public async Task SetScene(string sceneId)
     {
         if (!Presence.Players.TryGetValue(Context.ConnectionId, out var p)) return;
+        var previous = p.Scene;
         p.Scene = sceneId ?? "";
+        if (previous != p.Scene)
+        {
+            // sair da cena solta o que estava segurando lá (cadeira, trava, reserva)
+            await ReleaseClaimsAsync(previous);
+            if (!string.IsNullOrEmpty(previous))
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, SceneGroup(previous));
+            if (!string.IsNullOrEmpty(p.Scene))
+                await Groups.AddToGroupAsync(Context.ConnectionId, SceneGroup(p.Scene));
+        }
         await Clients.All.SendAsync("PlayerScene", new { key = p.Key, scene = p.Scene });
+        // estado da cena nova (quem já está sentado, o que está trancado)
+        if (!string.IsNullOrEmpty(p.Scene))
+            await Clients.Caller.SendAsync("SceneClaims", Presence.ClaimsIn(p.Scene).Values);
+    }
+
+    // ---------- estado efêmero com dono (assento, trava de porta, reserva) ----------
+    // Portas automáticas NÃO passam por aqui: são derivadas das posições, que a
+    // presença já replica. Só entra o que é disputa e não dá para derivar.
+
+    /// <summary>
+    /// Toma posse de uma entidade da cena. Recusa se já tem outro dono.
+    /// Um mesmo `kind` por conexão: sentar numa cadeira solta a anterior.
+    /// </summary>
+    public async Task<bool> ClaimEntity(string entityId, string kind, string? data)
+    {
+        if (!Presence.Players.TryGetValue(Context.ConnectionId, out var p)) return false;
+        if (string.IsNullOrWhiteSpace(entityId) || string.IsNullOrWhiteSpace(kind)) return false;
+        if (string.IsNullOrEmpty(p.Scene)) return false;
+        if (data is { Length: > 2000 }) return false;
+
+        var claims = Presence.ClaimsIn(p.Scene);
+        var mine = new SceneClaim(Context.ConnectionId, p.UserId, p.Name, kind, entityId, data);
+        if (!claims.TryAdd(entityId, mine))
+        {
+            // já tinha dono: só sobrescreve se for meu (atualização de dados)
+            if (!claims.TryGetValue(entityId, out var current) || current.Key != Context.ConnectionId) return false;
+            claims[entityId] = mine;
+        }
+
+        // exclusividade por kind: solta o anterior deste mesmo tipo
+        foreach (var (otherId, claim) in claims)
+        {
+            if (otherId == entityId || claim.Key != Context.ConnectionId || claim.Kind != kind) continue;
+            if (claims.TryRemove(otherId, out var gone)) await BroadcastClaimAsync(p.Scene, gone, false);
+        }
+
+        await BroadcastClaimAsync(p.Scene, mine, true);
+        return true;
+    }
+
+    /// <summary>Libera uma entidade. Só o dono consegue.</summary>
+    public async Task ReleaseEntity(string entityId)
+    {
+        if (!Presence.Players.TryGetValue(Context.ConnectionId, out var p)) return;
+        if (string.IsNullOrEmpty(p.Scene)) return;
+        var claims = Presence.ClaimsIn(p.Scene);
+        if (!claims.TryGetValue(entityId, out var claim) || claim.Key != Context.ConnectionId) return;
+        if (claims.TryRemove(entityId, out var gone)) await BroadcastClaimAsync(p.Scene, gone, false);
+    }
+
+    private Task BroadcastClaimAsync(string sceneId, SceneClaim claim, bool claimed) =>
+        Clients.Group(SceneGroup(sceneId)).SendAsync("EntityClaim", new
+        {
+            sceneId,
+            entityId = claim.EntityId,
+            kind = claim.Kind,
+            data = claim.Data,
+            key = claim.Key,
+            userId = claim.UserId,
+            name = claim.Name,
+            claimed,
+        });
+
+    private async Task ReleaseClaimsAsync(string sceneId)
+    {
+        foreach (var claim in Presence.ReleaseAllFor(Context.ConnectionId, sceneId))
+            await BroadcastClaimAsync(sceneId, claim, false);
     }
 
     // ---------- xadrez em rede ----------
@@ -347,6 +427,8 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
 
         if (Presence.Players.TryRemove(Context.ConnectionId, out var p))
         {
+            // navegador fechado não pode deixar cadeira ocupada ou porta trancada
+            await ReleaseClaimsAsync(p.Scene);
             if (p.AutoEntryId != null)
             {
                 await using var db = await dbFactory.CreateDbContextAsync();

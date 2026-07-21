@@ -18,11 +18,13 @@ async function open(userId) {
   const c = new window.signalR.HubConnectionBuilder()
     .withUrl(`${API}/hub/office`, { withCredentials: false })
     .build();
-  const got = { appearance: [], headset: [], joined: [], snapshot: null };
+  const got = { appearance: [], headset: [], joined: [], snapshot: null, claim: [], sceneClaims: null };
   c.on('PlayerAppearance', (p) => got.appearance.push(p));
   c.on('Headset', (p) => got.headset.push(p));
   c.on('PlayerJoined', (p) => got.joined.push(p));
   c.on('Snapshot', (p) => { got.snapshot = p; });
+  c.on('EntityClaim', (p) => got.claim.push(p));
+  c.on('SceneClaims', (p) => { got.sceneClaims = p; });
   await c.start();
   await c.invoke('Join', userId);
   return { c, got, key: c.connectionId };
@@ -78,6 +80,67 @@ window.__run = async () => {
   out.aposSoltar = b.got.headset.at(-1);
 
   for (const conn of [a, b, c3, c4]) await conn.c.stop();
+  return out;
+};
+
+// ---- estado efêmero com dono: claims de cena ----
+window.__runClaims = async () => {
+  const a = await open(1);
+  const b = await open(2);
+  await a.c.invoke('SetScene', 'tooq-office');
+  await b.c.invoke('SetScene', 'tooq-office');
+  await new Promise((r) => setTimeout(r, 400));
+  const out = {};
+
+  // 1. A senta numa cadeira → B recebe o claim
+  out.aSentou = await a.c.invoke('ClaimEntity', 'furniture:42', 'seat', JSON.stringify({ x: 10, y: 20, dir: 'left' }));
+  await new Promise((r) => setTimeout(r, 300));
+  out.bViuClaim = b.got.claim.map((c) => ({ entityId: c.entityId, kind: c.kind, claimed: c.claimed, deA: c.key === a.key, data: c.data }));
+
+  // 2. B tenta a MESMA cadeira → recusado, sem mudar o dono
+  out.bTentouMesmaCadeira = await b.c.invoke('ClaimEntity', 'furniture:42', 'seat', null);
+
+  // 3. A senta em outra cadeira → a primeira é liberada sozinha (1 por kind)
+  b.got.claim.length = 0;
+  out.aTrocouDeCadeira = await a.c.invoke('ClaimEntity', 'furniture:99', 'seat', null);
+  await new Promise((r) => setTimeout(r, 300));
+  out.eventosDaTroca = b.got.claim.map((c) => ({ entityId: c.entityId, claimed: c.claimed }));
+
+  // 4. kinds diferentes coexistem (sentar + trancar porta)
+  out.aTrancouPorta = await a.c.invoke('ClaimEntity', 'door:office-b:S@6', 'door-lock', null);
+
+  // 5. quem entra na cena depois recebe o snapshot
+  const c3 = await open(3);
+  await c3.c.invoke('SetScene', 'tooq-office');
+  await new Promise((r) => setTimeout(r, 400));
+  out.snapshotDaCena = (c3.got.sceneClaims || []).map((c) => ({ entityId: c.entityId, kind: c.kind, userId: c.userId }));
+
+  // 6. claim é por cena: quem está noutra cena não recebe
+  const d = await open(4);
+  await d.c.invoke('SetScene', 'world');
+  await new Promise((r) => setTimeout(r, 300));
+  d.got.claim.length = 0;
+  await a.c.invoke('ClaimEntity', 'room:office-b', 'room', null);
+  await new Promise((r) => setTimeout(r, 300));
+  out.outraCenaNaoRecebe = d.got.claim.length;
+
+  // 7. trocar de cena solta os claims
+  b.got.claim.length = 0;
+  await a.c.invoke('SetScene', 'world');
+  await new Promise((r) => setTimeout(r, 400));
+  out.trocaDeCenaLiberou = b.got.claim.filter((c) => !c.claimed).map((c) => c.entityId);
+
+  // 8. queda de conexão solta os claims
+  await a.c.invoke('SetScene', 'tooq-office');
+  await a.c.invoke('ClaimEntity', 'furniture:7', 'seat', null);
+  await new Promise((r) => setTimeout(r, 300));
+  b.got.claim.length = 0;
+  await a.c.stop();                       // simula navegador fechado
+  await new Promise((r) => setTimeout(r, 500));
+  out.quedaLiberou = b.got.claim.filter((c) => !c.claimed).map((c) => c.entityId);
+  out.bConsegueSentarDepois = await b.c.invoke('ClaimEntity', 'furniture:7', 'seat', null);
+
+  for (const conn of [b, c3, d]) await conn.c.stop();
   return out;
 };
 document.querySelector('#log').textContent = 'pronto';

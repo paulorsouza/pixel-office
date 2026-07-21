@@ -18,7 +18,7 @@ function distanceToPlayer(record, player, tile) {
   ) / tile;
 }
 
-export function createFurnitureInteractionSystem(scene, map, gameItems, equipmentMenu) {
+export function createFurnitureInteractionSystem(scene, map, gameItems, equipmentMenu, options = {}) {
   const panel = document.querySelector('#furniture-interaction-panel');
   const title = document.querySelector('#furniture-interaction-title');
   const subtitle = document.querySelector('#furniture-interaction-subtitle');
@@ -148,6 +148,8 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     chest: (record) => renderChest(record),
     workstation: (record) => renderWorkstation(record),
     seat(record) {
+      // sentar de fato é estado com dono (a cadeira fica ocupada para todos)
+      options.onSeat?.(record);
       const tile = map.tile || 16;
       const workstation = ownedInteractive()
         .filter((candidate) => candidate.item.interactionType === 'workstation')
@@ -157,17 +159,17 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         .filter((entry) => entry.distance <= 2.75)
         .sort((a, b) => a.distance - b.distance)[0]?.candidate;
       if (workstation) return renderWorkstation(workstation);
-      title.textContent = 'Cadeira';
-      subtitle.textContent = 'Coloque uma estação de trabalho em frente a esta cadeira';
-      content.innerHTML = '<p class="interaction-message">A cadeira está pronta, mas ainda não existe um computador próximo.</p>';
-      return null;
+      // sem estação por perto não há painel: o jogador só senta
+      return false;
     },
   };
 
   async function interact() {
     if (!nearby || open) return false;
     setOpen(true);
-    await handlers[nearby.item.interactionType]?.(nearby);
+    // handler pode devolver false quando não há painel a mostrar (ex.: só sentar)
+    const rendered = await handlers[nearby.item.interactionType]?.(nearby);
+    if (rendered === false) setOpen(false);
     return true;
   }
 

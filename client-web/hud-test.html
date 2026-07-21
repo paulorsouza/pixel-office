@@ -36,6 +36,8 @@ const hud = createMeetingHUD({
   onJoin: () => { sync('connected'); },
   onLeave: () => { setChannel('open'); sync('off'); },
   onReleaseHeadset: () => { setChannel('room'); },
+  onToggleLock: () => { room.locked = room.locked ? null : { name: 'Paulo Souza', key: 'me', mine: true }; setChannel(kind); },
+  onToggleReserve: () => { room.reserved = room.reserved ? null : { name: 'Paulo Souza', key: 'me', mine: true }; setChannel(kind); },
   listDevices: async (kind) => ({
     audioinput: [{ deviceId: 'a', label: 'Microfone interno' }, { deviceId: 'b', label: 'Headset USB' }],
     audiooutput: [{ deviceId: 'c', label: 'Alto-falantes' }],
@@ -63,13 +65,22 @@ function sync(next) {
   }
 }
 // canal: 'open' (proximidade), 'room' (sala fechada), 'pinned' (fone vestido)
-function setChannel(kind) {
-  if (kind === 'open') hud.setChannel({ kind: 'open', name: 'Área aberta', pinned: false });
-  else if (kind === 'room') hud.setChannel({ kind: 'room', name: 'Escritório B', pinned: false });
-  else hud.setChannel({ kind: 'room', name: 'Escritório B', pinned: true });
+const room = { locked: null, reserved: null };
+let kind = 'open';
+function setChannel(next) {
+  kind = next;
+  if (kind === 'open') {
+    hud.setChannel({ kind: 'open', name: 'Área aberta', pinned: false, locked: null, reserved: null });
+  } else {
+    hud.setChannel({
+      kind: 'room', name: 'Escritório B', pinned: kind === 'pinned',
+      locked: room.locked, reserved: room.reserved,
+    });
+  }
 }
 setChannel('open');
 window.setChannel = setChannel;
+window.room = room;
 
 sync();
 

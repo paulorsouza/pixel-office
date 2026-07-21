@@ -202,6 +202,8 @@ function drawDoorFixtures(scene, rect, tile, solids) {
       const blocker = addSolidRect(scene, solids, collision, tile);
       scene.automaticDoors ||= [];
       scene.automaticDoors.push({
+        // chave derivada do mapa: igual em todos os clientes sem precisar de id no Tiled
+        key: `door:${rect.id || 'building'}:${door.side}@${door.at}`,
         sprite: fixture,
         blocker,
         animation: animated.animation,
@@ -215,26 +217,42 @@ function drawDoorFixtures(scene, rect, tile, solids) {
   }
 }
 
-export function updateAutomaticDoors(scene, player) {
-  const playerX = player.body.center.x;
-  const playerY = player.body.center.y;
+/**
+ * Decide a transição da porta. Estado DERIVADO: qualquer cliente com as mesmas
+ * posições chega à mesma conclusão, então não existe estado de porta no servidor.
+ * Função pura (sem Phaser) para poder ser testada headless.
+ * @returns {'open'|'closed'|null} null = manter como está
+ */
+export function doorTargetState(door, occupants = [], locked = false) {
+  const opened = door.state === 'open' || door.state === 'opening';
+  // trancada fecha e não reage a quem chega (Fase 3: trava com dono no servidor)
+  if (locked) return opened ? 'closed' : null;
 
+  const within = (radius) => occupants.some(
+    (o) => Math.hypot(o.x - door.sensorX, o.y - door.sensorY) <= radius,
+  );
+  // histerese preservada: basta UM perto para abrir, e TODOS longe para fechar
+  if (!opened && within(door.openRadius)) return 'open';
+  if (opened && !within(door.closeRadius)) return 'closed';
+  return null;
+}
+
+/**
+ * @param occupants lista de {x,y} de TODOS os avatares da cena (local + remotos).
+ *   Só o avatar local abria a porta antes — o colega atravessava porta fechada.
+ * @param isLocked (doorKey) => boolean
+ */
+export function updateAutomaticDoors(scene, occupants = [], isLocked = null) {
   for (const door of (scene.automaticDoors || [])) {
-    const distance = Phaser.Math.Distance.Between(
-      playerX,
-      playerY,
-      door.sensorX,
-      door.sensorY,
-    );
-
-    if (distance <= door.openRadius && (door.state === 'closed' || door.state === 'closing')) {
+    const target = doorTargetState(door, occupants, isLocked?.(door.key) || false);
+    if (target === 'open') {
       door.state = 'opening';
       door.blocker.body.enable = false;
       door.sprite.play(door.animation);
       door.sprite.once('animationcomplete', () => {
         if (door.state === 'opening') door.state = 'open';
       });
-    } else if (distance >= door.closeRadius && (door.state === 'open' || door.state === 'opening')) {
+    } else if (target === 'closed') {
       door.state = 'closing';
       door.sprite.playReverse(door.animation);
       door.sprite.once('animationcomplete', () => {

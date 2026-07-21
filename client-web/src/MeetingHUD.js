@@ -20,6 +20,9 @@ const ICONS = {
   fullscreenExit: SVG('<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'),
   people: SVG('<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>'),
   headset: SVG('<path d="M12 1a9 9 0 0 0-9 9v7a3 3 0 0 0 3 3h1a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H5v-2a7 7 0 0 1 14 0v2h-2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h1a3 3 0 0 0 3-3v-7a9 9 0 0 0-9-9z"/>'),
+  lock: SVG('<path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm3 12a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>'),
+  unlock: SVG('<path d="M18 8h-1V6a5 5 0 0 0-9.9-1h2.06A3 3 0 0 1 15 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 10a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>'),
+  reserve: SVG('<path d="M17 3h-1V1h-2v2H10V1H8v2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 18H7V9h10v12zM9 11h6v2H9v-2zm0 4h6v2H9v-2z"/>'),
   chevron: SVG('<path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>'),
   close: SVG('<path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>'),
   modeGame: SVG('<path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h14V7H5z"/><circle cx="9.5" cy="12" r="2.2"/>'),
@@ -210,7 +213,8 @@ export function createMeetingHUD(callbacks = {}) {
     // assinatura evita reconstruir o DOM da barra sem necessidade (fecha menus etc.)
     const sig = [status, session.micOn, session.camOn, session.screenOn, mode,
       Boolean(document.fullscreenElement), peopleOpen, roster.length,
-      channel.kind, channel.pinned, channel.name].join('|');
+      channel.kind, channel.pinned, channel.name,
+      channel.locked?.key || '', channel.reserved?.key || ''].join('|');
     if (sig === barSignature) return;
     barSignature = sig;
 
@@ -294,6 +298,34 @@ export function createMeetingHUD(callbacks = {}) {
         ppl.append(badge);
       }
       center.append(ppl);
+      // controles da sala em que o avatar está: trancar a porta e reservar
+      if (channel.kind === 'room') {
+        const locked = channel.locked || null;
+        const reserved = channel.reserved || null;
+        center.append(divider());
+        center.append(barButton({
+          icon: locked ? ICONS.lock : ICONS.unlock,
+          label: locked
+            ? (locked.mine ? 'Destrancar a porta' : `Trancada por ${locked.name}`)
+            : 'Trancar a porta da sala',
+          accent: Boolean(locked),
+          onClick: () => {
+            if (locked && !locked.mine) return toast(`A porta foi trancada por ${locked.name}`);
+            cb.onToggleLock?.();
+          },
+        }));
+        center.append(barButton({
+          icon: ICONS.reserve,
+          label: reserved
+            ? (reserved.mine ? 'Liberar a sala' : `Reservada por ${reserved.name}`)
+            : 'Reservar a sala',
+          accent: Boolean(reserved),
+          onClick: () => {
+            if (reserved && !reserved.mine) return toast(`A sala está reservada por ${reserved.name}`);
+            cb.onToggleReserve?.();
+          },
+        }));
+      }
       // fone da reunião: enquanto está "vestido", o call é fixo naquela sala
       if (channel.pinned) {
         const pin = document.createElement('button');
@@ -630,8 +662,9 @@ export function createMeetingHUD(callbacks = {}) {
     ensure();
     channel = { ...channel, ...next };
     root.dataset.channel = channel.kind;
+    const marks = `${channel.pinned ? '🎧 ' : ''}${channel.locked ? '🔒 ' : ''}${channel.reserved ? '📌 ' : ''}`;
     els.channel.textContent = channel.kind === 'room'
-      ? `${channel.pinned ? '🎧 ' : ''}${channel.name}`
+      ? `${marks}${channel.name}`
       : 'Área aberta · proximidade';
     els.channel.dataset.pinned = channel.pinned ? '1' : '';
     els.channel.title = channel.kind === 'room'

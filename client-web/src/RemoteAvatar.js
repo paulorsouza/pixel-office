@@ -54,21 +54,30 @@ export function createRemoteAvatar(scene, catalogs, record) {
   }
 
   return {
-    update(moving, time) {
-      ghost.x = record.x;
-      ghost.y = record.y;
-      ghost.body.bottom = record.y + BODY_OFFSET;
-      const direction = record.dir || 'down';
+    // seat = âncora {x,y,dir} vinda do claim da cadeira, ou null
+    update(moving, time, seat = null) {
+      // sentado: a posição vem da cadeira, não do último Move (o avatar fica colado nela)
+      const x = seat ? seat.x : record.x;
+      const y = seat ? seat.y : record.y;
+      ghost.x = x;
+      ghost.y = y;
+      ghost.body.bottom = y + BODY_OFFSET;
+      const direction = seat?.dir || record.dir || 'down';
 
       if (!record.appearance) {
         useFallback();
-        fallback.setPosition(record.x, record.y).setDepth(record.y + BODY_OFFSET);
-        const anim = `${moving ? 'run' : 'idle'}-${direction}`;
+        fallback.setPosition(x, y).setDepth(y + BODY_OFFSET);
+        const anim = `${seat ? 'idle' : moving ? 'run' : 'idle'}-${direction}`;
         if (scene.anims.exists(anim)) fallback.anims.play(anim, true);
         return;
       }
 
       useModular();
+      if (seat) {
+        character.update(direction, 'sit', false, time);
+        equipment.update(ghost, null, direction, false, false, time);
+        return;
+      }
       const vehicle = record.appearance.vehicle
         ? equipmentById(catalogs.equipment, record.appearance.vehicle)
         : null;

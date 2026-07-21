@@ -17,6 +17,8 @@ export function createPresence(options = {}) {
 
   const events = new EventTarget();
   const remotes = new Map(); // key -> { userId, name, color, scene, x, y, tx, ty, dir, lastMoveAt, avatar, label, appearance }
+  // estado efêmero com dono na cena: entityId -> { kind, data, key, userId, name }
+  const claims = new Map();
   let connection = null;
   let selfKey = null;
   let myAppearance = null;    // último json enviado (reenviado ao reconectar)
@@ -56,6 +58,21 @@ export function createPresence(options = {}) {
   // a aparência chega como json opaco; normalizar aqui protege o render de lixo da rede
   function setAppearanceOn(rec, raw) {
     rec.appearance = catalogs ? normalizeAppearance(catalogs, raw) : null;
+  }
+
+  // o `data` do claim também é json opaco (âncora do assento, etc.)
+  function parseClaim(claim) {
+    let data = null;
+    try { data = claim.data ? JSON.parse(claim.data) : null; } catch { data = null; }
+    return {
+      entityId: claim.entityId,
+      kind: claim.kind,
+      key: claim.key,
+      userId: claim.userId,
+      name: claim.name,
+      data,
+      mine: claim.key === selfKey,
+    };
   }
 
   function remove(key) {
@@ -121,6 +138,16 @@ export function createPresence(options = {}) {
       setAppearanceOn(rec, appearance);   // o avatar lê a seleção a cada frame
       emit('change');
     });
+    connection.on('SceneClaims', (list) => {
+      claims.clear();
+      for (const claim of (list || [])) claims.set(claim.entityId, parseClaim(claim));
+      emit('claims');
+    });
+    connection.on('EntityClaim', ({ entityId, claimed, ...claim }) => {
+      if (claimed) claims.set(entityId, parseClaim({ entityId, ...claim }));
+      else claims.delete(entityId);
+      emit('claims', { entityId, claimed });
+    });
     connection.on('Headset', ({ key, hasHeadset }) => {
       const rec = remotes.get(key);
       if (!rec) return;
@@ -166,6 +193,8 @@ export function createPresence(options = {}) {
       lastSent = { x: null, y: null, dir: null };
       // recria os avatares remotos desta cena (a cena anterior foi destruída)
       for (const rec of remotes.values()) { rec.avatar = null; rec.label = null; ensureSprite(rec); }
+      // claims são por cena: o servidor manda o snapshot da nova em resposta ao SetScene
+      claims.clear();
       if (connection && selfKey) connection.invoke('SetScene', sceneId).catch(() => {});
     },
 
@@ -191,13 +220,19 @@ export function createPresence(options = {}) {
       if (!scene) return;
       const now = performance.now();
       const t = Math.min(1, delta / 80);
+      // quem está sentado é desenhado na âncora da cadeira (vem do claim, não do Move)
+      const seats = new Map();
+      for (const claim of claims.values()) {
+        if (claim.kind === 'seat' && claim.data) seats.set(claim.key, claim.data);
+      }
       for (const rec of remotes.values()) {
         if (!rec.avatar) continue;
         rec.x += (rec.tx - rec.x) * t;
         rec.y += (rec.ty - rec.y) * t;
         const moving = now - rec.lastMoveAt < MOVING_TIMEOUT_MS;
-        rec.avatar.update(moving, now);
-        rec.label?.setPosition(rec.x, rec.y - 22);
+        const seat = seats.get(rec.key) || null;
+        rec.avatar.update(moving, now, seat);
+        rec.label?.setPosition(seat ? seat.x : rec.x, (seat ? seat.y : rec.y) - 22);
         rec.label?.setDepth(1e6);
       }
     },
@@ -222,6 +257,22 @@ export function createPresence(options = {}) {
     // fone da reunião: mantém o lançamento de horas aberto ao circular fora da sala
     pickUpHeadset() { connection?.invoke('PickUpHeadset').catch(() => {}); },
     dropHeadset() { connection?.invoke('DropHeadset').catch(() => {}); },
+
+    // ---- estado efêmero com dono (assento, trava de porta, reserva de sala) ----
+    // false = alguém chegou antes. Portas automáticas NÃO usam isto (são derivadas).
+    async claimEntity(entityId, kind, data = null) {
+      if (!connection) return false;
+      try {
+        return await connection.invoke('ClaimEntity', entityId, kind, data ? JSON.stringify(data) : null);
+      } catch { return false; }
+    },
+    releaseEntity(entityId) { connection?.invoke('ReleaseEntity', entityId).catch(() => {}); },
+    claimOf(entityId) { return claims.get(entityId) || null; },
+    claimsOfKind(kind) { return [...claims.values()].filter((c) => c.kind === kind); },
+    isClaimedByOther(entityId) {
+      const claim = claims.get(entityId);
+      return Boolean(claim) && !claim.mine;
+    },
 
     // zona atual (ex.: 'meeting' inicia o lançamento de horas de reunião no backend)
     setZone(zone) {

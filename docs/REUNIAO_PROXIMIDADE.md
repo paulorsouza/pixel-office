@@ -45,6 +45,34 @@ monta um *player fantasma* (`{x, y, body.bottom}`) e entrega para `createCharact
   parado = `idle`, andando = `walk`.
 - **Fallback**: sem aparência (bots, cliente antigo) volta para o corpo base `adam_idle/run`.
 
+## Estado com dono na cena (assento, trava, reserva)
+
+Canal genérico no hub para o que **não dá para derivar** das posições. Ver a regra das 3 camadas
+em [`CONTEXT.md`](../CONTEXT.md) §4.
+
+- `ClaimEntity(entityId, kind, data) -> bool` / `ReleaseEntity(entityId)`; broadcast `EntityClaim`
+  e snapshot `SceneClaims` no grupo `game:scene:{cena}`. Recusa se já tem outro dono.
+- **Um claim por `kind` por conexão**: sentar numa cadeira solta a anterior automaticamente.
+- **Libera sozinho** ao trocar de cena (`SetScene`) e na desconexão — senão um navegador fechado
+  deixaria a cadeira ocupada para sempre.
+- ⚠️ O grupo por cena vale **só** para este canal. `Snapshot`/`PlayerMoved` seguem globais: a lista
+  de online do app web legado depende disso.
+
+Consumidores hoje:
+
+| Kind | entityId | Efeito |
+|---|---|---|
+| `seat` | `furniture:{placementId}` | Avatar sentado na âncora da cadeira para todos; cadeira ocupada recusa outro |
+| `door-lock` | `door:{parentId}:{side}@{at}` | Porta para de abrir sozinha e o bloqueio de colisão fica ativo |
+| `room` | `room:{roomId}` | Sala marcada como reservada no HUD |
+
+A chave da porta é **derivada do mapa** (`MapRenderer.js`), então não precisa de id no Tiled e é
+igual em todos os clientes — o `parent` desambigua (as duas salas têm porta em `S@5`).
+
+**Sentar**: `E` numa cadeira senta (e abre a estação, se houver uma ao lado); `E` de novo ou
+qualquer tecla de movimento levanta. **Limitação:** só há arte sentada para `left`/`right`
+(`CharacterSystem.js`), então a direção vem do `flipX` da cadeira.
+
 ## Fone de reunião (ficar na call ao sair da sala)
 
 Toda sala marcada como reunião (`meeting:true` no `extraJson`, ou `id: "meeting"`) ganha um
@@ -106,8 +134,8 @@ client-web/hud-test.html             harness de QA do HUD (dados falsos, sem Pha
 client-web/voice-test.html           harness de QA do canal de voz (LiveKit stubado)
 client-web/presence-test.html        harness de QA da presença (2 conexões SignalR reais)
 client-web/lib/livekit-client.umd.min.js  SDK vendorizado (v2.20.0)
-backend/.../Presence.cs               PlayerState.Scene / .Appearance / .HasHeadset
-backend/.../OfficeHub.cs              SetScene, SetAppearance, PickUpHeadset/DropHeadset
+backend/.../Presence.cs               PlayerState.Scene/.Appearance/.HasHeadset + SceneClaims
+backend/.../OfficeHub.cs              SetScene, SetAppearance, PickUp/DropHeadset, Claim/ReleaseEntity
 backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, roomId}
 ```
 
@@ -129,7 +157,12 @@ backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, ro
    Saia da sala andando: **continua ouvindo a reunião** (e as horas seguem contando; o outro
    cliente mostra 🎧 no seu label). `E` no suporte (ou **Soltar o fone** na barra) volta para a
    proximidade da área aberta.
-7. **Skin em rede**: em uma janela abra `Tab → Personagem` e troque cabelo/roupa → o avatar muda
+7. **Porta compartilhada**: leve **um** avatar até a porta do Escritório B e olhe a **outra**
+   janela — a porta abre lá também (antes só abria para quem chegava).
+8. **Assento e trava**: `E` numa cadeira → a outra janela vê o avatar sentado; a segunda janela
+   tentando a mesma cadeira recebe "cadeira ocupada". Dentro da sala, 🔒 na barra tranca a porta
+   (ela para de abrir para todos) e 📌 reserva. Feche uma janela: cadeira e trava são liberadas.
+9. **Skin em rede**: em uma janela abra `Tab → Personagem` e troque cabelo/roupa → o avatar muda
    **na outra janela na hora**. Segure `Shift` com um veículo equipado → o outro vê o veículo e a
    pose (moto = sentado). Os bots continuam com o corpo base.
 

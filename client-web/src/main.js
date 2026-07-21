@@ -56,11 +56,37 @@ const presence = createPresence({
   catalogs: { character: characterCatalog, equipment: equipmentCatalog },
 });
 await presence.initialize();
+// a porta automática de uma sala: chave derivada, registrada no render
+const roomDoorKey = (roomId) => (window.__scene?.automaticDoors || [])
+  .find((door) => door.key.startsWith(`door:${roomId}:`))?.key || null;
+
+// alterna um claim: se é meu, solto; se está livre, pego; se é de outro, avisa
+async function toggleClaim(entityId, kind, takenMessage) {
+  if (!entityId) return;
+  const current = presence.claimOf(entityId);
+  if (current?.mine) { presence.releaseEntity(entityId); return; }
+  if (current) { proximityVoice.toast(takenMessage(current.name)); return; }
+  if (!(await presence.claimEntity(entityId, kind))) {
+    proximityVoice.toast('Alguém chegou primeiro');
+  }
+}
+
 // "Soltar o fone" pelo HUD precisa devolver o fone ao suporte na cena atual
 const proximityVoice = createProximityVoice({
   presence,
   // notify=true: além de devolver o fone ao suporte, avisa o backend (encerra a reunião)
   onReleaseHeadset: () => window.__scene?.headsets?.releaseAll(true),
+  // trava da porta e reserva da sala: estado efêmero com dono, vindo do hub
+  roomState: (roomId) => ({
+    locked: roomId ? presence.claimOf(roomDoorKey(roomId)) : null,
+    reserved: roomId ? presence.claimOf(`room:${roomId}`) : null,
+  }),
+  onToggleLock: (roomId) => toggleClaim(
+    roomDoorKey(roomId), 'door-lock', (name) => `A porta foi trancada por ${name}`,
+  ),
+  onToggleReserve: (roomId) => toggleClaim(
+    roomId && `room:${roomId}`, 'room', (name) => `A sala está reservada por ${name}`,
+  ),
 });
 await proximityVoice.initialize();
 const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
@@ -76,6 +102,9 @@ const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
 });
+// porta trancada é estado com dono (a automática, não): o claim vem do hub
+const doorLock = (doorKey) => Boolean(doorKey && presence.claimOf(doorKey));
+
 // aparência publicada na presença: camadas do personagem + veículo em uso.
 // `onChange` dispara já na construção do customizer, então a seleção vem por parâmetro
 // (o const ainda está na zona morta neste ponto).
@@ -302,6 +331,7 @@ class MapScene extends Phaser.Scene {
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.equipmentVisual = createEquipmentVisual(this);
     this.handleInteract = async () => {
+      if (this.seated) { this.standUp(); return; }   // E sentado = levantar
       if (this.furnitureInteractions && await this.furnitureInteractions.interact()) return;
       if (this.headsets?.interact()) return;
       if (
@@ -392,11 +422,13 @@ class MapScene extends Phaser.Scene {
     const debugRoom = query.get('decorateRoom');
     if (debugRoom) this.roomDecorationEditor.open(debugRoom);
 
+    this.seated = null;
     this.furnitureInteractions = createFurnitureInteractionSystem(
       this,
       this.map,
       gameItems,
       equipmentMenu,
+      { onSeat: (record) => this.sitOn(record) },
     );
     this.interactionPreviewPending = interactionPreview;
 
@@ -429,6 +461,7 @@ class MapScene extends Phaser.Scene {
     // sair da cena segurando o fone também encerra a reunião no backend
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       if (this.headsets?.hasHeld()) presence.dropHeadset();
+      this.standUp();   // o servidor também libera no SetScene, mas o local precisa limpar
     });
 
     // sala de reunião: entrar dispara o lançamento de horas (SetZone no backend)
@@ -458,11 +491,18 @@ class MapScene extends Phaser.Scene {
       this.player.body.setVelocity(0, 0);
       this.player.anims.play(`idle-${this.lastDirection}`, true);
       this.setPlayerBodyFrameWidth(16);
-      this.characterVisual.update(this.lastDirection, 'idle', true, this.time.now);
+      this.characterVisual.update(
+        this.seated?.dir || this.lastDirection,
+        this.seated ? 'sit' : 'idle',
+        !this.seated,
+        this.time.now,
+      );
       this.equipmentVisual.hide();
       this.activeHeadsetPrompt = this.headsets.update(this.player, true);
       presence.updateLocal(this.player.x, this.player.y, this.lastDirection);
       presence.interpolate(delta);
+      // portas continuam reagindo com menu aberto: quem abre pode ser outro avatar
+      updateAutomaticDoors(this, this.doorOccupants(), doorLock);
       proximityVoice.update();
       this.syncMeetingZone();
       this.syncVoiceChannel();
@@ -470,6 +510,27 @@ class MapScene extends Phaser.Scene {
     }
 
     const keys = this.moveKeys;
+    // sentado: qualquer tecla de movimento levanta; enquanto isso o avatar fica na cadeira
+    if (this.seated) {
+      const wantsToMove = ['A', 'D', 'W', 'S', 'LEFT', 'RIGHT', 'UP', 'DOWN']
+        .some((key) => keys[key]?.isDown);
+      if (wantsToMove) this.standUp();
+    }
+    if (this.seated) {
+      showPortalPrompt(null);
+      this.player.body.setVelocity(0, 0);
+      this.player.setPosition(this.seated.x, this.seated.y);
+      this.setPlayerBodyFrameWidth(16);
+      this.characterVisual.update(this.seated.dir, 'sit', false, this.time.now);
+      this.equipmentVisual.hide();
+      presence.updateLocal(this.player.x, this.player.y, this.seated.dir);
+      presence.interpolate(delta);
+      updateAutomaticDoors(this, this.doorOccupants(), doorLock);
+      proximityVoice.update();
+      this.syncMeetingZone();
+      this.syncVoiceChannel();
+      return;
+    }
     const profile = movementProfile(
       equipmentCatalog,
       equipmentPreview?.id || equipmentMenu.getEquippedId(),
@@ -520,7 +581,7 @@ class MapScene extends Phaser.Scene {
       moving,
       this.time.now,
     );
-    updateAutomaticDoors(this, this.player);
+    updateAutomaticDoors(this, this.doorOccupants(), doorLock);
     this.updatePortalInteraction();
     this.activeHeadsetPrompt = this.headsets.update(
       this.player,
@@ -556,6 +617,37 @@ class MapScene extends Phaser.Scene {
     const inside = !!r && this.player.x >= r.x && this.player.x <= r.x + r.w
       && this.player.y >= r.y && this.player.y <= r.y + r.h;
     presence.setZone(inside ? 'meeting' : '');
+  }
+
+  // ---- assento: a cadeira vira estado com dono, então ninguém senta em cima de ninguém ----
+  async sitOn(record) {
+    if (this.seated || !record?.item?.placementId) return;
+    const entityId = `furniture:${record.item.placementId}`;
+    // só as poses left/right têm arte sentada (CharacterSystem); usa o lado da cadeira
+    const dir = record.item.flipX ? 'right' : 'left';
+    const anchor = { x: Math.round(record.display.x), y: Math.round(record.display.y - 2), dir };
+    if (!(await presence.claimEntity(entityId, 'seat', anchor))) {
+      const who = presence.claimOf(entityId)?.name;
+      proximityVoice.toast(who ? `${who} já está nessa cadeira` : 'Essa cadeira está ocupada');
+      return;
+    }
+    this.seated = { entityId, ...anchor };
+    this.player.body.setVelocity(0, 0);
+    this.player.setPosition(anchor.x, anchor.y);
+    this.lastDirection = dir;
+  }
+
+  standUp() {
+    if (!this.seated) return;
+    presence.releaseEntity(this.seated.entityId);
+    this.seated = null;
+  }
+
+  // sensores das portas veem TODOS os avatares da cena, não só o local
+  doorOccupants() {
+    const occupants = [{ x: this.player.body.center.x, y: this.player.body.center.y }];
+    for (const peer of presence.peersInScene()) occupants.push({ x: peer.x, y: peer.y });
+    return occupants;
   }
 
   // cada sala fechada tem seu próprio call; fora delas vale a proximidade da cena
