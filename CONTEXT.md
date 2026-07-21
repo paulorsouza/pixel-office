@@ -197,8 +197,11 @@ externa.
 **Presença + voz por proximidade (feito):** o cliente Phaser conecta o hub de presença
 (`PresenceSystem.js`), renderiza avatares remotos interpolados (filtro de cena no cliente) e
 sincroniza `Join/Move/SetScene`. A voz é LiveKit por cena (`ProximityVoice.js`), com volume por
-distância e vídeo/tela sob demanda; a URL do LiveKit vem do backend. Detalhes e caveats:
-[`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
+distância e vídeo/tela sob demanda; a URL do LiveKit vem do backend. O HUD da reunião é estilo
+Meet (`MeetingHUD.js`): barra inferior com mic/câmera/tela e seletor de dispositivos, três
+layouts (jogo | dividido | foco com o jogo em PiP), tela cheia, grade com indicador de fala e
+volume por distância, painel de pessoas e toasts; QA visual em `client-web/hud-test.html`.
+Detalhes e caveats: [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
 
 **Reunião conta horas + xadrez (ligados a salas existentes, de forma aditiva):** ⚠️ **lição
 aprendida** — o mapa do escritório é trabalho manual (quintal, portas animadas, mobília); mexer nele

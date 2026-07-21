@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness do MeetingHUD (sem Phaser)</title>
+<style>
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#20222c}
+  button{font:inherit}
+  #game{position:fixed;inset:0;width:100vw;height:100vh;display:grid;place-items:center;
+    background:radial-gradient(circle at 30% 30%,#3a4a3a,#232a33 60%);color:#9fb59f;
+    font:600 18px Inter,system-ui,sans-serif}
+  #portal-prompt{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);color:#fff;
+    background:#171923ee;padding:9px 14px;border-radius:12px;font:12px Inter,system-ui}
+  #scene-card{position:fixed;left:16px;top:16px;color:#fff;background:#171923dc;
+    padding:10px 13px;border-radius:12px;font:14px Inter,system-ui}
+  #controls{position:fixed;left:16px;bottom:13px;color:#e8eaff;font-size:12px;background:#171923d9;
+    padding:7px 11px;border-radius:9px;font-family:Inter,system-ui}
+</style>
+</head>
+<body>
+<div id="game">(área do jogo — placeholder)</div>
+<div id="scene-card"><strong id="scene-name">Escritório Tooq</strong></div>
+<div id="controls">WASD andar · Tab equipamentos</div>
+<div id="portal-prompt">E — entrar</div>
+<script type="module">
+import { createMeetingHUD } from './src/MeetingHUD.js';
+
+const state = { mic: false, cam: false, scr: false };
+const hud = createMeetingHUD({
+  onToggleMic: () => { state.mic = !state.mic; sync(); },
+  onToggleCamera: () => { state.cam = !state.cam; toggleFakeCam(); sync(); },
+  onToggleScreen: () => { state.scr = !state.scr; toggleFakeScreen(); sync(); },
+  onJoin: () => { sync('connected'); },
+  onLeave: () => { sync('off'); },
+  listDevices: async (kind) => ({
+    audioinput: [{ deviceId: 'a', label: 'Microfone interno' }, { deviceId: 'b', label: 'Headset USB' }],
+    audiooutput: [{ deviceId: 'c', label: 'Alto-falantes' }],
+    videoinput: [{ deviceId: 'd', label: 'Webcam integrada' }],
+  }[kind] || []),
+  activeDevice: (kind) => ({ audioinput: 'a', audiooutput: 'c', videoinput: 'd' }[kind] || ''),
+  switchDevice: async () => {},
+});
+hud.initialize();
+
+let status = 'connected';
+function sync(next) {
+  if (next) status = next;
+  hud.setSession({ status, micOn: state.mic, camOn: state.cam, screenOn: state.scr,
+    startedAt: Date.now() - 125000, sceneName: 'Escritório Tooq' });
+  hud.syncParticipants(status === 'connected' ? [
+    { identity: '1-abc', name: 'Paulo Souza', isLocal: true, micOn: state.mic },
+    { identity: '2-def', name: 'Ana Lima', isLocal: false, micOn: true },
+    { identity: '3-ghi', name: 'Bruno Castro', isLocal: false, micOn: false },
+  ] : [], [{ userId: 9, name: 'Carla Dias' }]);
+  if (status === 'connected') {
+    hud.setSpeaking(new Set(['2-def']));
+    hud.setProximity('2-def', 0.92);
+    hud.setProximity('3-ghi', 0.3);
+  }
+}
+sync();
+
+function fakeVideo(label, hue) {
+  const c = document.createElement('canvas');
+  c.width = 640; c.height = 360;
+  const ctx = c.getContext('2d');
+  let t = 0;
+  setInterval(() => {
+    t += 0.05;
+    ctx.fillStyle = `hsl(${hue} 40% 22%)`;
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = `hsl(${hue} 70% 60%)`;
+    ctx.beginPath();
+    ctx.arc(320 + Math.sin(t) * 80, 180 + Math.cos(t * 0.7) * 40, 46, 0, 7);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '28px Inter,system-ui';
+    ctx.fillText(label, 24, 328);
+  }, 66);
+  const v = document.createElement('video');
+  v.srcObject = c.captureStream(15);
+  v.autoplay = true; v.muted = true; v.playsInline = true;
+  return v;
+}
+
+// vídeo remoto fixo de exemplo
+const anaCam = fakeVideo('Câmera da Ana', 200);
+hud.addTrack('2-def', 'camera', anaCam);
+
+let myCam = null;
+function toggleFakeCam() {
+  if (state.cam) { myCam = fakeVideo('Sua câmera', 260); hud.addTrack('1-abc', 'camera', myCam); }
+  else if (myCam) { hud.removeTrack('1-abc', 'camera', myCam); myCam = null; }
+}
+let myScreen = null;
+function toggleFakeScreen() {
+  if (state.scr) { myScreen = fakeVideo('Sua tela compartilhada', 40); hud.addTrack('1-abc', 'screen', myScreen); }
+  else if (myScreen) { hud.removeTrack('1-abc', 'screen', myScreen); myScreen = null; }
+}
+
+window.hud = hud;
+window.hudSync = sync;
+window.hudState = state;
+</script>
+</body>
+</html>
