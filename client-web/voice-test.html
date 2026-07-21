@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Harness do canal de voz (LiveKit stubado)</title>
+<style>
+  html,body{margin:0;height:100%;background:#20222c;color:#dfe3f0;font:13px Inter,system-ui}
+  #game{position:fixed;inset:0}
+  #scene-card{position:fixed;left:16px;top:16px}
+  #log{position:fixed;left:16px;top:60px;z-index:200;max-height:60vh;overflow:auto;
+    padding:10px 12px;border-radius:10px;background:#11131bee;font:12px ui-monospace,monospace;white-space:pre}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="scene-card"><strong id="scene-name">Escritório Tooq</strong></div>
+<pre id="log">rodando…</pre>
+<script>
+// ---- stubs: LiveKit + token endpoint ----
+window.__connects = [];      // salas LiveKit efetivamente conectadas, em ordem
+window.__tokenCalls = [];    // corpo de cada POST /api/av/proximity-token
+class FakeRoom {
+  constructor() { this.remoteParticipants = new Map(); this.localParticipant = { identity: '1-me', isMicrophoneEnabled: false, isCameraEnabled: false, isScreenShareEnabled: false }; this.canPlaybackAudio = true; this.handlers = {}; }
+  on(evt, fn) { (this.handlers[evt] ||= []).push(fn); return this; }
+  async connect(url, token) { this.__room = token.split('|')[1]; window.__connects.push(this.__room); }
+  async disconnect() {}
+  getActiveDevice() { return ''; }
+}
+FakeRoom.getLocalDevices = async () => [];
+window.LivekitClient = {
+  Room: FakeRoom,
+  RoomEvent: new Proxy({}, { get: (t, k) => String(k) }),
+  Track: { Source: { ScreenShare: 'screen_share', Camera: 'camera' } },
+};
+const realFetch = window.fetch.bind(window);
+window.fetch = async (url, init) => {
+  if (String(url).includes('/api/av/proximity-token')) {
+    const body = JSON.parse(init.body);
+    window.__tokenCalls.push(body);
+    // espelha a montagem do nome que o backend faz
+    const slug = (v) => String(v || '').replace(/[^a-zA-Z0-9_-]/g, '');
+    const room = slug(body.roomId) ? `proximity-${slug(body.sceneId)}--${slug(body.roomId)}` : `proximity-${slug(body.sceneId)}`;
+    return { ok: true, json: async () => ({ url: 'ws://fake', token: `tok|${room}`, room, identity: '1-me' }) };
+  }
+  return realFetch(url, init);
+};
+</script>
+<script type="module">
+import { createProximityVoice } from './src/ProximityVoice.js';
+
+const presence = {
+  userId: 1,
+  events: new EventTarget(),
+  peersInScene: () => [],
+  localPosition: () => ({ x: 0, y: 0 }),
+  currentScene: () => 'tooq-office',
+};
+
+const voice = createProximityVoice({ presence, onReleaseHeadset: () => { window.__hudReleased = true; } });
+await voice.initialize();
+
+const log = (m) => { document.querySelector('#log').textContent += `\n${m}`; };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// o dwell (350ms) só conta em trocas por posição; precisa de ticks de update()
+const settle = async (ms = 700) => {
+  const until = performance.now() + ms;
+  while (performance.now() < until) { voice.update(); await sleep(40); }
+  await sleep(60);
+};
+
+window.__voice = voice;
+window.__settle = settle;
+window.__log = log;
+document.querySelector('#log').textContent = 'pronto';
+</script>
+</body>
+</html>

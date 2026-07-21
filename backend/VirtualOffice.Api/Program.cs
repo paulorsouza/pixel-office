@@ -566,12 +566,17 @@ api.MapPost("/av/token", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
 api.MapPost("/av/proximity-token", async (ProximityTokenRequest dto, HttpRequest req, IDbContextFactory<AppDb> f) =>
 {
     if (UserId(req) is not int uid) return Results.Unauthorized();
-    var scene = new string((dto.SceneId ?? "").Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
+    static string Slug(string? value) =>
+        new((value ?? "").Where(c => char.IsLetterOrDigit(c) || c is '-' or '_').ToArray());
+    var scene = Slug(dto.SceneId);
     if (scene.Length == 0) return Results.BadRequest(new { error = "Cena obrigatória" });
     await using var db = await f.CreateDbContextAsync();
     var user = await db.Users.FindAsync(uid);
     if (user is null) return Results.NotFound();
-    var room = $"proximity-{scene}";
+    // Uma sala LiveKit por (cena, sala): dentro de uma sala fechada o call é isolado;
+    // sem roomId, a sala da cena inteira mantém a voz por proximidade da área aberta.
+    var roomSlug = Slug(dto.RoomId);
+    var room = roomSlug.Length > 0 ? $"proximity-{scene}--{roomSlug}" : $"proximity-{scene}";
     var identity = $"{uid}-{Guid.NewGuid():N}"[..16];
     var token = LiveKitService.CreateToken(identity, user.Name, room);
     return Results.Ok(new { url = LiveKitService.Url, token, room, identity });
@@ -868,7 +873,7 @@ record ManualEntry(DateTime Date, int Minutes, int? WorkItemId, string? Category
 record RoomLayout(List<RoomPlacement> Items);
 record RoomPlacement(int ItemDefinitionId, int X, int Y);
 record SetActiveTask(int? WorkItemId);
-record ProximityTokenRequest(string? SceneId);
+record ProximityTokenRequest(string? SceneId, string? RoomId);
 record PlaceFurniture(int InventoryItemId, string SceneId, string RoomId, double X, double Y, bool FlipX);
 record MoveFurniture(double X, double Y, bool FlipX);
 record ChestTransfer(int InventoryItemId);

@@ -13,12 +13,33 @@ sob demanda, via LiveKit. A sala de reunião fixa continua existindo (ver §Foll
   A isolação por cena é feita **no cliente** (renderiza só quem tem a mesma cena) para não
   afetar a lista de online do app web, que usa a presença global. Bots vêm com `scene:""`
   e por isso não são desenhados no mundo.
-- **A/V espacial**: uma sala LiveKit por cena (`proximity-{cena}`), emitida por
-  `POST /api/av/proximity-token` (sem gate de zona; basta estar autenticado). O cliente
-  (`ProximityVoice.js`) ajusta o volume de cada participante pela distância entre os avatares
-  (posições vêm da presença): cheio até `NEAR_PX=90`, mudo a partir de `FAR_PX=280`, linear
-  no meio. Áudio é automático; **mic/câmera/tela são sob demanda** no HUD. Se o LiveKit não
-  estiver no ar, degrada em silêncio.
+- **A/V espacial**: o call é keyed por **(cena, sala)**, emitido por
+  `POST /api/av/proximity-token` (`{sceneId, roomId}`; sem gate de zona, basta estar autenticado):
+  - **área aberta** → `proximity-{cena}`: volume por distância entre os avatares (posições vêm
+    da presença), cheio até `NEAR_PX=90`, mudo a partir de `FAR_PX=280`, linear no meio;
+  - **dentro de uma sala fechada** → `proximity-{cena}--{sala}`: **call isolado**, todos no
+    mesmo volume; quem está fora não ouve e não é ouvido.
+
+  O cliente (`ProximityVoice.js`) resolve o canal-alvo a cada frame a partir da sala em que o
+  avatar está (`roomAtPoint`) e reconecta quando ele muda, com **dwell de 350 ms** para não
+  ficar trocando de call na soleira da porta. Áudio é automático; **mic/câmera/tela são sob
+  demanda** no HUD. Se o LiveKit não estiver no ar, degrada em silêncio.
+
+## Fone de reunião (ficar na call ao sair da sala)
+
+Toda sala marcada como reunião (`meeting:true` no `extraJson`, ou `id: "meeting"`) ganha um
+**fone no chão**, gerado por `MeetingHeadset.js` a partir de `map.rooms` — **derivado, não é
+objeto do Tiled**, porque o mapa é trabalho manual e só recebe edição aditiva.
+
+- Chegar perto e apertar `E` → **pega o fone**: o call fica **fixo** naquela sala mesmo que o
+  avatar saia dela (é o "levanto para pegar um café e continuo na reunião").
+- Soltar: `E` de novo perto do suporte, ou o botão **🎧 Soltar o fone** na barra do HUD (funciona
+  de qualquer lugar). Trocar de cena também solta o fone automaticamente.
+- Enquanto está vestido, o suporte fica apagado no lugar para o jogador saber onde devolver, e o
+  HUD mostra o chip `🎧 {sala}`.
+
+O fone é **local por cliente** (cada um "veste o seu"): não há disputa de posse em rede — está
+nos follow-ups.
 
 ## HUD da reunião (estilo Meet)
 
@@ -36,26 +57,32 @@ alimenta o HUD com roster, tracks, quem fala e volume por distância).
   O Phaser usa `Scale.RESIZE`, então o HUD só re-estiliza o `#game` e dispara `resize`.
 - **Grade de participantes**: tile com vídeo ou avatar de iniciais, anel + equalizer para quem
   fala (`ActiveSpeakersChanged`), badge de mic mudo e indicador de 3 barras com o volume por
-  distância; apresentação de tela vira palco com filmstrip embaixo.
+  distância (some no call de sala, onde todos se ouvem por completo); apresentação de tela vira
+  palco com filmstrip embaixo.
+- **Chip do canal** no cabeçalho: `Área aberta · proximidade`, `{sala}` ou `🎧 {sala}` (fone).
 - **Painel Pessoas**: quem está na voz (com volume) e quem está na cena fora da voz (presença).
 - **Extras de UX**: atalhos `Ctrl+D` (mic) e `Ctrl+E` (câmera); toasts para permissão negada,
   tela apresentada e autoplay de áudio bloqueado (`room.startAudio` num clique); auto-hide da
   barra no modo foco; auto-volta ao modo jogo quando a voz cai.
 
 > **Harness de QA sem Phaser/LiveKit:** `client-web/hud-test.html` monta o HUD com participantes
-> e vídeos falsos (canvas `captureStream`) — bom para mexer no visual sem subir o resto.
+> e vídeos falsos (canvas `captureStream`); `client-web/voice-test.html` stuba o LiveKit e o
+> endpoint de token para dirigir a troca de canal (entrar/sair de sala, fone, dwell) e conferir
+> em `window.__connects` as salas efetivamente conectadas.
 > ⚠️ Não usar `transition` no `#game` entre valores `auto`↔numéricos: trava a troca de layout.
 
 ### Arquivos
 ```
 client-web/src/PresenceSystem.js     presença + avatares remotos interpolados
-client-web/src/ProximityVoice.js     LiveKit por cena, volume por distância, estado → HUD
+client-web/src/ProximityVoice.js     call por (cena,sala), volume por distância, estado → HUD
 client-web/src/MeetingHUD.js         UI da reunião: barra, grade, layouts, pessoas, toasts
+client-web/src/MeetingHeadset.js     fone das salas de reunião (fixa o call até soltar)
 client-web/hud-test.html             harness de QA do HUD (dados falsos, sem Phaser)
+client-web/voice-test.html           harness de QA do canal de voz (LiveKit stubado)
 client-web/lib/livekit-client.umd.min.js  SDK vendorizado (v2.20.0)
 backend/.../Presence.cs               PlayerState.Scene
 backend/.../OfficeHub.cs              SetScene + broadcast PlayerScene
-backend/.../Program.cs                POST /api/av/proximity-token
+backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, roomId}
 ```
 
 ## Como testar
@@ -67,8 +94,14 @@ backend/.../Program.cs                POST /api/av/proximity-token
 4. Abra **duas janelas** (navegadores/perfis diferentes), uma com `?userId=1#world` e outra
    com `?userId=2#world` em `http://localhost:8123`.
    - Ande com uma: o avatar aparece e se move na outra (presença).
-   - No HUD (canto inf. esquerdo), clique **🎤 mic**; aproxime os avatares → o volume sobe;
-     afaste → cai. **📷/🖥️** publicam vídeo/tela (tiles no canto sup. direito).
+   - Na barra do HUD, clique **mic**; aproxime os avatares → o volume sobe; afaste → cai.
+     Câmera/tela publicam vídeo (tiles / palco de apresentação).
+5. **Call por sala** (`?scene=tooq-office`): coloque os dois avatares no open space (se ouvem por
+   proximidade) e leve **um** para dentro do Escritório B → ele some do áudio do outro; com os
+   dois dentro, se ouvem por completo. O chip do HUD mostra a sala.
+6. **Fone**: dentro do Escritório B, chegue no 🎧 e aperte `E` → chip vira `🎧 Escritório B`.
+   Saia da sala andando: **continua ouvindo a reunião**. `E` no suporte (ou **Soltar o fone**
+   na barra) volta para a proximidade da área aberta.
 
 > O navegador embutido do assistente não consegue bootar esse cliente Phaser (geração
 > procedural de texturas + assets pesados), então a verificação visual foi feita via harness
@@ -77,6 +110,12 @@ backend/.../Program.cs                POST /api/av/proximity-token
 
 ## Follow-ups
 
+- **Fone sem posse em rede**: cada cliente renderiza/veste o seu fone; dois jogadores podem
+  "pegar" o mesmo suporte e ninguém vê o fone sumir do chão do outro. Sincronizar posse (e mostrar
+  quem está com ele) pede um evento no hub de presença.
+- **Fone não aparece no avatar** (só no HUD) — falta a camada visual no personagem.
+- **Sem indicação de quem está em qual sala** no painel de pessoas: hoje ele lista quem está no
+  seu call e quem está na cena fora dele, sem dizer em que sala fechada cada um está.
 - **Avatar remoto usa o corpo base** (`adam_idle/run`) + label com o nome; ainda **não**
   sincroniza a skin modular do CharacterSystem (cada cliente guarda a sua em localStorage).
   Falta enviar a composição pela rede.

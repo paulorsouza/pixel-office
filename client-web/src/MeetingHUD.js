@@ -19,6 +19,7 @@ const ICONS = {
   fullscreen: SVG('<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>'),
   fullscreenExit: SVG('<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'),
   people: SVG('<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>'),
+  headset: SVG('<path d="M12 1a9 9 0 0 0-9 9v7a3 3 0 0 0 3 3h1a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H5v-2a7 7 0 0 1 14 0v2h-2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h1a3 3 0 0 0 3-3v-7a9 9 0 0 0-9-9z"/>'),
   chevron: SVG('<path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>'),
   close: SVG('<path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>'),
   modeGame: SVG('<path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h14V7H5z"/><circle cx="9.5" cy="12" r="2.2"/>'),
@@ -55,6 +56,7 @@ export function createMeetingHUD(callbacks = {}) {
   let mode = 'game';
   let session = { status: 'off', micOn: false, camOn: false, screenOn: false, startedAt: 0 };
   let sceneName = '';
+  let channel = { kind: 'open', name: 'Área aberta', pinned: false };
   const tiles = new Map();      // identity -> { el, media, name, isLocal, micOn, volume }
   const stageTracks = [];       // [{ identity, el }] — o último é o exibido
   let roster = [];
@@ -79,6 +81,7 @@ export function createMeetingHUD(callbacks = {}) {
           <div id="mh-head-left">
             <strong>Reunião por proximidade</strong>
             <span id="mh-scene" class="mh-chip"></span>
+            <span id="mh-channel" class="mh-chip"></span>
             <span id="mh-timer" class="mh-chip mh-chip-dim"></span>
             <span id="mh-count" class="mh-chip mh-chip-dim"></span>
           </div>
@@ -116,6 +119,7 @@ export function createMeetingHUD(callbacks = {}) {
     els = {
       panel: root.querySelector('#mh-panel'),
       scene: root.querySelector('#mh-scene'),
+      channel: root.querySelector('#mh-channel'),
       timer: root.querySelector('#mh-timer'),
       count: root.querySelector('#mh-count'),
       stage: root.querySelector('#mh-stage'),
@@ -205,7 +209,8 @@ export function createMeetingHUD(callbacks = {}) {
     const { status } = session;
     // assinatura evita reconstruir o DOM da barra sem necessidade (fecha menus etc.)
     const sig = [status, session.micOn, session.camOn, session.screenOn, mode,
-      Boolean(document.fullscreenElement), peopleOpen, roster.length].join('|');
+      Boolean(document.fullscreenElement), peopleOpen, roster.length,
+      channel.kind, channel.pinned, channel.name].join('|');
     if (sig === barSignature) return;
     barSignature = sig;
 
@@ -289,6 +294,16 @@ export function createMeetingHUD(callbacks = {}) {
         ppl.append(badge);
       }
       center.append(ppl);
+      // fone da reunião: enquanto está "vestido", o call é fixo naquela sala
+      if (channel.pinned) {
+        const pin = document.createElement('button');
+        pin.type = 'button';
+        pin.className = 'mh-pill mh-pill-headset';
+        pin.innerHTML = `${ICONS.headset}<span>Soltar o fone</span>`;
+        pin.title = `Você está preso na reunião "${channel.name}" pelo fone — clique para soltar`;
+        pin.onclick = () => cb.onReleaseHeadset?.();
+        right.append(pin);
+      }
       right.append(barButton({
         icon: ICONS.leave, label: 'Sair da voz', danger: true, onClick: () => cb.onLeave?.(),
       }));
@@ -609,6 +624,24 @@ export function createMeetingHUD(callbacks = {}) {
     renderBar();
   }
 
+  // canal de voz atual: área aberta (proximidade) ou uma sala fechada (call isolado).
+  // `pinned` = o jogador está preso nesse call pelo fone da reunião.
+  function setChannel(next = {}) {
+    ensure();
+    channel = { ...channel, ...next };
+    root.dataset.channel = channel.kind;
+    els.channel.textContent = channel.kind === 'room'
+      ? `${channel.pinned ? '🎧 ' : ''}${channel.name}`
+      : 'Área aberta · proximidade';
+    els.channel.dataset.pinned = channel.pinned ? '1' : '';
+    els.channel.title = channel.kind === 'room'
+      ? (channel.pinned
+        ? 'O fone te mantém nesta reunião mesmo saindo da sala'
+        : 'Call isolado desta sala — quem está fora não ouve')
+      : 'Voz por proximidade: o volume cai com a distância';
+    renderBar();
+  }
+
   // ---------- toasts ----------
 
   function toast(message, { tone = 'info', actionLabel, onAction, duration = 4500 } = {}) {
@@ -723,6 +756,9 @@ html[data-mh-mode="focus"] #game{left:calc(100vw - 316px);top:calc(100vh - 290px
 .mh-tile-prox[data-level="1"] i:nth-child(1){background:var(--mh-warn)}
 .mh-tile-prox[data-level="2"] i:nth-child(-n+2){background:var(--mh-ok)}
 .mh-tile-prox[data-level="3"] i{background:var(--mh-ok)}
+/* num call de sala todos se ouvem por completo: medidor de distância não se aplica */
+#mh-root[data-channel="room"] .mh-tile-prox{display:none}
+#mh-channel[data-pinned="1"]{background:color-mix(in srgb,var(--mh-accent) 34%,transparent);color:#fff}
 
 /* ---- modo jogo: strip flutuante ---- */
 #mh-root[data-mode="game"] #mh-panel{display:flex;left:auto;top:12px;right:12px;bottom:auto;width:236px;
@@ -788,6 +824,9 @@ html[data-mh-mode="focus"] #game{left:calc(100vw - 316px);top:calc(100vh - 290px
 .mh-pill-join{background:var(--mh-ok);color:#0b3524;cursor:pointer}
 .mh-pill-join:hover{filter:brightness(1.07)}
 .mh-pill-wait{background:var(--mh-btn);color:var(--mh-dim)}
+.mh-pill-headset{background:color-mix(in srgb,var(--mh-accent) 30%,var(--mh-btn));color:#e7e0ff;cursor:pointer}
+.mh-pill-headset:hover{background:color-mix(in srgb,var(--mh-accent) 46%,var(--mh-btn));color:#fff}
+@media(max-width:860px){.mh-pill-headset span{display:none}.mh-pill-headset{padding:11px 13px}}
 .mh-pill-warn{background:color-mix(in srgb,var(--mh-warn) 22%,var(--mh-btn));color:#f4cf9a}
 .mh-spin{width:13px;height:13px;border-radius:50%;border:2px solid #ffffff35;border-top-color:#fff;
   display:inline-block;animation:mh-rot .8s linear infinite}
@@ -863,6 +902,7 @@ html[data-mh-mode="focus"] #game{left:calc(100vw - 316px);top:calc(100vh - 290px
   return {
     initialize() { ensure(); },
     setSession,
+    setChannel,
     syncParticipants,
     setSpeaking,
     setProximity,

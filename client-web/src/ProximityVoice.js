@@ -1,8 +1,9 @@
-// A/V por proximidade (LiveKit). Uma sala por cena; o cliente ajusta o volume de
-// cada participante pela distância entre os avatares (posições vêm da presença).
-// Áudio é automático por proximidade; vídeo/tela são sob demanda.
-// A interface (barra estilo Meet, grade, modos de layout) vive em MeetingHUD.js;
-// este módulo cuida da sala LiveKit e alimenta o HUD com estado e tracks.
+// A/V por proximidade (LiveKit). O call é keyed por (cena, sala):
+//  - na ÁREA ABERTA da cena, uma sala LiveKit por cena com volume por distância;
+//  - DENTRO de uma sala fechada, uma sala LiveKit isolada (volume cheio, sem vazar).
+// O canal-alvo vem da posição do avatar (sala em que ele está) ou é FIXADO pelo
+// fone de reunião (fica no call da sala até soltar). Áudio é automático; vídeo/tela
+// são sob demanda. A interface (barra estilo Meet, grade, modos) vive em MeetingHUD.js.
 // Se o LiveKit não estiver no ar, degrada em silêncio — o resto do jogo segue.
 import { auth, resolveApiBase } from './auth.js';
 import { createMeetingHUD } from './MeetingHUD.js';
@@ -10,6 +11,7 @@ import { createMeetingHUD } from './MeetingHUD.js';
 const NEAR_PX = 90;    // dentro disso: volume cheio
 const FAR_PX = 280;    // além disso: mudo
 const APPLY_INTERVAL_MS = 150;
+const SWITCH_DWELL_MS = 350;   // dwell antes de trocar de call por posição (anti-flap na porta)
 
 export function createProximityVoice(options = {}) {
   const apiBase = options.apiBase ? String(options.apiBase).replace(/\/$/, '') : resolveApiBase();
@@ -26,6 +28,14 @@ export function createProximityVoice(options = {}) {
   let micHintShown = false;
   let audioBlockedShown = false;
 
+  // canal de voz
+  let locationRoom = null;   // sala em que o avatar está fisicamente: {id,name}|null (aberto)
+  let pinnedRoom = null;     // sala fixada pelo fone: {scene,id,name}|null
+  let connectedKey = '';     // key do call já conectado ('scene::room')
+  let connectedRoomId = '';  // '' = área aberta (proximidade); senão sala isolada
+  let pendingKey = '';       // dwell da troca por posição
+  let pendingSince = 0;
+
   const hud = createMeetingHUD({
     onToggleMic: () => toggleLocal('microphone'),
     onToggleCamera: () => toggleLocal('camera'),
@@ -33,9 +43,12 @@ export function createProximityVoice(options = {}) {
     onJoin: async () => {
       enabled = true;
       failed = false;
-      await connect(currentScene || presence.currentScene());
+      if (!currentScene) currentScene = presence.currentScene();
+      await reconcile(true);
     },
-    onLeave: async () => { enabled = false; await disconnect(); },
+    onLeave: async () => { enabled = false; releasePin(); await disconnect(); },
+    // devolve o fone ao suporte na cena e garante o unpin mesmo sem cena ativa
+    onReleaseHeadset: () => { options.onReleaseHeadset?.(); releasePin(); },
     listDevices: (kind) => LK()?.Room.getLocalDevices(kind, kind !== 'audiooutput') ?? [],
     activeDevice: (kind) => room?.getActiveDevice?.(kind) || '',
     switchDevice: async (kind, deviceId) => {
@@ -74,7 +87,35 @@ export function createProximityVoice(options = {}) {
     refresh();
   }
 
-  async function fetchToken(scene) {
+  // ---- canal de voz (posição ou fixado pelo fone) ----
+
+  function resolveTarget() {
+    if (!enabled) return null;
+    if (pinnedRoom) return { scene: pinnedRoom.scene, roomId: pinnedRoom.id, name: pinnedRoom.name };
+    if (!currentScene) return null;
+    return { scene: currentScene, roomId: locationRoom?.id || '', name: locationRoom?.name || '' };
+  }
+
+  const keyOf = (t) => `${t.scene}::${t.roomId}`;
+
+  // decide/executa a (re)conexão quando o canal-alvo muda
+  async function reconcile(immediate = false) {
+    const target = resolveTarget();
+    if (!target) { if (room) await disconnect(); else refresh(); return; }
+    const key = keyOf(target);
+    if (key === connectedKey && room) { pendingKey = ''; refresh(); return; }
+    if (connecting) return;
+    // troca por posição espera um dwell (evita flap na porta); fone é imediato
+    if (!immediate && !pinnedRoom) {
+      const now = performance.now();
+      if (key !== pendingKey) { pendingKey = key; pendingSince = now; refresh(); return; }
+      if (now - pendingSince < SWITCH_DWELL_MS) return;
+    }
+    pendingKey = '';
+    await connect(target.scene, target.roomId, target.name);
+  }
+
+  async function fetchToken(scene, roomId) {
     const t = await auth.token();
     const res = await fetch(`${apiBase}/api/av/proximity-token`, {
       method: 'POST',
@@ -82,21 +123,20 @@ export function createProximityVoice(options = {}) {
         'Content-Type': 'application/json',
         ...(t ? { Authorization: `Bearer ${t}` } : { 'X-User-Id': String(presence.userId) }),
       },
-      body: JSON.stringify({ sceneId: scene }),
+      body: JSON.stringify({ sceneId: scene, roomId: roomId || null }),
     });
     if (!res.ok) throw new Error(`token ${res.status}`);
     return res.json();
   }
 
-  async function connect(scene) {
+  async function connect(scene, roomId, roomName) {
     if (!LK() || connecting || !enabled || !scene) { refresh(); return; }
-    if (room && currentScene === scene) return;
     if (room) await disconnect();
     connecting = true;
     failed = false;
     refresh();
     try {
-      const info = await fetchToken(scene);
+      const info = await fetchToken(scene, roomId);
       const events = LK().RoomEvent;
       const r = new (LK().Room)({ adaptiveStream: true, dynacast: true });
       r.on(events.TrackSubscribed, onTrackSubscribed);
@@ -114,32 +154,38 @@ export function createProximityVoice(options = {}) {
       r.on(events.Reconnecting, () => { connecting = true; refresh(); });
       r.on(events.Reconnected, () => { connecting = false; refresh(); });
       r.on(events.Disconnected, () => {
-        if (room === r) { room = null; startedAt = 0; cleanupMedia(); }
+        if (room === r) { room = null; connectedKey = ''; connectedRoomId = ''; startedAt = 0; cleanupMedia(); }
         refresh();
       });
       await r.connect(info.url, info.token);
       room = r;
       currentScene = scene;
+      connectedKey = `${scene}::${roomId || ''}`;
+      connectedRoomId = roomId || '';
       startedAt = Date.now();
       maybeOfferAudioStart(r);
       if (!micHintShown) {
         micHintShown = true;
-        hud.toast('Você entrou na voz por proximidade — o microfone começa desligado', {
+        hud.toast('Você entrou na voz — o microfone começa desligado', {
           actionLabel: 'Ligar mic', onAction: () => toggleLocal('microphone'), duration: 6000,
         });
       }
     } catch (error) {
       console.warn('Áudio de proximidade indisponível (LiveKit inacessível deste endereço).', error?.message || error);
       room = null;
+      connectedKey = '';
+      connectedRoomId = '';
       failed = true;
     } finally {
       connecting = false;
       refresh();
+      // o canal-alvo pode ter mudado enquanto conectávamos
+      if (room && keyOf(resolveTarget() || { scene: '', roomId: '' }) !== connectedKey) reconcile(true);
     }
   }
 
   async function disconnect() {
-    const r = room; room = null; currentScene = ''; startedAt = 0;
+    const r = room; room = null; connectedKey = ''; connectedRoomId = ''; startedAt = 0;
     try { await r?.disconnect(); } catch { /* ignore */ }
     cleanupMedia();
     refresh();
@@ -252,6 +298,13 @@ export function createProximityVoice(options = {}) {
     return presence.peersInScene().filter((p) => !inVoice.has(p.userId));
   }
 
+  // rótulo do canal atual para a HUD
+  function channelInfo() {
+    if (pinnedRoom) return { kind: 'room', name: pinnedRoom.name || 'Sala de reunião', pinned: true };
+    if (connectedRoomId) return { kind: 'room', name: locationRoom?.name || 'Sala', pinned: false };
+    return { kind: 'open', name: 'Área aberta', pinned: false };
+  }
+
   function refresh() {
     const lp = room?.localParticipant;
     hud.setSession({
@@ -266,28 +319,46 @@ export function createProximityVoice(options = {}) {
       startedAt,
       sceneName: sceneDisplayName(),
     });
+    hud.setChannel(channelInfo());
     hud.syncParticipants(roster(), bystanders());
   }
 
-  // volume de cada participante pela distância entre os avatares
+  // volume por participante: numa sala fechada todos no call se ouvem por completo;
+  // na área aberta o volume cai com a distância entre os avatares.
   function applyProximity() {
     if (!room || !presence) return;
     const now = performance.now();
     if (now - lastApply < APPLY_INTERVAL_MS) return;
     lastApply = now;
-    const me = presence.localPosition();
-    if (!me) return;
+    const inRoomCall = connectedRoomId !== '';
+    const me = inRoomCall ? null : presence.localPosition();
+    if (!inRoomCall && !me) return;
     const byUid = new Map(presence.peersInScene().map((p) => [p.userId, p]));
     room.remoteParticipants.forEach((participant) => {
-      const peer = byUid.get(uidFromIdentity(participant.identity));
-      let volume = 0;
-      if (peer) {
-        const d = Math.hypot(peer.x - me.x, peer.y - me.y);
-        volume = d <= NEAR_PX ? 1 : d >= FAR_PX ? 0 : 1 - (d - NEAR_PX) / (FAR_PX - NEAR_PX);
+      let volume = 1;
+      if (!inRoomCall) {
+        const peer = byUid.get(uidFromIdentity(participant.identity));
+        volume = 0;
+        if (peer) {
+          const d = Math.hypot(peer.x - me.x, peer.y - me.y);
+          volume = d <= NEAR_PX ? 1 : d >= FAR_PX ? 0 : 1 - (d - NEAR_PX) / (FAR_PX - NEAR_PX);
+        }
       }
       try { participant.setVolume(volume); } catch { /* participante sem áudio ainda */ }
       hud.setProximity(participant.identity, volume);
     });
+  }
+
+  // ---- fone de reunião: fixa/solta o call de uma sala ----
+  function pinToRoom(scene, meetingRoom) {
+    pinnedRoom = { scene: scene || currentScene, id: meetingRoom.id, name: meetingRoom.name || meetingRoom.id };
+    hud.toast(`🎧 Você entrou na reunião — ${pinnedRoom.name}. O fone te mantém no call até soltar.`, { duration: 6000 });
+    reconcile(true);
+  }
+  function releasePin() {
+    if (!pinnedRoom) return;
+    pinnedRoom = null;
+    reconcile(true);
   }
 
   return {
@@ -299,10 +370,26 @@ export function createProximityVoice(options = {}) {
     },
     // chamado no create() de cada cena
     attachScene(sceneId) {
-      if (enabled) connect(sceneId);
-      else { currentScene = sceneId; refresh(); }
+      const changed = sceneId !== currentScene;
+      currentScene = sceneId;
+      locationRoom = null;
+      if (changed) { pinnedRoom = null; pendingKey = ''; }   // trocou de cena = largou o fone
+      reconcile(true);
     },
-    update() { applyProximity(); },
+    // sala física em que o avatar está: {id,name} ou null (área aberta)
+    updateLocation(meetingRoom) {
+      const id = meetingRoom?.id || '';
+      if ((locationRoom?.id || '') === id) {
+        if (meetingRoom) locationRoom.name = meetingRoom.name || locationRoom.name;
+        return;
+      }
+      locationRoom = meetingRoom ? { id, name: meetingRoom.name || id } : null;
+      reconcile(false);
+    },
+    pinToRoom,
+    releasePin,
+    isPinned: () => Boolean(pinnedRoom),
+    update() { applyProximity(); reconcile(false); },
     async shutdown() { await disconnect(); },
   };
 }

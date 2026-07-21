@@ -34,7 +34,8 @@ const hud = createMeetingHUD({
   onToggleCamera: () => { state.cam = !state.cam; toggleFakeCam(); sync(); },
   onToggleScreen: () => { state.scr = !state.scr; toggleFakeScreen(); sync(); },
   onJoin: () => { sync('connected'); },
-  onLeave: () => { sync('off'); },
+  onLeave: () => { setChannel('open'); sync('off'); },
+  onReleaseHeadset: () => { setChannel('room'); },
   listDevices: async (kind) => ({
     audioinput: [{ deviceId: 'a', label: 'Microfone interno' }, { deviceId: 'b', label: 'Headset USB' }],
     audiooutput: [{ deviceId: 'c', label: 'Alto-falantes' }],
@@ -61,6 +62,15 @@ function sync(next) {
     hud.setProximity('3-ghi', 0.3);
   }
 }
+// canal: 'open' (proximidade), 'room' (sala fechada), 'pinned' (fone vestido)
+function setChannel(kind) {
+  if (kind === 'open') hud.setChannel({ kind: 'open', name: 'Área aberta', pinned: false });
+  else if (kind === 'room') hud.setChannel({ kind: 'room', name: 'Escritório B', pinned: false });
+  else hud.setChannel({ kind: 'room', name: 'Escritório B', pinned: true });
+}
+setChannel('open');
+window.setChannel = setChannel;
+
 sync();
 
 function fakeVideo(label, hue) {

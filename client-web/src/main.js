@@ -15,6 +15,7 @@ import {
   createRoomDecorationEditor,
   createRoomDecorationStore,
   preloadRoomDecorationAssets,
+  roomAtPoint,
 } from './RoomDecorationSystem.js';
 import { preloadMechanics } from './mechanics/index.js';
 import { createDevMapSync } from './DevMapSync.js';
@@ -23,6 +24,7 @@ import { createGameItemsClient } from './GameItemsSystem.js';
 import { createFurnitureInteractionSystem } from './FurnitureInteractionSystem.js';
 import { createPresence } from './PresenceSystem.js';
 import { createProximityVoice } from './ProximityVoice.js';
+import { createMeetingHeadsets } from './MeetingHeadset.js';
 
 const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
@@ -51,7 +53,11 @@ const gameItems = createGameItemsClient();
 await gameItems.initialize();
 const presence = createPresence({ userId: gameItems.userId });
 await presence.initialize();
-const proximityVoice = createProximityVoice({ presence });
+// "Soltar o fone" pelo HUD precisa devolver o fone ao suporte na cena atual
+const proximityVoice = createProximityVoice({
+  presence,
+  onReleaseHeadset: () => window.__scene?.headsets?.releaseAll(),
+});
 await proximityVoice.initialize();
 const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
 let sceneMaps;
@@ -283,6 +289,7 @@ class MapScene extends Phaser.Scene {
     this.equipmentVisual = createEquipmentVisual(this);
     this.handleInteract = async () => {
       if (this.furnitureInteractions && await this.furnitureInteractions.interact()) return;
+      if (this.headsets?.interact()) return;
       if (
         this.activePortal
         && !this.transitioning
@@ -392,6 +399,12 @@ class MapScene extends Phaser.Scene {
     proximityVoice.attachScene(this.currentSceneId);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => presence.detach());
 
+    // fone das salas de reunião: pegar fixa o call daquela sala até soltar
+    this.headsets = createMeetingHeadsets(this, this.map, {
+      onGrab: (meetingRoom) => proximityVoice.pinToRoom(this.currentSceneId, meetingRoom),
+      onRelease: () => proximityVoice.releasePin(),
+    });
+
     // sala de reunião: entrar dispara o lançamento de horas (SetZone no backend)
     // marca-se com id "meeting" ou a flag extraJson meeting:true numa sala existente
     const meetingRoom = (this.map.rooms || []).find((room) => room.meeting || room.id === 'meeting');
@@ -421,10 +434,12 @@ class MapScene extends Phaser.Scene {
       this.setPlayerBodyFrameWidth(16);
       this.characterVisual.update(this.lastDirection, 'idle', true, this.time.now);
       this.equipmentVisual.hide();
+      this.activeHeadsetPrompt = this.headsets.update(this.player, true);
       presence.updateLocal(this.player.x, this.player.y, this.lastDirection);
       presence.interpolate(delta);
       proximityVoice.update();
       this.syncMeetingZone();
+      this.syncVoiceChannel();
       return;
     }
 
@@ -475,11 +490,16 @@ class MapScene extends Phaser.Scene {
     );
     updateAutomaticDoors(this, this.player);
     this.updatePortalInteraction();
-    showPortalPrompt(this.activeFurniturePrompt || this.activePortal);
+    this.activeHeadsetPrompt = this.headsets.update(
+      this.player,
+      this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),
+    );
+    showPortalPrompt(this.activeFurniturePrompt || this.activeHeadsetPrompt || this.activePortal);
     presence.updateLocal(this.player.x, this.player.y, direction);
     presence.interpolate(delta);
     proximityVoice.update();
     this.syncMeetingZone();
+    this.syncVoiceChannel();
   }
 
   updatePortalInteraction() {
@@ -504,6 +524,13 @@ class MapScene extends Phaser.Scene {
     const inside = !!r && this.player.x >= r.x && this.player.x <= r.x + r.w
       && this.player.y >= r.y && this.player.y <= r.y + r.h;
     presence.setZone(inside ? 'meeting' : '');
+  }
+
+  // cada sala fechada tem seu próprio call; fora delas vale a proximidade da cena
+  syncVoiceChannel() {
+    const tile = this.map.tile || 16;
+    const room = roomAtPoint(this.map, this.player.body.center.x / tile, this.player.body.center.y / tile);
+    proximityVoice.updateLocation(room ? { id: room.id, name: room.name || room.id } : null);
   }
 
   changeScene(portal) {
