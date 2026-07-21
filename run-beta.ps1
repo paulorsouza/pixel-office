@@ -66,6 +66,12 @@ $env:ASPNETCORE_URLS = 'http://localhost:5210'
 if ($betaEnv['LIVEKIT_URL'])        { $env:LiveKit__Url = $betaEnv['LIVEKIT_URL'] }
 if ($betaEnv['LIVEKIT_API_KEY'])    { $env:LiveKit__ApiKey = $betaEnv['LIVEKIT_API_KEY'] }
 if ($betaEnv['LIVEKIT_API_SECRET']) { $env:LiveKit__ApiSecret = $betaEnv['LIVEKIT_API_SECRET'] }
+# Conta por usuario+senha: no beta o X-User-Id fica desligado (senao qualquer um
+# entra como qualquer um). Para voltar ao atalho de dev: AUTH_DEV_BYPASS=true no beta.env.
+$env:Auth__DevBypass = if ($betaEnv['AUTH_DEV_BYPASS']) { $betaEnv['AUTH_DEV_BYPASS'] } else { 'false' }
+if ($betaEnv['AUTH_ALLOW_REGISTRATION']) { $env:Auth__AllowRegistration = $betaEnv['AUTH_ALLOW_REGISTRATION'] }
+if ($betaEnv['JWT_KEY']) { $env:Auth__JwtKey = $betaEnv['JWT_KEY'] }
+Write-Host "Contas: usuario+senha (cadastro na tela de login). DevBypass=$($env:Auth__DevBypass)." -ForegroundColor Cyan
 Start-Term 'OfficeQuest - Backend' "Set-Location '$apiDir'; & dotnet '$dll'"
 
 # --- 4. Caddy: game + API na mesma origem (:8080) ---

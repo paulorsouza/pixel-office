@@ -60,7 +60,77 @@ export async function renderProfile(view) {
             h("div", { style: { fontSize: "24px", marginBottom: "4px" } }, i.def.icon),
             i.def.name.replace("Medalha: ", ""),
             i.equipped && h("div", { style: { color: "var(--green)", fontSize: "10.5px", marginTop: "3px" } }, "em uso"))),
-          [...skins, ...medals].length === 0 && h("div", { class: "faint" }, "Jogue para dropar itens."))))));
+          [...skins, ...medals].length === 0 && h("div", { class: "faint" }, "Jogue para dropar itens."))),
+      accountPanel())));
 }
 
 function chip(t) { return h("span", { class: "badge" }, t); }
+
+/// Conta: trocar senha e vincular/desvincular o Google na MESMA conta (nada de
+/// progresso duplicado). Só aparece para quem entrou com token de verdade.
+function accountPanel() {
+  const panel = h("div", { class: "panel" }, h("div", { class: "panel-head" }, "🔐 Conta"));
+  const body = h("div", { class: "panel-pad account-form", style: { display: "grid", gap: "10px" } });
+  panel.append(body);
+
+  (async () => {
+    const identity = await fetch("/auth/me", { headers: { Authorization: `Bearer ${API.token}` } })
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (!identity) {
+      body.append(h("div", { class: "faint" }, "Entre com usuário e senha para gerenciar a conta."));
+      return;
+    }
+
+    const msg = h("div", { class: "form-msg" });
+    const current = h("input", { type: "password", placeholder: "senha atual", autocomplete: "current-password" });
+    const next = h("input", { type: "password", placeholder: "nova senha (mín. 8)", autocomplete: "new-password" });
+    const username = h("input", { placeholder: "escolha um usuário", autocomplete: "username" });
+    current.hidden = !identity.hasPassword;      // conta só-Google define a primeira senha
+    username.hidden = !!identity.username;
+
+    const save = h("button", { class: "btn primary" }, identity.hasPassword ? "Trocar senha" : "Definir senha");
+    save.onclick = async () => {
+      save.disabled = true;
+      msg.textContent = "";
+      try {
+        const res = await fetch("/auth/password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${API.token}` },
+          body: JSON.stringify({
+            currentPassword: current.value, newPassword: next.value, username: username.value,
+          }),
+        });
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(payload?.error || `Erro ${res.status}`);
+        API.token = payload.access_token;
+        msg.style.color = "var(--green)";
+        msg.textContent = "Senha atualizada. As outras sessões foram encerradas.";
+        current.value = next.value = "";
+      } catch (err) {
+        msg.style.color = "";
+        msg.textContent = err.message;
+      }
+      save.disabled = false;
+    };
+
+    body.append(
+      h("div", { class: "faint" }, `Usuário: ${identity.username || "—"} · ${identity.email || "sem e-mail"}`),
+      username, current, next, save, msg);
+
+    const cfg = await API.get("/auth/config").catch(() => ({ googleEnabled: false }));
+    if (!cfg.googleEnabled) return;
+    if (identity.hasGoogle) {
+      body.append(h("div", { class: "faint" }, "Google vinculado a esta conta."));
+      return;
+    }
+    const link = h("button", { class: "btn" }, "Vincular conta Google");
+    // Passa o token no start: o callback pendura o Google neste usuário em vez de criar outro.
+    link.onclick = () => {
+      const back = encodeURIComponent(location.origin + "/");
+      location.href = `/auth/google/login?return=${back}&link=${encodeURIComponent(API.token)}`;
+    };
+    body.append(link);
+  })();
+
+  return panel;
+}

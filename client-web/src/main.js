@@ -25,6 +25,7 @@ import { createFurnitureInteractionSystem } from './FurnitureInteractionSystem.j
 import { createPresence } from './PresenceSystem.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
+import { ensureSession } from './LoginScreen.js';
 
 const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
@@ -43,6 +44,9 @@ function showBootstrapMapError(error) {
   root.querySelector('span').textContent = error?.message || String(error);
   document.body.append(root);
 }
+
+// Portaria: sem sessão, o mundo nem carrega (em dev, ?userId= passa direto).
+await ensureSession();
 
 const manifest = await fetchJson('maps/scenes.json');
 const animatedAssets = await fetchJson('assets/animations/catalog.json');
@@ -89,6 +93,9 @@ const proximityVoice = createProximityVoice({
   ),
 });
 await proximityVoice.initialize();
+// Conta assumida por outra janela: solta o microfone junto com a presença, senão
+// esta aba continuaria falando na call de um avatar que já saiu do mundo.
+presence.events.addEventListener('session-ended', () => { proximityVoice.shutdown(); });
 const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
 let sceneMaps;
 try {

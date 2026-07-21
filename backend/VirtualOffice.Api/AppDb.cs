@@ -27,6 +27,8 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<FurniturePlacement>()
             .HasIndex(x => new { x.SceneId, x.RoomId });
         modelBuilder.Entity<User>().HasIndex(x => x.GoogleSubject);
+        // Username é único entre quem tem login local; nulos (bots/seed) não colidem.
+        modelBuilder.Entity<User>().HasIndex(x => x.Username).IsUnique();
         modelBuilder.Entity<GoogleCredential>().HasIndex(x => x.UserId).IsUnique();
         modelBuilder.Entity<AppRefreshToken>().HasIndex(x => x.TokenHash);
     }

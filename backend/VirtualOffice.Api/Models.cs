@@ -19,7 +19,13 @@ public class User
     // task que o dev escolheu como "ativa" — o timer da mesa conta horas nela
     public int? ActiveWorkItemId { get; set; }
 
-    // ---- identidade (Google Workspace) ----
+    // ---- identidade ----
+    // A conta é este User. Cada forma de entrar é só uma credencial pendurada nele:
+    // senha local (beta) e/ou Google (depois). Vincular uma não mexe no progresso.
+    public string? Username { get; set; }          // login local, sempre normalizado (minúsculo)
+    public string? PasswordHash { get; set; }      // PBKDF2 — ver PasswordAuth
+    public DateTime? PasswordUpdatedUtc { get; set; }
+
     // 'sub' do Google: chave de vínculo estável (e-mail pode mudar, sub não).
     public string? GoogleSubject { get; set; }
     public string? Email { get; set; }

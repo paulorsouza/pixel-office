@@ -75,27 +75,86 @@ export const App = {
   },
 
   async showLogin() {
-    const cfg = await API.get("/auth/config").catch(() => ({ googleEnabled: false, devBypass: true }));
+    const cfg = await API.get("/auth/config").catch(() => ({ googleEnabled: false, passwordEnabled: true, devBypass: true }));
     const el = document.getElementById("login");
     el.className = "login";
     el.innerHTML = "";
     el.append(h("div", { class: "logo-lg" }, "◆"), h("h1", {}, "Office Quest"));
 
+    if (cfg.passwordEnabled !== false) el.append(App.accountForm(cfg));
+
     if (cfg.googleEnabled) {
       el.append(
-        h("p", {}, "Entre com sua conta Tooq"),
+        h("p", {}, cfg.passwordEnabled === false ? "Entre com sua conta Tooq" : "ou entre com sua conta Tooq"),
         h("button", { class: "btn primary", onclick: () => App.googleLogin() }, "Entrar com Google"));
     }
-    // Em dev (ou sem Google configurado), mantém o seletor simbólico de usuário.
-    if (cfg.devBypass || !cfg.googleEnabled) {
-      const users = await API.get("/api/users");
+    // Só em dev: o seletor simbólico de usuário (com DevBypass=false a API recusa).
+    if (cfg.devBypass) {
+      const users = await API.get("/api/users").catch(() => []);
       el.append(
-        h("p", {}, cfg.googleEnabled ? "ou entre como (dev):" : "Escolha quem você é para entrar"),
+        h("p", {}, "ou entre como (dev):"),
         h("div", { class: "cards" }, users.map((u) =>
           h("div", { class: "ucard", onclick: () => App.login(u.id) },
             avatar(u, "lg"), h("b", {}, u.name), h("span", {}, u.role),
             h("div", { class: "lvl" }, `⭐ ${u.xp} XP`)))));
     }
+  },
+
+  // Conta local (usuário + senha) — o caminho do beta. A mesma conta aceita o
+  // Google depois, pelo botão de vincular no perfil.
+  accountForm(cfg) {
+    const username = h("input", { placeholder: "usuário", autocomplete: "username" });
+    const password = h("input", { type: "password", placeholder: "senha", autocomplete: "current-password" });
+    const name = h("input", { placeholder: "nome exibido (opcional)", autocomplete: "nickname" });
+    const msg = h("div", { class: "form-msg" });
+    const submit = h("button", { class: "btn primary", type: "submit" }, "Entrar");
+    let mode = "login";
+
+    const loginTab = h("button", { type: "button", class: "btn primary" }, "Entrar");
+    const registerTab = h("button", { type: "button", class: "btn" }, "Criar conta");
+    const setMode = (value) => {
+      mode = value;
+      loginTab.className = "btn" + (mode === "login" ? " primary" : "");
+      registerTab.className = "btn" + (mode === "register" ? " primary" : "");
+      name.hidden = mode !== "register";
+      password.autocomplete = mode === "register" ? "new-password" : "current-password";
+      submit.textContent = mode === "register" ? "Criar conta e entrar" : "Entrar";
+      msg.textContent = "";
+    };
+    loginTab.onclick = () => setMode("login");
+    registerTab.onclick = () => setMode("register");
+
+    const tabs = cfg.registrationOpen ? h("div", { class: "tabs" }, loginTab, registerTab) : null;
+    name.hidden = true;
+
+    const form = h("form", {
+      class: "account-form",
+      onsubmit: async (ev) => {
+        ev.preventDefault();
+        submit.disabled = true;
+        msg.textContent = "";
+        try {
+          const path = mode === "register" ? "/auth/register" : "/auth/login";
+          const body = mode === "register"
+            ? { username: username.value, password: password.value, name: name.value }
+            : { username: username.value, password: password.value };
+          const res = await fetch(path, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+          });
+          const payload = await res.json().catch(() => null);
+          if (!res.ok) throw new Error(payload?.error || `Erro ${res.status}`);
+          Session.save(Session.fromTokens(payload.access_token, payload.refresh_token, payload.expires_in));
+          API.token = payload.access_token;
+          API.uid = null;
+          localStorage.removeItem("uid");
+          await App.boot();
+        } catch (err) {
+          msg.textContent = err.message;
+          submit.disabled = false;
+        }
+      },
+    }, tabs, username, password, name, submit, msg);
+    return form;
   },
 
   googleLogin() {
@@ -169,8 +228,9 @@ export const App = {
     // handlers específicos são registrados pelas páginas chat/meeting
     try {
       await App.hub.start();
-      // com token o servidor deriva o usuário do JWT; o argumento é fallback de dev
-      await App.hub.invoke("Join", Number(API.uid) || 0);
+      // com token o servidor deriva o usuário do JWT; o argumento é fallback de dev.
+      // "panel": o painel não disputa o avatar do mundo com o cliente do jogo.
+      await App.hub.invoke("Join", Number(API.uid) || 0, "panel");
     } catch { App.hub = null; }
   },
 

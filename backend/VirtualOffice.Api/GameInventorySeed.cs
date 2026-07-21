@@ -89,16 +89,19 @@ public static class GameInventorySeed
 
         var users = await db.Users.Where(x => !x.IsBot).Select(x => x.Id).ToListAsync();
         if (users.Count == 0) return;
+        foreach (var userId in users) await EnsureUserStockAsync(db, userId);
+    }
+
+    /// <summary>Dá o estoque inicial a um usuário que ainda não tem nenhum item (conta recém-criada).</summary>
+    public static async Task EnsureUserStockAsync(AppDb db, int userId)
+    {
+        if (await db.GameItemInstances.AnyAsync(x => x.UserId == userId)) return;
         var definitions = await db.GameItemDefinitions.ToListAsync();
-        foreach (var userId in users)
+        // Estoque inicial finito para testar a economia; duas unidades por definição.
+        foreach (var definition in definitions)
         {
-            if (await db.GameItemInstances.AnyAsync(x => x.UserId == userId)) continue;
-            // Estoque inicial finito para testar a economia; duas unidades por definição.
-            foreach (var definition in definitions)
-            {
-                db.GameItemInstances.Add(new GameItemInstance { UserId = userId, DefinitionId = definition.Id });
-                db.GameItemInstances.Add(new GameItemInstance { UserId = userId, DefinitionId = definition.Id });
-            }
+            db.GameItemInstances.Add(new GameItemInstance { UserId = userId, DefinitionId = definition.Id });
+            db.GameItemInstances.Add(new GameItemInstance { UserId = userId, DefinitionId = definition.Id });
         }
         await db.SaveChangesAsync();
     }

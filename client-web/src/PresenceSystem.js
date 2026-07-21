@@ -5,6 +5,7 @@
 // para não afetar a lista de "online" do app web, que usa a presença global.
 import { auth, resolveApiBase } from './auth.js';
 import { createRemoteAvatar, normalizeAppearance } from './RemoteAvatar.js';
+import { showSessionEnded } from './LoginScreen.js';
 
 const MOVE_INTERVAL_MS = 100;   // frequência máxima de envio da própria posição
 const MOVING_TIMEOUT_MS = 220;  // sem update recente ⇒ avatar remoto entra em idle
@@ -21,6 +22,7 @@ export function createPresence(options = {}) {
   const claims = new Map();
   let connection = null;
   let selfKey = null;
+  let evicted = false;   // conta assumida por outra janela: não tenta voltar
   let myAppearance = null;    // último json enviado (reenviado ao reconectar)
 
   let scene = null;          // Phaser.Scene atual
@@ -155,6 +157,16 @@ export function createPresence(options = {}) {
       rec.label?.setText(labelText(rec));
       emit('change');
     });
+    // A conta entrou no mundo em outra janela: esta sessão sai de cena. Paramos a
+    // conexão de propósito — deixar o auto-reconnect voltar viraria pingue-pongue
+    // entre as duas janelas, cada uma derrubando a outra.
+    connection.on('SessionEnded', ({ message } = {}) => {
+      evicted = true;
+      connection?.stop().catch(() => {});
+      showSessionEnded(message);
+      emit('session-ended', { message });
+    });
+
     // xadrez: repassa os eventos do hub para quem escutar (a mecânica de xadrez)
     for (const name of ['ChessState', 'ChessMoved', 'ChessSeats', 'ChessReset']) {
       connection.on(name, (payload) => emit(name, payload));
@@ -162,8 +174,9 @@ export function createPresence(options = {}) {
 
     // reconexão automática: reenvia cena e aparência, senão o avatar volta genérico
     connection.onreconnected(() => {
+      if (evicted) { connection?.stop().catch(() => {}); return; }
       selfKey = connection.connectionId;
-      connection.invoke('Join', userId).catch(() => {});
+      connection.invoke('Join', userId, 'world').catch(() => {});
       if (sceneId) connection.invoke('SetScene', sceneId).catch(() => {});
       if (myAppearance) connection.invoke('SetAppearance', myAppearance).catch(() => {});
     });
@@ -171,7 +184,7 @@ export function createPresence(options = {}) {
     try {
       await connection.start();
       selfKey = connection.connectionId;
-      await connection.invoke('Join', userId).catch(() => {});
+      await connection.invoke('Join', userId, 'world').catch(() => {});
       if (sceneId) await connection.invoke('SetScene', sceneId).catch(() => {});
       if (myAppearance) await connection.invoke('SetAppearance', myAppearance).catch(() => {});
     } catch (error) {

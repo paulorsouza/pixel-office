@@ -31,6 +31,8 @@ services:
       ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       # --- auth ---
       Auth__DevBypass: "${AUTH_DEV_BYPASS}"
+      Auth__PasswordEnabled: "${AUTH_PASSWORD_ENABLED:-true}"
+      Auth__AllowRegistration: "${AUTH_ALLOW_REGISTRATION:-true}"
       Auth__JwtKey: "${JWT_KEY}"
       Auth__AllowedOrigins__0: "https://localhost"
       Auth__AllowedOrigins__1: "https://localhost:8443"

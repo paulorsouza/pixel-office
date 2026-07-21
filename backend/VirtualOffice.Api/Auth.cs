@@ -24,6 +24,11 @@ public static class AuthOptions
     // Aceita X-User-Id / userId no hub sem token (só para dev). Nunca em produção.
     public static bool DevBypass { get; private set; } = true;
 
+    // Login local (usuário + senha) — o caminho do beta, sem depender do Workspace.
+    public static bool PasswordEnabled { get; private set; } = true;
+    // Cadastro aberto. Em beta fechado, desligue e crie as contas por convite/seed.
+    public static bool AllowRegistration { get; private set; } = true;
+
     // Restrição de domínio (claim "hd" do Google). Vazio = sem restrição (dev).
     public static string HostedDomain { get; private set; } = "";
 
@@ -61,6 +66,8 @@ public static class AuthOptions
     {
         var a = config.GetSection("Auth");
         DevBypass = a.GetValue("DevBypass", DevBypass);
+        PasswordEnabled = a.GetValue("PasswordEnabled", PasswordEnabled);
+        AllowRegistration = a.GetValue("AllowRegistration", AllowRegistration);
         HostedDomain = a["HostedDomain"] ?? HostedDomain;
         GoogleClientId = a["GoogleClientId"] ?? GoogleClientId;
         GoogleClientSecret = a["GoogleClientSecret"] ?? GoogleClientSecret;
@@ -91,6 +98,12 @@ public static class AuthSchema
         await AddColumnIfMissing(db, "Users", "GoogleSubject", "TEXT NULL");
         await AddColumnIfMissing(db, "Users", "Email", "TEXT NULL");
         await AddColumnIfMissing(db, "Users", "AppRole", "INTEGER NOT NULL DEFAULT 0");
+        await AddColumnIfMissing(db, "Users", "Username", "TEXT NULL");
+        await AddColumnIfMissing(db, "Users", "PasswordHash", "TEXT NULL");
+        await AddColumnIfMissing(db, "Users", "PasswordUpdatedUtc", "TEXT NULL");
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Username" ON "Users" ("Username");
+            """);
         await db.Database.ExecuteSqlRawAsync("""
             CREATE TABLE IF NOT EXISTS "GoogleCredentials" (
               "Id" INTEGER NOT NULL CONSTRAINT "PK_GoogleCredentials" PRIMARY KEY AUTOINCREMENT,
@@ -163,12 +176,34 @@ public static class AppJwt
         return await db.Users.FindAsync(row.UserId);
     }
 
+    /// <summary>Valida um access token avulso (fora do pipeline) e devolve o uid — usado no link do Google.</summary>
+    public static int? ReadUserId(string accessToken)
+    {
+        try
+        {
+            var principal = new JwtSecurityTokenHandler().ValidateToken(accessToken, new TokenValidationParameters
+            {
+                ValidateIssuer = true, ValidIssuer = AuthOptions.JwtIssuer,
+                ValidateAudience = true, ValidAudience = AuthOptions.JwtAudience,
+                ValidateIssuerSigningKey = true, IssuerSigningKey = AuthOptions.SigningKey,
+                ValidateLifetime = true, ClockSkew = TimeSpan.FromMinutes(1),
+            }, out _);
+            return int.TryParse(principal.FindFirst("uid")?.Value, out var id) ? id : null;
+        }
+        catch { return null; }
+    }
+
     public static async Task RevokeAsync(AppDb db, string rawRefresh)
     {
         var hash = Sha256(rawRefresh);
         await db.AppRefreshTokens.Where(t => t.TokenHash == hash && t.RevokedUtc == null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedUtc, DateTime.UtcNow));
     }
+
+    /// <summary>Derruba todas as sessões do usuário (troca de senha, suspeita de vazamento).</summary>
+    public static async Task RevokeAllAsync(AppDb db, int userId) =>
+        await db.AppRefreshTokens.Where(t => t.UserId == userId && t.RevokedUtc == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedUtc, DateTime.UtcNow));
 
     public static string Sha256(string value) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
@@ -182,15 +217,17 @@ public static class GoogleOidc
 {
     private static readonly HttpClient Http = new();
 
-    // state -> (returnUrl, criado). CSRF + para onde redirecionar após o login.
+    // state -> (returnUrl, usuário a vincular, criado). CSRF + para onde redirecionar
+    // após o login. LinkUserId != null significa "não crie conta: pendure este Google
+    // na conta já logada" (usuário que entrou com senha e está adicionando o Google).
     // Em memória: o protótipo roda uma instância só; migrar para store distribuído ao escalar.
-    private static readonly ConcurrentDictionary<string, (string ReturnUrl, DateTime CreatedUtc)> Pending = new();
+    private static readonly ConcurrentDictionary<string, (string ReturnUrl, int? LinkUserId, DateTime CreatedUtc)> Pending = new();
 
-    public static string StartLogin(string returnUrl)
+    public static string StartLogin(string returnUrl, int? linkUserId = null)
     {
         var state = Convert.ToBase64String(RandomNumberGenerator.GetBytes(24))
             .TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        Pending[state] = (returnUrl, DateTime.UtcNow);
+        Pending[state] = (returnUrl, linkUserId, DateTime.UtcNow);
         PruneExpired();
 
         var query = new Dictionary<string, string?>
@@ -213,11 +250,17 @@ public static class GoogleOidc
         return $"https://accounts.google.com/o/oauth2/v2/auth?{qs}";
     }
 
-    public static bool TryConsumeState(string state, out string returnUrl)
+    public static bool TryConsumeState(string state, out string returnUrl, out int? linkUserId)
     {
         PruneExpired();
-        if (Pending.TryRemove(state, out var entry)) { returnUrl = entry.ReturnUrl; return true; }
+        if (Pending.TryRemove(state, out var entry))
+        {
+            returnUrl = entry.ReturnUrl;
+            linkUserId = entry.LinkUserId;
+            return true;
+        }
         returnUrl = "";
+        linkUserId = null;
         return false;
     }
 

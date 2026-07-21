@@ -37,6 +37,50 @@ e o `userId` passado ao hub — para não quebrar o loop de dev antes das creden
 existirem. Os clientes usam Bearer quando há token; senão, caem no modo dev.
 **Em produção: `DevBypass = false`.**
 
+### Conta local (usuário + senha) — o caminho do beta
+
+O beta não depende do Workspace: dá para criar conta com **usuário e senha** na própria
+tela de login. A conta **é o mesmo `User`**; cada forma de entrar é só uma credencial
+pendurada nele:
+
+```
+User(Id) ──┬── Username + PasswordHash   (PBKDF2-SHA256, 210k iterações)
+           └── GoogleSubject + Email     (vinculado depois, mesmo Id)
+```
+
+Como o progresso (XP, horas, inventário, móveis, tasks) sempre foi por `UserId`, ligar o
+Google mais tarde **não migra nada** — o Id não muda.
+
+| Endpoint | O que faz |
+|---|---|
+| `POST /auth/register` | cria conta (usuário, senha, nome) + estoque inicial; devolve os tokens |
+| `POST /auth/login` | valida a senha; devolve os tokens (mesmo par do fluxo Google) |
+| `GET /auth/me` | identidade + `hasPassword` / `hasGoogle` |
+| `POST /auth/password` | troca a senha (ou define a primeira, para conta vinda do Google) e derruba as outras sessões |
+| `GET /auth/google/login?link=<access_token>` | pendura o Google na conta **já logada**, em vez de criar outra |
+| `POST /auth/google/unlink` | remove o vínculo (exige ter senha, senão a conta ficaria sem entrada) |
+
+Defesas: senha mínima de 8 caracteres; hash com sal por usuário e rehash automático quando
+as iterações subirem; resposta genérica ("usuário ou senha inválidos") com verificação
+falsa para não vazar quais usuários existem; bloqueio por usuário e por IP após 8 falhas
+em 15 minutos (`LoginThrottle`, em memória — vira store distribuído ao escalar).
+
+Chaves de config: `Auth:PasswordEnabled` e `Auth:AllowRegistration` (beta por convite =
+`AllowRegistration:false` e contas criadas por você).
+
+### Uma conta = um avatar no mundo
+
+O hub marca cada conexão como `world` (cliente Phaser) ou `panel` (app web). Ao entrar no
+mundo, `OfficeHub.EvictWorldSessionsAsync` derruba as outras sessões **de mundo** da mesma
+conta: manda `SessionEnded` e encerra o socket. O painel web fica de fora — é normal ele
+estar aberto junto com o jogo.
+
+**Quem cai é a sessão antiga, não a nova.** O contrário travaria o dono para fora sempre
+que uma aba morresse sem avisar (navegador fechado no tranco, queda de internet), até o
+timeout do SignalR. O cliente derrubado para a conexão de propósito (sem auto-reconnect,
+senão as duas janelas ficariam se derrubando em loop), solta o microfone da call e mostra
+"Sessão encerrada" com o botão **Jogar aqui**, que retoma o mundo naquela janela.
+
 ---
 
 ## 2. O que já está implementado (Fases 0–2)
@@ -47,7 +91,12 @@ existirem. Os clientes usam Bearer quando há token; senão, caem no modo dev.
 | Endpoints `/auth/config`, `/auth/google/login`, `/auth/google/callback`, `/auth/refresh`, `/auth/logout` | `backend/.../AuthEndpoints.cs` |
 | Middleware JwtBearer + políticas `Admin`/`Manager`, CORS configurável, helper `UserId` via principal | `backend/.../Program.cs` |
 | Hub deriva `userId` do JWT (fallback dev) | `backend/.../OfficeHub.cs` |
-| Modelo: `User.GoogleSubject/Email/AppRole`, `UserRole`, `GoogleCredential`, `AppRefreshToken` | `backend/.../Models.cs` |
+| Modelo: `User.GoogleSubject/Email/AppRole`, `User.Username/PasswordHash`, `UserRole`, `GoogleCredential`, `AppRefreshToken` | `backend/.../Models.cs` |
+| Conta local: hash PBKDF2, regras de usuário/senha, freio de força bruta | `backend/.../PasswordAuth.cs` |
+| Endpoints `/auth/register`, `/auth/login`, `/auth/me`, `/auth/password`, `/auth/google/unlink` e o `?link=` do Google | `backend/.../AuthEndpoints.cs` |
+| Portaria do jogo + tela "sessão encerrada" | `client-web/src/LoginScreen.js` |
+| Sessão única no mundo (`ClientKind`, takeover da sessão antiga) | `backend/.../Presence.cs`, `OfficeHub.cs` |
+| Painel: formulário de conta no login e bloco "Conta" no perfil (trocar senha, vincular Google) | `backend/.../wwwroot/js/{main,profile}.js` |
 | Cliente Phaser: captura de token, Bearer, `accessTokenFactory` | `client-web/src/auth.js`, `GameItemsSystem.js` |
 | App web: botão Google + refresh + logout, Bearer | `backend/.../wwwroot/js/{api,main,chat}.js` |
 

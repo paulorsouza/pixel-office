@@ -38,10 +38,57 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
         return AuthOptions.DevBypass ? fallback : null;
     }
 
-    public async Task Join(int userId)
+    // Conexões vivas: só o dono do contexto consegue derrubar a própria conexão,
+    // então guardamos os contextos para poder encerrar a sessão antiga na troca.
+    private static readonly ConcurrentDictionary<string, HubCallerContext> LiveConnections = new();
+
+    public override Task OnConnectedAsync()
+    {
+        LiveConnections[Context.ConnectionId] = Context;
+        return base.OnConnectedAsync();
+    }
+
+    /// <summary>
+    /// Derruba as outras sessões DE MUNDO desta conta. O painel web fica de fora:
+    /// ele só ouve presença/chat e é normal ficar aberto junto com o jogo.
+    /// </summary>
+    private async Task EvictWorldSessionsAsync(int userId)
+    {
+        var stale = Presence.Players.Values
+            .Where(p => p.UserId == userId && !p.IsBot
+                        && p.Client == ClientKind.World && p.Key != Context.ConnectionId)
+            .Select(p => p.Key)
+            .ToList();
+        if (stale.Count == 0) return;
+
+        await Clients.Clients(stale).SendAsync("SessionEnded", new
+        {
+            reason = "takeover",
+            message = "Sua conta entrou no mundo em outra janela. Esta sessão foi encerrada.",
+        });
+
+        // A limpeza (avatar, cadeira, timer de horas) acontece no OnDisconnectedAsync
+        // de cada uma. O respiro é só para o aviso chegar antes do socket fechar.
+        foreach (var key in stale)
+        {
+            if (!LiveConnections.TryGetValue(key, out var ctx)) continue;
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(500);
+                ctx.Abort();
+            });
+        }
+    }
+
+    public async Task Join(int userId, string? client)
     {
         if (ResolveUser(userId) is not int resolved) return;
         userId = resolved;
+        var kind = ClientKind.Normalize(client);
+        // Uma conta = um avatar no mundo. A sessão nova ganha e a antiga cai —
+        // se fosse ao contrário, uma aba fantasma (browser fechado no tranco,
+        // internet caiu) trancaria o dono para fora até o timeout do SignalR.
+        if (kind == ClientKind.World) await EvictWorldSessionsAsync(userId);
         await using var db = await dbFactory.CreateDbContextAsync();
         var user = await db.Users.FindAsync(userId);
         if (user is null) return;
@@ -73,6 +120,7 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
         {
             Key = Context.ConnectionId,
             UserId = user.Id,
+            Client = kind,
             Name = user.Name,
             Color = user.Color,
             SkinData = skin?.Data,
@@ -420,6 +468,8 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        LiveConnections.TryRemove(Context.ConnectionId, out _);
+
         // libera assentos de xadrez ocupados por esta conexão
         foreach (var (boardId, match) in ChessMatches)
             if (match.WhiteConn == Context.ConnectionId || match.BlackConn == Context.ConnectionId)

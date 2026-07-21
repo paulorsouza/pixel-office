@@ -2,10 +2,22 @@ using System.Collections.Concurrent;
 
 namespace VirtualOffice.Api;
 
+public static class ClientKind
+{
+    public const string World = "world";   // cliente Phaser: um avatar por conta
+    public const string Panel = "panel";   // app web: só presença/chat, pode duplicar
+
+    public static string Normalize(string? value) =>
+        string.Equals(value, World, StringComparison.OrdinalIgnoreCase) ? World : Panel;
+}
+
 public class PlayerState
 {
     public string Key { get; set; } = "";       // connectionId ou "bot-N"
     public int UserId { get; set; }
+    // De onde veio a conexão: "world" (cliente Phaser) ou "panel" (app web).
+    // Só o mundo é exclusivo por conta — o painel pode ficar aberto em paralelo.
+    public string Client { get; set; } = ClientKind.Panel;
     public string Name { get; set; } = "";
     public string Color { get; set; } = "#7c5cff";
     public string? SkinData { get; set; }        // json da skin equipada (inventário legado do app web)
