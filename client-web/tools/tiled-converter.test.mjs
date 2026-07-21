@@ -187,7 +187,7 @@ test('mapa gerado oferece uma camada livre editável sem poluir o runtime vazio'
   ));
 
   assert.ok(freeDraw, 'a camada de desenho livre precisa existir');
-  assert.match(freeDraw.name, /DESENHO LIVRE/);
+  assert.match(freeDraw.name, /Desenho livre/);
   assert.equal(freeDraw.type, 'tilelayer');
   assert.equal(freeDraw.locked, false);
   assert.ok(freeDraw.data.every((gid) => gid === 0));

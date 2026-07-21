@@ -678,7 +678,7 @@ export function makeMapEditable(map, catalogs) {
   const baseLayers = [
     {
       id: 'base-floors',
-      name: '🎨 00 · CHÃO E RUAS — EDITE COM O PINCEL',
+      name: 'Pincel · Chão e ruas',
       width: map.w,
       height: map.h,
       depth: -100,
@@ -686,7 +686,7 @@ export function makeMapEditable(map, catalogs) {
     },
     {
       id: 'base-walls',
-      name: '🎨 01 · PAREDES — EDITE COM O PINCEL',
+      name: 'Pincel · Paredes',
       width: map.w,
       height: map.h,
       depth: -80,
@@ -695,7 +695,7 @@ export function makeMapEditable(map, catalogs) {
     },
     {
       id: 'base-hedges',
-      name: '🎨 02 · CERCAS — EDITE COM O PINCEL',
+      name: 'Pincel · Cercas',
       width: map.w,
       height: map.h,
       depth: -75,
@@ -1079,7 +1079,7 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
   if (!visualLayerSources.some((layer) => layer.id === 'free-draw')) {
     visualLayerSources.push({
       id: 'free-draw',
-      name: '✏ 16 · DESENHO LIVRE — PINTE AQUI',
+      name: 'Pincel · Desenho livre',
       width: map.w,
       height: map.h,
       depth: -85,
@@ -1094,22 +1094,22 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
     catalogs,
   ));
 
-  const structuresLayer = objectLayer(layerId(), '✥ 01 · Prédio e quintal — OBJETOS', 'structures', '#4c9aff', structures, { opacity: 0.45 });
-  const pathsLayer = objectLayer(layerId(), '✥ 02 · Caminhos — OBJETOS', 'paths', '#e7c873', paths, { opacity: 0.55 });
-  const zonesLayer = objectLayer(layerId(), '✥ 03 · Zonas abertas — OBJETOS', 'zones', '#70d6c7', zones, { opacity: 0.45 });
-  const roomsLayer = objectLayer(layerId(), '✥ 04 · Salas — OBJETOS', 'rooms', '#f4a261', rooms, { opacity: 0.45 });
-  const hedgesLayer = objectLayer(layerId(), '✥ 06 · Cercas e colisões — OBJETOS', 'hedges', '#4f772d', hedges, { opacity: 0.35 });
-  const detailsLayer = objectLayer(layerId(), '✥ 08 · Detalhes — OBJETOS', 'details', '#9ef01a', details);
-  const propsLayer = objectLayer(layerId(), '✥ 09 · Props do mundo — OBJETOS', 'props', '#52b788', props);
-  const furnitureLayer = objectLayer(layerId(), '✥ 10 · Móveis — OBJETOS', 'furniture', '#ffd166', furniture);
-  const doorsLayer = objectLayer(layerId(), '✥ 11 · Portas — OBJETOS', 'doors', '#00b4d8', doors, { opacity: 0.6 });
-  const collisionsLayer = objectLayer(layerId(), '✥ 12 · Colisões — OBJETOS', 'collisions', '#ef233c', collisions, { opacity: 0.55 });
-  const navigationLayer = objectLayer(layerId(), '✥ 13 · Spawns e portais — OBJETOS', 'navigation', '#c77dff', navigation, { opacity: 0.7 });
-  const cameraLayer = objectLayer(layerId(), '🔒 14 · Limite da câmera — NÃO DESBLOQUEIE SEM NECESSIDADE', 'camera', '#ffffff', camera, {
+  const structuresLayer = objectLayer(layerId(), 'Objetos · Prédio e quintal', 'structures', '#4c9aff', structures, { opacity: 0.45 });
+  const pathsLayer = objectLayer(layerId(), 'Objetos · Caminhos', 'paths', '#e7c873', paths, { opacity: 0.55 });
+  const zonesLayer = objectLayer(layerId(), 'Objetos · Zonas abertas', 'zones', '#70d6c7', zones, { opacity: 0.45 });
+  const roomsLayer = objectLayer(layerId(), 'Objetos · Salas', 'rooms', '#f4a261', rooms, { opacity: 0.45 });
+  const hedgesLayer = objectLayer(layerId(), 'Objetos · Cercas e colisões', 'hedges', '#4f772d', hedges, { opacity: 0.35 });
+  const detailsLayer = objectLayer(layerId(), 'Objetos · Detalhes', 'details', '#9ef01a', details);
+  const propsLayer = objectLayer(layerId(), 'Objetos · Props do mundo', 'props', '#52b788', props);
+  const furnitureLayer = objectLayer(layerId(), 'Objetos · Móveis', 'furniture', '#ffd166', furniture);
+  const doorsLayer = objectLayer(layerId(), 'Objetos · Portas', 'doors', '#00b4d8', doors, { opacity: 0.6 });
+  const collisionsLayer = objectLayer(layerId(), 'Objetos · Colisões', 'collisions', '#ef233c', collisions, { opacity: 0.55 });
+  const navigationLayer = objectLayer(layerId(), 'Objetos · Spawns e portais', 'navigation', '#c77dff', navigation, { opacity: 0.7 });
+  const cameraLayer = objectLayer(layerId(), 'Objetos · Limite da câmera (travada)', 'camera', '#ffffff', camera, {
       locked: true,
       opacity: 0.35,
     });
-  const mechanicsLayer = objectLayer(layerId(), '✥ 15 · Mecânicas — OBJETOS', 'mechanics', '#ff70a6', entities, { opacity: 0.75 });
+  const mechanicsLayer = objectLayer(layerId(), 'Objetos · Mecânicas', 'mechanics', '#ff70a6', entities, { opacity: 0.75 });
   const objectLayers = [
     structuresLayer,
     pathsLayer,
@@ -1134,14 +1134,14 @@ export function runtimeToTiled(map, catalogs, runtimeFile = `${map.id}.json`) {
   const layers = map.visualMode === 'tiled'
     ? [...visualLayers, ...nativeObjectLayers]
     : [
-        tileLayer(layerId(), '🔒 00 · PRÉVIA DOS PISOS — NÃO EDITAR', 'previewFloors', map.w, map.h, previewFloors(map, catalogs)),
+        tileLayer(layerId(), 'Prévia · Pisos (não editar)', 'previewFloors', map.w, map.h, previewFloors(map, catalogs)),
         structuresLayer,
         pathsLayer,
         zonesLayer,
         roomsLayer,
-        tileLayer(layerId(), '🔒 05 · PRÉVIA DAS CERCAS — NÃO EDITAR', 'previewHedges', map.w, map.h, previewHedges(map, catalogs)),
+        tileLayer(layerId(), 'Prévia · Cercas (não editar)', 'previewHedges', map.w, map.h, previewHedges(map, catalogs)),
         hedgesLayer,
-        tileLayer(layerId(), '🔒 07 · PRÉVIA DAS PAREDES — NÃO EDITAR', 'previewWalls', map.w, map.h, previewWalls(map)),
+        tileLayer(layerId(), 'Prévia · Paredes (não editar)', 'previewWalls', map.w, map.h, previewWalls(map)),
         detailsLayer,
         propsLayer,
         furnitureLayer,

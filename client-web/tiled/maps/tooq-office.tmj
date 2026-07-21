@@ -2123,7 +2123,7 @@
    "height": 44,
    "id": 1,
    "locked": false,
-   "name": "🎨 00 · CHÃO E RUAS — EDITE COM O PINCEL",
+   "name": "Pincel · Chão e ruas",
    "opacity": 1,
    "properties": [
     {
@@ -4266,7 +4266,7 @@
    "height": 44,
    "id": 2,
    "locked": false,
-   "name": "🎨 01 · PAREDES — EDITE COM O PINCEL",
+   "name": "Pincel · Paredes",
    "opacity": 1,
    "properties": [
     {
@@ -6424,7 +6424,7 @@
    "height": 44,
    "id": 3,
    "locked": false,
-   "name": "🎨 02 · CERCAS — EDITE COM O PINCEL",
+   "name": "Pincel · Cercas",
    "opacity": 1,
    "properties": [
     {
@@ -8577,7 +8577,7 @@
    "height": 44,
    "id": 4,
    "locked": false,
-   "name": "✏ 16 · DESENHO LIVRE — PINTE AQUI",
+   "name": "Pincel · Desenho livre",
    "opacity": 1,
    "properties": [
     {
@@ -8612,7 +8612,7 @@
    "draworder": "topdown",
    "id": 5,
    "locked": false,
-   "name": "✥ 01 · Prédio e quintal — OBJETOS",
+   "name": "Objetos · Prédio e quintal",
    "objects": [
     {
      "height": 448,
@@ -8671,7 +8671,7 @@
    "draworder": "topdown",
    "id": 7,
    "locked": false,
-   "name": "✥ 03 · Zonas abertas — OBJETOS",
+   "name": "Objetos · Zonas abertas",
    "objects": [
     {
      "height": 160,
@@ -8788,7 +8788,7 @@
    "draworder": "topdown",
    "id": 8,
    "locked": false,
-   "name": "✥ 04 · Salas — OBJETOS",
+   "name": "Objetos · Salas",
    "objects": [
     {
      "height": 176,
@@ -8867,7 +8867,7 @@
    "draworder": "topdown",
    "id": 10,
    "locked": false,
-   "name": "✥ 08 · Detalhes — OBJETOS",
+   "name": "Objetos · Detalhes",
    "objects": [
     {
      "gid": 10007,
@@ -9008,7 +9008,7 @@
    "draworder": "topdown",
    "id": 11,
    "locked": false,
-   "name": "✥ 09 · Props do mundo — OBJETOS",
+   "name": "Objetos · Props do mundo",
    "objects": [
     {
      "gid": 10006,
@@ -9484,7 +9484,7 @@
    "draworder": "topdown",
    "id": 12,
    "locked": false,
-   "name": "✥ 10 · Móveis — OBJETOS",
+   "name": "Objetos · Móveis",
    "objects": [
     {
      "gid": 100170,
@@ -10825,7 +10825,7 @@
    "draworder": "topdown",
    "id": 13,
    "locked": false,
-   "name": "✥ 11 · Portas — OBJETOS",
+   "name": "Objetos · Portas",
    "objects": [
     {
      "height": 16,
@@ -10958,7 +10958,7 @@
    "draworder": "topdown",
    "id": 14,
    "locked": false,
-   "name": "✥ 12 · Colisões — OBJETOS",
+   "name": "Objetos · Colisões",
    "objects": [],
    "opacity": 0.55,
    "properties": [
@@ -10978,7 +10978,7 @@
    "draworder": "topdown",
    "id": 15,
    "locked": false,
-   "name": "✥ 13 · Spawns e portais — OBJETOS",
+   "name": "Objetos · Spawns e portais",
    "objects": [
     {
      "height": 0,
@@ -11153,7 +11153,7 @@
    "draworder": "topdown",
    "id": 16,
    "locked": true,
-   "name": "🔒 14 · Limite da câmera — NÃO DESBLOQUEIE SEM NECESSIDADE",
+   "name": "Objetos · Limite da câmera (travada)",
    "objects": [
     {
      "height": 688,
@@ -11187,7 +11187,7 @@
    "draworder": "topdown",
    "id": 17,
    "locked": false,
-   "name": "✥ 15 · Mecânicas — OBJETOS",
+   "name": "Objetos · Mecânicas",
    "objects": [
     {
      "id": 72,

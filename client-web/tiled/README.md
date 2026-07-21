@@ -30,18 +30,18 @@ numeradas; `Office Quest · Móveis` permanece como catálogo completo dos 339 r
 
 O visual existente foi convertido para camadas nativas do Tiled. Há dois modos de edição:
 
-- **Chão e ruas:** selecione `🎨 00 · CHÃO E RUAS`, escolha um piso e use **Stamp Brush** (`B`) ou
+- **Chão e ruas:** selecione `Pincel · Chão e ruas`, escolha um piso e use **Stamp Brush** (`B`) ou
   a borracha. Você pode apagar e redesenhar os caminhos que já existem.
-- **Paredes:** selecione `🎨 01 · PAREDES` e pinte/apague qualquer peça do room builder.
-- **Cercas:** selecione `🎨 02 · CERCAS`, escolha uma peça em `08 · Cercas externas` e pinte/apague.
+- **Paredes:** selecione `Pincel · Paredes` e pinte/apague qualquer peça do room builder.
+- **Cercas:** selecione `Pincel · Cercas`, escolha uma peça em `08 · Cercas externas` e pinte/apague.
   Os conjuntos metal cinza e metal/madeira têm retas, laterais e quatro cantos.
-- **Árvores, fachada, móveis e detalhes:** selecione a camada `✥` correspondente, use
-  **Select Objects** (`S`) e arraste o próprio sprite. Props estão em `✥ 09` e móveis em `✥ 10`.
-- **Desenho adicional:** `✏ 16 · DESENHO LIVRE` continua disponível para acabamentos separados.
+- **Árvores, fachada, móveis e detalhes:** selecione a camada `Objetos · …` correspondente, use
+  **Select Objects** (`S`) e arraste o próprio sprite. Props estão em `Objetos · Props do mundo` e móveis em `Objetos · Móveis`.
+- **Desenho adicional:** `Pincel · Desenho livre` continua disponível para acabamentos separados.
 
-As camadas `🎨 01 · PAREDES` e `🎨 02 · CERCAS` criam colisão automaticamente a partir dos tiles
-pintados. Apagar um desses tiles também apaga sua colisão. A camada `✏ 16 · DESENHO LIVRE` é apenas
-visual; use `✥ 12 · Colisões` quando um acabamento novo precisar bloquear o jogador.
+As camadas `Pincel · Paredes` e `Pincel · Cercas` criam colisão automaticamente a partir dos tiles
+pintados. Apagar um desses tiles também apaga sua colisão. A camada `Pincel · Desenho livre` é apenas
+visual; use `Objetos · Colisões` quando um acabamento novo precisar bloquear o jogador.
 
 Não tente desenhar na camada da câmera. Ela contém somente o retângulo que limita a visão e agora
 fica bloqueada para evitar deformar o mapa acidentalmente.
@@ -60,24 +60,24 @@ As camadas numeradas mantêm o desenho e os dados organizados:
 
 | Camada | O que editar |
 |---|---|
-| `🎨 00 · Chão e ruas` | Tiles reais de grama, pisos e caminhos; editar com `B`. |
-| `🎨 01 · Paredes` | Tiles reais das paredes; editar com `B`. |
-| `🎨 02 · Cercas` | Tiles reais das cercas; editar com `B`. |
+| `Pincel · Chão e ruas · Chão e ruas` | Tiles reais de grama, pisos e caminhos; editar com `B`. |
+| `Pincel · Paredes · Paredes` | Tiles reais das paredes; editar com `B`. |
+| `Pincel · Cercas · Cercas` | Tiles reais das cercas; editar com `B`. |
 | `01 · Prédio e quintal` | Retângulos `building` e `yard`. |
 | `03 · Zonas abertas` | Café, lounge, recepção e áreas de time. |
-| `04 · Salas` | Geometria e colisão das salas; o visual está em `🎨 00` e `🎨 01`. |
+| `04 · Salas` | Geometria e colisão das salas; o visual está em `Pincel · Chão e ruas` e `Pincel · Paredes`. |
 | `08 · Detalhes` | Grama e decoração pequena sem colisão. |
-| `09 · Props do mundo` | Árvores, bancos, fachadas, portões e outros PNGs. |
-| `10 · Móveis` | Mobília fixa do cenário-base; não representa estoque do jogador. |
+| `Objetos · Props do mundo` | Árvores, bancos, fachadas, portões e outros PNGs. |
+| `Objetos · Móveis` | Mobília fixa do cenário-base; não representa estoque do jogador. |
 | `11 · Portas` | Vãos associados ao prédio ou a uma sala. |
-| `12 · Colisões` | Retângulos físicos invisíveis no jogo. |
-| `13 · Spawns e portais` | Entradas do jogador e troca de cenas. |
+| `Objetos · Colisões` | Retângulos físicos invisíveis no jogo. |
+| `Objetos · Spawns e portais` | Entradas do jogador e troca de cenas. |
 | `14 · Limite da câmera` | Existe apenas em cenas fechadas; o mundo aberto usa mapa + objetos externos. |
 | `15 · Mecânicas` | Objetos de gameplay orientados por classe e propriedades. |
 | `16 · Desenho livre` | Tile layer desbloqueada para pintar pisos, paredes e detalhes diretamente. |
 
 No `world.tmj` não há camada de limite da câmera: ela acompanha automaticamente `Width`, `Height` e
-qualquer objeto visível colocado além dessas bordas. As camadas `🎨` e as camadas de objetos `✥`
+qualquer objeto visível colocado além dessas bordas. As camadas `Pincel · …` e `Objetos · …`
 estão desbloqueadas e são fontes do runtime.
 
 ### Mudar a estrutura inteira do mundo
@@ -88,7 +88,7 @@ direções. Para crescer além disso:
 1. use **Map → Resize Map**;
 2. informe o novo `Width` e `Height` e escolha a âncora;
 3. confirme — o Tiled redimensiona todas as tile layers e move os objetos conforme a âncora;
-4. preencha a área nova na camada `🎨 00 · CHÃO E RUAS`.
+4. preencha a área nova na camada `Pincel · Chão e ruas`.
 
 Não existe outro limite de câmera para atualizar. Objetos podem ser movidos livremente em pixels e a
 câmera alcança coordenadas externas automaticamente. Para pintar chão, ruas, paredes ou cercas nessa
@@ -131,7 +131,7 @@ Não execute `validate` nem `from-tiled` no trabalho diário. Esses comandos con
 para CI e diagnóstico avançado.
 
 Não use `refresh-preview` nesses mapas: pisos, paredes e cercas não são mais prévias geradas. Edite
-diretamente as três camadas `🎨`.
+diretamente as camadas `Pincel · Chão e ruas`, `Pincel · Paredes` e `Pincel · Cercas`.
 
 ## 5. Mover ou inserir um móvel
 
@@ -141,7 +141,7 @@ comprada/encontrada e persistida, use o modo `Decorar sala` no jogo.
 
 ### Mover
 
-1. Selecione a camada `10 · Móveis`.
+1. Selecione a camada `Objetos · Móveis`.
 2. Use a ferramenta de seleção de objetos.
 3. Arraste o móvel. A grade é de 16 × 16 px.
 4. Salve; o jogo atualiza automaticamente.
@@ -185,7 +185,7 @@ mantém o último mapa válido.
 
 1. Abra o tileset `Office Quest · Móveis`.
 2. Escolha visualmente o móvel `of_*`.
-3. Selecione a camada `10 · Móveis`.
+3. Selecione a camada `Objetos · Móveis`.
 4. Use a ferramenta de inserir objeto de tile e clique no mapa.
 5. Na visão **Properties**, altere a propriedade herdada `solid` para `true` se o avatar não puder
    atravessá-lo. Para móveis largos, prefira o footprint explícito descrito abaixo.
@@ -209,7 +209,7 @@ Exemplo para uma mesa de três tiles: `collisionX=-1`, `collisionY=0.1`, `collis
 
 1. Abra o tileset `Office Quest · Mundo`.
 2. Selecione uma árvore, banco, fachada ou outro item.
-3. Coloque-o na camada `09 · Props do mundo`.
+3. Coloque-o na camada `Objetos · Props do mundo`.
 4. Para adicionar colisão na base, crie estas propriedades numéricas no objeto:
 
 | Propriedade | Significado |

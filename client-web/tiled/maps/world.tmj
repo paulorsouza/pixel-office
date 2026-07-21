@@ -79,7 +79,7 @@
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
          "height":72,
          "id":1,
-         "name":"\ud83c\udfa8 00 \u00b7 CH\u00c3O E RUAS \u2014 EDITE COM O PINCEL",
+         "name":"Pincel \u00b7 Ch\u00e3o e ruas",
          "opacity":1,
          "properties":[
                 {
@@ -178,7 +178,7 @@
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":72,
          "id":2,
-         "name":"\ud83c\udfa8 01 \u00b7 PAREDES \u2014 EDITE COM O PINCEL",
+         "name":"Pincel \u00b7 Paredes",
          "opacity":1,
          "properties":[
                 {
@@ -292,7 +292,7 @@
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":72,
          "id":3,
-         "name":"\ud83c\udfa8 02 \u00b7 CERCAS \u2014 EDITE COM O PINCEL",
+         "name":"Pincel \u00b7 Cercas",
          "opacity":1,
          "properties":[
                 {
@@ -401,7 +401,7 @@
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":72,
          "id":4,
-         "name":"\u270f 16 \u00b7 DESENHO LIVRE \u2014 PINTE AQUI",
+         "name":"Pincel \u00b7 Desenho livre",
          "opacity":1,
          "properties":[
                 {
@@ -434,7 +434,7 @@
          "color":"#9ef01a",
          "draworder":"topdown",
          "id":10,
-         "name":"\u2725 08 \u00b7 Detalhes \u2014 OBJETOS",
+         "name":"Objetos \u00b7 Detalhes",
          "objects":[
                 {
                  "gid":238,
@@ -476,7 +476,7 @@
          "color":"#52b788",
          "draworder":"topdown",
          "id":11,
-         "name":"\u2725 09 \u00b7 Props do mundo \u2014 OBJETOS",
+         "name":"Objetos \u00b7 Props do mundo",
          "objects":[
                 {
                  "gid":246,
@@ -1453,7 +1453,7 @@
          "color":"#ffd166",
          "draworder":"topdown",
          "id":12,
-         "name":"\u2725 10 \u00b7 M\u00f3veis \u2014 OBJETOS",
+         "name":"Objetos \u00b7 M\u00f3veis",
          "objects":[],
          "opacity":1,
          "properties":[
@@ -1471,7 +1471,7 @@
          "color":"#ef233c",
          "draworder":"topdown",
          "id":14,
-         "name":"\u2725 12 \u00b7 Colis\u00f5es \u2014 OBJETOS",
+         "name":"Objetos \u00b7 Colis\u00f5es",
          "objects":[
                 {
                  "height":30.4,
@@ -1513,7 +1513,7 @@
          "color":"#c77dff",
          "draworder":"topdown",
          "id":15,
-         "name":"\u2725 13 \u00b7 Spawns e portais \u2014 OBJETOS",
+         "name":"Objetos \u00b7 Spawns e portais",
          "objects":[
                 {
                  "height":0,
@@ -1621,7 +1621,7 @@
          "color":"#ff70a6",
          "draworder":"topdown",
          "id":17,
-         "name":"\u2725 15 \u00b7 Mec\u00e2nicas \u2014 OBJETOS",
+         "name":"Objetos \u00b7 Mec\u00e2nicas",
          "objects":[],
          "opacity":0.75,
          "properties":[

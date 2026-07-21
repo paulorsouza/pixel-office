@@ -61,17 +61,17 @@ Os nomes têm ícones e números para deixar o tipo de edição evidente:
 
 | Camada | Ferramenta e resultado |
 |---|---|
-| `🎨 00 · CHÃO E RUAS` | Pincel (`B`), preenchimento (`F`) e borracha para grama e pisos. |
-| `🎨 01 · PAREDES` | Pinte peças do room builder; os tiles também geram colisão. |
-| `🎨 02 · CERCAS` | Pinte/apague cercas; os tiles também geram colisão. |
-| `✥ 09 · Props do mundo` | Selecione (`S`) e mova fachadas, árvores, bancos e portões. |
-| `✥ 10 · Móveis` | Posicione mobília fixa do cenário-base; não concede itens ao jogador. |
-| `✥ 11 · Portas` | Edite o vão e as propriedades da porta. |
-| `✥ 12 · Colisões` | Retângulos físicos invisíveis. |
-| `✥ 13 · Spawns e portais` | Pontos de entrada e retângulos de troca de cena. |
-| `✥ 14 · Limite da câmera` | Somente cenas fechadas; o hub inclui mapa e objetos externos. |
-| `✥ 15 · Mecânicas` | Objetos de gameplay identificados por classe. |
-| `✏ 16 · DESENHO LIVRE` | Acabamentos visuais sem colisão automática. |
+| `Pincel · Chão e ruas` | Pincel (`B`), preenchimento (`F`) e borracha para grama e pisos. |
+| `Pincel · Paredes` | Pinte peças do room builder; os tiles também geram colisão. |
+| `Pincel · Cercas` | Pinte/apague cercas; os tiles também geram colisão. |
+| `Objetos · Props do mundo` | Selecione (`S`) e mova fachadas, árvores, bancos e portões. |
+| `Objetos · Móveis` | Posicione mobília fixa do cenário-base; não concede itens ao jogador. |
+| `Objetos · Portas` | Edite o vão e as propriedades da porta. |
+| `Objetos · Colisões` | Retângulos físicos invisíveis. |
+| `Objetos · Spawns e portais` | Pontos de entrada e retângulos de troca de cena. |
+| `Objetos · Limite da câmera (travada)` | Somente cenas fechadas; o hub inclui mapa e objetos externos. |
+| `Objetos · Mecânicas` | Objetos de gameplay identificados por classe. |
+| `Pincel · Desenho livre` | Acabamentos visuais sem colisão automática. |
 
 Tiles usam a grade de **16×16 px**. Objetos podem ficar fora da grade quando o alinhamento visual
 pedir; o carregador preserva coordenadas fracionárias.
@@ -88,9 +88,9 @@ No `world.tmj`, há três paletas dedicadas ao fechamento do terreno:
 - `08 · Cercas externas`: famílias modulares metal cinza e metal/madeira, com retas, laterais,
   cantos e uma peça de passagem.
 
-Pinte cercas de 16×16 na camada `🎨 02 · CERCAS` para ganhar colisão automática. Use os portões e
-a peça larga `*_pass` como objetos em `✥ 09 · Props`; se precisarem bloquear o jogador, desenhe a
-colisão física em `✥ 12 · Colisões`. O portal de troca de cena continua em `✥ 13 · Spawns e portais`.
+Pinte cercas de 16×16 na camada `Pincel · Cercas` para ganhar colisão automática. Use os portões e
+a peça larga `*_pass` como objetos em `Objetos · Props do mundo`; se precisarem bloquear o jogador, desenhe a
+colisão física em `Objetos · Colisões`. O portal de troca de cena continua em `Objetos · Spawns e portais`.
 
 ## 5. Criar um tileset próprio
 
@@ -124,7 +124,7 @@ grandes, a colisão pode ser declarada no próprio objeto, em tiles:
 | `collisionW`, `collisionH` | Largura e altura da base física. |
 
 Colida apenas com a base de árvores e fachadas para o avatar poder passar visualmente atrás delas.
-Para formas irregulares, desenhe vários retângulos na camada `✥ 12 · Colisões`.
+Para formas irregulares, desenhe vários retângulos na camada `Objetos · Colisões`.
 
 ## 7. Spawns, portais e cenas novas
 
@@ -161,7 +161,7 @@ Paredes, pisos, portas, portais, ruas e estrutura de salas continuam exclusivos 
 
 Há duas categorias visuais que não devem ser confundidas:
 
-- móvel em `✥ 10 · Móveis`: parte fixa do mapa, editável no Tiled e não selecionável pelo jogador;
+- móvel em `Objetos · Móveis`: parte fixa do mapa, editável no Tiled e não selecionável pelo jogador;
 - móvel colocado no jogo: instância com dono, carregada por cima do mapa e editável no modo decoração.
 
 Para tornar um recorte disponível como item, não basta arrastá-lo no Tiled. Cadastre-o em

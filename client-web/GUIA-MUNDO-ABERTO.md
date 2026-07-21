@@ -24,12 +24,12 @@ fonte carregada diretamente pelo jogo; `maps/world.json` é apenas um snapshot l
 
 O desenho existente está em três tile layers nativas e desbloqueadas:
 
-- `🎨 00 · CHÃO E RUAS`;
-- `🎨 01 · PAREDES`;
-- `🎨 02 · CERCAS`.
+- `Pincel · Chão e ruas`;
+- `Pincel · Paredes`;
+- `Pincel · Cercas`.
 
 Edite-as diretamente com o pincel e a borracha. Prédios, árvores e outras imagens continuam como
-objetos movíveis em `09 · Props do mundo`; móveis ficam em `10 · Móveis`.
+objetos movíveis em `Objetos · Props do mundo`; móveis ficam em `Objetos · Móveis`.
 
 > Nunca use `to-tiled --force` para atualizar uma prévia. Esse comando reconstrói o mapa inteiro a
 > partir do JSON e pode descartar seu trabalho visual.
@@ -84,11 +84,11 @@ composição existente.
 Depois do redimensionamento:
 
 1. redimensione o mapa; no mundo aberto a câmera acompanha automaticamente as novas dimensões;
-2. pinte a nova área na camada `🎨 00 · CHÃO E RUAS`;
-3. pinte ou apague as cercas na camada `🎨 02 · CERCAS`;
+2. pinte a nova área na camada `Pincel · Chão e ruas`;
+3. pinte ou apague as cercas na camada `Pincel · Cercas`;
 4. remova a cerca antiga exatamente onde a nova rua deve continuar.
 
-Ao aumentar o mapa, os tiles novos começam vazios. Use o preenchimento do Tiled na camada `🎨 00`
+Ao aumentar o mapa, os tiles novos começam vazios. Use o preenchimento do Tiled na camada `Pincel · Chão e ruas`
 para cobrir rapidamente a nova área com grama.
 
 Paredes e cercas pintadas geram a própria colisão. Não existe retângulo separado para manter
@@ -96,7 +96,7 @@ sincronizado; apagar o tile libera a passagem.
 
 ## 5. Criar uma rua com os pisos atuais
 
-1. selecione `🎨 00 · CHÃO E RUAS`;
+1. selecione `Pincel · Chão e ruas`;
 2. escolha o piso desejado na paleta `01 · Construção`;
 3. use **Stamp Brush** (`B`), **Bucket Fill** (`F`) e a borracha para desenhar a rua;
 4. salve e confira o resultado no navegador.
@@ -134,7 +134,7 @@ O PNG deve ser **seamless, 16×16 e sem bordas**. Não é necessário alterar Ja
 2. no Tiled, use **File → New → New Tileset** e marque **Collection of Images**;
 3. adicione `floor_road.png` e salve como `client-web/tiled/tilesets/my-roads.tsj`;
 4. em `world.tmj`, use **Map → Add External Tileset** e escolha `my-roads.tsj`;
-5. pinte o novo tile em `🎨 00 · CHÃO E RUAS` e salve.
+5. pinte o novo tile em `Pincel · Chão e ruas` e salve.
 
 O `.tmj` passa a referenciar o novo `.tsj`; o carregador encontra a imagem e a entrega ao Phaser
 automaticamente. Se o tile possuir uma borda, ela será repetida a cada 16 px e a rua ficará
@@ -144,7 +144,7 @@ quadriculada. Confira o PNG ampliado antes de cadastrá-lo.
 
 Estruturas externas são props: fachadas, casas, portões, árvores grandes e monumentos.
 
-1. selecione a camada `09 · Props do mundo`;
+1. selecione a camada `Objetos · Props do mundo`;
 2. no painel **Tilesets**, abra `Office Quest · Mundo`;
 3. escolha a fachada ou estrutura;
 4. use a ferramenta **Insert Tile** e clique no mapa;
@@ -182,10 +182,10 @@ da fachada e ser coberto naturalmente pelo Y-sort.
 Para um prédio que pode ser visitado, não use uma colisão única sobre toda a base:
 
 1. deixe o prop sem `collisionW`/`collisionH`;
-2. na camada `12 · Colisões`, duplique um retângulo de classe `collision`;
+2. na camada `Objetos · Colisões`, duplique um retângulo de classe `collision`;
 3. crie uma colisão à esquerda da porta e outra à direita;
 4. deixe o vão da porta completamente livre;
-5. na camada `13 · Spawns e portais`, coloque o portal sobre esse vão.
+5. na camada `Objetos · Spawns e portais`, coloque o portal sobre esse vão.
 
 ```text
 [ colisão esquerda ][ porta livre ][ colisão direita ]
@@ -204,7 +204,7 @@ Os PNGs crus ficam em `LimeZu/exteriores/singles/`. Use sempre a versão 16×16.
 5. crie ou abra um tileset externo **Collection of Images** em `client-web/tiled/tilesets/`;
 6. use **Tileset → Add Tiles** para adicionar `arcade_front.png`;
 7. no tile, defina `class = prop` e a propriedade string `assetId = arcade_front`;
-8. adicione esse tileset externo ao `world.tmj` e insira o objeto em `09 · Props do mundo`.
+8. adicione esse tileset externo ao `world.tmj` e insira o objeto em `Objetos · Props do mundo`.
 
 O runtime lê a referência externa e carrega a imagem sem cadastro em código. Se você quiser incluir
 o asset nas paletas oficiais geradas do projeto, ainda pode atualizar `tiled/palettes.json` e rodar
@@ -218,7 +218,7 @@ O padrão do projeto é: a fachada permanece no mundo e o interior vive em outra
 
 ### No mundo
 
-1. na camada `13 · Spawns e portais`, duplique um portal existente;
+1. na camada `Objetos · Spawns e portais`, duplique um portal existente;
 2. coloque-o sobre a porta da nova fachada;
 3. mantenha a classe `portal`;
 4. edite as propriedades:
@@ -301,22 +301,22 @@ mundo**. Ela prova o fluxo inteiro antes de multiplicar o trabalho.
 
 | Sintoma | Causa provável |
 |---|---|
-| A rua não aparece no jogo | a camada `🎨 00` não foi salva ou o salvamento mostrou erro |
-| Consigo ver, mas não pintar | está selecionada uma camada de objetos; selecione uma camada `🎨` |
+| A rua não aparece no jogo | a camada `Pincel · Chão e ruas` não foi salva ou o salvamento mostrou erro |
+| Consigo ver, mas não pintar | está selecionada uma camada de objetos; selecione uma camada `Pincel · …` |
 | O mapa não abre após salvar | há uma referência, classe ou propriedade inválida; leia o aviso no jogo |
 | O piso sempre fica claro | `floor` inválido; o renderer usa `light` como fallback |
-| O prédio aparece, mas o avatar o atravessa | faltou footprint ou camada `12 · Colisões` |
+| O prédio aparece, mas o avatar o atravessa | faltou footprint ou camada `Objetos · Colisões` |
 | A porta está desenhada, mas não entra | porta visual não é portal; crie classe `portal` |
 | O portal não valida | `targetScene` ou `targetSpawn` não existe |
 | O avatar nasce preso | spawn está dentro de colisão ou em cima da parede |
-| A câmera mostra vazio | a área nova ainda não foi preenchida na camada `🎨 00` |
+| A câmera mostra vazio | a área nova ainda não foi preenchida na camada `Pincel · Chão e ruas` |
 | O PNG novo não aparece no jogo | o `.tsj` não foi adicionado ao mapa, ou o `.tsj`/`.tmj` não foi salvo |
 
 ## 13. Checklist final
 
 - [ ] O `.tmj` foi salvo.
-- [ ] A rua foi pintada na camada `🎨 00 · CHÃO E RUAS`.
-- [ ] Paredes e cercas foram pintadas nas camadas `🎨 01` e `🎨 02`.
+- [ ] A rua foi pintada na camada `Pincel · Chão e ruas`.
+- [ ] Paredes e cercas foram pintadas nas camadas `Pincel · Paredes` e `Pincel · Cercas`.
 - [ ] Existe espaço para o avatar e para os veículos.
 - [ ] Props grandes têm colisão apenas na base.
 - [ ] Portas acessíveis possuem um vão real entre colisões.
