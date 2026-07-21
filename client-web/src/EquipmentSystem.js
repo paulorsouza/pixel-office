@@ -452,5 +452,11 @@ export function createEquipmentVisual(scene) {
       equipmentGraphics.setVisible(false);
       renderKey = '';
     },
+    // avatares remotos vêm e vão no meio da cena; sem isso os graphics ficariam pendurados
+    destroy() {
+      trail.destroy();
+      equipmentGraphics.destroy();
+      renderKey = '';
+    },
   };
 }

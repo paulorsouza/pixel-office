@@ -97,6 +97,20 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
     public Task LeaveGameRoom(string sceneId, string roomId) =>
         Groups.RemoveFromGroupAsync(Context.ConnectionId, RoomGroup(sceneId, roomId));
 
+    /// <summary>
+    /// Aparência do avatar Phaser (camadas modulares do CharacterSystem + veículo ativo).
+    /// A composição vive no cliente; aqui ela só trafega para os outros renderizarem.
+    /// </summary>
+    public async Task SetAppearance(string? json)
+    {
+        if (!Presence.Players.TryGetValue(Context.ConnectionId, out var p)) return;
+        // payload é opaco para o servidor: limita tamanho para não virar canal de abuso
+        if (json is { Length: > 2000 }) return;
+        if (p.Appearance == json) return;
+        p.Appearance = json;
+        await Clients.Others.SendAsync("PlayerAppearance", new { key = p.Key, appearance = p.Appearance });
+    }
+
     /// <summary>Cena atual do avatar no mundo Phaser. Os clientes filtram o render por cena.</summary>
     public async Task SetScene(string sceneId)
     {

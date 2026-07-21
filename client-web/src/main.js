@@ -51,12 +51,16 @@ const characterCatalog = await fetchJson('assets/character/catalog.json');
 const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
 const gameItems = createGameItemsClient();
 await gameItems.initialize();
-const presence = createPresence({ userId: gameItems.userId });
+const presence = createPresence({
+  userId: gameItems.userId,
+  catalogs: { character: characterCatalog, equipment: equipmentCatalog },
+});
 await presence.initialize();
 // "Soltar o fone" pelo HUD precisa devolver o fone ao suporte na cena atual
 const proximityVoice = createProximityVoice({
   presence,
-  onReleaseHeadset: () => window.__scene?.headsets?.releaseAll(),
+  // notify=true: além de devolver o fone ao suporte, avisa o backend (encerra a reunião)
+  onReleaseHeadset: () => window.__scene?.headsets?.releaseAll(true),
 });
 await proximityVoice.initialize();
 const vehicleEquipment = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
@@ -72,7 +76,17 @@ const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
 });
-const characterCustomizer = createCharacterCustomizer(characterCatalog);
+// aparência publicada na presença: camadas do personagem + veículo em uso.
+// `onChange` dispara já na construção do customizer, então a seleção vem por parâmetro
+// (o const ainda está na zona morta neste ponto).
+let activeVehicleId = null;
+const publishAppearance = (selection) => presence.setAppearance({
+  character: selection || characterCustomizer.getSelection(),
+  vehicle: activeVehicleId,
+});
+const characterCustomizer = createCharacterCustomizer(characterCatalog, {
+  onChange: (selection) => publishAppearance(selection),
+});
 const query = new URLSearchParams(location.search);
 const requestedScene = query.get('scene') || location.hash.replace(/^#/, '');
 const initialScene = sceneMaps[requestedScene] ? requestedScene : manifest.startScene;
@@ -400,9 +414,21 @@ class MapScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => presence.detach());
 
     // fone das salas de reunião: pegar fixa o call daquela sala até soltar
+    // o backend também conhece o fone: é ele que mantém o lançamento de horas da
+    // reunião aberto enquanto a pessoa circula fora da sala (PickUpHeadset/DropHeadset)
     this.headsets = createMeetingHeadsets(this, this.map, {
-      onGrab: (meetingRoom) => proximityVoice.pinToRoom(this.currentSceneId, meetingRoom),
-      onRelease: () => proximityVoice.releasePin(),
+      onGrab: (meetingRoom) => {
+        proximityVoice.pinToRoom(this.currentSceneId, meetingRoom);
+        presence.pickUpHeadset();
+      },
+      onRelease: () => {
+        proximityVoice.releasePin();
+        presence.dropHeadset();
+      },
+    });
+    // sair da cena segurando o fone também encerra a reunião no backend
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.headsets?.hasHeld()) presence.dropHeadset();
     });
 
     // sala de reunião: entrar dispara o lançamento de horas (SetZone no backend)
@@ -450,6 +476,12 @@ class MapScene extends Phaser.Scene {
       this.shiftKey.isDown || Boolean(equipmentPreview),
     );
     const speed = profile.speed;
+    // veículo entra/sai (Shift): republica a aparência para os outros verem a troca
+    const vehicleNow = profile.active ? profile.equipment.id : null;
+    if (vehicleNow !== activeVehicleId) {
+      activeVehicleId = vehicleNow;
+      publishAppearance();
+    }
     let vx = 0;
     let vy = 0;
     if (keys.A.isDown || keys.LEFT.isDown) vx = -speed;

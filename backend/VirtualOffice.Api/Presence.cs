@@ -8,7 +8,8 @@ public class PlayerState
     public int UserId { get; set; }
     public string Name { get; set; } = "";
     public string Color { get; set; } = "#7c5cff";
-    public string? SkinData { get; set; }        // json da skin equipada
+    public string? SkinData { get; set; }        // json da skin equipada (inventário legado do app web)
+    public string? Appearance { get; set; }      // json do avatar Phaser: camadas modulares + veículo
     public double X { get; set; }
     public double Y { get; set; }
     public string Dir { get; set; } = "down";

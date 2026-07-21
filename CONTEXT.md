@@ -196,7 +196,9 @@ externa.
 
 **Presença + voz por proximidade (feito):** o cliente Phaser conecta o hub de presença
 (`PresenceSystem.js`), renderiza avatares remotos interpolados (filtro de cena no cliente) e
-sincroniza `Join/Move/SetScene`. A voz é LiveKit por **(cena, sala)** (`ProximityVoice.js`): na
+sincroniza `Join/Move/SetScene/SetAppearance`. Os avatares remotos usam a **skin modular** e o
+**veículo** de cada jogador (`RemoteAvatar.js` reaproveita os visuais do avatar local; bots e
+clientes antigos caem no corpo base). A voz é LiveKit por **(cena, sala)** (`ProximityVoice.js`): na
 área aberta o volume cai com a distância; **dentro de uma sala fechada o call é isolado** (todos
 no volume cheio, sem vazar para fora). Salas de reunião têm um **fone** (`MeetingHeadset.js`,
 derivado de `map.rooms`): pegar com `E` mantém você na reunião mesmo saindo da sala, até soltar.

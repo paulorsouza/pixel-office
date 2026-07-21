@@ -4,6 +4,7 @@
 // A isolação por cena é feita no cliente (render só de quem está na mesma cena),
 // para não afetar a lista de "online" do app web, que usa a presença global.
 import { auth, resolveApiBase } from './auth.js';
+import { createRemoteAvatar, normalizeAppearance } from './RemoteAvatar.js';
 
 const MOVE_INTERVAL_MS = 100;   // frequência máxima de envio da própria posição
 const MOVING_TIMEOUT_MS = 220;  // sem update recente ⇒ avatar remoto entra em idle
@@ -12,11 +13,13 @@ export function createPresence(options = {}) {
   const query = new URLSearchParams(location.search);
   const apiBase = options.apiBase ? String(options.apiBase).replace(/\/$/, '') : resolveApiBase();
   const userId = Number(options.userId || auth.userId() || query.get('userId') || query.get('user') || 1);
+  const catalogs = options.catalogs || null;   // { character, equipment } para o avatar remoto
 
   const events = new EventTarget();
-  const remotes = new Map(); // key -> { userId, name, color, scene, x, y, tx, ty, dir, lastMoveAt, sprite, label }
+  const remotes = new Map(); // key -> { userId, name, color, scene, x, y, tx, ty, dir, lastMoveAt, avatar, label, appearance }
   let connection = null;
   let selfKey = null;
+  let myAppearance = null;    // último json enviado (reenviado ao reconectar)
 
   let scene = null;          // Phaser.Scene atual
   let sceneId = '';
@@ -43,9 +46,16 @@ export function createPresence(options = {}) {
     rec.tx = state.x;
     rec.ty = state.y;
     rec.dir = state.dir || rec.dir || 'down';
+    rec.hasHeadset = Boolean(state.hasHeadset);
+    setAppearanceOn(rec, state.appearance);
     remotes.set(state.key, rec);
     ensureSprite(rec);
     emit('change');
+  }
+
+  // a aparência chega como json opaco; normalizar aqui protege o render de lixo da rede
+  function setAppearanceOn(rec, raw) {
+    rec.appearance = catalogs ? normalizeAppearance(catalogs, raw) : null;
   }
 
   function remove(key) {
@@ -53,28 +63,32 @@ export function createPresence(options = {}) {
     if (rec) { destroySprite(rec); remotes.delete(key); emit('change'); }
   }
 
-  // ---- sprites (só para quem está na cena atual) ----
+  // ---- avatares (só para quem está na cena atual) ----
   function ensureSprite(rec) {
     if (!scene || !localPlayer) return;
     const visible = rec.scene === sceneId;
-    if (visible && !rec.sprite) {
-      rec.sprite = scene.physics
-        ? scene.add.sprite(rec.x, rec.y, 'adam_idle', 18)
+    if (visible && !rec.avatar) {
+      if (!scene.physics) return;
+      rec.avatar = catalogs
+        ? createRemoteAvatar(scene, catalogs, rec)
         : null;
-      if (rec.sprite) {
-        rec.sprite.setOrigin(0.5, 0.5);
-        rec.label = scene.add.text(rec.x, rec.y - 22, rec.name, {
-          fontSize: '9px', fontFamily: 'monospace', color: '#fff',
-          backgroundColor: rec.color, padding: { x: 3, y: 1 },
-        }).setOrigin(0.5, 1).setDepth(1e6);
-      }
-    } else if (!visible && rec.sprite) {
+      if (!rec.avatar) return;
+      rec.label = scene.add.text(rec.x, rec.y - 22, labelText(rec), {
+        fontSize: '9px', fontFamily: 'monospace', color: '#fff',
+        backgroundColor: rec.color, padding: { x: 3, y: 1 },
+      }).setOrigin(0.5, 1).setDepth(1e6);
+    } else if (!visible && rec.avatar) {
       destroySprite(rec);
+    } else if (visible && rec.label) {
+      rec.label.setText(labelText(rec));
     }
   }
 
+  // fone pego na reunião aparece junto do nome (quem está na call, mesmo fora da sala)
+  const labelText = (rec) => `${rec.hasHeadset ? '🎧 ' : ''}${rec.name}`;
+
   function destroySprite(rec) {
-    rec.sprite?.destroy(); rec.sprite = null;
+    rec.avatar?.destroy(); rec.avatar = null;
     rec.label?.destroy(); rec.label = null;
   }
 
@@ -101,16 +115,38 @@ export function createPresence(options = {}) {
       ensureSprite(rec);
       emit('change');
     });
+    connection.on('PlayerAppearance', ({ key, appearance }) => {
+      const rec = remotes.get(key);
+      if (!rec) return;
+      setAppearanceOn(rec, appearance);   // o avatar lê a seleção a cada frame
+      emit('change');
+    });
+    connection.on('Headset', ({ key, hasHeadset }) => {
+      const rec = remotes.get(key);
+      if (!rec) return;
+      rec.hasHeadset = Boolean(hasHeadset);
+      rec.label?.setText(labelText(rec));
+      emit('change');
+    });
     // xadrez: repassa os eventos do hub para quem escutar (a mecânica de xadrez)
     for (const name of ['ChessState', 'ChessMoved', 'ChessSeats', 'ChessReset']) {
       connection.on(name, (payload) => emit(name, payload));
     }
+
+    // reconexão automática: reenvia cena e aparência, senão o avatar volta genérico
+    connection.onreconnected(() => {
+      selfKey = connection.connectionId;
+      connection.invoke('Join', userId).catch(() => {});
+      if (sceneId) connection.invoke('SetScene', sceneId).catch(() => {});
+      if (myAppearance) connection.invoke('SetAppearance', myAppearance).catch(() => {});
+    });
 
     try {
       await connection.start();
       selfKey = connection.connectionId;
       await connection.invoke('Join', userId).catch(() => {});
       if (sceneId) await connection.invoke('SetScene', sceneId).catch(() => {});
+      if (myAppearance) await connection.invoke('SetAppearance', myAppearance).catch(() => {});
     } catch (error) {
       console.warn('Presença em rede indisponível; jogo segue offline.', error);
       connection = null;
@@ -128,13 +164,13 @@ export function createPresence(options = {}) {
       sceneId = currentSceneId;
       localPlayer = playerSprite;
       lastSent = { x: null, y: null, dir: null };
-      // recria os sprites remotos desta cena (a cena anterior foi destruída)
-      for (const rec of remotes.values()) { rec.sprite = null; rec.label = null; ensureSprite(rec); }
+      // recria os avatares remotos desta cena (a cena anterior foi destruída)
+      for (const rec of remotes.values()) { rec.avatar = null; rec.label = null; ensureSprite(rec); }
       if (connection && selfKey) connection.invoke('SetScene', sceneId).catch(() => {});
     },
 
     detach() {
-      for (const rec of remotes.values()) { rec.sprite = null; rec.label = null; }
+      for (const rec of remotes.values()) { rec.avatar = null; rec.label = null; }
       scene = null; localPlayer = null;
     },
 
@@ -156,14 +192,11 @@ export function createPresence(options = {}) {
       const now = performance.now();
       const t = Math.min(1, delta / 80);
       for (const rec of remotes.values()) {
-        if (!rec.sprite) continue;
+        if (!rec.avatar) continue;
         rec.x += (rec.tx - rec.x) * t;
         rec.y += (rec.ty - rec.y) * t;
-        rec.sprite.setPosition(rec.x, rec.y);
-        rec.sprite.setDepth(rec.y + 16);
         const moving = now - rec.lastMoveAt < MOVING_TIMEOUT_MS;
-        const anim = `${moving ? 'run' : 'idle'}-${rec.dir}`;
-        if (scene.anims.exists(anim)) rec.sprite.anims.play(anim, true);
+        rec.avatar.update(moving, now);
         rec.label?.setPosition(rec.x, rec.y - 22);
         rec.label?.setDepth(1e6);
       }
@@ -174,6 +207,21 @@ export function createPresence(options = {}) {
     chessMove(boardId, from, to, promo) { connection?.invoke('ChessMove', boardId, from, to, promo || null).catch(() => {}); },
     chessReset(boardId) { connection?.invoke('ChessReset', boardId).catch(() => {}); },
     chessLeave(boardId) { connection?.invoke('LeaveChess', boardId).catch(() => {}); },
+
+    // aparência do avatar (camadas modulares + veículo ativo); só vai à rede quando muda
+    setAppearance(appearance) {
+      const json = JSON.stringify({
+        character: appearance?.character || {},
+        vehicle: appearance?.vehicle || null,
+      });
+      if (json === myAppearance) return;
+      myAppearance = json;
+      connection?.invoke('SetAppearance', json).catch(() => {});
+    },
+
+    // fone da reunião: mantém o lançamento de horas aberto ao circular fora da sala
+    pickUpHeadset() { connection?.invoke('PickUpHeadset').catch(() => {}); },
+    dropHeadset() { connection?.invoke('DropHeadset').catch(() => {}); },
 
     // zona atual (ex.: 'meeting' inicia o lançamento de horas de reunião no backend)
     setZone(zone) {

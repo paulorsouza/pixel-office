@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Harness da presença (SignalR real)</title>
+<style>body{margin:0;padding:16px;background:#20222c;color:#dfe3f0;font:13px ui-monospace,monospace}</style>
+</head>
+<body>
+<pre id="log">carregando…</pre>
+<script src="lib/signalr.min.js"></script>
+<script type="module">
+// Duas conexões reais no hub para provar o contrato de rede da aparência e do fone.
+// Precisa do backend no ar (http://localhost:5210).
+const API = 'http://localhost:5210';
+const log = (m) => { document.querySelector('#log').textContent += `\n${m}`; };
+
+async function open(userId) {
+  const c = new window.signalR.HubConnectionBuilder()
+    .withUrl(`${API}/hub/office`, { withCredentials: false })
+    .build();
+  const got = { appearance: [], headset: [], joined: [], snapshot: null };
+  c.on('PlayerAppearance', (p) => got.appearance.push(p));
+  c.on('Headset', (p) => got.headset.push(p));
+  c.on('PlayerJoined', (p) => got.joined.push(p));
+  c.on('Snapshot', (p) => { got.snapshot = p; });
+  await c.start();
+  await c.invoke('Join', userId);
+  return { c, got, key: c.connectionId };
+}
+
+window.__run = async () => {
+  const a = await open(1);
+  const b = await open(2);
+  await new Promise((r) => setTimeout(r, 300));
+  const out = {};
+
+  // 1. A publica a aparência → B recebe
+  const appearance = JSON.stringify({ character: { body: 'body-01', eyes: 'eyes-02' }, vehicle: 'motorcycle' });
+  await a.c.invoke('SetAppearance', appearance);
+  await new Promise((r) => setTimeout(r, 300));
+  out.bRecebeuAparencia = b.got.appearance.map((p) => ({ deA: p.key === a.key, appearance: p.appearance }));
+
+  // 2. reenviar igual não gera broadcast (dedupe no servidor)
+  await a.c.invoke('SetAppearance', appearance);
+  await new Promise((r) => setTimeout(r, 250));
+  out.broadcastsAposReenvioIgual = b.got.appearance.length;
+
+  // 3. payload gigante é ignorado (limite de 2000)
+  await a.c.invoke('SetAppearance', JSON.stringify({ character: {}, lixo: 'x'.repeat(3000) }));
+  await new Promise((r) => setTimeout(r, 250));
+  out.broadcastsAposPayloadGigante = b.got.appearance.length;
+
+  // 4. quem entra depois recebe a aparência no Snapshot
+  const c3 = await open(3);
+  await new Promise((r) => setTimeout(r, 300));
+  const meNoSnapshot = (c3.got.snapshot || []).find((p) => p.key === a.key);
+  out.aparenciaNoSnapshot = meNoSnapshot?.appearance || null;
+
+  // 5. fone: precisa estar na zona meeting; depois circula fora sem perder o estado
+  await a.c.invoke('PickUpHeadset');
+  await new Promise((r) => setTimeout(r, 250));
+  out.foneSemEstarNaSala = b.got.headset.length;
+
+  await a.c.invoke('SetZone', 'meeting');
+  await a.c.invoke('PickUpHeadset');
+  await new Promise((r) => setTimeout(r, 350));
+  out.foneNaSala = b.got.headset.map((h) => ({ deA: h.key === a.key, hasHeadset: h.hasHeadset }));
+
+  await a.c.invoke('SetZone', '');   // sai da sala segurando o fone
+  await new Promise((r) => setTimeout(r, 250));
+  const c4 = await open(4);
+  await new Promise((r) => setTimeout(r, 300));
+  const aDepoisDeSair = (c4.got.snapshot || []).find((p) => p.key === a.key);
+  out.continuaComFoneForaDaSala = { hasHeadset: aDepoisDeSair?.hasHeadset, zone: aDepoisDeSair?.zone };
+
+  await a.c.invoke('DropHeadset');
+  await new Promise((r) => setTimeout(r, 300));
+  out.aposSoltar = b.got.headset.at(-1);
+
+  for (const conn of [a, b, c3, c4]) await conn.c.stop();
+  return out;
+};
+document.querySelector('#log').textContent = 'pronto';
+</script>
+</body>
+</html>

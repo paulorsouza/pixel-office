@@ -9,7 +9,8 @@ sob demanda, via LiveKit. A sala de reunião fixa continua existindo (ver §Foll
 ## Arquitetura
 
 - **Presença**: uma conexão SignalR dedicada (`PresenceSystem.js`), separada da de mobília.
-  `Join(userId)` cria o `PlayerState`; `Move(x,y,dir)` e `SetScene(sceneId)` sincronizam.
+  `Join(userId)` cria o `PlayerState`; `Move(x,y,dir)`, `SetScene(sceneId)` e
+  `SetAppearance(json)` sincronizam.
   A isolação por cena é feita **no cliente** (renderiza só quem tem a mesma cena) para não
   afetar a lista de online do app web, que usa a presença global. Bots vêm com `scene:""`
   e por isso não são desenhados no mundo.
@@ -25,6 +26,25 @@ sob demanda, via LiveKit. A sala de reunião fixa continua existindo (ver §Foll
   ficar trocando de call na soleira da porta. Áudio é automático; **mic/câmera/tela são sob
   demanda** no HUD. Se o LiveKit não estiver no ar, degrada em silêncio.
 
+## Avatares remotos: skin modular, animação e veículo
+
+Os outros jogadores são desenhados com **o mesmo código do avatar local** — `RemoteAvatar.js`
+monta um *player fantasma* (`{x, y, body.bottom}`) e entrega para `createCharacterVisual` e
+`createEquipmentVisual`, então camadas, poses e veículos não têm caminho duplicado.
+
+- **Aparência na rede**: `SetAppearance(json)` guarda `PlayerState.Appearance` e emite
+  `PlayerAppearance` para os outros; quem entra depois recebe tudo pelo `Snapshot`. O payload é
+  `{character: {body, eyes, outfit, hairstyle, accessory}, vehicle: id|null}` — **opaco para o
+  servidor**, que só limita o tamanho (2000 chars) e ignora reenvio idêntico.
+- **Quando é enviado**: ao trocar qualquer camada no menu `Tab` (reflete na hora nos outros) e ao
+  entrar/sair de um veículo com `Shift`. Reconexão reenvia cena + aparência.
+- **Validação na entrada**: `normalizeAppearance` normaliza contra o catálogo — opção ou veículo
+  inexistente cai no padrão, então json adulterado não quebra o render de quem recebe.
+- **Animação**: direção vem do `Move`; `moving` é inferido do tempo desde o último update
+  (`MOVING_TIMEOUT_MS`). Pose segue a regra do avatar local — moto = `sit`, demais veículos e
+  parado = `idle`, andando = `walk`.
+- **Fallback**: sem aparência (bots, cliente antigo) volta para o corpo base `adam_idle/run`.
+
 ## Fone de reunião (ficar na call ao sair da sala)
 
 Toda sala marcada como reunião (`meeting:true` no `extraJson`, ou `id: "meeting"`) ganha um
@@ -35,6 +55,10 @@ objeto do Tiled**, porque o mapa é trabalho manual e só recebe edição aditiv
   avatar saia dela (é o "levanto para pegar um café e continuo na reunião").
 - Soltar: `E` de novo perto do suporte, ou o botão **🎧 Soltar o fone** na barra do HUD (funciona
   de qualquer lugar). Trocar de cena também solta o fone automaticamente.
+- O fone também fala com o backend (`PickUpHeadset`/`DropHeadset`, que já existiam): é o que
+  **mantém o lançamento de horas da reunião aberto** enquanto a pessoa circula fora da sala —
+  `SetZone("")` só encerra a reunião quando `HasHeadset` é falso. Os outros clientes veem
+  **🎧 no label** de quem está com o fone.
 - Enquanto está vestido, o suporte fica apagado no lugar para o jogador saber onde devolver, e o
   HUD mostra o chip `🎧 {sala}`.
 
@@ -73,15 +97,17 @@ alimenta o HUD com roster, tracks, quem fala e volume por distância).
 
 ### Arquivos
 ```
-client-web/src/PresenceSystem.js     presença + avatares remotos interpolados
+client-web/src/PresenceSystem.js     presença, aparência em rede e avatares interpolados
+client-web/src/RemoteAvatar.js       avatar do outro jogador (skin modular + veículo + fallback)
 client-web/src/ProximityVoice.js     call por (cena,sala), volume por distância, estado → HUD
 client-web/src/MeetingHUD.js         UI da reunião: barra, grade, layouts, pessoas, toasts
 client-web/src/MeetingHeadset.js     fone das salas de reunião (fixa o call até soltar)
 client-web/hud-test.html             harness de QA do HUD (dados falsos, sem Phaser)
 client-web/voice-test.html           harness de QA do canal de voz (LiveKit stubado)
+client-web/presence-test.html        harness de QA da presença (2 conexões SignalR reais)
 client-web/lib/livekit-client.umd.min.js  SDK vendorizado (v2.20.0)
-backend/.../Presence.cs               PlayerState.Scene
-backend/.../OfficeHub.cs              SetScene + broadcast PlayerScene
+backend/.../Presence.cs               PlayerState.Scene / .Appearance / .HasHeadset
+backend/.../OfficeHub.cs              SetScene, SetAppearance, PickUpHeadset/DropHeadset
 backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, roomId}
 ```
 
@@ -100,13 +126,17 @@ backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, ro
    proximidade) e leve **um** para dentro do Escritório B → ele some do áudio do outro; com os
    dois dentro, se ouvem por completo. O chip do HUD mostra a sala.
 6. **Fone**: dentro do Escritório B, chegue no 🎧 e aperte `E` → chip vira `🎧 Escritório B`.
-   Saia da sala andando: **continua ouvindo a reunião**. `E` no suporte (ou **Soltar o fone**
-   na barra) volta para a proximidade da área aberta.
+   Saia da sala andando: **continua ouvindo a reunião** (e as horas seguem contando; o outro
+   cliente mostra 🎧 no seu label). `E` no suporte (ou **Soltar o fone** na barra) volta para a
+   proximidade da área aberta.
+7. **Skin em rede**: em uma janela abra `Tab → Personagem` e troque cabelo/roupa → o avatar muda
+   **na outra janela na hora**. Segure `Shift` com um veículo equipado → o outro vê o veículo e a
+   pose (moto = sentado). Os bots continuam com o corpo base.
 
 > O navegador embutido do assistente não consegue bootar esse cliente Phaser (geração
-> procedural de texturas + assets pesados), então a verificação visual foi feita via harness
-> de SignalR (protocolo de presença) e `curl` (token). O render e o áudio precisam de um
-> navegador real com LiveKit rodando.
+> procedural de texturas + assets pesados), então a verificação visual foi feita via harnesses
+> (`presence-test.html` com SignalR real, `voice-test.html` com LiveKit stubado) e testes
+> headless com stubs do Phaser. O render e o áudio precisam de um navegador real.
 
 ## Follow-ups
 
@@ -116,9 +146,11 @@ backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, ro
 - **Fone não aparece no avatar** (só no HUD) — falta a camada visual no personagem.
 - **Sem indicação de quem está em qual sala** no painel de pessoas: hoje ele lista quem está no
   seu call e quem está na cena fora dele, sem dizer em que sala fechada cada um está.
-- **Avatar remoto usa o corpo base** (`adam_idle/run`) + label com o nome; ainda **não**
-  sincroniza a skin modular do CharacterSystem (cada cliente guarda a sua em localStorage).
-  Falta enviar a composição pela rede.
+- **Equipamentos não-veículo não vão para a rede** (corrente, brincos, teclado…): a aparência
+  publicada cobre as 5 camadas do personagem + veículo. Os outros slots ainda não têm efeito
+  visual nem no avatar local, então nada a sincronizar por enquanto.
+- **Pose de sentar em cadeira/estação não é sincronizada** — quem trabalha numa estação aparece
+  de pé para os outros.
 - **Switch para a sala fixa na zona de reunião**: hoje o mundo usa proximidade e a sala fixa
   `meeting` segue acessível pelo app web, mas o cliente Phaser ainda **não troca** para a sala
   `meeting` (áudio full) ao entrar na zona — falta o Phaser detectar a zona e chamar o token
