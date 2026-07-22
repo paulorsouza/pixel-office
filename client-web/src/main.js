@@ -199,6 +199,12 @@ class MapScene extends Phaser.Scene {
       loadImageOnce(this, `floor_${floor}`, `assets/floors/floor_${floor}.png`);
     }
     loadImageOnce(this, 'grass', worldAssetPath('grass'));
+    // fone de reunião: vem de map.rooms, não de objeto do Tiled, então não
+    // entra em map.assets e precisa ser pedido aqui
+    if ((this.map.rooms || []).some((room) => room.meeting || room.id === 'meeting')) {
+      loadImageOnce(this, 'headset_wall', worldAssetPath('headset_wall'));
+      loadImageOnce(this, 'headset_wall_empty', worldAssetPath('headset_wall_empty'));
+    }
 
     const directTiledKeys = new Set();
     for (const descriptor of (this.map.tiledTextures || [])) {
@@ -335,12 +341,12 @@ class MapScene extends Phaser.Scene {
 
     this.moveKeys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
     this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.headsetKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.equipmentVisual = createEquipmentVisual(this);
     this.handleInteract = async () => {
       if (this.seated) { this.standUp(); return; }   // E sentado = levantar
       if (this.furnitureInteractions && await this.furnitureInteractions.interact()) return;
-      if (this.headsets?.interact()) return;
       if (
         this.activePortal
         && !this.transitioning
@@ -350,9 +356,13 @@ class MapScene extends Phaser.Scene {
         this.changeScene(this.activePortal);
       }
     };
+    // F é só do fone: separado do E para não disputar com portal, móvel e assento
+    this.handleHeadset = () => { this.headsets?.interact(); };
     this.interactKey.on('down', this.handleInteract);
+    this.headsetKey.on('down', this.handleHeadset);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.interactKey.off('down', this.handleInteract);
+      this.headsetKey.off('down', this.handleHeadset);
     });
     this.lastDirection = equipmentPreviewDirection || 'down';
     this.activePortal = null;

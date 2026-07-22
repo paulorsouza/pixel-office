@@ -1,6 +1,7 @@
-// Fone de reunião. Cada sala marcada como reunião (meeting) ganha um fone no chão.
-// Pegar o fone (E) fixa o jogador no call daquela sala mesmo saindo dela; soltar
-// (E perto do suporte, ou o botão do HUD) volta ao comportamento por posição.
+// Fone de reunião. Cada sala marcada como reunião (meeting) ganha um fone
+// pendurado na parede norte. Pegar o fone (F) fixa o jogador no call daquela sala
+// mesmo saindo dela; soltar (F perto do gancho, ou o botão do HUD) volta ao
+// comportamento por posição.
 // Derivado de map.rooms — aditivo, não depende de objeto no Tiled (o mapa é manual).
 
 const GRAB_RANGE = 2.0;   // tiles
@@ -11,34 +12,31 @@ export function createMeetingHeadsets(scene, map, handlers = {}) {
 
   const stands = meetingRooms.map((room) => {
     const x = (room.x + room.w / 2) * tile;
-    // logo abaixo da parede norte da sala, sem encostar nela
-    const y = (room.y + Math.min(room.h - 1.5, 2.4)) * tile;
+    // pendurado na parede norte da sala, na altura da face da parede
+    const y = (room.y + 1) * tile;
 
-    const base = scene.add.ellipse(x, y + 11, 30, 12, 0x140e1f, 0.5).setDepth(y - 1);
-    const ring = scene.add.circle(x, y + 2, 15).setStrokeStyle(2, 0x9a86ff, 0.9)
+    // origem no centro-inferior, como o resto da mobília, e profundidade por Y
+    // para desenhar por cima da parede
+    const sprite = scene.add.image(x, y, 'headset_wall')
+      .setOrigin(0.5, 1).setDepth(y);
+    const brilho = scene.add.circle(x, y - 8, 13).setStrokeStyle(2, 0x9a86ff, 0.9)
       .setFillStyle(0x7c5cff, 0).setDepth(y - 1);
-    const glyph = scene.add.text(x, y, '🎧', { fontSize: '19px' }).setOrigin(0.5).setDepth(y + 1);
 
-    const float = scene.tweens.add({
-      targets: glyph, y: y - 4, duration: 950, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-    });
     const pulse = scene.tweens.add({
-      targets: ring, scale: 1.7, alpha: { from: 0.85, to: 0 },
+      targets: brilho, scale: 1.6, alpha: { from: 0.7, to: 0 },
       duration: 1500, repeat: -1, ease: 'Sine.easeOut',
     });
 
-    return { room, x, y, base, ring, glyph, float, pulse, held: false };
+    return { room, x, y, sprite, brilho, pulse, held: false };
   });
 
   function setHeld(stand, held) {
     if (stand.held === held) return;
     stand.held = held;
-    // fone "vestido": suporte esvazia (glifo apagado, sem pulso) mas continua no
-    // lugar para o jogador saber onde devolver
-    stand.glyph.setAlpha(held ? 0.28 : 1);
-    stand.ring.setVisible(!held);
-    if (held) { stand.pulse.pause(); stand.float.pause(); stand.glyph.setY(stand.y); }
-    else { stand.pulse.resume(); stand.float.resume(); }
+    // fone "vestido": o gancho fica vazio no lugar, para o jogador saber onde devolver
+    stand.sprite.setTexture(held ? 'headset_wall_empty' : 'headset_wall');
+    stand.brilho.setVisible(!held);
+    if (held) stand.pulse.pause(); else stand.pulse.resume();
   }
 
   function releaseAll(notify = false) {
@@ -64,7 +62,7 @@ export function createMeetingHeadsets(scene, map, handlers = {}) {
   let nearbyHeld = null;
 
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-    for (const stand of stands) { stand.float?.remove(); stand.pulse?.remove(); }
+    for (const stand of stands) stand.pulse?.remove();
   });
 
   return {
@@ -75,12 +73,12 @@ export function createMeetingHeadsets(scene, map, handlers = {}) {
     update(player, blocked = false) {
       nearbyHeld = blocked ? null : nearestWithin(player, true);
       nearbyGrab = blocked ? null : nearestWithin(player, false);
-      if (nearbyHeld) return { label: 'Soltar o fone — sair da reunião' };
-      if (nearbyGrab) return { label: 'Pegar o fone — entrar na reunião' };
+      if (nearbyHeld) return { label: 'F — soltar o fone e sair da reunião' };
+      if (nearbyGrab) return { label: 'F — pegar o fone e entrar na reunião' };
       return null;
     },
 
-    // chamado no handler do E; true = consumiu a interação
+    // chamado no handler do F; true = consumiu a interação
     interact() {
       if (nearbyHeld) { setHeld(nearbyHeld, false); handlers.onRelease?.(); return true; }
       if (nearbyGrab) {
