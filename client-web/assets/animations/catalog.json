@@ -34,5 +34,29 @@
     "repeat": 0,
     "animation": "interior-sliding-door-open",
     "category": "door"
+  },
+  "interior_door_glass_double": {
+    "path": "assets/animations/interior-door-glass-double.png",
+    "preview": "assets/animations/interior-door-glass-double-preview.png",
+    "frameWidth": 32,
+    "frameHeight": 48,
+    "start": 0,
+    "end": 4,
+    "frameRate": 14,
+    "repeat": 0,
+    "animation": "interior-door-glass-double-open",
+    "category": "door"
+  },
+  "interior_door_wood": {
+    "path": "assets/animations/interior-door-wood.png",
+    "preview": "assets/animations/interior-door-wood-preview.png",
+    "frameWidth": 16,
+    "frameHeight": 32,
+    "start": 0,
+    "end": 4,
+    "frameRate": 12,
+    "repeat": 0,
+    "animation": "interior-door-wood-open",
+    "category": "door"
   }
 }

@@ -592,17 +592,19 @@ test('porta automática abre sem colisão e só a restaura depois de fechar', ()
       closeRadius: 20,
     };
     const scene = { automaticDoors: [door] };
-    const player = { body: { center: { x: 5, y: 0 } } };
+    // occupants é a lista de TODOS os avatares da cena; o teste tinha ficado
+    // na assinatura antiga, que recebia só o player local
+    const ocupantes = [{ x: 5, y: 0 }];
 
-    rendererModule.updateAutomaticDoors(scene, player);
+    rendererModule.updateAutomaticDoors(scene, ocupantes);
     assert.equal(door.state, 'opening');
     assert.equal(door.blocker.body.enable, false);
     assert.equal(sprite.playCalls, 1);
     completions.shift()();
     assert.equal(door.state, 'open');
 
-    player.body.center.x = 30;
-    rendererModule.updateAutomaticDoors(scene, player);
+    ocupantes[0].x = 30;
+    rendererModule.updateAutomaticDoors(scene, ocupantes);
     assert.equal(door.state, 'closing');
     assert.equal(door.blocker.body.enable, false);
     assert.equal(sprite.reverseCalls, 1);

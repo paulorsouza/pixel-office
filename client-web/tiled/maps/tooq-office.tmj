@@ -10919,7 +10919,7 @@
       {
        "name": "texture",
        "type": "string",
-       "value": "interior_sliding_door"
+       "value": "interior_door_glass_double"
       },
       {
        "name": "frame",
