@@ -91,11 +91,17 @@ export function createProximityVoice(options = {}) {
 
   // ---- canal de voz (posição ou fixado pelo fone) ----
 
+  // Existe canal de voz onde o jogador esta? Area verde e corredor nao tem:
+  // so sala declarada, ou o fone da reuniao, que acompanha o jogador.
+  // Independe de `enabled`, senao sair da voz esconderia o botao de voltar.
+  function hasChannel() {
+    return Boolean(pinnedRoom || (currentScene && locationRoom));
+  }
+
   function resolveTarget() {
-    if (!enabled) return null;
+    if (!enabled || !hasChannel()) return null;
     if (pinnedRoom) return { scene: pinnedRoom.scene, roomId: pinnedRoom.id, name: pinnedRoom.name };
-    if (!currentScene) return null;
-    return { scene: currentScene, roomId: locationRoom?.id || '', name: locationRoom?.name || '' };
+    return { scene: currentScene, roomId: locationRoom.id, name: locationRoom.name || locationRoom.id };
   }
 
   const keyOf = (t) => `${t.scene}::${t.roomId}`;
@@ -316,10 +322,13 @@ export function createProximityVoice(options = {}) {
   function refresh() {
     const lp = room?.localParticipant;
     hud.setSession({
+      // sem canal aqui o HUD some por inteiro; `room` mantem ele visivel
+      // durante a desconexao ao sair da sala
+      available: hasChannel() || Boolean(room) || connecting,
       status: room ? (connecting ? 'connecting' : 'connected')
         : connecting ? 'connecting'
         : failed ? 'failed'
-        : enabled && currentScene ? 'connecting'
+        : enabled && hasChannel() ? 'connecting'
         : 'off',
       micOn: Boolean(lp?.isMicrophoneEnabled),
       camOn: Boolean(lp?.isCameraEnabled),

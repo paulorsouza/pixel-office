@@ -644,6 +644,10 @@ export function createMeetingHUD(callbacks = {}) {
     ensure();
     const wasStatus = session.status;
     session = { ...session, ...next };
+    // `available` distingue "aqui nao existe call" (area verde, corredor) de
+    // "voce saiu da voz". Os dois deixam o status 'off', mas o primeiro esconde
+    // o HUD inteiro e o segundo mantem o botao de voltar.
+    root.hidden = session.available === false;
     if (typeof next.sceneName === 'string') {
       sceneName = next.sceneName;
       els.scene.textContent = sceneName;
