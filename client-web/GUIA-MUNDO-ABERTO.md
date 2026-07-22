@@ -113,6 +113,25 @@ Pisos disponíveis:
 
 Tiles de piso são atravessáveis. Não coloque colisão sobre a rua.
 
+### Asfalto, calçada e faixa de pedestre
+
+A paleta `09 · Ruas e calçadas` tem 34 tiles de 16×16 prontos, todos pintáveis na mesma camada
+`Pincel · Chão e ruas`:
+
+- **asfalto:** `asphalt` para a pista e `asphalt_2/3/4` para salpicar trinca e remendo;
+- **calçada:** `sidewalk` no miolo, `curb_top/bottom/left/right` na borda — o nome diz **onde fica a
+  calçada** (`curb_top` = calçada em cima, asfalto embaixo);
+- **esquina:** `curb_bend_tl/tr/bl/br` arredondam o encontro de duas calçadas num cruzamento. O
+  sufixo é o quadrante em que a calçada fica. Elas **não** servem como canto de um quarteirão solto —
+  ali a curva aponta para fora;
+- **faixa de pedestre:** `crosswalk_h_l` + `crosswalk_h_r` lado a lado, ou `crosswalk_v_t` +
+  `crosswalk_v_b` empilhados;
+- **marcações:** `mark_line_h/v`, `mark_tee_*`, `mark_cross` e afins.
+
+⚠️ As marcações têm 2 px de margem transparente de cada lado. Repetidas, elas formam uma linha
+**tracejada** — este pack não tem linha central contínua. Para divisória de faixa e vaga de
+estacionamento ficam ótimas; para uma faixa sólida você precisaria de arte nova.
+
 ### Formar curvas e cruzamentos
 
 Como a rua agora é pintada tile a tile, curvas e cruzamentos podem ter qualquer formato.
@@ -128,7 +147,7 @@ Sobreposição de caminhos é permitida. Deixe ambos com o mesmo `floor` para a 
 
 ## 6. Adicionar um piso de asfalto novo
 
-O PNG deve ser **seamless, 16×16 e sem bordas**. Não é necessário alterar JavaScript ou conversor:
+O PNG deve ser **seamless, 16×16 e sem bordas**. O tile aparece e alinha sem tocar em JavaScript:
 
 1. copie o tile para `client-web/assets/floors/floor_road.png`;
 2. no Tiled, use **File → New → New Tileset** e marque **Collection of Images**;
@@ -139,6 +158,12 @@ O PNG deve ser **seamless, 16×16 e sem bordas**. Não é necessário alterar Ja
 O `.tmj` passa a referenciar o novo `.tsj`; o carregador encontra a imagem e a entrega ao Phaser
 automaticamente. Se o tile possuir uma borda, ela será repetida a cada 16 px e a rua ficará
 quadriculada. Confira o PNG ampliado antes de cadastrá-lo.
+
+**Um passo a mais, se o piso novo vai cobrir área grande:** acrescente o `assetId` dele à lista
+`ROAD_SURFACES` em [`src/MapRenderer.js`](src/MapRenderer.js). O renderer só junta os tiles de uma
+camada em faixas largas quando **todas** as células são pisos conhecidos; um único tile de fora
+derruba essa otimização para a camada inteira, inclusive para os milhares de tiles de grama. Um piso
+fora da lista aparece na posição certa — só custa mais um sprite por célula.
 
 ## 7. Colocar uma estrutura já cadastrada
 

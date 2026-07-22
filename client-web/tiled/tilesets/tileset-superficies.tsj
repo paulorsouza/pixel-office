@@ -1,0 +1,1196 @@
+{
+  "columns": 0,
+  "grid": {
+    "height": 16,
+    "orientation": "orthogonal",
+    "width": 16
+  },
+  "margin": 0,
+  "name": "02 · Superfícies e pisos",
+  "objectalignment": "bottom",
+  "spacing": 0,
+  "tilecount": 50,
+  "tiledversion": "1.12.2",
+  "tileheight": 16,
+  "tiles": [
+    {
+      "id": 0,
+      "image": "../../assets/world/grass.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "grass"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 1,
+      "image": "../../assets/floors/floor_wood.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wood"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 2,
+      "image": "../../assets/floors/floor_carpet.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "carpet"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 3,
+      "image": "../../assets/floors/floor_cream.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "cream"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 4,
+      "image": "../../assets/floors/floor_sage.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "sage"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 5,
+      "image": "../../assets/floors/floor_water.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "water"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 6,
+      "image": "../../assets/world/roads/asphalt.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_asphalt"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "asfalto"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 7,
+      "image": "../../assets/world/roads/asphalt_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_asphalt_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "asfalto"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 8,
+      "image": "../../assets/world/roads/asphalt_3.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_asphalt_3"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "asfalto"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 9,
+      "image": "../../assets/world/roads/asphalt_4.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_asphalt_4"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "asfalto"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 10,
+      "image": "../../assets/world/roads/mark_line_h.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_line_h"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 11,
+      "image": "../../assets/world/roads/mark_line_h_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_line_h_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 12,
+      "image": "../../assets/world/roads/mark_line_v.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_line_v"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 13,
+      "image": "../../assets/world/roads/mark_line_v_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_line_v_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 14,
+      "image": "../../assets/world/roads/mark_dash_h.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_dash_h"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 15,
+      "image": "../../assets/world/roads/mark_dash_v.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_dash_v"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 16,
+      "image": "../../assets/world/roads/mark_corner_1.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_corner_1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 17,
+      "image": "../../assets/world/roads/mark_corner_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_corner_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 18,
+      "image": "../../assets/world/roads/mark_corner_3.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_corner_3"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 19,
+      "image": "../../assets/world/roads/mark_corner_4.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_corner_4"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 20,
+      "image": "../../assets/world/roads/mark_tee_1.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_tee_1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 21,
+      "image": "../../assets/world/roads/mark_tee_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_tee_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 22,
+      "image": "../../assets/world/roads/mark_tee_3.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_tee_3"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 23,
+      "image": "../../assets/world/roads/mark_tee_4.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_tee_4"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 24,
+      "image": "../../assets/world/roads/mark_cross.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_mark_cross"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "marcacao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 25,
+      "image": "../../assets/world/roads/sidewalk.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_sidewalk"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 26,
+      "image": "../../assets/world/roads/curb_top.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_top"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 27,
+      "image": "../../assets/world/roads/curb_bottom.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_bottom"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 28,
+      "image": "../../assets/world/roads/curb_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_left"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 29,
+      "image": "../../assets/world/roads/curb_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_right"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 30,
+      "image": "../../assets/world/roads/curb_bend_tl.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_bend_tl"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 31,
+      "image": "../../assets/world/roads/curb_bend_tr.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_bend_tr"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 32,
+      "image": "../../assets/world/roads/curb_bend_bl.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_bend_bl"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 33,
+      "image": "../../assets/world/roads/curb_bend_br.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_bend_br"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 34,
+      "image": "../../assets/world/roads/curb_gutter_1.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_gutter_1"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 35,
+      "image": "../../assets/world/roads/curb_gutter_2.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_curb_gutter_2"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "calcada"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 36,
+      "image": "../../assets/world/roads/crosswalk_h_l.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_crosswalk_h_l"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "faixa"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 37,
+      "image": "../../assets/world/roads/crosswalk_h_r.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_crosswalk_h_r"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "faixa"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 38,
+      "image": "../../assets/world/roads/crosswalk_v_t.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_crosswalk_v_t"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "faixa"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 39,
+      "image": "../../assets/world/roads/crosswalk_v_b.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "road_crosswalk_v_b"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "faixa"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 40,
+      "image": "../../assets/tiles/doorways/doorway_top_l.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_doorway_top_l"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "doorway"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 41,
+      "image": "../../assets/tiles/doorways/doorway_top_m.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_doorway_top_m"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "doorway"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 42,
+      "image": "../../assets/tiles/doorways/doorway_top_r.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_doorway_top_r"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "doorway"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 43,
+      "image": "../../assets/tiles/doorways/doorway_bottom_l.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_doorway_bottom_l"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "doorway"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 44,
+      "image": "../../assets/tiles/doorways/doorway_bottom_m.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_doorway_bottom_m"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "doorway"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 45,
+      "image": "../../assets/tiles/doorways/doorway_bottom_r.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_doorway_bottom_r"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "doorway"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 46,
+      "image": "../../assets/tiles/doorways/wall_tee_top_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_tee_top_right"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "juncao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 47,
+      "image": "../../assets/tiles/doorways/wall_tee_right.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_tee_right"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "juncao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 48,
+      "image": "../../assets/tiles/doorways/wall_tee_top_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_tee_top_left"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "juncao"
+        }
+      ],
+      "type": "surface"
+    },
+    {
+      "id": 49,
+      "image": "../../assets/tiles/doorways/wall_tee_left.png",
+      "imageheight": 16,
+      "imagewidth": 16,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "wall_tee_left"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "surface"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "juncao"
+        }
+      ],
+      "type": "surface"
+    }
+  ],
+  "tilewidth": 16,
+  "transformations": {
+    "hflip": false,
+    "preferuntransformed": true,
+    "rotate": false,
+    "vflip": false
+  },
+  "type": "tileset",
+  "version": "1.10"
+}

@@ -22,6 +22,21 @@ const NORTH_WALL = {
   lavender: wallFace(5),
 };
 
+// Tiles de rua de palette-roads.tsj. Entram em FLOORS porque canBatchAsRuns exige
+// que TODAS as celulas da camada sejam pisos conhecidos: um unico tile de fora
+// derruba o batching da camada inteira, inclusive dos milhares de tiles de grama.
+const ROAD_SURFACES = [
+  'asphalt', 'asphalt_2', 'asphalt_3', 'asphalt_4',
+  'mark_line_h', 'mark_line_h_2', 'mark_line_v', 'mark_line_v_2',
+  'mark_dash_h', 'mark_dash_v',
+  'mark_corner_1', 'mark_corner_2', 'mark_corner_3', 'mark_corner_4',
+  'mark_tee_1', 'mark_tee_2', 'mark_tee_3', 'mark_tee_4', 'mark_cross',
+  'sidewalk', 'curb_top', 'curb_bottom', 'curb_left', 'curb_right',
+  'curb_bend_tl', 'curb_bend_tr', 'curb_bend_bl', 'curb_bend_br',
+  'curb_gutter_1', 'curb_gutter_2',
+  'crosswalk_h_l', 'crosswalk_h_r', 'crosswalk_v_t', 'crosswalk_v_b',
+].map((name) => `road_${name}`);
+
 export const FLOORS = {
   wood: 'floor_wood',
   gray: 'floor_carpet',
@@ -31,6 +46,7 @@ export const FLOORS = {
   terra: 'floor_sage',
   sage: 'floor_sage',
   water: 'floor_water',
+  ...Object.fromEntries(ROAD_SURFACES.map((id) => [id, id])),
 };
 
 function floorTexture(name) {

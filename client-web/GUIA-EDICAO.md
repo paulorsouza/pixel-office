@@ -76,6 +76,30 @@ Os nomes têm ícones e números para deixar o tipo de edição evidente:
 Tiles usam a grade de **16×16 px**. Objetos podem ficar fora da grade quando o alinhamento visual
 pedir; o carregador preserva coordenadas fracionárias.
 
+## Paletas de interior
+
+Além do room builder de escritório (`01 · Construção · Paredes`), existem paletas de interior com
+muito mais acabamento e mobília de cômodo:
+
+| Paleta | Onde usar |
+|---|---|
+| `10 · Interiores · Paredes` | ~48 estilos de parede — pinte em `Pincel · Paredes` (gera colisão) |
+| `11 · Interiores · Pisos` | ~60 padrões de piso — pinte em **`Pincel · Desenho livre`**, veja o aviso abaixo |
+| `12 · Interiores · Vãos e arcos` | portas em arco e passagens, em `Pincel · Paredes` |
+| `13 · Interiores · Lounge` | 122 peças: sofá, TV, estante, luminária, quadro, planta |
+| `14 · Interiores · Banheiro` | 159 peças |
+| `15 · Interiores · Copa` | 408 peças: pia, geladeira, fogão, armário, mesa |
+| `16 · Interiores · Reunião` | 68 peças: mesa de conferência, projetor, cadeiras |
+
+As quatro últimas são mobília: use **Insert Tile** (`T`) na camada `Objetos · Móveis`, nunca o
+pincel — peça grande carimbada como tile numa camada de pincel renderiza deslocada.
+
+⚠️ **Piso de interior vai em `Pincel · Desenho livre`, não em `Pincel · Chão e ruas`.** Ele desenha
+por cima do chão (profundidade −85 contra −100), então o visual é o mesmo. O motivo é performance: a
+camada de chão só é agrupada em faixas largas quando todas as células são pisos simples, e um único
+tile vindo de folha derruba o agrupamento da camada inteira. Num mapa grande isso troca algumas
+centenas de faixas por dezenas de milhares de sprites.
+
 No mundo aberto, a câmera segue o avatar e expande seus limites para alcançar objetos colocados fora
 do canvas. Isso não expande as tile layers: use **Map → Resize Map** antes de pintar chão ou cercas
 em uma área externa, evitando grandes trechos que exibem apenas a cor verde de fundo.

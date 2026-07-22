@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -71,7 +71,7 @@ test('colisões e portais antigos são normalizados como mecânicas', () => {
 });
 
 test('classe desconhecida do Tiled atravessa o conversor como entidade genérica', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   const tiled = runtimeToTiled(original, catalogs, 'world.json');
   tiled.layers.push({
@@ -113,7 +113,7 @@ test('classe desconhecida do Tiled atravessa o conversor como entidade genérica
 });
 
 test('entidades genéricas preservam propriedades no round-trip', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   original.entities = [{
     id: 'standup',
@@ -130,7 +130,7 @@ test('entidades genéricas preservam propriedades no round-trip', () => {
 });
 
 test('tile layer criada no Tiled vira camada visual renderizável', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   delete original.visualMode;
   delete original.visualLayers;
@@ -176,7 +176,7 @@ test('tile layer criada no Tiled vira camada visual renderizável', () => {
 });
 
 test('mapa gerado oferece uma camada livre editável sem poluir o runtime vazio', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   delete original.visualMode;
   delete original.visualLayers;
@@ -216,7 +216,7 @@ test('mapa gerado oferece uma camada livre editável sem poluir o runtime vazio'
 });
 
 test('camada da câmera rejeita objetos extras e limites fora do mapa', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   original.camera.bounds = { x: 1, y: 1, w: original.w - 2, h: original.h - 1 };
   const tiled = runtimeToTiled(original, catalogs, 'world.json');
@@ -259,7 +259,7 @@ test('câmera do mundo inclui automaticamente objetos colocados fora do canvas',
 });
 
 test('modo editável transforma o visual procedural em tile layers desbloqueadas', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   const editable = makeMapEditable(original, catalogs);
   const tiled = runtimeToTiled(editable, catalogs, 'world.json');
@@ -287,7 +287,7 @@ test('modo editável transforma o visual procedural em tile layers desbloqueadas
 });
 
 test('canvas ampliado centraliza o mundo e deixa a câmera seguir o tamanho do mapa', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   const expanded = expandMapCanvas(original, 96, 72, catalogs);
   const offsetX = Math.floor((96 - original.w) / 2);
@@ -326,7 +326,7 @@ test('colisão de tile layer acompanha exatamente os tiles pintados', () => {
 });
 
 test('instância de template do Tiled herda classe e propriedades', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   const tiled = runtimeToTiled(original, catalogs, 'world.json');
   const navigation = tiled.layers.find((layer) => (
@@ -452,9 +452,15 @@ test('seleção inválida volta ao padrão e poses respeitam direção e veícul
     characterModule.characterFrameSpec(characterCatalog, 'sit', 'left', 0, true),
     { pose: 'sit', frame: 6, name: 'sit-6' },
   );
+  // sentar de frente e de costas passou a ter arte propria (frames 12..23 da
+  // linha sit); antes essas direcoes caiam no idle em pe
   assert.deepEqual(
     characterModule.characterFrameSpec(characterCatalog, 'sit', 'down', 0, false),
-    { pose: 'idle', frame: 18, name: 'idle-18' },
+    { pose: 'sit', frame: 18, name: 'sit-18' },
+  );
+  assert.deepEqual(
+    characterModule.characterFrameSpec(characterCatalog, 'sit', 'up', 0, false),
+    { pose: 'sit', frame: 12, name: 'sit-12' },
   );
 });
 
@@ -609,17 +615,13 @@ test('porta automática abre sem colisão e só a restaura depois de fechar', ()
 });
 
 test('todos os PNGs referenciados pelos tilesets existem', () => {
-  generateTilesets();
-  const tilesetPaths = [
-    'surfaces.tsj',
-    'room-builder.tsj',
-    'world-assets.tsj',
-    'office-furniture.tsj',
-    'palette-gates.tsj',
-    'palette-access-control.tsj',
-    'palette-fences.tsj',
-    ...palettes.map((palette) => palette.file),
-  ].map((file) => resolve(CLIENT_ROOT, 'tiled/tilesets', file));
+  // varre a pasta em vez de uma lista fixa: tileset novo entra na checagem
+  // sozinho, e tileset removido não quebra o teste
+  const tilesetsDir = resolve(CLIENT_ROOT, 'tiled/tilesets');
+  const tilesetPaths = readdirSync(tilesetsDir)
+    .filter((file) => file.endsWith('.tsj'))
+    .map((file) => resolve(tilesetsDir, file));
+  assert.ok(tilesetPaths.length > 0, 'nenhum tileset encontrado');
   for (const tilesetPath of tilesetPaths) {
     const tileset = readJson(tilesetPath);
     if (tileset.image) assert.ok(existsSync(resolve(dirname(tilesetPath), tileset.image)));
@@ -702,7 +704,7 @@ test('runtime direto aceita um tileset externo novo sem cadastro no conversor', 
 
 for (const scene of manifest.scenes) {
   test(`round-trip preserva ${scene.id}`, () => {
-    const catalogs = generateTilesets();
+    const catalogs = generateTilesets(false);
     const runtimeFile = scene.runtimeFile || `${scene.id}.json`;
     const original = readJson(resolve(CLIENT_ROOT, 'maps', runtimeFile));
     const tiled = runtimeToTiled(original, catalogs, runtimeFile);
@@ -737,7 +739,7 @@ test('runtime direto valida manifesto, portais e spawns em conjunto', async () =
 });
 
 test('objeto novo herdado da paleta vira móvel e preserva flip', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   const tiled = runtimeToTiled(original, catalogs, 'world.json');
   const asset = catalogs.furniture.byAsset.get('of_1');
@@ -763,7 +765,7 @@ test('objeto novo herdado da paleta vira móvel e preserva flip', () => {
 });
 
 test('objeto arrastado da paleta curada mantém o asset original', () => {
-  const catalogs = generateTilesets();
+  const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
   const tiled = runtimeToTiled(original, catalogs, 'world.json');
   const asset = catalogs.officePalette.byAsset.get('of_317');

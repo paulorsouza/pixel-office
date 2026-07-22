@@ -1,4 +1,7 @@
 const DIRECTION_STARTS = { right: 0, up: 6, left: 12, down: 18 };
+// A linha `sit` tem ordem propria: direita e esquerda vieram do pack, cima e
+// baixo foram desenhadas depois e entraram nos frames livres seguintes.
+const SIT_STARTS = { right: 0, left: 6, up: 12, down: 18 };
 
 function storageGet(key) {
   try {
@@ -50,10 +53,7 @@ export function characterTextureKey(categoryId, optionId) {
 export function characterFrameSpec(catalog, pose, direction, time, moving = true) {
   let resolvedPose = pose;
   let start = DIRECTION_STARTS[direction] ?? DIRECTION_STARTS.down;
-  if (resolvedPose === 'sit' && direction !== 'left' && direction !== 'right') {
-    resolvedPose = 'idle';
-  }
-  if (resolvedPose === 'sit') start = direction === 'left' ? 6 : 0;
+  if (resolvedPose === 'sit') start = SIT_STARTS[direction] ?? SIT_STARTS.down;
   const poseSpec = catalog.frame?.poses?.[resolvedPose] || catalog.frame?.poses?.idle;
   const framesPerDirection = 6;
   const phase = moving

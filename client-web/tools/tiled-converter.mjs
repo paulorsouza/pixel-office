@@ -220,7 +220,7 @@ function previousIds(path) {
   }));
 }
 
-function writeCollectionTileset(path, name, entries) {
+function writeCollectionTileset(path, name, entries, gravar = true) {
   const oldIds = previousIds(path);
   let nextId = Math.max(-1, ...oldIds.values()) + 1;
   const assigned = entries.map((entry) => ({
@@ -262,7 +262,7 @@ function writeCollectionTileset(path, name, entries) {
     type: 'tileset',
     version: FORMAT_VERSION,
   };
-  writeJson(path, tileset);
+  if (gravar) writeJson(path, tileset);
   return catalogFromTileset(tileset);
 }
 
@@ -284,7 +284,7 @@ function catalogFromTileset(tileset) {
   };
 }
 
-function writeSurfaceTileset() {
+function writeSurfaceTileset(gravar = true) {
   const entries = SURFACES.map((surface, localId) => {
     const path = resolve(CLIENT_ROOT, surface.path);
     return { ...surface, localId, ...pngSize(path), path };
@@ -311,11 +311,11 @@ function writeSurfaceTileset() {
     type: 'tileset',
     version: FORMAT_VERSION,
   };
-  writeJson(resolve(TILESETS_DIR, 'surfaces.tsj'), tileset);
+  if (gravar) writeJson(resolve(TILESETS_DIR, 'surfaces.tsj'), tileset);
   return catalogFromTileset(tileset);
 }
 
-function writeWallTileset() {
+function writeWallTileset(gravar = true) {
   const imagePath = resolve(CLIENT_ROOT, 'assets/tiles/room_builder.png');
   const { width, height } = pngSize(imagePath);
   const tileset = {
@@ -339,11 +339,11 @@ function writeWallTileset() {
     type: 'tileset',
     version: FORMAT_VERSION,
   };
-  writeJson(resolve(TILESETS_DIR, 'room-builder.tsj'), tileset);
+  if (gravar) writeJson(resolve(TILESETS_DIR, 'room-builder.tsj'), tileset);
   return { tilecount: tileset.tilecount };
 }
 
-export function generateTilesets() {
+export function generateTilesets(gravar = true) {
   ensureDirectories();
   const worldEntries = collectionEntries(
     resolve(CLIENT_ROOT, 'assets/world'),
@@ -362,17 +362,19 @@ export function generateTilesets() {
   ];
 
   const catalogs = {
-    surfaces: writeSurfaceTileset(),
-    walls: writeWallTileset(),
+    surfaces: writeSurfaceTileset(gravar),
+    walls: writeWallTileset(gravar),
     world: writeCollectionTileset(
       resolve(TILESETS_DIR, 'world-assets.tsj'),
       'Office Quest · Mundo',
       worldEntries,
+      gravar,
     ),
     furniture: writeCollectionTileset(
       resolve(TILESETS_DIR, 'office-furniture.tsj'),
       'Office Quest · Móveis',
       furnitureEntries,
+      gravar,
     ),
   };
 
@@ -389,6 +391,7 @@ export function generateTilesets() {
       resolve(TILESETS_DIR, palette.file),
       palette.name,
       entries,
+      gravar,
     );
   }
 
@@ -404,7 +407,7 @@ export function loadTilesetCatalogs() {
     ...paletteDefinitions().map((palette) => palette.file),
   ];
   if (required.some((file) => !existsSync(resolve(TILESETS_DIR, file)))) {
-    return generateTilesets();
+    return generateTilesets(false);
   }
 
   const readCatalog = (file) => catalogFromTileset(readJson(resolve(TILESETS_DIR, file)));

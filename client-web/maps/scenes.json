@@ -8,6 +8,10 @@
     {
       "id": "tooq-office",
       "file": "tiled/maps/tooq-office.tmj"
+    },
+    {
+      "id": "tooq-office-1",
+      "file": "tiled/maps/tooq-office-1.tmj"
     }
   ]
 }

@@ -1,0 +1,21 @@
+{
+  "columns": 32,
+  "image": "../../assets/tiles/construcao.png",
+  "imageheight": 2016,
+  "imagewidth": 512,
+  "margin": 0,
+  "name": "01 · Construção",
+  "spacing": 0,
+  "tilecount": 4032,
+  "tiledversion": "1.12.2",
+  "tileheight": 16,
+  "tilewidth": 16,
+  "transformations": {
+    "hflip": false,
+    "preferuntransformed": true,
+    "rotate": false,
+    "vflip": false
+  },
+  "type": "tileset",
+  "version": "1.10"
+}

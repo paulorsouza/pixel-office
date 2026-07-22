@@ -216,6 +216,7 @@ Organizados em subpastas. O cliente multi-cena usa `chars/`, `tiles/`, `floors/`
 | `world/gates/automatic_barrier_1..4.png` | Cancelas externas nas quatro orientações do pack |
 | `world/fences/metal_*.png` | Família modular de cerca metálica cinza: 13 peças |
 | `world/fences/wood_metal_*.png` | Família modular metal/madeira: 13 peças |
+| `world/roads/*.png` ⭐ | Ruas e calçadas: 34 tiles de 16×16 — ver §4.3 |
 | `world/fountain.png`, `world/bench.png`, `world/flower1/2.png` | Jardim |
 | `world/tree1/2.png`, `world/bush1/2.png` | Vegetação |
 | `world/roof.png`, `world/rp_*.png` | Telhado seamless + props (dutos, painel solar, antena, escada) |
@@ -297,6 +298,172 @@ confundir esses assets com os itens pedidos, a primeira versão desenha os quatr
 art procedural no Phaser. O único recorte novo do pack é `Adam_sit.png`, auditado acima. Quando
 sprites dedicados forem adquiridos, eles podem substituir o desenho sem alterar o catálogo de
 velocidade nem a interação por Shift.
+
+---
+
+### 4.3 Ruas e calçadas (`world/roads/*.png`)
+
+Origem: `LimeZu/exteriores/theme-sorter/2_City_Terrains_Singles_16x16/`, famílias
+`Asphalt_1_Variation_*` e `Sidewalk_1_*` (das seis variações de calçada do pack, foi recortada só a
+**Sidewalk_1**). Todos os 34 tiles são **16×16** e ficam no tileset
+`tiled/tilesets/palette-roads.tsj` (`09 · Ruas e calçadas`), já referenciado por `world.tmj`.
+
+| Grupo | Arquivos | Origem |
+|---|---|---|
+| Asfalto | `asphalt`, `asphalt_2..4` | `Asphalt_1_Variation_21/16/20/23` — 21 é a variação mais lisa, as outras têm trinca/remendo |
+| Marcações | `mark_line_h/v`, `mark_line_h_2/v_2`, `mark_dash_h/v`, `mark_corner_1..4`, `mark_tee_1..4`, `mark_cross` | `Asphalt_1_Variation_1..15` |
+| Calçada e meio-fio | `sidewalk`, `curb_top/bottom/left/right`, `curb_bend_tl/tr/bl/br`, `curb_gutter_1/2` | `Sidewalk_1_9/6/2/4/8/13/14/12/11/19/20` |
+| Faixa de pedestre | `crosswalk_h_l/h_r`, `crosswalk_v_t/v_b` | fatiados de `Sidewalk_1_30` (32×16) e `Sidewalk_1_34` (16×32) |
+
+**Convenções conferidas pixel a pixel:**
+
+- `curb_top` = **a calçada fica em cima** e o asfalto embaixo; o mesmo vale para os outros três.
+- `curb_bend_tl` = a calçada ocupa o **quadrante superior esquerdo**. As quatro `bend` são
+  esquinas arredondadas de cruzamento, não cantos de um quarteirão isolado — usadas como canto
+  externo de um bloco solto elas curvam para o lado errado.
+- ⚠️ **As 15 marcações têm 2 px de margem transparente em cada lado** (a arte ocupa só x/y 2..13).
+  Pintadas em sequência elas produzem uma linha **tracejada**, nunca contínua. Servem para divisória
+  de faixa e vaga de estacionamento; não existe linha central sólida neste pack.
+- Os `assetId` levam prefixo `road_` (ex.: `road_asphalt`), e **os 34 estão listados em
+  `ROAD_SURFACES` no [`MapRenderer.js`](client-web/src/MapRenderer.js)** — sem isso, um único tile
+  de rua na camada de chão derruba o batching de toda a camada.
+
+---
+
+### 4.4 Interiores: paredes, pisos e móveis de cômodo
+
+Importados de `LimeZu/interiores/singles/` para dar variedade de acabamento e mobília além do
+escritório. Os móveis vêm dos **singles já recortados pelo pack** (`Theme_Sorter_Singles`, variante
+com sombra — a mesma dos `of_N`), copiados byte a byte.
+
+**Construção — tilesets em folha**, pintados com o pincel:
+
+| Paleta | Arquivo | Grade | Origem |
+|---|---|---|---|
+| `10 · Interiores · Paredes` | `tiles/interior_walls.png` | 32×40 = 1280 tiles | `Room_Builder_Walls_16x16.png` — ~48 estilos de parede |
+| `11 · Interiores · Pisos` | `tiles/interior_floors.png` | 15×40 = 600 tiles | `Room_Builder_Floors_16x16.png` — ~60 padrões |
+| `12 · Interiores · Vãos e arcos` | `tiles/interior_entryways.png` | 10×32 = 320 tiles | `Room_Builder_Arched_Entryways_16x16.png` |
+
+**Mobília — coleções de imagens**, colocadas como objeto em `Objetos · Móveis`:
+
+Os quatro temas ficam num tileset só, `13 · Interiores · Móveis`
+(`palette-interior-furniture.tsj`, 757 tiles), na ordem abaixo — uma aba no Tiled em vez de quatro:
+
+| Faixa no tileset | Pasta | Itens | `assetId` | Origem |
+|---|---|---:|---|---|
+| 0–121 | `furniture/living-room/` | 122 | `lr_N` | `2_Living_Room_Singles` |
+| 122–280 | `furniture/bathroom/` | 159 | `bt_N` | `3_Bathroom_Singles` |
+| 281–688 | `furniture/kitchen/` | 408 | `kt_N` | `12_Kitchen_Singles` |
+| 689–756 | `furniture/conference/` | 68 | `cf_N` | `13_Conference_Hall_Singles` |
+
+Os quatro `.tsj` por tema continuam no disco, sem referência em mapa nenhum, só como rede de
+segurança para uma sessão antiga do Tiled que ainda os tenha aberto. Podem ser apagados.
+
+O `N` preserva a numeração do pack, então dá para voltar ao arquivo de origem. Peças chegam a 32×64;
+a origem é o centro inferior (`objectalignment: bottom`), como nos demais móveis.
+
+**Faixas de GID** (seguindo o espaçamento de `FIRST_GID` no conversor): paredes 300000, pisos 310000,
+vãos 320000, lounge 400000, banheiro 410000, copa 420000, reunião 430000. Registradas em
+`tooq-office-1.tmj`.
+
+⚠️ **Não pinte piso de interior na camada `Pincel · Chão e ruas`.** O agrupamento em faixas exige que
+**todas** as células da camada sejam pisos simples sem `frame`; tile de folha sempre tem `frame`, então
+um único deles derruba a otimização da camada inteira — num mapa grande isso vira dezenas de milhares
+de sprites. Use `Pincel · Desenho livre` (profundidade −85, acima do chão em −100): o visual é o mesmo
+e a camada de chão continua agrupada.
+
+Como as paletas `gates`, `access-control`, `fences` e `roads`, estas **não** estão declaradas em
+`tiled/palettes.json` — o runtime lê os tilesets direto do `.tmj`, mas o conversor legado não as
+conhece.
+
+### 4.5 Junção e vão de parede (`tiles/doorways/*.png`)
+
+**Junção — começar uma parede lateral na parede de trás.** O `room_builder.png` tem a parede
+horizontal em elevação (topo branco + face lavanda, 2 tiles) e a parede lateral como tira fina
+vertical, mas **não** tem a peça de encontro entre as duas. Sem ela a tira começa solta, abaixo da
+linha da base, e o encontro lê como buraco.
+
+A parede de trás ocupa **duas linhas de tile**: a de cima (tile 177) traz o topo branco visto de
+cima, a de baixo (tile 193) só a face. A parede lateral também é vista de cima, então o topo dela
+precisa **fundir com o topo da parede de trás** — e isso exige peça nas duas linhas. Tratar só a
+linha de baixo deixa a junção quebrada ao longo de toda a linha de cima.
+
+| Situação | Linha de cima | Linha de baixo | Tile da lateral abaixo |
+|---|---|---|---|
+| Parede esquerda de sala | `wall_tee_top_right` | `wall_tee_right` | 39 (`MID_L`) |
+| Parede direita de sala | `wall_tee_top_left` | `wall_tee_left` | 41 (`MID_R`) |
+
+Na linha de cima a tira sobe até encostar no topo branco e rompe o contorno horizontal no seu miolo —
+é esse rompimento que faz os dois topos lerem como uma superfície só. Na linha de baixo a tira
+atravessa o tile inteiro, inclusive o contorno da base, para emendar sem quebra no tile da lateral.
+
+Pinte as duas na camada `Pincel · Paredes` — são parede e devem colidir. O pareamento 39 na esquerda
+e 41 na direita foi conferido nas divisórias do `tooq-office.tmj`.
+
+### 4.6 Estações de trabalho montadas (`furniture/stations/*.png`)
+
+Peças **compostas**, não recortadas: mesa + itens de bancada + cadeira de costas empilhados num único
+PNG de **32×64** (2×4 tiles). Todas as peças de `of_N` vêm num quadro de 32×48, então sobrepõem
+alinhadas — o deslocamento só posiciona a cadeira à frente da mesa.
+
+| Asset | Composição |
+|---|---|
+| `station_white_dual` | mesa clara `of_263` + monitor duplo `of_227` + cadeira `of_101` |
+| `station_white_pc` | mesa clara + monitor/gabinete/teclado `of_231` + `of_101` |
+| `station_white_lamp` | mesa clara + monitor e luminária `of_229` + `of_106` |
+| `station_dark_dual` | mesa escura `of_268` + `of_227` + cadeira de tela `of_102` |
+| `station_l_white` | mesa em L `of_264` + `of_227` + `of_101` |
+| `station_l_orange` | mesa em L + `of_231` + cadeira laranja `of_107` |
+| `station_gamer` | mesa em L escura `of_269` + monitor duplo em braço `of_311` + `of_101` + **fita de LED** |
+
+⚠️ **As cadeiras do pack têm quatro poses, não variações de cor.** Comparando as imagens pixel a
+pixel elas se agrupam em pares quase idênticos (diferença de ~50 px dentro do par, 174–287 entre
+pares):
+
+| Pose | Escuras | Laranja | Uso |
+|---|---|---|---|
+| **Encara a mesa** ✅ | `of_105` (tela), `of_106` (lisa) | `of_111` (tela), `of_112` (lisa) | pessoa sentada de frente para a mesa acima |
+| De costas para a mesa ❌ | `of_101`, `of_102` | `of_107`, `of_108` | erradas para uma estação |
+| De perfil | `of_103`, `of_104` | `of_109`, `of_110` | mesa encostada em parede lateral |
+
+Medir só a silhueta **não** distingue as poses — as larguras por linha são iguais. É preciso comparar
+os pixels. As sete estações usam a primeira linha da tabela.
+
+**Mesas:** família `of_179`–`of_187` (esquerda/meio/direita em três cores, y16–36) e `of_210`–`of_224`
+(cinco cores, y25–47). Já com 32 px de largura: `of_263`/`of_268` (retas) e `of_264`/`of_269` (em L).
+Nem toda mesa emenda com a vizinha — só as de mesma assinatura de caixa (`of_180`, `of_183`, `of_186`).
+
+A fita de LED da estação gamer é **desenhada**, não vem de pack: gradiente ciano→magenta com brilho
+decrescente ao longo da borda frontal da mesa. O LimeZu não tem nada gamer.
+
+Coloque em `Objetos · Móveis` com **Insert Tile** (`T`); a origem é o centro inferior, então o clique
+cai nos pés da cadeira. Não têm colisão — se precisar bloquear, desenhe em `Objetos · Colisões`.
+
+### 4.7 Vão de parede (`tiles/doorways/doorway_*.png`)
+
+Peça **montada**, não recortada de pack: as seis peças de `17 · Interiores · Vãos de parede` foram
+compostas a partir das cores exatas dos tiles 177 (topo) e 193 (face) do `room_builder.png`, para
+fecharem com a parede norte do prédio.
+
+O problema que ela resolve: um buraco na camada de parede deixa o piso aparecer, e a abertura lê como
+piso subindo, não como passagem. A peça devolve a leitura de vão — o topo branco da parede atravessa
+a abertura, e por baixo fica um recuo em sombra com batentes escuros nas laterais, dissolvendo no
+chão.
+
+| Arquivo | Papel |
+|---|---|
+| `doorway_top_l/m/r` | linha da verga: contorno, 4 px de topo branco, contorno, sombra |
+| `doorway_bottom_l/m/r` | passagem: sombra dissolvendo até transparente |
+
+Os sufixos `l`/`r` trazem o batente de 2 px na borda que encosta na parede; `m` é o miolo. A sombra é
+preta com alfa decrescente, então a peça funciona sobre qualquer piso.
+
+⚠️ **Pinte em `Pincel · Desenho livre`, nunca em `Pincel · Paredes`.** A camada de parede gera colisão
+a partir de cada tile pintado — o vão voltaria a ser bloqueado. O desenho livre não tem colisão e fica
+em −85, acima do chão (−100) e abaixo da parede (−80).
+
+Serve só para a **parede norte**, que usa a arte em elevação. As outras três usam a parede fina
+esquemática (banda de 6 px no sul, 7 px nas laterais) e precisariam de peças próprias.
 
 ---
 
