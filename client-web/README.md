@@ -59,7 +59,7 @@ client-web/
 │   ├── EquipmentSystem.js      loadout, inventário, velocidades e visuais
 │   ├── RoomDecorationSystem.js editor de móveis por sala e persistência
 │   ├── GameItemsSystem.js       REST, cache de inventário e SignalR
-│   ├── FurnitureInteractionSystem.js kanban, baú, cadeira e estação
+│   ├── FurnitureInteractionSystem.js kanban, baú, cadeira, estação e café
 │   ├── DevMapSync.js           feedback e recarga após salvar no Tiled
 │   ├── TiledRuntimeLoader.js   carregamento direto de TMJ, TSJ e templates
 │   ├── mechanics/              registro e handlers reutilizáveis de gameplay
@@ -241,6 +241,7 @@ O catálogo associa comportamentos por `InteractionType`, sem colocar IDs no loo
 - `chest`: mostra itens guardados e transfere unidades entre baú e inventário;
 - `workstation`: inicia/encerra o contador persistido de uma atividade;
 - `seat`: procura um computador/estação próximo e abre o fluxo de trabalho ao sentar.
+- `coffee`: tira um café da bancada; só se bebe sentado (cinco goles de 2,6 s numa poltrona).
 
 O backend expõe `/api/game/inventory`, `/api/game/furniture`, rotas de baú e rotas de estação.
 O cliente usa `?userId=1` por padrão no protótipo; esse cabeçalho deverá ser substituído pela

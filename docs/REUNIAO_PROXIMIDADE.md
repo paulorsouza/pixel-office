@@ -1,10 +1,10 @@
 # Reunião por proximidade (presença em rede + A/V espacial)
 
-**Atualizado:** 2026-07-20
+**Atualizado:** 2026-07-22
 
 Traz para o cliente Phaser: (1) **presença em rede** — ver os avatares dos outros andando
-na mesma cena; e (2) **A/V por proximidade** — áudio com volume por distância e vídeo/tela
-sob demanda, via LiveKit. A sala de reunião fixa continua existindo (ver §Follow-ups).
+na mesma cena; e (2) **A/V por sala** — call isolado por sala declarada, com vídeo/tela sob
+demanda, via LiveKit. Fora de sala (ou sem o fone) não há call.
 
 ## Arquitetura
 
@@ -16,10 +16,20 @@ sob demanda, via LiveKit. A sala de reunião fixa continua existindo (ver §Foll
   e por isso não são desenhados no mundo.
 - **A/V espacial**: o call é keyed por **(cena, sala)**, emitido por
   `POST /api/av/proximity-token` (`{sceneId, roomId}`; sem gate de zona, basta estar autenticado):
-  - **área aberta** → `proximity-{cena}`: volume por distância entre os avatares (posições vêm
-    da presença), cheio até `NEAR_PX=90`, mudo a partir de `FAR_PX=280`, linear no meio;
-  - **dentro de uma sala fechada** → `proximity-{cena}--{sala}`: **call isolado**, todos no
-    mesmo volume; quem está fora não ouve e não é ouvido.
+  - **dentro de uma sala declarada** → `proximity-{cena}--{sala}`: **call isolado**, todos no
+    mesmo volume; quem está fora não ouve e não é ouvido;
+  - **com o fone da reunião** → o mesmo canal da sala do fone, mesmo andando longe dela;
+  - **em qualquer outro lugar** (área verde, quintal, corredor) → **não há canal**: o HUD some
+    e ninguém conecta.
+
+  Antes existia um call de área aberta (`proximity-{cena}`) com volume por distância entre os
+  avatares. Ele foi removido: `hasChannel()` em `ProximityVoice.js` só reconhece sala declarada
+  ou fone, e fora disso o alvo é `null`. ⚠️ Com isso o cálculo de volume por distância
+  (`NEAR_PX`/`FAR_PX`, ramo `if (!inRoomCall)`) ficou **inalcançável** — todo call é de sala e
+  todos se ouvem por completo. O código continua lá para um eventual modo de área aberta; ver
+  §Follow-ups. O HUD distingue **"aqui não existe call"** (campo
+  `available: false`, esconde o HUD inteiro) de **"eu saí da voz"** (mantém o botão *Entrar na
+  voz*) — os dois deixam `status: 'off'` e antes ficavam indistinguíveis.
 
   O cliente (`ProximityVoice.js`) resolve o canal-alvo a cada frame a partir da sala em que o
   avatar está (`roomAtPoint`) e reconecta quando ele muda, com **dwell de 350 ms** para não
@@ -70,24 +80,30 @@ A chave da porta é **derivada do mapa** (`MapRenderer.js`), então não precisa
 igual em todos os clientes — o `parent` desambigua (as duas salas têm porta em `S@5`).
 
 **Sentar**: `E` numa cadeira senta (e abre a estação, se houver uma ao lado); `E` de novo ou
-qualquer tecla de movimento levanta. **Limitação:** só há arte sentada para `left`/`right`
-(`CharacterSystem.js`), então a direção vem do `flipX` da cadeira.
+qualquer tecla de movimento levanta. A pose sentada existe nas **quatro direções**: esquerda e
+direita vieram do pack, cima e baixo foram desenhadas depois (frames 12..23 da linha `sit`) — antes
+essas duas caíam no `idle` em pé.
 
 ## Fone de reunião (ficar na call ao sair da sala)
 
 Toda sala marcada como reunião (`meeting:true` no `extraJson`, ou `id: "meeting"`) ganha um
-**fone no chão**, gerado por `MeetingHeadset.js` a partir de `map.rooms` — **derivado, não é
-objeto do Tiled**, porque o mapa é trabalho manual e só recebe edição aditiva.
+**fone pendurado na parede norte**, gerado por `MeetingHeadset.js` a partir de `map.rooms` —
+**derivado, não é objeto do Tiled**, porque o mapa é trabalho manual e só recebe edição aditiva.
+As duas artes (`headset_wall` e `headset_wall_empty`, em `assets/world/`) não vêm de `map.assets`;
+o `preload` as pede por nome quando a cena tem sala de reunião.
 
-- Chegar perto e apertar `E` → **pega o fone**: o call fica **fixo** naquela sala mesmo que o
+- Chegar perto e apertar `F` → **pega o fone**: o call fica **fixo** naquela sala mesmo que o
   avatar saia dela (é o "levanto para pegar um café e continuo na reunião").
-- Soltar: `E` de novo perto do suporte, ou o botão **🎧 Soltar o fone** na barra do HUD (funciona
+- Soltar: `F` de novo perto do gancho, ou o botão **🎧 Soltar o fone** na barra do HUD (funciona
   de qualquer lugar). Trocar de cena também solta o fone automaticamente.
+- `F` é tecla própria, não um caso dentro do `E`. O `handleInteract` do `E` tem uma cadeia de
+  prioridade (levantar, móvel, portal) e o fone no meio dela roubava o `E` de quem quisesse usar
+  um móvel ou entrar num portal parado no mesmo ponto.
 - O fone também fala com o backend (`PickUpHeadset`/`DropHeadset`, que já existiam): é o que
   **mantém o lançamento de horas da reunião aberto** enquanto a pessoa circula fora da sala —
   `SetZone("")` só encerra a reunião quando `HasHeadset` é falso. Os outros clientes veem
   **🎧 no label** de quem está com o fone.
-- Enquanto está vestido, o suporte fica apagado no lugar para o jogador saber onde devolver, e o
+- Enquanto está vestido, o gancho fica vazio na parede para o jogador saber onde devolver, e o
   HUD mostra o chip `🎧 {sala}`.
 
 O fone é **local por cliente** (cada um "veste o seu"): não há disputa de posse em rede — está
@@ -96,7 +112,7 @@ nos follow-ups.
 ## HUD da reunião (estilo Meet)
 
 A UI vive em `MeetingHUD.js` (módulo só de interface; `ProximityVoice.js` cuida do LiveKit e
-alimenta o HUD com roster, tracks, quem fala e volume por distância).
+alimenta o HUD com roster, tracks e quem fala).
 
 - **Barra inferior** (sempre visível): mic e câmera com seletor de dispositivos (chevron),
   apresentar tela, abas de layout, tela cheia, painel de pessoas e sair/entrar na voz.
@@ -111,7 +127,8 @@ alimenta o HUD com roster, tracks, quem fala e volume por distância).
   fala (`ActiveSpeakersChanged`), badge de mic mudo e indicador de 3 barras com o volume por
   distância (some no call de sala, onde todos se ouvem por completo); apresentação de tela vira
   palco com filmstrip embaixo.
-- **Chip do canal** no cabeçalho: `Área aberta · proximidade`, `{sala}` ou `🎧 {sala}` (fone).
+- **Chip do canal** no cabeçalho: `{sala}` ou `🎧 {sala}` (fone). Fora de sala não há canal e o
+  HUD inteiro some.
 - **Painel Pessoas**: quem está na voz (com volume) e quem está na cena fora da voz (presença).
 - **Extras de UX**: atalhos `Ctrl+D` (mic) e `Ctrl+E` (câmera); toasts para permissão negada,
   tela apresentada e autoplay de áudio bloqueado (`room.startAudio` num clique); auto-hide da
@@ -127,7 +144,7 @@ alimenta o HUD com roster, tracks, quem fala e volume por distância).
 ```
 client-web/src/PresenceSystem.js     presença, aparência em rede e avatares interpolados
 client-web/src/RemoteAvatar.js       avatar do outro jogador (skin modular + veículo + fallback)
-client-web/src/ProximityVoice.js     call por (cena,sala), volume por distância, estado → HUD
+client-web/src/ProximityVoice.js     call por (cena,sala), gate por sala/fone, estado → HUD
 client-web/src/MeetingHUD.js         UI da reunião: barra, grade, layouts, pessoas, toasts
 client-web/src/MeetingHeadset.js     fone das salas de reunião (fixa o call até soltar)
 client-web/hud-test.html             harness de QA do HUD (dados falsos, sem Phaser)
@@ -150,13 +167,13 @@ backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, ro
    - Ande com uma: o avatar aparece e se move na outra (presença).
    - Na barra do HUD, clique **mic**; aproxime os avatares → o volume sobe; afaste → cai.
      Câmera/tela publicam vídeo (tiles / palco de apresentação).
-5. **Call por sala** (`?scene=tooq-office`): coloque os dois avatares no open space (se ouvem por
-   proximidade) e leve **um** para dentro do Escritório B → ele some do áudio do outro; com os
-   dois dentro, se ouvem por completo. O chip do HUD mostra a sala.
-6. **Fone**: dentro do Escritório B, chegue no 🎧 e aperte `E` → chip vira `🎧 Escritório B`.
+5. **Call por sala** (`?scene=tooq-office`): com os dois avatares no open space **ninguém conecta**
+   e o HUD some. Leve os dois para dentro do Escritório B → se ouvem por completo e o chip do HUD
+   mostra a sala; tire **um** de lá → ele sai do call.
+6. **Fone**: dentro do Escritório B, chegue no 🎧 da parede e aperte `F` → chip vira `🎧 Escritório B`.
    Saia da sala andando: **continua ouvindo a reunião** (e as horas seguem contando; o outro
-   cliente mostra 🎧 no seu label). `E` no suporte (ou **Soltar o fone** na barra) volta para a
-   proximidade da área aberta.
+   cliente mostra 🎧 no seu label). `F` no gancho (ou **Soltar o fone** na barra) desconecta —
+   fora de sala não existe canal.
 7. **Porta compartilhada**: leve **um** avatar até a porta do Escritório B e olhe a **outra**
    janela — a porta abre lá também (antes só abria para quem chegava).
 8. **Assento e trava**: `E` numa cadeira → a outra janela vê o avatar sentado; a segunda janela
@@ -173,9 +190,14 @@ backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, ro
 
 ## Follow-ups
 
+- **Volume por distância virou código morto**: com o call de área aberta removido, o ramo
+  `if (!inRoomCall)` nunca roda. Ou se apaga `NEAR_PX`/`FAR_PX` e o cálculo, ou se traz de volta
+  um modo de área aberta que o use.
 - **Fone sem posse em rede**: cada cliente renderiza/veste o seu fone; dois jogadores podem
-  "pegar" o mesmo suporte e ninguém vê o fone sumir do chão do outro. Sincronizar posse (e mostrar
+  "pegar" o mesmo gancho e ninguém vê o fone sumir da parede do outro. Sincronizar posse (e mostrar
   quem está com ele) pede um evento no hub de presença.
+- **Servir café para outro jogador**: o hub só tem métodos nomeados (`PickUpHeadset`, `SitAt`,
+  `Chat`…), sem canal genérico de mensagem. Servir precisa de um `ServeCoffee(alvo)` novo em C#.
 - **Fone não aparece no avatar** (só no HUD) — falta a camada visual no personagem.
 - **Sem indicação de quem está em qual sala** no painel de pessoas: hoje ele lista quem está no
   seu call e quem está na cena fora dele, sem dizer em que sala fechada cada um está.

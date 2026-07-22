@@ -190,7 +190,8 @@ Há duas categorias visuais que não devem ser confundidas:
 
 Para tornar um recorte disponível como item, não basta arrastá-lo no Tiled. Cadastre-o em
 `assets/furniture/catalog.json` e em `backend/VirtualOffice.Api/GameInventorySeed.cs`. Se tiver
-comportamento, configure também seu `InteractionType` (`kanban`, `chest`, `workstation` ou `seat`).
+comportamento, configure também seu `InteractionType` (`kanban`, `chest`, `workstation`,
+`seat` ou `coffee`).
 
 ## 9. Testar
 

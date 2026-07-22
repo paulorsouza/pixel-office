@@ -1,6 +1,6 @@
 # CONTEXT — Office Quest (escritório virtual da Tooq)
 
-**Atualizado:** 2026-07-20
+**Atualizado:** 2026-07-22
 
 Visão geral pragmática do projeto: o que é, o que existe, como as peças se conectam e para onde vai.
 Detalhes vivem em docs específicos (linkados no fim) — aqui é o mapa mental.
@@ -54,7 +54,7 @@ client-web/src/MapRenderer.js   desenha world/interior a partir do JSON
 client-web/src/CharacterSystem.js  avatar modular, editor e persistência
 client-web/src/RoomDecorationSystem.js  editor de móveis, validação e integração com estoque
 client-web/src/GameItemsSystem.js       API de inventário/mobília + cliente SignalR
-client-web/src/FurnitureInteractionSystem.js  kanban, baú, cadeira e estação
+client-web/src/FurnitureInteractionSystem.js  kanban, baú, cadeira, estação e café
 client-web/src/mechanics/             registro e handlers extensíveis de gameplay
 client-web/src/DevMapSync.js          feedback e recarga do Tiled ao vivo
 client-web/src/TiledRuntimeLoader.js  TMJ/TSJ/templates → contrato do renderer no navegador
@@ -77,8 +77,9 @@ FurniturePlacement  instância colocada, sceneId/roomId/x/y/flipX
 ```
 
 `GameInventorySeed.EnsureSchemaAsync` cria o schema aditivo em bancos SQLite existentes; não há
-migration EF formal ainda. `GameInventorySeed.RunAsync` cadastra os 37 recortes curados e estoque
-inicial. Endpoints atuais: `/api/game/inventory`, `/api/game/rooms/{scene}/{room}/furniture`,
+migration EF formal ainda. `GameInventorySeed.RunAsync` **reconcilia** o catálogo curado (acrescenta o que
+falta e corrige a interação do que mudou) e dá o estoque inicial. Antes ele só inseria com a tabela
+vazia, então mudar a interação de um item não tinha efeito em banco já semeado. Endpoints atuais: `/api/game/inventory`, `/api/game/rooms/{scene}/{room}/furniture`,
 `/api/game/furniture`, `/api/game/chests/*` e `/api/game/workstations/*`.
 
 **Schema do mapa, referência de campos e limitações conhecidas:**
@@ -212,14 +213,16 @@ externa.
 (`PresenceSystem.js`), renderiza avatares remotos interpolados (filtro de cena no cliente) e
 sincroniza `Join/Move/SetScene/SetAppearance`. Os avatares remotos usam a **skin modular** e o
 **veículo** de cada jogador (`RemoteAvatar.js` reaproveita os visuais do avatar local; bots e
-clientes antigos caem no corpo base). A voz é LiveKit por **(cena, sala)** (`ProximityVoice.js`): na
-área aberta o volume cai com a distância; **dentro de uma sala fechada o call é isolado** (todos
-no volume cheio, sem vazar para fora). Salas de reunião têm um **fone** (`MeetingHeadset.js`,
-derivado de `map.rooms`): pegar com `E` mantém você na reunião mesmo saindo da sala, até soltar.
+clientes antigos caem no corpo base). A voz é LiveKit por **(cena, sala)** (`ProximityVoice.js`): o call
+só existe **dentro de uma sala declarada** (isolado, todos no volume cheio) ou **com o fone da
+reunião**. Em área verde e corredor não há canal e o HUD some — o call de área aberta com volume
+por distância foi removido. Salas de reunião têm um **fone pendurado na parede**
+(`MeetingHeadset.js`, derivado de `map.rooms`): pegar com `F` mantém você na reunião mesmo saindo
+da sala, até soltar.
 A URL do LiveKit vem do backend. O HUD da reunião é estilo
 Meet (`MeetingHUD.js`): barra inferior com mic/câmera/tela e seletor de dispositivos, três
-layouts (jogo | dividido | foco com o jogo em PiP), tela cheia, grade com indicador de fala e
-volume por distância, painel de pessoas e toasts; QA visual em `client-web/hud-test.html`.
+layouts (jogo | dividido | foco com o jogo em PiP), tela cheia, grade com indicador de fala,
+painel de pessoas e toasts; QA visual em `client-web/hud-test.html`.
 Detalhes e caveats: [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
 
 **Reunião conta horas + xadrez (ligados a salas existentes, de forma aditiva):** ⚠️ **lição
@@ -267,9 +270,9 @@ paredes, pisos, móveis, exteriores, porta animada):
 3. **Evoluir a economia de itens** com compra, drops, preços e permissões de sala.
 4. **Adicionar a segunda cena de destino** ao hub para provar que a arquitetura cresce além do
    escritório.
-5. ✅ **A/V por proximidade** (LiveKit JS) — feito. `ProximityVoice.js`: sala por cena, volume
-   por distância, mic/câmera/tela sob demanda. Falta o switch automático para a sala fixa na
-   zona de reunião e a sincronização da skin modular dos avatares remotos (ver o doc).
+5. ✅ **A/V por sala** (LiveKit JS) — feito. `ProximityVoice.js`: call isolado por sala declarada
+   ou pelo fone, mic/câmera/tela sob demanda. Falta sincronizar a posse do fone em rede e servir
+   café para outro jogador (ver o doc).
 6. **Polimento visual e conteúdo** do escritório, preservando o mapa como dados do Tiled.
 
 ---

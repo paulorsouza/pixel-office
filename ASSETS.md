@@ -1,6 +1,6 @@
 # ASSETS — onde está tudo e o que já foi explorado
 
-**Atualizado:** 2026-07-17
+**Atualizado:** 2026-07-22
 
 Este doc responde três perguntas: **onde estão os assets**, **o que tem em cada pack**, e
 **o que já mapeamos** (as coordenadas/medidas que custaram caro pra descobrir).
@@ -99,7 +99,15 @@ Tudo abaixo foi **renderizado e conferido visualmente**. **Não chute de novo** 
 - Cada célula útil mede **16×32**. Linhas usadas pelo cliente: `idle` em **y=32**, `walk` em
   **y=64** e `sit` em **y=128**.
 - `idle` e `walk`: 24 frames na ordem `right(0-5), up(6-11), left(12-17), down(18-23)`.
-  `sit`: 12 frames, apenas `right(0-5), left(6-11)`; na vertical o runtime usa `idle`.
+- `sit`: **24 frames**, na ordem própria `right(0-5), left(6-11), up(12-17), down(18-23)`. O pack só
+  trazia as laterais; **cima e baixo foram desenhadas** e escritas nas 23 folhas modulares (276
+  frames). Antes essas duas direções caíam no `idle` em pé.
+  A construção é geométrica e independente de paleta — o tronco vem do `idle` correspondente e a
+  parte de baixo vira colo (quadril alargado 1 px de cada lado + joelhos a 82% do brilho), o que faz
+  a mesma transformação servir para corpo, roupa e acessório. Peças que só cobrem a cabeça (olhos,
+  cabelo, gorro) passam intactas.
+- ⚠️ Medir a **silhueta** não distingue poses de cadeira nem de personagem: as larguras por linha
+  são iguais. É preciso comparar os pixels.
 - O cliente carrega a imagem inteira e registra somente esses retângulos como frames nomeados no
   Phaser. Isso mantém as cinco camadas perfeitamente alinhadas sem gerar centenas de recortes.
 
@@ -257,6 +265,16 @@ cadeiras/plantas (são clipboard/teclado/monitor). Confirme pela thumbnail no ed
   `LimeZu/interiores/animados/spritesheets/animated_door_glass_double.png`: **256×48**, 8 frames de
   **32×48**. Foi auditada, mas não é usada nas salas porque as folhas articuladas ocupam muito
   espaço visual.
+- `interior_door_glass_double` é a **mesma folha**, agora usada de verdade: é a porta da sala de
+  reunião. A faixa de frames saiu de medir a **área opaca** de cada um — a folha é simétrica
+  (928, 868, 752, 610, **182**, 610, 752, 868), então `0..4` abre e o resto é o espelho; o motor
+  toca ao contrário para fechar.
+- `interior_door_wood` veio de `animated_door_1.png`: **80×32**, 5 frames de **16×32**, porta comum.
+- Trocar uma porta de 32 para 48 px de altura é seguro: a origem da porta é **centro-inferior**, a
+  base fica no lugar e a porta só sobe mais na parede.
+- `coffee_cup` é **desenhada aqui**, não vem de pack: **48×16**, 3 frames de **16×16**, xícara com
+  vapor. É item de mão, não mobília, então não entra em `map.assets` — o `preload` e a criação da
+  animação pedem por nome, como o fone. Não confundir com `anim_coffee`, que é a **máquina**.
 - `interior_sliding_door` veio de `animated_door_sliding_glass.png`: **448×32**, 14 frames de
   **32×32**. Frame 0 = fechada, frame 6 = aberta, frame 13 = fechada novamente. É a porta interna
   escolhida; as folhas ficam recolhidas nas laterais do vão. A entrada externa continua usando
@@ -285,6 +303,7 @@ renderer; ele chega ao cliente como `InteractionType`:
 | `chest` | `of_176` | Guarda e retira instâncias; **placeholder visual de baú**. |
 | `workstation` | `of_225`, `227`, `229`, `231`, `233`, `235`, `317`, `318`, `319` | Inicia/encerra horas de uma atividade. |
 | `seat` | `of_196`–`199`, `306`, `307`, `315`, `316` | Procura uma estação a até 2,75 tiles e abre o fluxo de trabalho. |
+| `coffee` | `of_320`–`322` | Tira um café da bancada; o jogador sai carregando a xícara. |
 
 Ao trocar um asset interativo, atualize juntos `assets/furniture/catalog.json`,
 `GameInventorySeed.cs` e esta tabela. Não use o ID visual como regra de negócio dentro de
