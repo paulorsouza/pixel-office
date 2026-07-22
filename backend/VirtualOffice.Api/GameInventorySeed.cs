@@ -20,9 +20,9 @@ public static class GameInventorySeed
         ("of_317", "Computador azul", "workstations", "workstation"),
         ("of_318", "Computador violeta", "workstations", "workstation"),
         ("of_319", "Computador cinza", "workstations", "workstation"),
-        ("of_320", "Bancada de café clara", "workstations", ""),
-        ("of_321", "Bancada de café madeira", "workstations", ""),
-        ("of_322", "Bancada de café laranja", "workstations", ""),
+        ("of_320", "Bancada de café clara", "workstations", "coffee"),
+        ("of_321", "Bancada de café madeira", "workstations", "coffee"),
+        ("of_322", "Bancada de café laranja", "workstations", "coffee"),
         ("of_196", "Poltrona azul", "seating", "seat"),
         ("of_197", "Poltrona violeta", "seating", "seat"),
         ("of_198", "Poltrona cinza", "seating", "seat"),
@@ -74,18 +74,31 @@ public static class GameInventorySeed
 
     public static async Task RunAsync(AppDb db)
     {
-        if (!await db.GameItemDefinitions.AnyAsync())
+        // Reconcilia o catálogo em vez de só semear tabela vazia: antes, mudar a
+        // interação de um item existente (ou acrescentar item novo) não tinha
+        // efeito nenhum em banco já semeado.
+        var existentes = await db.GameItemDefinitions.ToDictionaryAsync(d => d.CatalogKey);
+        var mudou = false;
+        foreach (var item in Catalog)
         {
-            db.GameItemDefinitions.AddRange(Catalog.Select(item => new GameItemDefinition
+            if (existentes.TryGetValue(item.Key, out var definicao))
+            {
+                if (definicao.InteractionType == item.Interaction) continue;
+                definicao.InteractionType = item.Interaction;
+                mudou = true;
+                continue;
+            }
+            db.GameItemDefinitions.Add(new GameItemDefinition
             {
                 CatalogKey = item.Key,
                 Name = item.Name,
                 Category = item.Category,
                 IconPath = $"assets/furniture/office/{item.Key}.png",
                 InteractionType = item.Interaction,
-            }));
-            await db.SaveChangesAsync();
+            });
+            mudou = true;
         }
+        if (mudou) await db.SaveChangesAsync();
 
         var users = await db.Users.Where(x => !x.IsBot).Select(x => x.Id).ToListAsync();
         if (users.Count == 0) return;

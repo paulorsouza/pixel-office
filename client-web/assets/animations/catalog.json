@@ -58,5 +58,17 @@
     "repeat": 0,
     "animation": "interior-door-wood-open",
     "category": "door"
+  },
+  "coffee_cup": {
+    "path": "assets/animations/coffee-cup.png",
+    "preview": "assets/animations/coffee-cup-preview.png",
+    "frameWidth": 16,
+    "frameHeight": 16,
+    "start": 0,
+    "end": 2,
+    "frameRate": 3,
+    "repeat": -1,
+    "animation": "coffee-cup-steam",
+    "category": "item"
   }
 }

@@ -31,6 +31,10 @@ const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
 const worldAssetPath = (asset) => `assets/world/${asset}.png`;
 
+// ritmo do cafe: um gole a cada 2,6s sentado; a xicara dura ~13s de poltrona
+const GOLE_MS = 2600;
+const GOLES_ATE_ACABAR = 5;
+
 async function fetchJson(path) {
   const response = await fetch(path, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Não foi possível carregar ${path}`);
@@ -205,6 +209,14 @@ class MapScene extends Phaser.Scene {
       loadImageOnce(this, 'headset_wall', worldAssetPath('headset_wall'));
       loadImageOnce(this, 'headset_wall_empty', worldAssetPath('headset_wall_empty'));
     }
+    // xícara de café: item de mão, não é mobília, então também não está em map.assets
+    if (!this.textures.exists('coffee_cup')) {
+      const cup = animatedAssets.coffee_cup;
+      this.load.spritesheet('coffee_cup', cup.path, {
+        frameWidth: cup.frameWidth,
+        frameHeight: cup.frameHeight,
+      });
+    }
 
     const directTiledKeys = new Set();
     for (const descriptor of (this.map.tiledTextures || [])) {
@@ -270,7 +282,8 @@ class MapScene extends Phaser.Scene {
     );
     this.solids = this.physics.add.staticGroup();
     this.animatedAssets = animatedAssets;
-    for (const asset of (this.map.assets || [])) {
+    // a xícara não vem de map.assets, então a animação dela é criada à parte
+    for (const asset of ['coffee_cup', ...(this.map.assets || [])]) {
       const animated = animatedAssets[asset];
       if (!animated || this.anims.exists(animated.animation)) continue;
       this.anims.create({
@@ -440,12 +453,16 @@ class MapScene extends Phaser.Scene {
     if (debugRoom) this.roomDecorationEditor.open(debugRoom);
 
     this.seated = null;
+    this.coffee = null;
     this.furnitureInteractions = createFurnitureInteractionSystem(
       this,
       this.map,
       gameItems,
       equipmentMenu,
-      { onSeat: (record) => this.sitOn(record) },
+      {
+        onSeat: (record) => this.sitOn(record),
+        onCoffee: () => this.takeCoffee(),
+      },
     );
     this.interactionPreviewPending = interactionPreview;
 
@@ -523,6 +540,7 @@ class MapScene extends Phaser.Scene {
       proximityVoice.update();
       this.syncMeetingZone();
       this.syncVoiceChannel();
+      this.updateCoffee();
       return;
     }
 
@@ -546,6 +564,7 @@ class MapScene extends Phaser.Scene {
       proximityVoice.update();
       this.syncMeetingZone();
       this.syncVoiceChannel();
+      this.updateCoffee();
       return;
     }
     const profile = movementProfile(
@@ -610,6 +629,7 @@ class MapScene extends Phaser.Scene {
     proximityVoice.update();
     this.syncMeetingZone();
     this.syncVoiceChannel();
+    this.updateCoffee();
   }
 
   updatePortalInteraction() {
@@ -658,6 +678,42 @@ class MapScene extends Phaser.Scene {
     if (!this.seated) return;
     presence.releaseEntity(this.seated.entityId);
     this.seated = null;
+  }
+
+  // ---- café: tira na bancada, carrega, e bebe sentado ----
+  takeCoffee() {
+    if (this.coffee) { proximityVoice.toast('Você já está com um café'); return; }
+    const sprite = this.add.sprite(this.player.x, this.player.y, 'coffee_cup')
+      .setOrigin(0.5, 1);
+    if (this.anims.exists('coffee-cup-steam')) sprite.play('coffee-cup-steam');
+    this.coffee = { sprite, goles: 0, proximoGoleEm: 0 };
+    proximityVoice.toast('Café na mão — sente numa poltrona para tomar');
+  }
+
+  dropCoffee() {
+    this.coffee?.sprite.destroy();
+    this.coffee = null;
+  }
+
+  updateCoffee() {
+    const cafe = this.coffee;
+    if (!cafe) return;
+    const sentado = Boolean(this.seated);
+    const base = this.player.body.bottom;
+    // sentado a xícara fica no colo; em pé, ao lado do corpo
+    const dx = sentado ? 0 : (this.lastDirection === 'left' ? -7 : 7);
+    cafe.sprite.setPosition(this.player.x + dx, base + (sentado ? -7 : -3));
+    cafe.sprite.setDepth(base + 1);
+    // só se bebe sentado: em pé o contador zera e nada acontece
+    if (!sentado) { cafe.proximoGoleEm = 0; return; }
+    if (!cafe.proximoGoleEm) { cafe.proximoGoleEm = this.time.now + GOLE_MS; return; }
+    if (this.time.now < cafe.proximoGoleEm) return;
+    cafe.goles += 1;
+    cafe.proximoGoleEm = this.time.now + GOLE_MS;
+    if (cafe.goles >= GOLES_ATE_ACABAR) {
+      this.dropCoffee();
+      proximityVoice.toast('Café tomado');
+    }
   }
 
   // sensores das portas veem TODOS os avatares da cena, não só o local

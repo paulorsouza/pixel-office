@@ -7,6 +7,7 @@ const labels = {
   chest: 'Abrir baú',
   workstation: 'Usar computador',
   seat: 'Sentar e trabalhar',
+  coffee: 'Fazer um café',
 };
 
 function distanceToPlayer(record, player, tile) {
@@ -160,6 +161,11 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         .sort((a, b) => a.distance - b.distance)[0]?.candidate;
       if (workstation) return renderWorkstation(workstation);
       // sem estação por perto não há painel: o jogador só senta
+      return false;
+    },
+    coffee(record) {
+      // sem painel: tira um café da bancada e sai carregando
+      options.onCoffee?.(record);
       return false;
     },
   };
