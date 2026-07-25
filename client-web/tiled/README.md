@@ -19,7 +19,8 @@ tiled/maps/*.tmj + tilesets/*.tsj + templates/*.tj
 3. Abra `client-web/tiled/office-quest.tiled-project`.
 4. Abra um dos mapas:
    - `maps/world.tmj` — quintal central;
-   - `maps/tooq-office.tmj` — escritório e quintal privado.
+   - `maps/tooq-office.tmj` — escritório e quintal privado;
+   - `maps/tooq-office-1.tmj` — prédio novo, `225×153`; a planta está na §7.1.
 
 Os tilesets completos continuam disponíveis, mas o mapa também carrega paletas menores numeradas:
 `01 · Construção`, `02 · Escritório`, `03 · Decoração`, `04 · Exterior`, `05 · Animações`,
@@ -205,6 +206,71 @@ Exemplo para uma mesa de três tiles: `collisionX=-1`, `collisionY=0.1`, `collis
 `collisionH=0.8`. Se essas quatro propriedades existirem, elas vencem o footprint genérico de
 `solid`. Cadeiras soltas normalmente não precisam de colisão.
 
+⚠️ **Não invente footprint.** [`assets/furniture/catalog.json`](../assets/furniture/catalog.json) já
+traz a colisão conferida de cada `of_*`; copie de lá. As 33 salas do `tooq-office-1` são geradas
+assim. As estações compostas (`station_*`, 32×64) não estão no catálogo — a colisão delas foi medida
+na arte: a mesa ocupa de −3 a −1,875 tiles acima da âncora, então `collisionX=-0.5`, `collisionY=-3`,
+`collisionW=2`, `collisionH=1.15`. Quem é sólida é a **mesa**; a cadeira do mesmo quadro fica livre
+porque é onde o avatar senta — se a colisão descer até lá, ele é expulso ao levantar.
+
+### Móvel do cenário que interage
+
+Um móvel colocado no Tiled não tem `GameItemInstance`, então normalmente é só cenário. A propriedade
+`interactionType` liga as interações que **não dependem do inventário**:
+
+| Valor | Efeito |
+|---|---|
+| `seat` | `E` senta o avatar no móvel; o assento vira claim de presença, então ninguém senta em cima de ninguém. |
+| `coffee` | `E` tira um café da bancada; o jogador sai carregando a xícara e bebe sentado. |
+
+Um `seat` ainda precisa dizer **onde**, **em que pose** e **para que lado** o avatar senta, porque a
+âncora do móvel é o centro-inferior do quadro e o assento desenhado fica acima dela:
+
+| Propriedade | Uso |
+|---|---|
+| `seatX`, `seatY` | Deslocamento do avatar em relação à âncora, **em tiles**. Sem eles vale o encaixe antigo (0, −2 px), que deixa o personagem um tile abaixo da cadeira. |
+| `seatPose` | `sit` ou `idle`. Ver abaixo. Sem ela vale `sit`. |
+| `seatDir` | `left`/`right` para `sit`; `up` para a estação. Sem ela o lado sai do `flipX`. |
+| `seatCover` | Px da base do móvel redesenhados **na frente** do avatar. Só para o quadro composto (estação): a cadeira colada à mesa "abraça" quem senta, em vez de o avatar ficar por cima dela inteira. |
+
+⚠️ **A pose `sit` só presta de lado.** A folha `sit` tem as quatro direções, mas só `left`/`right`
+vieram sentadas do pack; `up`/`down` são o `idle` com a perna encurtada, sem joelho dobrado, e leem
+como pessoa **em pé** (ver `ASSETS.md` §3.1). Por isso:
+
+- **Cadeira solta** (`of_315`/`of_316`, poltronas): `seatPose: sit` + `seatDir` `left`/`right`,
+  escolhido para o personagem olhar o miolo do grupo (numa mesa, metade esquerda olha `right`).
+- **Estação** (`station_*`, mesa+cadeira num quadro só, a cadeira encara o monitor acima):
+  `seatPose: idle` + `seatDir: up`. O avatar aparece **de costas no teclado**, como quem trabalha —
+  uma pose de sentar de frente ficaria em pé.
+
+⚠️ **O avatar sentado é desenhado ACIMA do móvel** (`main.js` usa `record.display.depth + 1`). Sem
+isso o tampo e o monitor da estação, que têm profundidade maior, desenham por cima e escondem quem
+senta — parece que a pessoa está atrás da mesa, não sentada nela.
+
+⚠️ **Mas aí ele fica por cima da cadeira inteira** (parece em pé nela), porque a estação é mesa +
+cadeira num sprite só. `seatCover` conserta: o motor redesenha os N px de baixo do móvel (a cadeira)
+na frente do avatar (`showSeatCover`), então as pernas encaixam no assento. É a única forma de aninhar
+o avatar num quadro composto sem fatiar a arte. A estação usa `seatCover: 20` (a cadeira ocupa os
+20 px de baixo do sprite de 64). Cadeira solta não precisa — a arte já é só a cadeira.
+
+Medidos na arte e usados no `tooq-office-1`:
+
+| Peça | `seatX` | `seatY` | `seatPose` | `seatDir` |
+|---|---:|---:|---|---|
+| `station_*` (32×64) | 0 | −1,625 | `idle` | `up` |
+| `of_315`/`of_316`, `of_196`–`of_199` (32×48) | −0,5 | −0,875 | `sit` | `left`/`right` conforme a posição no grupo |
+
+⚠️ **Nas peças de 32 px a cadeira é desenhada meio tile à esquerda do centro do quadro**, mas a
+colisão do catálogo começa na âncora. Duas cadeiras encostadas fazem o assento de uma cair dentro da
+colisão da outra, e o Arcade expulsa quem levanta — deixe **dois tiles** entre cadeiras vizinhas. O
+teste `o avatar sentado não cai dentro de colisão nenhuma` cobre isso.
+
+`workstation`, `kanban` e `chest` **não** funcionam em móvel de mapa: eles precisam do `placementId`
+que só existe em item comprado/colocado pelo jogador. Colocar esses valores aqui não faz nada.
+
+No `tooq-office-1` levam `seat` as cadeiras `of_315`/`of_316`, as poltronas `of_196`–`of_199` e as
+sete `station_*` (sentar na frente do computador); levam `coffee` as bancadas `of_320`–`of_322`.
+
 ## 6. Inserir um prop externo
 
 1. Abra o tileset `Office Quest · Mundo`.
@@ -243,6 +309,58 @@ O caminho mais seguro é duplicar uma sala existente:
 
 O objeto precisa manter a classe `room`. As dimensões incluem a parede; deixe espaço interno para
 móveis e circulação.
+
+## 7.1 A planta do `tooq-office-1`
+
+O prédio novo não usa caixas de sala soltas como o `tooq-office`: as salas são **recortadas da
+própria casca**, encostadas nas paredes externas e **compartilhando a divisória** com a sala
+vizinha. Não existe corredor nas costas de sala nenhuma — só as avenidas, que são a circulação.
+
+| Elemento | Tiles | Observação |
+|---|---|---|
+| Casca do prédio | `x 14–210`, `y 14–138` | 8 aberturas já existiam na casca |
+| Avenidas verticais | `x 79–81` e `x 145–147` | alinhadas com as aberturas norte/sul |
+| Avenidas horizontais | `y 55–57` e `y 97–99` | alinhadas com as aberturas leste/oeste |
+| Banda de salas norte | `y 14–27` | 15 salas, porta ao **sul**; a parede de trás é a do prédio |
+| Área aberta A | `y 28–53` | Time Produto · Lounge Norte · Time Plataforma |
+| Banda de salas do meio | `y 59–72` | 9 salas, porta ao **norte** (dão na avenida) |
+| Área aberta B | `y 73–95` | Time Dados · Café · Time Design |
+| Área aberta C | `y 101–123` | Lounge Sul · Recepção · Time Infra |
+| Banda de salas sul | `y 124–138` | 9 salas, porta ao **norte**; a parede sul é a do prédio |
+
+As três bandas são cortadas pelas duas avenidas verticais, o que dá três segmentos por banda.
+
+**Como as paredes de uma banda são montadas** (tudo em `Pincel · Paredes`):
+
+| Peça | GID | Onde |
+|---|---|---|
+| Topo da parede (cap) | `354` branco · `226` pedra · `290` tijolo | linha de cima da parede horizontal |
+| Face da parede | `386` · `258` · `322` | linha de baixo, é o que se vê do lado sul |
+| Divisória vertical | `72` (contorno à direita) / `74` (à esquerda) | o contorno olha **para dentro** da sala |
+| Canto superior | `40` esquerdo · `42` direito | ponta da parede horizontal da banda |
+| Encontro em T | `4079` + `4080` | divisória nascendo numa parede **branca** |
+| Cruzamento | cap `+2` / face `+2` (ex.: `356`/`388`) | divisória cruzando uma parede **colorida** |
+
+⚠️ O tee desenhado (`wall_tee_*`) só fecha com a parede branca. Numa parede de pedra ou tijolo use a
+peça sem borda lateral do próprio estilo (a quarta coluna da família), senão aparece um talho branco
+no meio da faixa.
+
+**Salas de reunião** levam `meeting: true` no `extraJson`, piso `carpet` e parede de **pedra**; salas
+de time levam parede de **tijolo**; salas pessoais ficam brancas com piso `cream`. O fone de reunião
+não é objeto do Tiled: ele nasce sozinho no **centro da parede norte** de toda sala marcada como
+`meeting`, então não pendure quadro nessa posição.
+
+**Portas do prédio.** `office_door` é arte de fachada, em elevação: só assenta na **parede norte**,
+que é a única desenhada com duas linhas de tile. Nas paredes fina do sul e das laterais o sprite fica
+pendurado por fora, sobre a grama — ali a abertura fica limpa e quem marca a saída é o portão da
+cerca. As entradas atuais são a porta de vidro em `x 145–147` e a portinha de madeira em `x 80`, as
+duas ao norte.
+
+**Quintal.** A cerca-viva fecha o retângulo `x 8–216`, `y 8–144` na camada `Pincel · Cercas` (topo e
+base com `hedge_top`, laterais com duas colunas de `hedge_fill`, como no `tooq-office`). O único vão
+é `x 79–81`, no eixo da saída sul do prédio: dali sai um caminho de piso `cream` até o portão
+`garden_gate_1`, com o spawn `yard-gate` logo acima e o portal `yard-exit` em cima da passagem. Sem
+esse anel a cena era uma casca solta no meio de grama infinita.
 
 ## 8. Editar portas
 

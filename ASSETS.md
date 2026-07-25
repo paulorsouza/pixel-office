@@ -1,6 +1,6 @@
 # ASSETS — onde está tudo e o que já foi explorado
 
-**Atualizado:** 2026-07-22
+**Atualizado:** 2026-07-24
 
 Este doc responde três perguntas: **onde estão os assets**, **o que tem em cada pack**, e
 **o que já mapeamos** (as coordenadas/medidas que custaram caro pra descobrir).
@@ -100,12 +100,19 @@ Tudo abaixo foi **renderizado e conferido visualmente**. **Não chute de novo** 
   **y=64** e `sit` em **y=128**.
 - `idle` e `walk`: 24 frames na ordem `right(0-5), up(6-11), left(12-17), down(18-23)`.
 - `sit`: **24 frames**, na ordem própria `right(0-5), left(6-11), up(12-17), down(18-23)`. O pack só
-  trazia as laterais; **cima e baixo foram desenhadas** e escritas nas 23 folhas modulares (276
-  frames). Antes essas duas direções caíam no `idle` em pé.
-  A construção é geométrica e independente de paleta — o tronco vem do `idle` correspondente e a
-  parte de baixo vira colo (quadril alargado 1 px de cada lado + joelhos a 82% do brilho), o que faz
-  a mesma transformação servir para corpo, roupa e acessório. Peças que só cobrem a cabeça (olhos,
-  cabelo, gorro) passam intactas.
+  trazia as laterais; cima e baixo foram geradas por script e escritas nas 23 folhas modulares (o
+  tronco vem do `idle` correspondente e a parte de baixo alarga o quadril + escurece os joelhos).
+  ⚠️ **Essa geração não convence** — o resultado lê como pessoa em pé (ver o alerta abaixo). As
+  laterais do pack continuam sendo as únicas poses realmente sentadas.
+- ⚠️ **`up` e `down` do `sit` não passam de pessoa em pé.** Ampliados lado a lado com o `idle`, a
+  diferença é só a perna encurtada: não há joelho dobrado, que é o que faz a silhueta ler como
+  sentada. Só as laterais do pack têm. Consequências no `tooq-office-1`:
+  - cadeira/poltrona solta → pose `sit` de **perfil** (`left`/`right`), a única boa;
+  - estação (`station_*`, cadeira encara o monitor) → **não** usa `sit`; o avatar fica em `idle up`,
+    de costas para a tela, lendo como quem trabalha. Uma pose de sentar de frente ficaria em pé.
+  - Quem senta é **desenhado acima do móvel** (`display.depth + 1`), senão o tampo da estação o
+    esconde. Redesenhar os 12 frames `up`/`down` do `sit` nas 23 folhas é o que destrava sentar de
+    frente/costas de verdade.
 - ⚠️ Medir a **silhueta** não distingue poses de cadeira nem de personagem: as larguras por linha
   são iguais. É preciso comparar os pixels.
 - O cliente carrega a imagem inteira e registra somente esses retângulos como frames nomeados no
@@ -365,18 +372,19 @@ com sombra — a mesma dos `of_N`), copiados byte a byte.
 
 **Mobília — coleções de imagens**, colocadas como objeto em `Objetos · Móveis`:
 
-Os quatro temas ficam num tileset só, `13 · Interiores · Móveis`
-(`palette-interior-furniture.tsj`, 757 tiles), na ordem abaixo — uma aba no Tiled em vez de quatro:
+Os quatro temas foram **consolidados** no tileset único de móveis
+(`tiled/tilesets/tileset-moveis.tsj`), depois dos 339 `of_N` do Office e do `anim_coffee` — na ordem
+abaixo. Os `.tsj` por tema e o antigo `palette-interior-furniture.tsj` foram removidos do disco;
+tudo é carregado a partir do `tileset-moveis.tsj`:
 
-| Faixa no tileset | Pasta | Itens | `assetId` | Origem |
-|---|---|---:|---|---|
-| 0–121 | `furniture/living-room/` | 122 | `lr_N` | `2_Living_Room_Singles` |
-| 122–280 | `furniture/bathroom/` | 159 | `bt_N` | `3_Bathroom_Singles` |
-| 281–688 | `furniture/kitchen/` | 408 | `kt_N` | `12_Kitchen_Singles` |
-| 689–756 | `furniture/conference/` | 68 | `cf_N` | `13_Conference_Hall_Singles` |
+| Pasta | Itens | `assetId` | Origem |
+|---|---:|---|---|
+| `furniture/living-room/` | 122 | `lr_N` | `2_Living_Room_Singles` |
+| `furniture/bathroom/` | 159 | `bt_N` | `3_Bathroom_Singles` |
+| `furniture/kitchen/` | 408 | `kt_N` | `12_Kitchen_Singles` |
+| `furniture/conference/` | 68 | `cf_N` | `13_Conference_Hall_Singles` |
 
-Os quatro `.tsj` por tema continuam no disco, sem referência em mapa nenhum, só como rede de
-segurança para uma sessão antiga do Tiled que ainda os tenha aberto. Podem ser apagados.
+As estações compostas (`station_*`) e a xícara vêm depois, no fim do mesmo tileset.
 
 O `N` preserva a numeração do pack, então dá para voltar ao arquivo de origem. Peças chegam a 32×64;
 a origem é o centro inferior (`objectalignment: bottom`), como nos demais móveis.
@@ -418,6 +426,13 @@ atravessa o tile inteiro, inclusive o contorno da base, para emendar sem quebra 
 
 Pinte as duas na camada `Pincel · Paredes` — são parede e devem colidir. O pareamento 39 na esquerda
 e 41 na direita foi conferido nas divisórias do `tooq-office.tmj`.
+
+⚠️ **As quatro peças são brancas e só fecham com a parede branca** (`rb_1_11`/`rb_1_12`). Numa parede
+de pedra, tijolo ou lavanda o tee vira um talho claro no meio da faixa. Nesses estilos o encontro usa
+a **quarta coluna da própria família** — `rb_3_<linha>`, a variante sem borda lateral: para a parede
+branca é `356`/`388`, para a pedra `228`/`260`, para o tijolo `292`/`324`. Foi essa a regra usada nas
+33 salas do `tooq-office-1.tmj`; o mesmo par serve quando a divisória **cruza** a parede horizontal
+em vez de nascer nela (o caso das paredes sul das salas).
 
 ### 4.6 Estações de trabalho montadas (`furniture/stations/*.png`)
 

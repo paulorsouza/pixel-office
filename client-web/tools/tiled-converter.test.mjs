@@ -732,6 +732,75 @@ for (const scene of manifest.scenes) {
   });
 }
 
+test('móvel do Tiled leva interactionType para o runtime', async () => {
+  const direct = await loadTiledMap(
+    pathToFileURL(resolve(CLIENT_ROOT, 'tiled/maps/tooq-office-1.tmj')).href,
+    { fetchJson: fileFetchJson },
+  );
+  const cadeira = direct.furniture.find((item) => item.id === 'of_315');
+  const bancada = direct.furniture.find((item) => item.id === 'of_320');
+  const planta = direct.furniture.find((item) => item.id === 'of_98');
+  assert.equal(cadeira.interactionType, 'seat');
+  assert.equal(bancada.interactionType, 'coffee');
+  // sem a propriedade no Tiled o móvel continua sendo só cenário
+  assert.equal(planta.interactionType, undefined);
+  // o encaixe do avatar sentado também é dado do móvel: a estação senta de costas
+  // para o monitor (idle up), a cadeira solta senta de lado (sit)
+  const estacao = direct.furniture.find((item) => item.id === 'station_white_dual');
+  assert.equal(estacao.seatPose, 'idle');
+  assert.equal(estacao.seatDir, 'up');
+  assert.equal(estacao.seatY, -1.625);
+  // a estação redesenha os 20 px de baixo (a cadeira) na frente do avatar sentado
+  assert.equal(estacao.seatCover, 20);
+  assert.equal(cadeira.seatPose, 'sit');
+  assert.ok(['left', 'right'].includes(cadeira.seatDir), 'cadeira solta senta de perfil');
+  assert.equal(cadeira.seatX, -0.5);
+  assert.equal(cadeira.seatCover, undefined);
+});
+
+test('o avatar sentado não cai dentro de colisão nenhuma', async () => {
+  const direct = await loadTiledMap(
+    pathToFileURL(resolve(CLIENT_ROOT, 'tiled/maps/tooq-office-1.tmj')).href,
+    { fetchJson: fileFetchJson },
+  );
+  const tile = direct.tile;
+  const solids = [];
+  for (const layer of direct.visualLayers) {
+    if (!layer.properties?.collision) continue;
+    for (const cell of layer.tiles) solids.push({ x: cell.x, y: cell.y, w: 1, h: 1, item: null });
+  }
+  for (const item of direct.furniture) {
+    const c = item.collision;
+    if (c) solids.push({ x: item.x + c.x, y: item.y + c.y, w: c.w, h: c.h, item });
+  }
+  const assentos = direct.furniture.filter((item) => item.interactionType === 'seat');
+  assert.ok(assentos.length > 0, 'o mapa precisa ter assentos');
+  for (const seat of assentos) {
+    // main.js: âncora + seatX/seatY; corpo 10×8 no offset (3,22) de um sprite 16×32
+    const ax = (seat.x + 0.5) * tile + (seat.seatX || 0) * tile;
+    const ay = (seat.y + 1) * tile + (seat.seatY === undefined ? -2 : seat.seatY * tile);
+    const body = { x0: (ax - 5) / tile, x1: (ax + 5) / tile, y0: (ay + 6) / tile, y1: (ay + 14) / tile };
+    for (const solid of solids) {
+      if (solid.item === seat) continue;   // a colisão da própria cadeira é esperada
+      const bate = body.x1 > solid.x && body.x0 < solid.x + solid.w
+        && body.y1 > solid.y && body.y0 < solid.y + solid.h;
+      assert.ok(!bate, `assento ${seat.id} em ${seat.x},${seat.y} cai dentro de ${solid.item?.id || 'parede'}`);
+    }
+  }
+});
+
+test('todo móvel do mapa herda a colisão do catálogo do jogo', async () => {
+  const direct = await loadTiledMap(
+    pathToFileURL(resolve(CLIENT_ROOT, 'tiled/maps/tooq-office-1.tmj')).href,
+    { fetchJson: fileFetchJson },
+  );
+  const esperado = new Map(furnitureCatalog.items.map((item) => [item.id, item.collision || null]));
+  for (const item of direct.furniture) {
+    if (!esperado.has(item.id)) continue;
+    assert.deepEqual(item.collision ?? null, esperado.get(item.id), `colisão divergente em ${item.id}`);
+  }
+});
+
 test('runtime direto valida manifesto, portais e spawns em conjunto', async () => {
   const maps = await loadTiledSceneMaps(manifest, {
     baseUrl: pathToFileURL(resolve(CLIENT_ROOT, 'index.html')).href,

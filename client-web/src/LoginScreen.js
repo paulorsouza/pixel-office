@@ -145,10 +145,32 @@ export function showSessionEnded(message) {
   document.body.append(gate);
 }
 
+// Bypass de login PARA TESTE DO CLIENTE, com trava de ambiente dupla:
+//   1. só em host local (localhost / 127.0.0.1 / ::1 / *.localhost);
+//   2. só com ?dev=1 na URL, ou o flag persistente localStorage `oq_dev_bypass=1`.
+// Em qualquer domínio real (beta, tunnel, produção) devolve false e o login normal
+// vale — então isto nunca vira porta dos fundos publicada. O jogo entra com a
+// identidade de dev (?userId= ou 1) via X-User-Id; sem backend em modo dev, roda
+// offline (sem inventário/presença persistidos), o bastante para testar a cena.
+export function isLocalDevBypass(query = new URLSearchParams(location.search)) {
+  const host = location.hostname;
+  const local = host === 'localhost' || host === '127.0.0.1' || host === '::1'
+    || host === '[::1]' || host.endsWith('.localhost');
+  if (!local) return false;
+  if (query.get('dev') === '1' || query.get('devLogin') === '1') return true;
+  try { return localStorage.getItem('oq_dev_bypass') === '1'; } catch { return false; }
+}
+
 /// Garante uma sessão antes de o jogo subir. Em dev, ?userId= continua entrando direto.
 export async function ensureSession() {
   if (auth.isAuthenticated()) return;
   const query = new URLSearchParams(location.search);
+  // Bypass local de teste: pula a portaria sem nem chamar o backend, para funcionar
+  // mesmo com a API fora do ar. A trava de host garante que é só na máquina do dev.
+  if (isLocalDevBypass(query)) {
+    console.warn('[Office Quest] modo dev: login ignorado (host local + ?dev=1).');
+    return;
+  }
   const config = await auth.config();
   if (config.devBypass && (query.get('userId') || query.get('user'))) return;
   await promptLogin(config);

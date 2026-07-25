@@ -479,7 +479,12 @@ export async function loadTiledMap(mapReference, options = {}) {
       y: cleanNumber((object.y - offsetY) / tile - 1),
     };
     if (asset.frame !== undefined) result.frame = asset.frame;
-    for (const key of ['offsetX', 'offsetY', 'originX', 'originY', 'depth', 'solid']) {
+    // `interactionType` deixa um móvel do cenário interagir sem existir no inventário;
+    // `seatX/seatY/seatDir` dizem onde e para que lado o avatar senta nele
+    for (const key of [
+      'offsetX', 'offsetY', 'originX', 'originY', 'depth', 'solid',
+      'interactionType', 'seatX', 'seatY', 'seatDir', 'seatPose', 'seatCover',
+    ]) {
       optional(result, key, properties[key], properties);
     }
     if (!Object.hasOwn(properties, 'originX') && asset.originX !== 0.5) result.originX = asset.originX;

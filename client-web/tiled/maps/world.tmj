@@ -29043,7 +29043,7 @@
       {
        "name": "label",
        "type": "string",
-       "value": "Entrar pelo portão da Tooq"
+       "value": "Entrar no prédio novo da Tooq"
       },
       {
        "name": "targetScene",

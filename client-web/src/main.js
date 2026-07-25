@@ -527,9 +527,10 @@ class MapScene extends Phaser.Scene {
       this.setPlayerBodyFrameWidth(16);
       this.characterVisual.update(
         this.seated?.dir || this.lastDirection,
-        this.seated ? 'sit' : 'idle',
+        this.seated ? (this.seated.pose || 'sit') : 'idle',
         !this.seated,
         this.time.now,
+        this.seated?.depth,
       );
       this.equipmentVisual.hide();
       this.activeHeadsetPrompt = this.headsets.update(this.player, true);
@@ -556,7 +557,9 @@ class MapScene extends Phaser.Scene {
       this.player.body.setVelocity(0, 0);
       this.player.setPosition(this.seated.x, this.seated.y);
       this.setPlayerBodyFrameWidth(16);
-      this.characterVisual.update(this.seated.dir, 'sit', false, this.time.now);
+      this.characterVisual.update(
+        this.seated.dir, this.seated.pose || 'sit', false, this.time.now, this.seated.depth,
+      );
       this.equipmentVisual.hide();
       presence.updateLocal(this.player.x, this.player.y, this.seated.dir);
       presence.interpolate(delta);
@@ -658,11 +661,27 @@ class MapScene extends Phaser.Scene {
 
   // ---- assento: a cadeira vira estado com dono, então ninguém senta em cima de ninguém ----
   async sitOn(record) {
-    if (this.seated || !record?.item?.placementId) return;
-    const entityId = `furniture:${record.item.placementId}`;
-    // só as poses left/right têm arte sentada (CharacterSystem); usa o lado da cadeira
-    const dir = record.item.flipX ? 'right' : 'left';
-    const anchor = { x: Math.round(record.display.x), y: Math.round(record.display.y - 2), dir };
+    if (this.seated || !record?.item) return;
+    // móvel do cenário não tem placement no backend; a posição no mapa é estável
+    // e igual em todos os clientes, então serve de chave do claim
+    const entityId = record.item.placementId
+      ? `furniture:${record.item.placementId}`
+      : `scenery:${record.item.id}@${record.item.x},${record.item.y}`;
+    // Onde o avatar encosta: a âncora do móvel é o centro-inferior do quadro, mas o
+    // assento desenhado fica acima dela (e nas peças de 32 px, meio tile à esquerda).
+    // `seatX`/`seatY` vêm em tiles no próprio móvel; sem eles vale o encaixe antigo.
+    const tile = this.map.tile || 16;
+    const item = record.item;
+    const dir = item.seatDir || (item.flipX ? 'right' : 'left');
+    const anchor = {
+      x: Math.round(record.display.x + (item.seatX || 0) * tile),
+      y: Math.round(record.display.y + (item.seatY === undefined ? -2 / tile : item.seatY) * tile),
+      dir,
+      // pose: `sit` só tem lateral boa; a estação usa idle de costas (trabalhando)
+      pose: item.seatPose || 'sit',
+      // desenhar o avatar acima do móvel em que senta
+      depth: record.display.depth + 1,
+    };
     if (!(await presence.claimEntity(entityId, 'seat', anchor))) {
       const who = presence.claimOf(entityId)?.name;
       proximityVoice.toast(who ? `${who} já está nessa cadeira` : 'Essa cadeira está ocupada');
@@ -672,12 +691,37 @@ class MapScene extends Phaser.Scene {
     this.player.body.setVelocity(0, 0);
     this.player.setPosition(anchor.x, anchor.y);
     this.lastDirection = dir;
+    this.showSeatCover(record);
+  }
+
+  // A estação é mesa + cadeira num quadro só: mesmo desenhando o avatar acima dela,
+  // ele fica por cima da cadeira inteira (parece em pé nela). `seatCover` redesenha
+  // a faixa de baixo do móvel (a cadeira) na frente do avatar, então as pernas
+  // ficam encaixadas no assento. É a única forma de "aninhar" o avatar num sprite
+  // composto sem fatiar a arte.
+  showSeatCover(record) {
+    const cover = record.item.seatCover;
+    if (!cover) return;
+    const src = record.display;
+    const frameH = src.frame?.realHeight ?? src.height;
+    const frameW = src.frame?.realWidth ?? src.width;
+    this.seatCover = this.add.image(src.x, src.y, src.texture.key, src.frame?.name)
+      .setOrigin(src.originX, src.originY)
+      .setFlipX(src.flipX)
+      .setDepth(this.seated.depth + 0.5)
+      .setCrop(0, frameH - cover, frameW, cover);
+  }
+
+  hideSeatCover() {
+    this.seatCover?.destroy();
+    this.seatCover = null;
   }
 
   standUp() {
     if (!this.seated) return;
     presence.releaseEntity(this.seated.entityId);
     this.seated = null;
+    this.hideSeatCover();
   }
 
   // ---- café: tira na bancada, carrega, e bebe sentado ----
@@ -744,7 +788,7 @@ class MapScene extends Phaser.Scene {
   }
 }
 
-new Phaser.Game({
+window.__phaserGame = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },

@@ -274,7 +274,10 @@ export function createPresence(options = {}) {
     // ---- estado efêmero com dono (assento, trava de porta, reserva de sala) ----
     // false = alguém chegou antes. Portas automáticas NÃO usam isto (são derivadas).
     async claimEntity(entityId, kind, data = null) {
-      if (!connection) return false;
+      // Offline (dev/single-player): sem hub não há disputa, então o claim local
+      // vale — senão sentar, trancar porta e reservar sala não funcionariam ao
+      // testar o cliente sem backend.
+      if (!connection) return true;
       try {
         return await connection.invoke('ClaimEntity', entityId, kind, data ? JSON.stringify(data) : null);
       } catch { return false; }

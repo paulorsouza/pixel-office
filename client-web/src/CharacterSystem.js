@@ -283,17 +283,20 @@ export function createCharacterVisual(scene, catalog, customizer, player) {
   };
 
   return {
-    update(direction, pose, moving, time) {
+    // `depthBase` sobrepõe a profundidade quando o avatar precisa ficar acima do
+    // móvel em que senta — senão o tampo e o monitor da estação o escondem.
+    update(direction, pose, moving, time, depthBase) {
       syncTextures();
       const frame = characterFrameSpec(catalog, pose, direction, time, moving);
       const x = Math.round(player.x);
       const y = Math.round(player.y);
+      const base = depthBase ?? player.body.bottom;
       for (const layer of layers) {
         if (!layer.renderable || layer.sprite.texture.key === '__DEFAULT') continue;
         layer.sprite
           .setFrame(frame.name)
           .setPosition(x, y)
-          .setDepth(player.body.bottom + layer.index * 0.01);
+          .setDepth(base + layer.index * 0.01);
       }
     },
     destroy() {

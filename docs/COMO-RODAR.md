@@ -3,7 +3,26 @@
 Este é o roteiro atual do cliente **web Phaser**. O cliente Unity está arquivado e não participa do
 produto nem dos testes novos.
 
-## 1. Backend obrigatório
+## 0. Só quero testar o cliente (sem backend)
+
+Para olhar a cena, andar, sentar, pegar café e conferir mapas **sem subir o backend nem logar**, use
+o modo dev — ele pula a portaria de login:
+
+```text
+http://localhost:8123/?dev=1&scene=tooq-office-1
+```
+
+Trava de segurança: `?dev=1` só vale em **host local** (`localhost`, `127.0.0.1`, `*.localhost`). Em
+qualquer domínio real (beta, tunnel, produção) o parâmetro é ignorado e o login normal vale, então
+isso nunca vira porta dos fundos publicada. Para deixar ligado sem repetir o parâmetro:
+`localStorage.setItem('oq_dev_bypass','1')`.
+
+Nesse modo o jogo roda **offline**: sem inventário/horas persistidos e sem presença/voz em rede
+(some sozinho). O que é do cliente funciona — cena, movimento, sentar (assento é claim local),
+café, decoração local. Para persistência e multiplayer, suba o backend (seção 1) com
+`Auth:DevBypass=true` e use `?userId=`.
+
+## 1. Backend obrigatório (para persistência e rede)
 
 Abra um PowerShell na raiz do repositório:
 

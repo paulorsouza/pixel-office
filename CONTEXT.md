@@ -1,6 +1,6 @@
 # CONTEXT — Office Quest (escritório virtual da Tooq)
 
-**Atualizado:** 2026-07-22
+**Atualizado:** 2026-07-24
 
 Visão geral pragmática do projeto: o que é, o que existe, como as peças se conectam e para onde vai.
 Detalhes vivem em docs específicos (linkados no fim) — aqui é o mapa mental.
@@ -193,21 +193,41 @@ procuram uma estação próxima e só abrem o fluxo de trabalho quando há uma c
 é `chest`, `of_225/227/229/231/233/235/317/318/319` são `workstation`, e as poltronas/cadeiras
 curadas são `seat`. O armário servidor é um placeholder visual de baú até entrar um asset melhor.
 
+Duas interações — **`seat`** e **`coffee`** — também valem para **móvel do cenário** (colocado no
+Tiled, sem `GameItemInstance`), via a propriedade `interactionType` no objeto. `kanban`/`chest`/
+`workstation` continuam exigindo item de inventário (dependem do `placementId`). Sentar num móvel de
+cenário usa a posição do mapa como chave do claim, então o assento continua exclusivo em rede. O
+encaixe do avatar sentado é **dado do móvel** (`seatX`/`seatY`/`seatPose`/`seatDir`/`seatCover`):
+cadeira solta senta de perfil (`sit`, a única pose lateral boa do pack — `up`/`down` da folha `sit`
+leem como pessoa em pé, ver `ASSETS.md` §3.1); a **estação** (mesa+cadeira num sprite só) usa `idle`
+de costas para o monitor e `seatCover` redesenha a cadeira na frente do avatar para ele encaixar no
+assento em vez de ficar por cima dela. Regras completas em
+[`client-web/tiled/README.md`](client-web/tiled/README.md) §5.
+
 **Rede implementada nesta fatia:** `GameItemsSystem.js` usa o cliente SignalR oficial vendorizado em
 `client-web/lib/signalr.min.js`. `JoinGame(userId, sceneId, roomId)` assina os grupos do usuário e
 da sala; `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved`, `InventoryChanged`,
 `ChestChanged` e `WorkSessionChanged` mantêm sessões abertas convergentes. Isso sincroniza mobília,
 não avatares: presença/movimento ainda precisa ganhar isolamento por `sceneId`.
 
-**Área-piloto de design:** o escritório foi compactado para 48×44 tiles e agora tem recepção, dois
-escritórios fechados, open space, lounge, café e quintal privado. O Tiled expõe paletas curadas por
-uso; móveis multi-tile aceitam footprints explícitos e `anim_coffee` prova o fluxo de decoração
-animada orientada a dados. As estações seguem a composição do `Office_Design_2` (mesa, equipamento
-e cadeira), as salas usam painéis brancos do room builder e porta interna deslizante automática do
-Modern Interiors. A face sul dessas duas salas tem dois tiles; a porta abre ao aproximar, fecha ao
-afastar e habilita/desabilita a colisão junto com a animação. Sofás modulares foram removidos do
-lounge em favor das poltronas vistas no `Office_Design_1`; `office_door` ficou restrita à transição
-externa.
+**Área-piloto de design (`tooq-office`):** 48×44 tiles com recepção, dois escritórios fechados, open
+space, lounge, café e quintal privado. O Tiled expõe paletas curadas por uso; móveis multi-tile
+aceitam footprints explícitos e `anim_coffee` prova o fluxo de decoração animada orientada a dados.
+As estações seguem a composição do `Office_Design_2` (mesa, equipamento e cadeira), as salas usam
+painéis brancos do room builder e porta interna deslizante automática do Modern Interiors. A face
+sul dessas duas salas tem dois tiles; a porta abre ao aproximar, fecha ao afastar e
+habilita/desabilita a colisão junto com a animação.
+
+**Prédio novo (`tooq-office-1`):** a segunda cena de escritório, `225×153`, mobiliada em cima da
+casca vazia que já existia. Padrão diferente do piloto: as salas são **recortadas da própria casca**,
+encostadas nas paredes externas e **compartilhando a divisória** com a vizinha — sem corredor nas
+costas de sala nenhuma; a circulação são avenidas centrais alinhadas com as aberturas da casca. São
+**três bandas de salas** (33 no total: 15 de reunião com parede de pedra, 9 de time com tijolo, 7
+pessoais e 2 cabines com parede branca) intercaladas com áreas abertas de time, dois lounges, café e
+recepção. Portas animadas em todas as salas; o quintal é fechado por cerca-viva com um portão
+alinhado à saída sul, e o portal de volta ao mundo fica no portão. Foi **gerado por script aditivo**
+sobre a casca — a planta completa e as regras de parede estão em
+[`client-web/tiled/README.md`](client-web/tiled/README.md) §7.1.
 
 **Presença + voz por proximidade (feito):** o cliente Phaser conecta o hub de presença
 (`PresenceSystem.js`), renderiza avatares remotos interpolados (filtro de cena no cliente) e
@@ -236,7 +256,10 @@ no Tiled (é o fluxo do projeto).
 **Auth (login-only por enquanto):** OIDC do Google + JWT próprio, escopo só `openid email profile`
 (sem Calendar ainda — é flip de config `Auth:Scopes`+`OfflineAccess`). `Auth:DevBypass=true` mantém o
 `X-User-Id` vivo em dev; produção = `false` + credenciais Google. Passo a passo (inclusive sem admin
-no Workspace): [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md).
+no Workspace): [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md). Para **testar só o cliente sem backend**,
+`?dev=1` pula a portaria de login — mas **só em host local** (`localhost`/`127.0.0.1`/`*.localhost`);
+em qualquer domínio real o parâmetro é ignorado, então não vira porta dos fundos publicada
+(`LoginScreen.isLocalDevBypass`). Nesse modo o jogo roda offline; ver [`docs/COMO-RODAR.md`](docs/COMO-RODAR.md) §0.
 
 **Deploy — produção (Docker) e beta (túnel):**
 - **Docker** (`docker-compose.yml`): Postgres + backend + game (nginx) + LiveKit + Caddy (TLS). O
@@ -268,12 +291,15 @@ paredes, pisos, móveis, exteriores, porta animada):
    Ver [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
 2. **Adicionar handlers das próximas mecânicas** e seus templates tipados no Tiled.
 3. **Evoluir a economia de itens** com compra, drops, preços e permissões de sala.
-4. **Adicionar a segunda cena de destino** ao hub para provar que a arquitetura cresce além do
-   escritório.
+4. ✅ **Segunda cena de destino** — feito. O prédio novo (`tooq-office-1`) entrou no hub pelo mesmo
+   contrato de `portals[]`/`spawns`, provando que a arquitetura cresce além do escritório-piloto.
 5. ✅ **A/V por sala** (LiveKit JS) — feito. `ProximityVoice.js`: call isolado por sala declarada
    ou pelo fone, mic/câmera/tela sob demanda. Falta sincronizar a posse do fone em rede e servir
    café para outro jogador (ver o doc).
-6. **Polimento visual e conteúdo** do escritório, preservando o mapa como dados do Tiled.
+6. **Redesenhar os frames `up`/`down` da folha `sit`** nas 23 folhas modulares — hoje são o `idle`
+   com a perna encurtada, então sentar de frente/costas não presta (a estação contorna com `idle` de
+   costas). É o que destrava sentar encarando o monitor de verdade.
+7. **Polimento visual e conteúdo** do escritório, preservando o mapa como dados do Tiled.
 
 ---
 

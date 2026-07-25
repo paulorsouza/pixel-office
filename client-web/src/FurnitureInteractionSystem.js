@@ -10,6 +10,9 @@ const labels = {
   coffee: 'Fazer um café',
 };
 
+// interações que funcionam sem um GameItemInstance por trás
+const SCENERY_INTERACTIONS = new Set(['seat', 'coffee']);
+
 function distanceToPlayer(record, player, tile) {
   return Phaser.Math.Distance.Between(
     record.display.x,
@@ -29,9 +32,16 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   let nearby = null;
   let workingPlacementId = null;
 
+  // Móvel do inventário: tem placement no backend, então serve para qualquer interação.
   const ownedInteractive = () => (scene.furnitureObjects || []).filter((record) => (
     record.item.owned && record.item.ownerId === gameItems.userId && record.item.interactionType
   ));
+  // Móvel do cenário (vem do Tiled): não tem placement, então só valem as interações
+  // que não dependem de um item do inventário — sentar e tirar café.
+  const sceneryInteractive = () => (scene.furnitureObjects || []).filter((record) => (
+    !record.item.owned && SCENERY_INTERACTIONS.has(record.item.interactionType)
+  ));
+  const interactive = () => [...ownedInteractive(), ...sceneryInteractive()];
 
   const setOpen = (value) => {
     open = value;
@@ -206,7 +216,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
       return true;
     },
     update(player, blocked = false) {
-      nearby = blocked || open ? null : ownedInteractive()
+      nearby = blocked || open ? null : interactive()
         .map((record) => ({ record, distance: distanceToPlayer(record, player, map.tile || 16) }))
         .filter((entry) => entry.distance <= 2.2)
         .sort((a, b) => a.distance - b.distance)[0]?.record || null;
