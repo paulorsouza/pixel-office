@@ -12,6 +12,8 @@
 # ---------- Docker / segredos ----------
 .env
 deploy/beta.env
+# URL do quick tunnel: muda a cada execucao, nao faz sentido versionar
+deploy/tunnel-url.txt
 # binários baixados (caddy/cloudflared) — não versionar
 deploy/*.exe
 **/cloudflared.exe

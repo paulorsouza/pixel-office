@@ -48,6 +48,11 @@ function Wait-HttpReady($url, $timeoutSeconds = 30) {
 }
 
 # --- 0. checagens ---
+# O backend so sobe com o Postgres de pe (nao existe mais fallback SQLite).
+$pg = Get-NetTCPConnection -State Listen -LocalPort 5432 -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $pg) {
+  throw "Postgres nao esta escutando na porta 5432. Suba com:  docker compose -f docker-compose.dev.yml up -d   (ver docs\BANCO_POSTGRES.md)"
+}
 $caddy = Find-Exe 'caddy'
 $cloudflared = Find-Exe 'cloudflared'
 if (-not $caddy) { Write-Host "AVISO: caddy nao encontrado. Baixe caddy.exe (caddyserver.com/download) e ponha no PATH ou em deploy\caddy.exe" -ForegroundColor Yellow }
@@ -94,6 +99,11 @@ if ($useCloud) {
 
 # --- 3. backend (.NET) em :5210 (os filhos herdam estas variaveis) ---
 $env:ASPNETCORE_URLS = 'http://localhost:5210'
+# Banco: Postgres e o unico provider. As migrations rodam sozinhas no boot.
+if ($betaEnv['DB_CONNECTION']) { $env:ConnectionStrings__Default = $betaEnv['DB_CONNECTION'] }
+# Economia do beta: 10 mil moedas por usuario, concedidas uma unica vez.
+$env:Game__WelcomeGrantCoins = if ($betaEnv['GAME_WELCOME_GRANT_COINS']) { $betaEnv['GAME_WELCOME_GRANT_COINS'] } else { '10000' }
+if ($betaEnv['GAME_WELCOME_GRANT_KEY']) { $env:Game__WelcomeGrantKey = $betaEnv['GAME_WELCOME_GRANT_KEY'] }
 if ($betaEnv['LIVEKIT_URL'])        { $env:LiveKit__Url = $betaEnv['LIVEKIT_URL'] }
 if ($betaEnv['LIVEKIT_API_KEY'])    { $env:LiveKit__ApiKey = $betaEnv['LIVEKIT_API_KEY'] }
 if ($betaEnv['LIVEKIT_API_SECRET']) { $env:LiveKit__ApiSecret = $betaEnv['LIVEKIT_API_SECRET'] }

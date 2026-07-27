@@ -27,8 +27,14 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      Database__Provider: postgres
       ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # Banco limpo: só o catálogo curado (tipos de lançamento, objetivos, itens).
+      # Ligue apenas se quiser o time fictício para demonstrar o produto.
+      Seed__DemoData: "${SEED_DEMO_DATA:-false}"
+      # --- economia (o beta abre com 10 mil moedas por usuário) ---
+      Game__WelcomeGrantCoins: "${GAME_WELCOME_GRANT_COINS:-0}"
+      Game__WelcomeGrantKey: "${GAME_WELCOME_GRANT_KEY:-beta-v1}"
+      Game__TimeZoneOffsetHours: "${GAME_TZ_OFFSET:--3}"
       # --- auth ---
       Auth__DevBypass: "${AUTH_DEV_BYPASS}"
       Auth__PasswordEnabled: "${AUTH_PASSWORD_ENABLED:-true}"
@@ -40,8 +46,12 @@ services:
       Auth__GoogleClientId: "${GOOGLE_CLIENT_ID}"
       Auth__GoogleClientSecret: "${GOOGLE_CLIENT_SECRET}"
       Auth__GoogleRedirectUri: "https://localhost/auth/google/callback"
-      # --- livekit (URL é a que o navegador usa; media via portas do serviço livekit) ---
-      LiveKit__Url: "wss://localhost:7443"
+      # --- livekit ---
+      # A URL é a que o NAVEGADOR usa. Com LiveKit Cloud (LIVEKIT_URL preenchido) a
+      # mídia vai direto para a nuvem e a voz atravessa redes — é o que o túnel exige,
+      # porque UDP não passa por túnel HTTP. Sem LIVEKIT_URL cai no container local,
+      # que só serve para quem está na mesma máquina/LAN.
+      LiveKit__Url: "${LIVEKIT_URL:-wss://localhost:7443}"
       LiveKit__ApiKey: "${LIVEKIT_API_KEY}"
       LiveKit__ApiSecret: "${LIVEKIT_API_SECRET}"
     restart: unless-stopped
@@ -50,8 +60,13 @@ services:
     build: ./client-web
     restart: unless-stopped
 
+  # SFU local — OPCIONAL. Só sobe com o perfil `local-livekit`:
+  #     docker compose --profile local-livekit up -d
+  # Serve para rodar sem depender da nuvem, mas a voz fica restrita à LAN.
+  # Para acesso externo (túnel) use a LiveKit Cloud via LIVEKIT_URL no .env.
   livekit:
     image: livekit/livekit-server:latest
+    profiles: ["local-livekit"]
     command: --config /etc/livekit.yaml
     environment:
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
@@ -64,11 +79,12 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    depends_on: [backend, game, livekit]
+    depends_on: [backend, game]
     ports:
-      - "443:443"     # game + API (mesma origem)
+      - "443:443"     # game + API (mesma origem), HTTPS self-signed
       - "8443:8443"   # app web (kanban/horas)
-      - "7443:7443"   # LiveKit (wss / sinalização)
+      - "7443:7443"   # LiveKit local (só usado com o perfil local-livekit)
+      - "8080:8080"   # origem HTTP única para o Cloudflare Tunnel
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

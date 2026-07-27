@@ -1,5 +1,10 @@
 # Beta na sua máquina, acessível de fora (sem Docker)
 
+> Para expor o **build de produção** (Docker + Postgres) pelo mesmo túnel, use
+> `.\run-prod-local.ps1` — ele também abre o túnel por padrão. Ver
+> [`DEPLOY_DOCKER.md`](DEPLOY_DOCKER.md). Lá o app web vai junto pelo túnel, em `/app/`;
+> aqui ele fica só local.
+
 Roda tudo local (nada em serviço externo) e expõe pela internet com um **túnel** — sem abrir
 porta no roteador, sem expor seu IP, com HTTPS automático. Um comando: [`run-beta.ps1`](../run-beta.ps1).
 
