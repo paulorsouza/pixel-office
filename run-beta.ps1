@@ -22,6 +22,31 @@ function Find-Exe($name) {
   return $null
 }
 
+function Assert-PortFree($port, $service) {
+  $listener = Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+  if (-not $listener) { return }
+
+  $process = Get-Process -Id $listener.OwningProcess -ErrorAction SilentlyContinue
+  $processName = if ($process) { "$($process.ProcessName) (PID $($process.Id))" } else { "PID $($listener.OwningProcess)" }
+  throw "Nao foi possivel iniciar $service`: a porta $port ja esta em uso por $processName. Feche o processo ou a execucao anterior do run-beta e tente novamente."
+}
+
+function Wait-HttpReady($url, $timeoutSeconds = 30) {
+  $deadline = (Get-Date).AddSeconds($timeoutSeconds)
+  do {
+    try {
+      $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2
+      if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) { return $true }
+    } catch {
+      # O backend ainda pode estar aplicando o schema e iniciando os servicos.
+    }
+    Start-Sleep -Milliseconds 500
+  } while ((Get-Date) -lt $deadline)
+
+  return $false
+}
+
 # --- 0. checagens ---
 $caddy = Find-Exe 'caddy'
 $cloudflared = Find-Exe 'cloudflared'
@@ -38,12 +63,18 @@ if (Test-Path $betaEnvFile) {
 }
 $useCloud = $betaEnv.ContainsKey('LIVEKIT_URL') -and $betaEnv['LIVEKIT_URL']
 
-# --- 1. garante o backend buildado ---
+# Falhe antes de abrir qualquer janela. Antes o script iniciava servicos duplicados e
+# seguia ate o tunel mesmo quando o backend nao conseguia escutar na porta 5210.
+Assert-PortFree 5210 'o backend'
+if ($caddy) { Assert-PortFree 8080 'o Caddy' }
+
+# --- 1. garante que a DLL corresponde ao codigo atual ---
 $apiDir = Join-Path $root 'backend\VirtualOffice.Api'
 $dll = Join-Path $apiDir 'bin\Debug\net10.0\VirtualOffice.Api.dll'
-if (-not (Test-Path $dll)) {
-  Write-Host "Buildando o backend..." -ForegroundColor Cyan
-  & dotnet build $apiDir -c Debug | Out-Host
+Write-Host "Atualizando o backend..." -ForegroundColor Cyan
+& dotnet build $apiDir -c Debug --nologo | Out-Host
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dll)) {
+  throw "O build do backend falhou. Corrija os erros acima antes de abrir a beta."
 }
 
 function Start-Term($title, $command) {
@@ -73,6 +104,11 @@ if ($betaEnv['AUTH_ALLOW_REGISTRATION']) { $env:Auth__AllowRegistration = $betaE
 if ($betaEnv['JWT_KEY']) { $env:Auth__JwtKey = $betaEnv['JWT_KEY'] }
 Write-Host "Contas: usuario+senha (cadastro na tela de login). DevBypass=$($env:Auth__DevBypass)." -ForegroundColor Cyan
 Start-Term 'OfficeQuest - Backend' "Set-Location '$apiDir'; & dotnet '$dll'"
+Write-Host "Aguardando o backend ficar pronto..." -ForegroundColor Cyan
+if (-not (Wait-HttpReady 'http://localhost:5210/' 30)) {
+  throw "O backend foi iniciado, mas nao respondeu em http://localhost:5210 dentro de 30 segundos. Confira a janela 'OfficeQuest - Backend'."
+}
+Write-Host "Backend pronto em http://localhost:5210." -ForegroundColor Green
 
 # --- 4. Caddy: game + API na mesma origem (:8080) ---
 if ($caddy) {
