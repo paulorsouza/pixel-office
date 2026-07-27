@@ -1,8 +1,21 @@
 # Plano — cardgame Pokémon do Pixel Office
 
-**Status:** proposta para validação  
-**Codinome provisório:** Tooq Triad  
+**Status:** em implementação — Fase 0
+**Codinome provisório:** Tooq Triad
 **Escopo inicial:** PvP, 151 Pokémon originais, coleção, decks e boosters de 5 cartas
+
+## Progresso
+
+- [x] Motor puro do tabuleiro 3×3.
+- [x] Baralho de 9, mão inicial de 6 e compra automática.
+- [x] Comparação das quatro bordas e captura de múltiplos vizinhos.
+- [x] Bônus de tipo bilateral limitado a `+1`.
+- [x] Bônus shiny em uma borda.
+- [x] Snapshot privado da mão e snapshot público do adversário.
+- [x] Matriz moderna dos 18 tipos e catálogo-protótipo com 20 Pokémon.
+- [x] Testes determinísticos da primeira fatia.
+- [ ] Backend autoritativo e persistência.
+- [ ] UI da partida, coleção e boosters.
 
 ## 1. Visão do produto
 
