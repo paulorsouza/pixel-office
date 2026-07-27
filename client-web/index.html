@@ -2,15 +2,24 @@
 <html lang="pt-br">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- viewport-fit=cover: usa a tela toda em aparelho com notch. user-scalable=no:
+     sem isto o toque duplo do jogo vira zoom da pagina no celular. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Office Quest — Mundo Tooq</title>
 <style>
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#20222c}
   button{font:inherit}
-  #game{position:fixed;inset:0;width:100vw;height:100vh}
-  #game canvas{display:block;image-rendering:pixelated;width:100%!important;height:100%!important}
+  /* 100dvh: a barra de endereco do Safari muda a altura e cortava o HUD. */
+  #game{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh}
+  /* touch-action:none -- sem isto o navegador rola/zooma a pagina em vez de o
+     toque virar comando de movimento. */
+  #game canvas{display:block;image-rendering:pixelated;width:100%!important;height:100%!important;
+    touch-action:none;-webkit-tap-highlight-color:transparent}
   .hud{position:fixed;z-index:20;font-family:Inter,system-ui,sans-serif;pointer-events:none}
   .hud.interactive{pointer-events:auto}
   #scene-card{left:16px;top:16px;display:flex;flex-direction:column;gap:2px;min-width:210px;
@@ -306,7 +315,7 @@
   <strong id="scene-name">Carregando…</strong>
   <span id="scene-subtitle"></span>
 </div>
-<div id="controls" class="hud"><b>WASD</b> andar · <b>Shift</b> usar veículo · <b>Tab</b> equipamentos · <b>E</b> entrar/sair · <b>F</b> fone da reunião · <b>scroll</b> zoom</div>
+<div id="controls" class="hud"><b>clique</b> ou <b>WASD</b> andar · <b>Shift</b> usar veículo · <b>Tab</b> equipamentos · <b>E</b> entrar/sair · <b>F</b> fone da reunião · <b>scroll</b> zoom</div>
 <div id="portal-prompt" class="hud"><kbd>E</kbd><span></span></div>
 <button id="room-decoration-entry" class="hud interactive" type="button" hidden>✦ Decorar sala</button>
 <aside id="room-decoration-panel" class="hud interactive" aria-label="Editor de móveis da sala" hidden>

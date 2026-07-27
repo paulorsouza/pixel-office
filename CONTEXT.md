@@ -57,6 +57,8 @@ client-web/src/CharacterSystem.js  avatar modular, editor e persistência
 client-web/src/RoomDecorationSystem.js  editor de móveis, validação e integração com estoque
 client-web/src/GameItemsSystem.js       API de inventário/mobília + cliente SignalR
 client-web/src/FurnitureInteractionSystem.js  kanban, baú, cadeira, estação e café
+client-web/src/NavigationSystem.js    grade de caminhabilidade + A* + suavização de rota
+client-web/src/ClickToMove.js         clique/toque vira destino (só anda; não interage)
 client-web/src/mechanics/             registro e handlers extensíveis de gameplay
 client-web/src/DevMapSync.js          feedback e recarga do Tiled ao vivo
 client-web/src/TiledRuntimeLoader.js  TMJ/TSJ/templates → contrato do renderer no navegador
@@ -202,6 +204,19 @@ semanais recalculam o progresso a partir dos lançamentos (nunca incrementam), e
 corrigir um lançamento acerta a meta sozinho. Apagar lançamento **estorna** o que ele
 pagou. `Game:WelcomeGrantCoins` credita o bônus do beta (10 000 moedas) uma vez por
 usuário, inclusive nos já existentes. Detalhes: [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md).
+
+**Movimento por destino (clique e toque):** clicar ou tocar no chão manda o avatar até lá,
+em vez de joystick virtual — um input só serve mouse e celular, e o desktop ganha função em vez
+de perder. `NavigationSystem.js` deriva uma grade de caminhabilidade dos **mesmos retângulos de
+colisão** que a física usa (`scene.solids`), então nunca diverge do que o jogador vê; a grade é
+reconstruída a cada clique (menos de 1 ms no mapa de 220×150) em vez de invalidada, porque
+invalidação esquecida vira bug silencioso. A* com corte de quina proibido, mais *string pulling*
+para a rota não ficar colada na parede. Blockers de porta ficam **fora** da grade: elas abrem por
+proximidade, e como parede nenhuma rota entraria em sala alguma.
+
+**O clique só anda.** Sentar, entrar num portal ou abrir um móvel continua exigindo confirmação
+(`E` ou o botão de ação) — ninguém senta sem querer ao tocar na tela. Qualquer tecla de movimento
+cancela o destino, então o caminho do teclado no desktop segue idêntico ao que era.
 
 **Interações de mobília:** definições declaram um `InteractionType`, resolvido por um registro
 extensível no cliente. `of_171` abre o kanban e escolhe a atividade ativa; `of_176` funciona como

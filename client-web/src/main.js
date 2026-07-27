@@ -22,6 +22,8 @@ import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
 import { createFurnitureInteractionSystem } from './FurnitureInteractionSystem.js';
+import { createNavigationSystem } from './NavigationSystem.js';
+import { createClickToMove } from './ClickToMove.js';
 import { createPresence } from './PresenceSystem.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
@@ -569,6 +571,22 @@ class MapScene extends Phaser.Scene {
     });
     this.interactionPreviewPending = interactionPreview;
 
+    // Movimento por destino (clique no desktop, toque no celular). A grade sai dos
+    // mesmos retângulos de `this.solids` que a física usa, então nunca diverge.
+    this.navigation = createNavigationSystem(this, this.map);
+    this.clickToMove = createClickToMove(this, this.navigation, {
+      isBlocked: () => (
+        this.transitioning
+        || this.chessOpen
+        || equipmentMenu.isOpen()
+        || this.roomDecorationEditor?.isOpen()
+        || this.furnitureInteractions?.isOpen()
+      ),
+      // Tocar sentado levanta e caminha; sem isto o comando parecia ignorado.
+      onBeforeMove: () => { if (this.seated) this.standUp(); },
+      onUnreachable: () => proximityVoice.toast('Não dá para chegar aí'),
+    });
+
     window.__scene = this;
     window.__equipment = equipmentMenu;
     window.__character = characterCustomizer;
@@ -691,6 +709,15 @@ class MapScene extends Phaser.Scene {
     else if (keys.D.isDown || keys.RIGHT.isDown) vx = speed;
     if (keys.W.isDown || keys.UP.isDown) vy = -speed;
     else if (keys.S.isDown || keys.DOWN.isDown) vy = speed;
+
+    // Teclado manda: qualquer tecla cancela o destino do clique. Assim o desktop
+    // continua idêntico ao que era — o caminho do teclado não passa por nada novo.
+    if (vx || vy) {
+      this.navigation.cancel();
+    } else {
+      const routed = this.navigation.step(this.player.body, speed, this.time.now);
+      if (routed) { vx = routed.vx; vy = routed.vy; }
+    }
 
     this.player.body.setVelocity(vx, vy);
     if (vx && vy) this.player.body.velocity.normalize().scale(speed);
@@ -910,6 +937,10 @@ window.__phaserGame = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
+  // Toque explícito: por padrão o Phaser liga o touch por detecção de recurso, e
+  // num navegador sem toque ele nem registra os listeners. Deixar declarado evita
+  // depender dessa detecção. activePointers > 1 é o que permite pinça depois.
+  input: { mouse: true, touch: true, activePointers: 3 },
   pixelArt: true,
   backgroundColor: '#20222c',
   physics: { default: 'arcade', arcade: { debug: false } },
