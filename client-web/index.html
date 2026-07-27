@@ -38,6 +38,25 @@
   #portal-prompt kbd{display:grid;place-items:center;width:25px;height:25px;border-radius:7px;
     font:700 12px system-ui;color:#fff;background:#6c5cff;box-shadow:inset 0 -2px #0003}
   #portal-prompt span{font-size:12px;font-weight:650;white-space:nowrap}
+
+  /* Controles de toque. env(safe-area-inset-*) mantem os botoes acima da barra
+     de gestos do iPhone; 64px e o minimo confortavel para o polegar. */
+  #touch-controls{right:0;bottom:0;z-index:30;display:flex;flex-direction:column;align-items:flex-end;
+    gap:10px;padding:0 calc(18px + env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) 0;
+    pointer-events:none}
+  #touch-controls button{pointer-events:auto;display:flex;align-items:center;gap:9px;min-height:64px;
+    padding:0 20px;border:2px solid #ffffff2e;border-radius:34px;color:#fff;background:#171923e8;
+    box-shadow:0 10px 28px #0006;font:650 14px Inter,system-ui,sans-serif;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  #touch-controls button:active{transform:scale(.96);background:#232739f2}
+  #touch-action{border-color:#a797ff88;background:#2a2352ee}
+  #touch-action .glyph{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+    background:#6c5cff;font-size:16px;box-shadow:inset 0 -2px #0004}
+  #touch-action-label{max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #touch-headset{border-color:#5ad1b088}
+  /* Quem decide se estes controles existem é o JS (isTouchDevice, que respeita
+     ?touch=1). Uma media query aqui seria uma segunda fonte de verdade — e foi
+     exatamente ela que escondia os botões no teste com o override ligado. */
   #map-sync-status{position:fixed;left:50%;top:14px;z-index:80;display:grid;min-width:min(430px,calc(100vw - 28px));
     max-width:min(680px,calc(100vw - 28px));transform:translateX(-50%);grid-template-columns:1fr auto;gap:3px 12px;
     padding:10px 38px 10px 12px;border:3px solid #2b1b20;color:#fff0d8;background:#503538;
@@ -317,6 +336,10 @@
 </div>
 <div id="controls" class="hud"><b>clique</b> ou <b>WASD</b> andar · <b>Shift</b> usar veículo · <b>Tab</b> equipamentos · <b>E</b> entrar/sair · <b>F</b> fone da reunião · <b>scroll</b> zoom</div>
 <div id="portal-prompt" class="hud"><kbd>E</kbd><span></span></div>
+<div id="touch-controls" class="hud interactive" hidden>
+  <button id="touch-headset" type="button" hidden>🎧 <span>Fone</span></button>
+  <button id="touch-action" type="button" hidden><span class="glyph">✋</span><span id="touch-action-label"></span></button>
+</div>
 <button id="room-decoration-entry" class="hud interactive" type="button" hidden>✦ Decorar sala</button>
 <aside id="room-decoration-panel" class="hud interactive" aria-label="Editor de móveis da sala" hidden>
   <header class="room-decoration-header">

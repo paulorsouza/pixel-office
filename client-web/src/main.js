@@ -24,6 +24,7 @@ import { createGameItemsClient } from './GameItemsSystem.js';
 import { createFurnitureInteractionSystem } from './FurnitureInteractionSystem.js';
 import { createNavigationSystem } from './NavigationSystem.js';
 import { createClickToMove } from './ClickToMove.js';
+import { createTouchControls } from './TouchControls.js';
 import { createPresence } from './PresenceSystem.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
@@ -356,7 +357,9 @@ class MapScene extends Phaser.Scene {
     const tile = this.map.tile || 16;
     updateSceneHud(this.map);
     showPortalPrompt(null);
-    history.replaceState(null, '', `${location.pathname}#${this.currentSceneId}`);
+    // Preserva a query: sem `location.search` aqui, trocar de cena apagava
+    // ?dev=1, ?userId=, ?api= e ?touch= da URL, e um refresh caía no login.
+    history.replaceState(null, '', `${location.pathname}${location.search}#${this.currentSceneId}`);
 
     const hasOutdoorArea = this.map.kind === 'world' || Boolean(this.map.yard);
     this.cameras.main.setBackgroundColor(
@@ -587,6 +590,14 @@ class MapScene extends Phaser.Scene {
       onUnreachable: () => proximityVoice.toast('Não dá para chegar aí'),
     });
 
+    // Botão de ação e pinça. Os handlers são os MESMOS do teclado: confirmar no
+    // celular e apertar E no desktop passam pelo mesmo caminho.
+    this.touchControls = createTouchControls(this, {
+      onAction: () => this.handleInteract(),
+      onHeadset: () => this.handleHeadset(),
+      onZoom: (factor) => this.applyCameraZoom(this.zoom * factor),
+    });
+
     window.__scene = this;
     window.__equipment = equipmentMenu;
     window.__character = characterCustomizer;
@@ -643,6 +654,7 @@ class MapScene extends Phaser.Scene {
     }
     if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen() || this.furnitureInteractions.isOpen() || this.chessOpen) {
       showPortalPrompt(null);
+      this.touchControls.update({ blocked: true });
       this.player.body.setVelocity(0, 0);
       this.player.anims.play(`idle-${this.lastDirection}`, true);
       this.setPlayerBodyFrameWidth(16);
@@ -675,6 +687,7 @@ class MapScene extends Phaser.Scene {
     }
     if (this.seated) {
       showPortalPrompt(null);
+      this.touchControls.update({ seated: true });
       this.player.body.setVelocity(0, 0);
       this.player.setPosition(this.seated.x, this.seated.y);
       this.setPlayerBodyFrameWidth(16);
@@ -715,7 +728,7 @@ class MapScene extends Phaser.Scene {
     if (vx || vy) {
       this.navigation.cancel();
     } else {
-      const routed = this.navigation.step(this.player.body, speed, this.time.now);
+      const routed = this.navigation.step(this.player.body, speed);
       if (routed) { vx = routed.vx; vy = routed.vy; }
     }
 
@@ -756,7 +769,13 @@ class MapScene extends Phaser.Scene {
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),
     );
-    showPortalPrompt(this.activeFurniturePrompt || this.activeHeadsetPrompt || this.activePortal);
+    const prompt = this.activeFurniturePrompt || this.activeHeadsetPrompt || this.activePortal;
+    showPortalPrompt(prompt);
+    // Mesma prioridade da HUD; o 'kind' diz se o botao dispara E ou F.
+    this.touchControls.update({
+      prompt,
+      kind: (!this.activeFurniturePrompt && this.activeHeadsetPrompt) ? 'headset' : 'action',
+    });
     presence.updateLocal(this.player.x, this.player.y, direction);
     presence.interpolate(delta);
     proximityVoice.update();

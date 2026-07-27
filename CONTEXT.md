@@ -59,6 +59,7 @@ client-web/src/GameItemsSystem.js       API de inventário/mobília + cliente Si
 client-web/src/FurnitureInteractionSystem.js  kanban, baú, cadeira, estação e café
 client-web/src/NavigationSystem.js    grade de caminhabilidade + A* + suavização de rota
 client-web/src/ClickToMove.js         clique/toque vira destino (só anda; não interage)
+client-web/src/TouchControls.js       botão de ação contextual + pinça de zoom
 client-web/src/mechanics/             registro e handlers extensíveis de gameplay
 client-web/src/DevMapSync.js          feedback e recarga do Tiled ao vivo
 client-web/src/TiledRuntimeLoader.js  TMJ/TSJ/templates → contrato do renderer no navegador
@@ -213,6 +214,15 @@ reconstruída a cada clique (menos de 1 ms no mapa de 220×150) em vez de invali
 invalidação esquecida vira bug silencioso. A* com corte de quina proibido, mais *string pulling*
 para a rota não ficar colada na parede. Blockers de porta ficam **fora** da grade: elas abrem por
 proximidade, e como parede nenhuma rota entraria em sala alguma.
+
+**Botão de ação no toque.** No celular não há tecla `E`, então o mesmo prompt que a HUD já
+resolve (`activeFurniturePrompt || activeHeadsetPrompt || activePortal`) vira um botão no polegar
+direito, com o rótulo do prompt — "Entrar no Tooq Office", "Sentar", "Levantar". Ele **dispara os
+mesmos handlers do teclado** (`handleInteract`/`handleHeadset`), então confirmar no celular e
+apertar `E` no desktop passam pelo mesmo caminho. O fone tem botão próprio: com um só, pegar o
+fone competiria com sentar. **Pinça** substitui o `scroll` do zoom e reusa `applyCameraZoom`, com
+os mesmos limites. Quem decide se os controles existem é `isTouchDevice()` no JS (`?touch=1`
+força, para testar no desktop) — uma media query seria uma segunda fonte de verdade.
 
 **O clique só anda.** Sentar, entrar num portal ou abrir um móvel continua exigindo confirmação
 (`E` ou o botão de ação) — ninguém senta sem querer ao tocar na tela. Qualquer tecla de movimento

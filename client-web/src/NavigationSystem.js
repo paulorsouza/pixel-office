@@ -230,8 +230,12 @@ export function createNavigationSystem(scene, map, options = {}) {
 
   let waypoints = [];
   let goal = null;
-  let lastProgressAt = 0;
+  let stalledSteps = 0;
   let lastDistance = Infinity;
+  // Contamos QUADROS sem avanço, não milissegundos: o Phaser limita o `delta`,
+  // então num engasgo do loop o relógio corre muito mais que o corpo anda e a
+  // rota era cancelada sozinha, como se tivesse travado numa parede.
+  const STALLED_STEPS_LIMIT = 90;
 
   const clear = () => { waypoints = []; goal = null; };
 
@@ -240,6 +244,19 @@ export function createNavigationSystem(scene, map, options = {}) {
     goal: () => (goal ? { ...goal } : null),
     cancel: clear,
     rebuild,
+
+    /** Diagnóstico: por que um destino foi recusado. Usado no console, não no jogo. */
+    debugAt(px, py) {
+      rebuild();
+      const [cx, cy] = cellOf(px, py);
+      return {
+        cell: [cx, cy],
+        dentroDoMapa: inside(cx, cy),
+        livre: isFreeCell(cx, cy),
+        corpoCabe: bodyFits(px, py),
+        celulaLivreMaisProxima: nearestFree(cx, cy),
+      };
+    },
 
     /**
      * Traça rota do corpo do jogador até o ponto de mundo.
@@ -267,7 +284,7 @@ export function createNavigationSystem(scene, map, options = {}) {
       }
       waypoints = smooth(points, body.center.x, body.center.y);
       goal = waypoints.length > 0 ? { ...waypoints[waypoints.length - 1] } : null;
-      lastProgressAt = scene.time.now;
+      stalledSteps = 0;
       lastDistance = Infinity;
       return waypoints.length > 0;
     },
@@ -276,7 +293,7 @@ export function createNavigationSystem(scene, map, options = {}) {
      * Velocidade para este frame. Devolve null quando não há rota ativa, para o
      * chamador seguir com o teclado sem ramificação extra.
      */
-    step(body, speed, now) {
+    step(body, speed) {
       const arrival = Math.max(2, speed * 0.02);
       let dx = 0;
       let dy = 0;
@@ -295,15 +312,15 @@ export function createNavigationSystem(scene, map, options = {}) {
         if (distance > arrival) break;
         waypoints.shift();
         lastDistance = Infinity;
-        lastProgressAt = now;
+        stalledSteps = 0;
       }
 
       // Travou de verdade (porta trancada, móvel novo no caminho): desiste em vez
       // de ficar raspando a parede para sempre.
       if (distance < lastDistance - 0.5) {
         lastDistance = distance;
-        lastProgressAt = now;
-      } else if (now - lastProgressAt > 900) {
+        stalledSteps = 0;
+      } else if (++stalledSteps > STALLED_STEPS_LIMIT) {
         clear();
         return null;
       }

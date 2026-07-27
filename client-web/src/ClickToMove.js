@@ -13,6 +13,7 @@ export function createClickToMove(scene, navigation, options = {}) {
   let downX = 0;
   let downY = 0;
   let marker = null;
+  let gesture = null;   // 'tap' | 'pinch'
 
   function showMarker(x, y, ok) {
     marker?.destroy();
@@ -29,13 +30,22 @@ export function createClickToMove(scene, navigation, options = {}) {
     });
   }
 
+  const pointersDown = () => scene.input.manager.pointers.filter((p) => p.isDown).length;
+
   const onPointerDown = (pointer) => {
+    // Segundo dedo na tela = pinça de zoom, não comando de movimento. Sem esta
+    // marca, soltar os dedos da pinça mandava o avatar para o meio do gesto.
+    if (pointersDown() > 1) gesture = 'pinch';
+    else gesture = 'tap';
     downAt = scene.time.now;
     downX = pointer.x;
     downY = pointer.y;
   };
 
   const onPointerUp = (pointer) => {
+    const wasPinch = gesture === 'pinch';
+    if (pointersDown() === 0) gesture = null;
+    if (wasPinch) return;
     if (isBlocked()) return;
     // Botão direito/meio não movem: ficam livres para menu de contexto futuro.
     if (pointer.button !== 0) return;
