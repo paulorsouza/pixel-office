@@ -168,7 +168,9 @@ testar `of_N` em `main.js`.
 - quadro: lê `/api/workitems` e grava `/api/me/active-task`;
 - baú: usa `/api/game/chests/{placementId}` e transferências `deposit`/`withdraw`;
 - estação: usa `/api/game/workstations/{placementId}/start` e `/stop`;
-- cadeira: procura uma estação pertencente ao jogador a até `2,75` tiles.
+- cadeira/poltrona: senta no próprio assento e usa claim de rede;
+- estação completa: senta diante do monitor e inicia as horas da atividade atual;
+- cafeteira: entrega uma xícara temporária, consumida ao sentar ou guardada quando esfria.
 
 Interação de móvel tem prioridade sobre portal quando ambos estão próximos. `E` deve chamar o
 sistema de móveis primeiro e só então trocar de cena.

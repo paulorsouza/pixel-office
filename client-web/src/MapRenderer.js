@@ -76,7 +76,7 @@ function fillFloor(scene, rect, tile, depth) {
 }
 
 function addLabel(scene, rect, tile, subtle = false) {
-  if (!rect.name) return;
+  if (!rect.name || rect.hideLabel) return;
   const labelY = subtle ? rect.y + 0.45 : rect.y + 1.15;
   scene.add.text(
     (rect.x + rect.w / 2) * tile,
@@ -174,44 +174,55 @@ function doorCollision(rect, door) {
   return { x: right, y: rect.y + door.at, w: 1, h: length };
 }
 
-function drawDoorFixtures(scene, rect, tile, solids) {
+export function doorFixtureTransform(rect, door, tile) {
   const right = rect.x + rect.w - 1;
   const bottom = rect.y + rect.h - 1;
+  const length = door.len || 3;
 
+  if (door.side === 'S') {
+    return {
+      x: (rect.x + door.at + length / 2) * tile,
+      y: (bottom + 1) * tile,
+      originX: 0.5,
+      originY: 1,
+      angle: 0,
+    };
+  }
+  if (door.side === 'N') {
+    return {
+      x: (rect.x + door.at + length / 2) * tile,
+      y: (rect.y + 2) * tile,
+      originX: 0.5,
+      originY: 1,
+      angle: 0,
+    };
+  }
+  return {
+    // A animação foi desenhada para um vão horizontal. Nas paredes laterais,
+    // centralizamos o quadro no vão e giramos o spritesheet inteiro.
+    x: (door.side === 'W' ? rect.x + 0.5 : right + 0.5) * tile,
+    y: (rect.y + door.at + length / 2) * tile,
+    originX: 0.5,
+    originY: 0.5,
+    angle: door.side === 'W' ? 90 : -90,
+  };
+}
+
+function drawDoorFixtures(scene, rect, tile, solids) {
   for (const door of (rect.doors || [])) {
     if (!door.texture || !scene.textures.exists(door.texture)) continue;
 
-    const length = door.len || 3;
-    let x;
-    let y;
-    let originX = 0.5;
-    let originY = 1;
-
-    if (door.side === 'S') {
-      x = (rect.x + door.at + length / 2) * tile;
-      y = (bottom + 1) * tile;
-    } else if (door.side === 'N') {
-      x = (rect.x + door.at + length / 2) * tile;
-      y = (rect.y + 2) * tile;
-      originY = 1;
-    } else if (door.side === 'W') {
-      x = (rect.x + 1) * tile;
-      y = (rect.y + door.at + length / 2) * tile;
-      originX = 0.5;
-    } else {
-      x = right * tile;
-      y = (rect.y + door.at + length / 2) * tile;
-      originX = 0.5;
-    }
+    const transform = doorFixtureTransform(rect, door, tile);
 
     const animated = door.automatic ? scene.animatedAssets?.[door.texture] : null;
     const fixture = animated
-      ? scene.add.sprite(x, y, door.texture, animated.start ?? 0)
-      : scene.add.image(x, y, door.texture, door.frame ?? 8);
+      ? scene.add.sprite(transform.x, transform.y, door.texture, animated.start ?? 0)
+      : scene.add.image(transform.x, transform.y, door.texture, door.frame ?? 8);
     fixture
-      .setOrigin(originX, originY)
+      .setOrigin(transform.originX, transform.originY)
+      .setAngle(door.angle ?? transform.angle)
       .setFlipX(Boolean(door.flipX))
-      .setDepth(door.depth ?? y - 1);
+      .setDepth(door.depth ?? transform.y - 1);
 
     if (animated) {
       const collision = doorCollision(rect, door);
@@ -283,10 +294,18 @@ export function updateAutomaticDoors(scene, occupants = [], isLocked = null) {
 export function furnitureCollision(item) {
   return item.collision || (item.solid ? {
     x: -0.45,
-    y: 0.15,
+    y: -0.1,
     w: 1.9,
-    h: 0.7,
+    h: 0.6,
   } : null);
+}
+
+export function furnitureSortDepth(item, tile, displayY) {
+  const collision = furnitureCollision(item);
+  if (!collision) return displayY;
+  // A linha que decide quem fica na frente é o pé físico do móvel, não a base
+  // do PNG (os recortes têm bastante transparência inferior).
+  return (item.y + (collision.y || 0) + collision.h) * tile + (item.offsetY || 0);
 }
 
 function removeFurnitureCollider(record) {
@@ -315,7 +334,7 @@ export function updateFurnitureObject(record, refreshCollision = false) {
     .setOrigin(item.originX ?? 0.5, item.originY ?? 1)
     .setFlipX(Boolean(item.flipX))
     .setFlipY(Boolean(item.flipY))
-    .setDepth(item.depth ?? y);
+    .setDepth(item.depth ?? furnitureSortDepth(item, tile, y));
   if (refreshCollision) {
     removeFurnitureCollider(record);
     record.collider = createFurnitureCollider(record);
@@ -567,8 +586,16 @@ export function renderVisualLayers(scene, map, solids) {
   return scene.visualLayerObjects;
 }
 
-export function renderScene(scene, map, solids) {
+export function resetSceneRenderState(scene) {
+  // `scene.restart()` reaproveita a instância da cena. Um mundo sem `furniture`
+  // não chama renderFurniture(), portanto os records da cena anterior precisam
+  // ser descartados explicitamente para não oferecer ações fantasma.
+  scene.furnitureObjects = [];
   scene.automaticDoors = [];
+}
+
+export function renderScene(scene, map, solids) {
+  resetSceneRenderState(scene);
   if (map.kind === 'world') renderWorld(scene, map, solids);
   else renderInterior(scene, map, solids);
   renderVisualLayers(scene, map, solids);

@@ -4,6 +4,9 @@ Este guia mostra como expandir manualmente a cena externa do Office Quest usando
 objetivo do exercício é criar uma nova rua, colocar uma estrutura no fim dela, configurar colisões
 e, opcionalmente, transformar a porta da estrutura em entrada para outra cena.
 
+O mapa atual mede `220×150` tiles: Tooq Office fica no centro, Coworking e Dark Company ficam mais
+afastados e a Vila dos Jogadores ocupa a lateral leste com 12 casas.
+
 Você não precisa alterar o Phaser para usar os pisos e assets já cadastrados. O trabalho normal é:
 
 ```text
@@ -78,7 +81,7 @@ Se a nova rua não cabe no mapa atual:
    use o canto superior esquerdo como âncora.
 4. Confirme e salve.
 
-Exemplo: mudar de `44×36` para `64×48` acrescenta 20 tiles à direita e 12 embaixo sem mover a
+Exemplo: mudar de `220×150` para `240×160` acrescenta 20 tiles à direita e 10 embaixo sem mover a
 composição existente.
 
 Depois do redimensionamento:

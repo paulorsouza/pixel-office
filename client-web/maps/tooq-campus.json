@@ -1,0 +1,2203 @@
+{
+  "id": "tooq-campus",
+  "name": "Tooq Office",
+  "subtitle": "Reuniões, 1×1, jogos, cozinha, estudos e acesso às alas pessoais",
+  "kind": "interior",
+  "tile": 16,
+  "w": 152,
+  "h": 162,
+  "camera": {
+    "zoom": 2.15,
+    "minZoom": 0.38,
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "w": 152,
+      "h": 162
+    }
+  },
+  "visualMode": "procedural",
+  "yard": {
+    "x": 0,
+    "y": 0,
+    "w": 152,
+    "h": 162,
+    "ground": "grass"
+  },
+  "assets": [
+    "interior_sliding_door",
+    "of_171",
+    "of_172",
+    "of_225",
+    "of_196",
+    "of_197",
+    "of_170",
+    "of_227",
+    "of_320",
+    "of_321",
+    "of_323",
+    "of_175",
+    "fountain",
+    "bench",
+    "tree1",
+    "tree2",
+    "bush1",
+    "bush2",
+    "flower1",
+    "flower2"
+  ],
+  "building": {
+    "x": 14,
+    "y": 32,
+    "w": 124,
+    "h": 112,
+    "floor": "wood",
+    "doors": [
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "S",
+        "at": 60,
+        "len": 4,
+        "texture": "",
+        "frame": 6
+      },
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "W",
+        "at": 98,
+        "len": 4,
+        "texture": "",
+        "frame": 6
+      },
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "E",
+        "at": 98,
+        "len": 4,
+        "texture": "",
+        "frame": 6
+      },
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "W",
+        "at": 51,
+        "len": 4,
+        "texture": "",
+        "frame": 6
+      },
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "E",
+        "at": 51,
+        "len": 4,
+        "texture": "",
+        "frame": 6
+      },
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "N",
+        "at": 9,
+        "len": 3,
+        "texture": "",
+        "frame": 6
+      },
+      {
+        "automatic": true,
+        "openExit": true,
+        "side": "N",
+        "at": 109,
+        "len": 3,
+        "texture": "",
+        "frame": 6
+      }
+    ]
+  },
+  "spawns": {
+    "default": {
+      "x": 76,
+      "y": 139
+    },
+    "entrance": {
+      "x": 76,
+      "y": 151
+    },
+    "from-personal-wing": {
+      "x": 54.5,
+      "y": 142
+    },
+    "from-personal-wing-elevator": {
+      "x": 54.5,
+      "y": 142
+    },
+    "from-personal-wing-stairs": {
+      "x": 87.5,
+      "y": 130
+    },
+    "from-yard": {
+      "x": 76,
+      "y": 148
+    },
+    "yard-center": {
+      "x": 76,
+      "y": 15
+    },
+    "circulation-top": {
+      "x": 76,
+      "y": 52
+    },
+    "circulation-middle": {
+      "x": 76,
+      "y": 99
+    },
+    "qa-elevator": {
+      "x": 54.5,
+      "y": 139
+    },
+    "qa-stairs": {
+      "x": 87.5,
+      "y": 127
+    },
+    "qa-meeting": {
+      "x": 24,
+      "y": 45
+    },
+    "qa-kitchen": {
+      "x": 96,
+      "y": 90
+    },
+    "qa-yard-fountain": {
+      "x": 76,
+      "y": 18
+    },
+    "qa-yard-west": {
+      "x": 9,
+      "y": 87
+    },
+    "qa-yard-east": {
+      "x": 143,
+      "y": 87
+    },
+    "qa-yard-front": {
+      "x": 76,
+      "y": 153
+    },
+    "qa-rear-exit": {
+      "x": 23,
+      "y": 35
+    },
+    "qa-edge-south": {
+      "x": 76,
+      "y": 160
+    },
+    "one-on-one-left": {
+      "x": 20,
+      "y": 63
+    },
+    "one-on-one-right": {
+      "x": 131,
+      "y": 63
+    },
+    "one-on-one-left-door": {
+      "x": 20,
+      "y": 69
+    }
+  },
+  "zones": [
+    {
+      "id": "reception",
+      "name": "Recepção e convivência",
+      "x": 15,
+      "y": 121,
+      "w": 122,
+      "h": 22,
+      "floor": "wood"
+    }
+  ],
+  "rooms": [
+    {
+      "wallStyle": "stone",
+      "southWall3d": true,
+      "meeting": true,
+      "id": "meeting-1",
+      "name": "Sala Aurora",
+      "x": 14,
+      "y": 32,
+      "w": 20,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 9,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        },
+        {
+          "automatic": true,
+          "openExit": true,
+          "side": "N",
+          "at": 9,
+          "len": 3,
+          "texture": "",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "stone",
+      "southWall3d": true,
+      "meeting": true,
+      "id": "meeting-2",
+      "name": "Sala Vega",
+      "x": 33,
+      "y": 32,
+      "w": 20,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 9,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "stone",
+      "southWall3d": true,
+      "meeting": true,
+      "id": "meeting-3",
+      "name": "Sala Órion",
+      "x": 52,
+      "y": 32,
+      "w": 19,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 8,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "stone",
+      "southWall3d": true,
+      "meeting": true,
+      "id": "meeting-4",
+      "name": "Sala Íris",
+      "x": 82,
+      "y": 32,
+      "w": 29,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 13,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "stone",
+      "southWall3d": true,
+      "meeting": true,
+      "id": "meeting-5",
+      "name": "Sala Atlas",
+      "x": 110,
+      "y": 32,
+      "w": 28,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 13,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        },
+        {
+          "automatic": true,
+          "openExit": true,
+          "side": "N",
+          "at": 13,
+          "len": 3,
+          "texture": "",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-1",
+      "name": "Sala 1×1 1",
+      "x": 14,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-2",
+      "name": "Sala 1×1 2",
+      "x": 25,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-3",
+      "name": "Sala 1×1 3",
+      "x": 36,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-4",
+      "name": "Sala 1×1 4",
+      "x": 47,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-5",
+      "name": "Sala 1×1 5",
+      "x": 58,
+      "y": 56,
+      "w": 13,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-6",
+      "name": "Sala 1×1 6",
+      "x": 82,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-7",
+      "name": "Sala 1×1 7",
+      "x": 93,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-8",
+      "name": "Sala 1×1 8",
+      "x": 104,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-9",
+      "name": "Sala 1×1 9",
+      "x": 115,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "one-on-one-10",
+      "name": "Sala 1×1 10",
+      "x": 126,
+      "y": 56,
+      "w": 12,
+      "h": 11,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 5,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "games",
+      "name": "Sala de jogos",
+      "x": 14,
+      "y": 74,
+      "w": 57,
+      "h": 22,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 27,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        },
+        {
+          "automatic": true,
+          "openExit": true,
+          "side": "W",
+          "at": 9,
+          "len": 4,
+          "texture": "",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "kitchen",
+      "name": "Cozinha",
+      "x": 82,
+      "y": 74,
+      "w": 29,
+      "h": 22,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 13,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "study-1",
+      "name": "Sala de estudos 1",
+      "x": 110,
+      "y": 74,
+      "w": 28,
+      "h": 22,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 13,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        },
+        {
+          "automatic": true,
+          "openExit": true,
+          "side": "E",
+          "at": 9,
+          "len": 4,
+          "texture": "",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "study-2",
+      "name": "Sala de estudos 2",
+      "x": 14,
+      "y": 103,
+      "w": 57,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 27,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "id": "study-3",
+      "name": "Sala de estudos 3",
+      "x": 82,
+      "y": 103,
+      "w": 56,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 27,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "hideLabel": true,
+      "id": "elevator-shaft",
+      "name": "elevator-shaft",
+      "x": 52,
+      "y": 134,
+      "w": 5,
+      "h": 4,
+      "floor": "wood"
+    }
+  ],
+  "furniture": [
+    {
+      "id": "of_171",
+      "x": 24,
+      "y": 35.5,
+      "interactionType": "kanban",
+      "interactionKey": "meeting-1:kanban"
+    },
+    {
+      "id": "of_172",
+      "x": 27,
+      "y": 35.5,
+      "interactionType": "timeclock",
+      "interactionKey": "meeting-1:clock"
+    },
+    {
+      "id": "of_225",
+      "x": 24,
+      "y": 43,
+      "interactionType": "seat",
+      "interactionKey": "meeting-1:station",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 20,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 29,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_171",
+      "x": 43,
+      "y": 35.5,
+      "interactionType": "kanban",
+      "interactionKey": "meeting-2:kanban"
+    },
+    {
+      "id": "of_172",
+      "x": 46,
+      "y": 35.5,
+      "interactionType": "timeclock",
+      "interactionKey": "meeting-2:clock"
+    },
+    {
+      "id": "of_225",
+      "x": 43,
+      "y": 43,
+      "interactionType": "seat",
+      "interactionKey": "meeting-2:station",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 39,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 48,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_171",
+      "x": 62,
+      "y": 35.5,
+      "interactionType": "kanban",
+      "interactionKey": "meeting-3:kanban"
+    },
+    {
+      "id": "of_172",
+      "x": 65,
+      "y": 35.5,
+      "interactionType": "timeclock",
+      "interactionKey": "meeting-3:clock"
+    },
+    {
+      "id": "of_225",
+      "x": 62,
+      "y": 43,
+      "interactionType": "seat",
+      "interactionKey": "meeting-3:station",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 58,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 67,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_171",
+      "x": 92,
+      "y": 35.5,
+      "interactionType": "kanban",
+      "interactionKey": "meeting-4:kanban"
+    },
+    {
+      "id": "of_172",
+      "x": 95,
+      "y": 35.5,
+      "interactionType": "timeclock",
+      "interactionKey": "meeting-4:clock"
+    },
+    {
+      "id": "of_225",
+      "x": 92,
+      "y": 43,
+      "interactionType": "seat",
+      "interactionKey": "meeting-4:station",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 88,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 97,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_171",
+      "x": 120,
+      "y": 35.5,
+      "interactionType": "kanban",
+      "interactionKey": "meeting-5:kanban"
+    },
+    {
+      "id": "of_172",
+      "x": 123,
+      "y": 35.5,
+      "interactionType": "timeclock",
+      "interactionKey": "meeting-5:clock"
+    },
+    {
+      "id": "of_225",
+      "x": 120,
+      "y": 43,
+      "interactionType": "seat",
+      "interactionKey": "meeting-5:station",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 116,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 125,
+      "y": 44,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 17,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 22,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 28,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 33,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 39,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 44,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 50,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 55,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 61,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 66,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 85,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 90,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 96,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 101,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 107,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 112,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 118,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 123,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 129,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 134,
+      "y": 62,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_170",
+      "x": 124,
+      "y": 77.5,
+      "interactionType": "whiteboard",
+      "interactionKey": "study-1:whiteboard"
+    },
+    {
+      "id": "of_225",
+      "x": 119,
+      "y": 86,
+      "interactionType": "seat",
+      "interactionKey": "study-1:station-a",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_227",
+      "x": 128,
+      "y": 86,
+      "interactionType": "seat",
+      "interactionKey": "study-1:station-b",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_170",
+      "x": 42,
+      "y": 106.5,
+      "interactionType": "whiteboard",
+      "interactionKey": "study-2:whiteboard"
+    },
+    {
+      "id": "of_225",
+      "x": 33,
+      "y": 115,
+      "interactionType": "seat",
+      "interactionKey": "study-2:station-a",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_227",
+      "x": 51,
+      "y": 115,
+      "interactionType": "seat",
+      "interactionKey": "study-2:station-b",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_170",
+      "x": 110,
+      "y": 106.5,
+      "interactionType": "whiteboard",
+      "interactionKey": "study-3:whiteboard"
+    },
+    {
+      "id": "of_225",
+      "x": 101,
+      "y": 115,
+      "interactionType": "seat",
+      "interactionKey": "study-3:station-a",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_227",
+      "x": 118,
+      "y": 115,
+      "interactionType": "seat",
+      "interactionKey": "study-3:station-b",
+      "seatX": 0,
+      "seatY": -1.625,
+      "seatDir": "up",
+      "seatPose": "idle",
+      "seatCover": 20,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 2,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_320",
+      "x": 92,
+      "y": 82,
+      "interactionType": "coffee",
+      "interactionKey": "kitchen:coffee-a",
+      "collision": {
+        "x": -0.3,
+        "y": -0.1,
+        "w": 1.65,
+        "h": 0.55
+      }
+    },
+    {
+      "id": "of_321",
+      "x": 98,
+      "y": 82,
+      "interactionType": "coffee",
+      "interactionKey": "kitchen:coffee-b",
+      "collision": {
+        "x": -0.3,
+        "y": -0.1,
+        "w": 1.65,
+        "h": 0.55
+      }
+    },
+    {
+      "id": "of_196",
+      "x": 94,
+      "y": 89,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 108,
+      "y": 89,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_323",
+      "x": 41,
+      "y": 134,
+      "solid": true,
+      "collision": {
+        "x": -0.3,
+        "y": -0.1,
+        "w": 1.6,
+        "h": 0.55
+      }
+    },
+    {
+      "id": "of_172",
+      "x": 46,
+      "y": 129.5,
+      "interactionType": "timeclock",
+      "interactionKey": "reception:clock"
+    },
+    {
+      "id": "of_175",
+      "x": 106,
+      "y": 134,
+      "solid": true,
+      "interactionType": "store",
+      "interactionKey": "reception:store",
+      "collision": {
+        "x": -0.25,
+        "y": -0.1,
+        "w": 1.5,
+        "h": 0.55
+      }
+    }
+  ],
+  "paths": [
+    {
+      "x": 12,
+      "y": 26,
+      "w": 128,
+      "h": 6,
+      "floor": "cream"
+    },
+    {
+      "x": 66,
+      "y": 11,
+      "w": 20,
+      "h": 9,
+      "floor": "cream"
+    },
+    {
+      "x": 21,
+      "y": 0,
+      "w": 6,
+      "h": 32,
+      "floor": "cream"
+    },
+    {
+      "x": 125,
+      "y": 0,
+      "w": 6,
+      "h": 32,
+      "floor": "cream"
+    },
+    {
+      "x": 8,
+      "y": 30,
+      "w": 6,
+      "h": 119,
+      "floor": "cream"
+    },
+    {
+      "x": 138,
+      "y": 30,
+      "w": 6,
+      "h": 119,
+      "floor": "cream"
+    },
+    {
+      "x": 12,
+      "y": 144,
+      "w": 128,
+      "h": 5,
+      "floor": "cream"
+    },
+    {
+      "x": 73,
+      "y": 144,
+      "w": 6,
+      "h": 18,
+      "floor": "cream"
+    },
+    {
+      "x": 0,
+      "y": 82,
+      "w": 14,
+      "h": 6,
+      "floor": "cream"
+    },
+    {
+      "x": 138,
+      "y": 82,
+      "w": 14,
+      "h": 6,
+      "floor": "cream"
+    },
+    {
+      "x": 0,
+      "y": 128,
+      "w": 14,
+      "h": 8,
+      "floor": "cream"
+    },
+    {
+      "x": 138,
+      "y": 128,
+      "w": 14,
+      "h": 8,
+      "floor": "cream"
+    }
+  ],
+  "props": [
+    {
+      "texture": "fountain",
+      "x": 76,
+      "y": 15,
+      "collision": {
+        "x": -0.8,
+        "y": -0.8,
+        "w": 1.6,
+        "h": 0.8
+      }
+    },
+    {
+      "texture": "bench",
+      "x": 61,
+      "y": 20,
+      "collision": {
+        "x": -1.4,
+        "y": -0.5,
+        "w": 2.8,
+        "h": 0.5
+      }
+    },
+    {
+      "texture": "bench",
+      "x": 91,
+      "y": 20,
+      "flipX": true,
+      "collision": {
+        "x": -1.4,
+        "y": -0.5,
+        "w": 2.8,
+        "h": 0.5
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 38,
+      "y": 11,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 114,
+      "y": 11,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 49,
+      "y": 24,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 103,
+      "y": 24,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "bush1",
+      "x": 54,
+      "y": 13
+    },
+    {
+      "texture": "bush2",
+      "x": 98,
+      "y": 13
+    },
+    {
+      "texture": "flower1",
+      "x": 58,
+      "y": 17
+    },
+    {
+      "texture": "flower2",
+      "x": 94,
+      "y": 17
+    },
+    {
+      "texture": "tree1",
+      "x": 7,
+      "y": 43,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 145,
+      "y": 48,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 6,
+      "y": 67,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 146,
+      "y": 73,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 6,
+      "y": 105,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 146,
+      "y": 101,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 5,
+      "y": 86,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 147,
+      "y": 86,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "bush1",
+      "x": 8,
+      "y": 55
+    },
+    {
+      "texture": "bush2",
+      "x": 144,
+      "y": 59
+    },
+    {
+      "texture": "flower2",
+      "x": 8,
+      "y": 92
+    },
+    {
+      "texture": "flower1",
+      "x": 144,
+      "y": 91
+    },
+    {
+      "texture": "bench",
+      "x": 8,
+      "y": 116,
+      "collision": {
+        "x": -1.4,
+        "y": -0.5,
+        "w": 2.8,
+        "h": 0.5
+      }
+    },
+    {
+      "texture": "bench",
+      "x": 144,
+      "y": 116,
+      "flipX": true,
+      "collision": {
+        "x": -1.4,
+        "y": -0.5,
+        "w": 2.8,
+        "h": 0.5
+      }
+    },
+    {
+      "texture": "tree1",
+      "x": 29,
+      "y": 154,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "tree2",
+      "x": 123,
+      "y": 154,
+      "collision": {
+        "x": -1.4,
+        "y": -1.2,
+        "w": 2.8,
+        "h": 1.2
+      }
+    },
+    {
+      "texture": "bush1",
+      "x": 48,
+      "y": 153
+    },
+    {
+      "texture": "bush2",
+      "x": 104,
+      "y": 153
+    },
+    {
+      "texture": "flower1",
+      "x": 57,
+      "y": 151
+    },
+    {
+      "texture": "flower2",
+      "x": 95,
+      "y": 151
+    },
+    {
+      "texture": "bush1",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 20,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 34,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 48,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 62,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 76,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 90,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 104,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 118,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 132,
+      "y": 3
+    },
+    {
+      "texture": "bush1",
+      "x": 146,
+      "y": 3
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 16
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 16
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 33
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 33
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 50
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 50
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 67
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 67
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 84
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 84
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 101
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 101
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 118
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 118
+    },
+    {
+      "texture": "bush2",
+      "x": 3,
+      "y": 135
+    },
+    {
+      "texture": "bush1",
+      "x": 149,
+      "y": 135
+    }
+  ],
+  "collisions": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 152,
+      "h": 1
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 162
+    },
+    {
+      "x": 151,
+      "y": 0,
+      "w": 1,
+      "h": 162
+    },
+    {
+      "x": 0,
+      "y": 161,
+      "w": 152,
+      "h": 1
+    }
+  ],
+  "portals": [
+    {
+      "id": "yard-exit-north",
+      "x": 0,
+      "y": 0,
+      "w": 152,
+      "h": 2,
+      "targetScene": "world",
+      "targetSpawn": "from-campus",
+      "label": "Voltar ao mundo aberto"
+    },
+    {
+      "id": "yard-exit-south",
+      "x": 0,
+      "y": 160,
+      "w": 152,
+      "h": 2,
+      "targetScene": "world",
+      "targetSpawn": "from-campus",
+      "label": "Voltar ao mundo aberto"
+    },
+    {
+      "id": "yard-exit-west",
+      "x": 0,
+      "y": 2,
+      "w": 2,
+      "h": 158,
+      "targetScene": "world",
+      "targetSpawn": "from-campus",
+      "label": "Voltar ao mundo aberto"
+    },
+    {
+      "id": "yard-exit-east",
+      "x": 150,
+      "y": 2,
+      "w": 2,
+      "h": 158,
+      "targetScene": "world",
+      "targetSpawn": "from-campus",
+      "label": "Voltar ao mundo aberto"
+    }
+  ],
+  "entities": [
+    {
+      "id": "games-chess-a",
+      "type": "chess",
+      "x": 24,
+      "y": 81,
+      "layer": "mechanics",
+      "name": "Xadrez A",
+      "w": 3,
+      "h": 3,
+      "properties": {
+        "boardId": "campus-games-a"
+      }
+    },
+    {
+      "id": "games-chess-b",
+      "type": "chess",
+      "x": 42,
+      "y": 81,
+      "layer": "mechanics",
+      "name": "Xadrez B",
+      "w": 3,
+      "h": 3,
+      "properties": {
+        "boardId": "campus-games-b"
+      }
+    },
+    {
+      "id": "campus-elevator",
+      "type": "verticalAccess",
+      "x": 51.5,
+      "y": 137,
+      "layer": "mechanics",
+      "name": "Núcleo · elevador",
+      "w": 6,
+      "h": 4,
+      "properties": {
+        "accessType": "elevator",
+        "visualX": 54.5,
+        "visualY": 137,
+        "floorIndex": 0,
+        "targetScene": "personal-wing",
+        "targetSpawn": "from-campus-elevator",
+        "targetWing": 0,
+        "label": "Subir de elevador para as salas pessoais"
+      }
+    },
+    {
+      "id": "campus-stairs",
+      "type": "verticalAccess",
+      "x": 84,
+      "y": 125,
+      "layer": "mechanics",
+      "name": "Núcleo · escadas",
+      "w": 7,
+      "h": 4,
+      "properties": {
+        "accessType": "stairs",
+        "visualX": 87.5,
+        "visualY": 125,
+        "blockX": 86.5,
+        "blockY": 121,
+        "blockW": 2,
+        "blockH": 4,
+        "floorIndex": 0,
+        "targetScene": "personal-wing",
+        "targetSpawn": "from-campus-stairs",
+        "targetWing": 0,
+        "label": "Subir pelas escadas para as salas pessoais"
+      }
+    }
+  ],
+  "visualLayers": [
+    {
+      "id": "free-draw",
+      "name": "Pincel · Desenho livre",
+      "width": 1,
+      "height": 1,
+      "depth": -85,
+      "tiles": []
+    }
+  ]
+}

@@ -40,6 +40,7 @@ office-unity/.vs/
 # ---------- Node ----------
 node_modules/
 package-lock.json
+/.tmp/
 
 # ---------- Assets ----------
 # Os packs LimeZu crus e seus backups locais NÃO são versionados — ver ASSETS.md.

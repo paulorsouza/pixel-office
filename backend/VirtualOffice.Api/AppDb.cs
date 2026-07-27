@@ -16,6 +16,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<GameItemDefinition> GameItemDefinitions => Set<GameItemDefinition>();
     public DbSet<GameItemInstance> GameItemInstances => Set<GameItemInstance>();
     public DbSet<FurniturePlacement> FurniturePlacements => Set<FurniturePlacement>();
+    public DbSet<PersonalRoom> PersonalRooms => Set<PersonalRoom>();
     public DbSet<GoogleCredential> GoogleCredentials => Set<GoogleCredential>();
     public DbSet<AppRefreshToken> AppRefreshTokens => Set<AppRefreshToken>();
 
@@ -26,6 +27,9 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<FurniturePlacement>().HasIndex(x => x.ItemInstanceId).IsUnique();
         modelBuilder.Entity<FurniturePlacement>()
             .HasIndex(x => new { x.SceneId, x.RoomId });
+        modelBuilder.Entity<PersonalRoom>().HasIndex(x => x.UserId).IsUnique();
+        modelBuilder.Entity<PersonalRoom>().HasIndex(x => x.RoomKey).IsUnique();
+        modelBuilder.Entity<PersonalRoom>().HasIndex(x => new { x.WingIndex, x.SlotIndex }).IsUnique();
         modelBuilder.Entity<User>().HasIndex(x => x.GoogleSubject);
         // Username é único entre quem tem login local; nulos (bots/seed) não colidem.
         modelBuilder.Entity<User>().HasIndex(x => x.Username).IsUnique();

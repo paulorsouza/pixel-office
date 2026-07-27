@@ -15,6 +15,7 @@ public class User
     public string Role { get; set; } = "";
     public string Color { get; set; } = "#7c5cff";
     public int Xp { get; set; }
+    public int Coins { get; set; } = 250;
     public bool IsBot { get; set; }
     // task que o dev escolheu como "ativa" — o timer da mesa conta horas nela
     public int? ActiveWorkItemId { get; set; }
@@ -146,6 +147,14 @@ public class GameItemDefinition
     public string Category { get; set; } = "";
     public string IconPath { get; set; } = "";
     public string InteractionType { get; set; } = "";
+    // furniture | vehicle | equipment. O catálogo é compartilhado pela economia do Phaser.
+    public string ItemType { get; set; } = "furniture";
+    public string Rarity { get; set; } = "common";
+    public int Price { get; set; }
+    public bool IsPurchasable { get; set; }
+    public int StarterQuantity { get; set; }
+    // Capacidades desacoplam regra de negócio do asset visual (ex.: ["kanban","wall-mounted"]).
+    public string CapabilitiesJson { get; set; } = "[]";
 }
 
 public class GameItemInstance
@@ -172,4 +181,19 @@ public class FurniturePlacement
     public double Y { get; set; }
     public bool FlipX { get; set; }
     public string StateJson { get; set; } = "{}";
+}
+
+/// <summary>
+/// Uma sala pessoal ocupa um slot estável numa ala pública modular.
+/// RoomKey não expõe o id sequencial do usuário e isola mobília/voz dentro do cômodo.
+/// </summary>
+public class PersonalRoom
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string RoomKey { get; set; } = Guid.NewGuid().ToString("N")[..12];
+    public int WingIndex { get; set; }
+    public int SlotIndex { get; set; }
+    public string SceneTemplate { get; set; } = "personal-wing";
+    public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 }

@@ -110,9 +110,13 @@ export function createEquipmentMenu(catalog, options = {}) {
   const vehicles = (catalog.items || []).filter((item) => item.slot === 'vehicle');
   let loadout = initialLoadout(catalog, storageGet(storageKey));
   let open = false;
+  const isOwned = (item) => item && (options.isOwned?.(item.id) ?? true);
+  for (const slot of slots) {
+    if (!isOwned(equipmentById(catalog, loadout[slot.id]))) loadout[slot.id] = null;
+  }
 
   list.innerHTML = (catalog.items || []).map((item, index) => `
-    <button class="inventory-item rarity-${item.rarity || 'common'}" type="button"
+    <button class="inventory-item rarity-${item.rarity || 'common'}${isOwned(item) ? '' : ' locked'}" type="button"
       data-equipment-id="${item.id}" style="--item-accent:${item.accent};--item-secondary:${item.secondary}">
       <span class="inventory-item-art">
         ${itemIcon(item)}
@@ -123,7 +127,7 @@ export function createEquipmentMenu(catalog, options = {}) {
       <small>${item.slot === 'vehicle' ? `${item.speed} px/s · ${vehicles.indexOf(item) + 1}` : RARITY_LABELS[item.rarity] || 'Comum'}</small>
     </button>
   `).join('');
-  inventoryCount.textContent = `${catalog.items?.length || 0} itens`;
+  inventoryCount.textContent = `${(catalog.items || []).filter(isOwned).length} itens`;
 
   const renderSlots = () => {
     slotsRoot.innerHTML = slots.map((slot) => {
@@ -146,11 +150,17 @@ export function createEquipmentMenu(catalog, options = {}) {
 
   const syncSelection = () => {
     const vehicle = equipmentById(catalog, loadout.vehicle);
+    for (const slot of slots) {
+      if (!isOwned(equipmentById(catalog, loadout[slot.id]))) loadout[slot.id] = null;
+    }
     const equippedIds = new Set(Object.values(loadout).filter(Boolean));
     const equippedTotal = equippedIds.size;
     for (const card of list.querySelectorAll('.inventory-item')) {
       const equipped = equippedIds.has(card.dataset.equipmentId);
+      const owned = isOwned(equipmentById(catalog, card.dataset.equipmentId));
       card.classList.toggle('equipped', equipped);
+      card.classList.toggle('locked', !owned);
+      card.disabled = !owned;
       card.setAttribute('aria-pressed', String(equipped));
     }
     renderSlots();
@@ -183,7 +193,7 @@ export function createEquipmentMenu(catalog, options = {}) {
       return null;
     }
     const item = equipmentById(catalog, equipmentId);
-    if (!item?.slot || !Object.hasOwn(loadout, item.slot)) return null;
+    if (!item?.slot || !Object.hasOwn(loadout, item.slot) || !isOwned(item)) return null;
     loadout[item.slot] = item.id;
     syncSelection();
     return item;
@@ -249,6 +259,7 @@ export function createEquipmentMenu(catalog, options = {}) {
     select,
     unequip,
     clearAll,
+    refreshOwnership: syncSelection,
   };
 }
 
@@ -408,10 +419,11 @@ function drawMotorcycle(graphics, equipment, direction, phase) {
 }
 
 function drawEquipment(graphics, equipment, direction, phase) {
-  if (equipment.id === 'skate') drawSkate(graphics, equipment, direction, phase);
-  else if (equipment.id === 'roller-skates') drawRollerSkates(graphics, equipment, direction, phase);
-  else if (equipment.id === 'electric-scooter') drawScooter(graphics, equipment, direction, phase);
-  else if (equipment.id === 'motorcycle') drawMotorcycle(graphics, equipment, direction, phase);
+  const visual = equipment.visual || equipment.id;
+  if (visual === 'skate') drawSkate(graphics, equipment, direction, phase);
+  else if (visual === 'roller-skates') drawRollerSkates(graphics, equipment, direction, phase);
+  else if (visual === 'electric-scooter') drawScooter(graphics, equipment, direction, phase);
+  else if (visual === 'motorcycle') drawMotorcycle(graphics, equipment, direction, phase);
 }
 
 export function createEquipmentVisual(scene) {

@@ -653,6 +653,76 @@ api.MapPut("/room", async (RoomLayout layout, HttpRequest req, IDbContextFactory
 });
 
 // ---------- inventário unitário e mobília do cliente Phaser ----------
+api.MapGet("/game/personal-rooms", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    await GameInventorySeed.EnsureUserStockAsync(db, uid);
+    var rooms = await db.PersonalRooms
+        .Join(db.Users, room => room.UserId, user => user.Id, (room, user) => new
+        {
+            room.RoomKey,
+            room.WingIndex,
+            room.SlotIndex,
+            room.SceneTemplate,
+            owner = new { user.Id, user.Name, user.Color },
+            mine = user.Id == uid,
+        })
+        .OrderBy(x => x.WingIndex).ThenBy(x => x.SlotIndex)
+        .ToListAsync();
+    var current = rooms.Single(x => x.mine);
+    return Results.Ok(new
+    {
+        roomsPerWing = 12,
+        wingCount = Math.Max(1, rooms.Count == 0 ? 1 : rooms.Max(x => x.WingIndex) + 1),
+        current,
+        rooms,
+    });
+});
+
+api.MapGet("/game/catalog", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    var user = await db.Users.FindAsync(uid);
+    if (user is null) return Results.NotFound();
+    var definitions = await db.GameItemDefinitions
+        .OrderBy(x => x.ItemType).ThenBy(x => x.Category).ThenBy(x => x.Price)
+        .Select(x => new
+        {
+            x.Id, x.CatalogKey, x.Name, x.Category, x.IconPath, x.InteractionType,
+            x.ItemType, x.Rarity, x.Price, x.IsPurchasable, x.StarterQuantity,
+            x.CapabilitiesJson,
+        })
+        .ToListAsync();
+    return Results.Ok(new { user.Coins, definitions });
+});
+
+api.MapPost("/game/catalog/{catalogKey}/purchase", async (
+    string catalogKey, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    await using var tx = await db.Database.BeginTransactionAsync();
+    var user = await db.Users.FindAsync(uid);
+    var definition = await db.GameItemDefinitions.SingleOrDefaultAsync(x => x.CatalogKey == catalogKey);
+    if (user is null || definition is null) return Results.NotFound();
+    if (!definition.IsPurchasable) return Results.BadRequest(new { error = "Este item não está à venda" });
+    if (user.Coins < definition.Price)
+        return Results.Conflict(new { error = "Moedas insuficientes", coins = user.Coins, price = definition.Price });
+    user.Coins -= definition.Price;
+    var instance = new GameItemInstance { UserId = uid, DefinitionId = definition.Id };
+    db.GameItemInstances.Add(instance);
+    await db.SaveChangesAsync();
+    await tx.CommitAsync();
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("InventoryChanged");
+    return Results.Created($"/api/game/inventory/{instance.Id}", new
+    {
+        instance.Id, instance.InstanceKey, coins = user.Coins,
+        definition = new { definition.CatalogKey, definition.Name, definition.ItemType },
+    });
+});
+
 api.MapGet("/game/inventory", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
 {
     if (UserId(req) is not int uid) return Results.Unauthorized();
@@ -668,7 +738,8 @@ api.MapGet("/game/inventory", async (HttpRequest req, IDbContextFactory<AppDb> f
         definition = new
         {
             row.d.Id, row.d.CatalogKey, row.d.Name, row.d.Category,
-            row.d.IconPath, row.d.InteractionType,
+            row.d.IconPath, row.d.InteractionType, row.d.ItemType, row.d.Rarity,
+            row.d.Price, row.d.IsPurchasable, row.d.CapabilitiesJson,
         },
         placement = placements.TryGetValue(row.x.Id, out var p) ? new
         {
@@ -689,6 +760,18 @@ api.MapGet("/game/rooms/{sceneId}/{roomId}/furniture", async (
     return Results.Ok(rows.Select(row => FurniturePayload(row.p, row.i, row.d)));
 });
 
+api.MapGet("/game/scenes/{sceneId}/furniture", async (
+    string sceneId, IDbContextFactory<AppDb> f) =>
+{
+    await using var db = await f.CreateDbContextAsync();
+    var rows = await db.FurniturePlacements
+        .Where(x => x.SceneId == sceneId)
+        .Join(db.GameItemInstances, p => p.ItemInstanceId, i => i.Id, (p, i) => new { p, i })
+        .Join(db.GameItemDefinitions, row => row.i.DefinitionId, d => d.Id, (row, d) => new { row.p, row.i, d })
+        .ToListAsync();
+    return Results.Ok(rows.Select(row => FurniturePayload(row.p, row.i, row.d)));
+});
+
 api.MapPost("/game/furniture", async (
     PlaceFurniture dto, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
 {
@@ -696,6 +779,9 @@ api.MapPost("/game/furniture", async (
     if (string.IsNullOrWhiteSpace(dto.SceneId) || string.IsNullOrWhiteSpace(dto.RoomId))
         return Results.BadRequest(new { error = "Cena e sala são obrigatórias" });
     await using var db = await f.CreateDbContextAsync();
+    if (dto.SceneId.StartsWith("personal-wing@", StringComparison.OrdinalIgnoreCase)
+        && !await db.PersonalRooms.AnyAsync(x => x.RoomKey == dto.RoomId && x.UserId == uid))
+        return Results.Json(new { error = "Somente o dono pode decorar esta sala pessoal" }, statusCode: 403);
     await using var tx = await db.Database.BeginTransactionAsync();
     var item = await db.GameItemInstances.FirstOrDefaultAsync(x => x.Id == dto.InventoryItemId && x.UserId == uid);
     if (item is null) return Results.NotFound(new { error = "Item não encontrado" });
@@ -808,32 +894,18 @@ api.MapPost("/game/workstations/{placementId:int}/start", async (
     if (UserId(req) is not int uid) return Results.Unauthorized();
     await using var db = await f.CreateDbContextAsync();
     if (!await IsOwnedInteraction(db, placementId, uid, "workstation")) return Results.NotFound();
-    var user = await db.Users.FindAsync(uid);
-    var workItemId = dto.WorkItemId ?? user?.ActiveWorkItemId;
-    var workItem = workItemId is int id ? await db.WorkItems.FindAsync(id) : null;
-    if (workItem is null || workItem.Status == WorkItemStatus.Done)
-        return Results.BadRequest(new { error = "Escolha uma atividade disponível" });
-    if (await db.TimeEntries.AnyAsync(x => x.UserId == uid && x.EndUtc == null))
-        return Results.Conflict(new { error = "Já existe um contador ativo" });
-    if (user is not null) user.ActiveWorkItemId = workItem.Id;
-    var entry = new TimeEntry
-    {
-        UserId = uid, WorkItemId = workItem.Id, Category = "task",
-        Note = $"Estação #{placementId}: {workItem.Code}", StartUtc = DateTime.UtcNow,
-    };
-    db.TimeEntries.Add(entry);
-    await db.SaveChangesAsync();
-    await hub.Clients.All.SendAsync("Status", new { userId = uid, status = $"🔴 {workItem.Code}" });
-    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("WorkSessionChanged", new
-    {
-        active = true, entryId = entry.Id, workItemId = workItem.Id,
-        workItem.Code, workItem.Title, entry.StartUtc,
-    });
-    return Results.Ok(new
-    {
-        entryId = entry.Id, workItemId = workItem.Id,
-        workItem.Code, workItem.Title, entry.StartUtc,
-    });
+    return await StartWorkSession(db, hub, uid, dto.WorkItemId, $"Estação #{placementId}");
+});
+
+api.MapPost("/game/workstations/scenery/{entityKey}/start", async (
+    string entityKey, WorkstationStart dto, HttpRequest req,
+    IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    var safeKey = new string(entityKey.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_' or ':').ToArray());
+    if (safeKey.Length == 0 || safeKey.Length > 100) return Results.BadRequest(new { error = "Estação inválida" });
+    await using var db = await f.CreateDbContextAsync();
+    return await StartWorkSession(db, hub, uid, dto.WorkItemId, $"Estação pública {safeKey}");
 });
 
 api.MapPost("/game/workstations/stop", async (
@@ -856,7 +928,11 @@ app.Run();
 static object FurniturePayload(FurniturePlacement p, GameItemInstance i, GameItemDefinition d) => new
 {
     p.Id, p.ItemInstanceId, p.UserId, p.SceneId, p.RoomId, p.X, p.Y, p.FlipX,
-    definition = new { d.Id, d.CatalogKey, d.Name, d.Category, d.IconPath, d.InteractionType },
+    definition = new
+    {
+        d.Id, d.CatalogKey, d.Name, d.Category, d.IconPath, d.InteractionType,
+        d.ItemType, d.Rarity, d.Price, d.CapabilitiesJson,
+    },
     instanceKey = i.InstanceKey,
 };
 
@@ -865,6 +941,51 @@ static async Task<bool> IsOwnedInteraction(AppDb db, int placementId, int userId
         .Join(db.GameItemInstances, p => p.ItemInstanceId, i => i.Id, (p, i) => i)
         .Join(db.GameItemDefinitions, i => i.DefinitionId, d => d.Id, (i, d) => d)
         .AnyAsync(d => d.InteractionType == interaction);
+
+static async Task<IResult> StartWorkSession(
+    AppDb db,
+    IHubContext<OfficeHub> hub,
+    int userId,
+    int? requestedWorkItemId,
+    string source)
+{
+    var user = await db.Users.FindAsync(userId);
+    var workItemId = requestedWorkItemId ?? user?.ActiveWorkItemId;
+    var workItem = workItemId is int id ? await db.WorkItems.FindAsync(id) : null;
+    if (workItem is null || workItem.Status == WorkItemStatus.Done)
+        return Results.BadRequest(new { error = "Escolha uma atividade disponível" });
+    if (await db.TimeEntries.AnyAsync(x => x.UserId == userId && x.EndUtc == null))
+        return Results.Conflict(new { error = "Já existe um contador ativo" });
+    if (user is not null) user.ActiveWorkItemId = workItem.Id;
+    var entry = new TimeEntry
+    {
+        UserId = userId,
+        WorkItemId = workItem.Id,
+        Category = "task",
+        Note = $"{source}: {workItem.Code}",
+        StartUtc = DateTime.UtcNow,
+    };
+    db.TimeEntries.Add(entry);
+    await db.SaveChangesAsync();
+    await hub.Clients.All.SendAsync("Status", new { userId, status = $"🔴 {workItem.Code}" });
+    await hub.Clients.Group(OfficeHub.UserGroup(userId)).SendAsync("WorkSessionChanged", new
+    {
+        active = true,
+        entryId = entry.Id,
+        workItemId = workItem.Id,
+        workItem.Code,
+        workItem.Title,
+        entry.StartUtc,
+    });
+    return Results.Ok(new
+    {
+        entryId = entry.Id,
+        workItemId = workItem.Id,
+        workItem.Code,
+        workItem.Title,
+        entry.StartUtc,
+    });
+}
 
 record WorkItemCreate(string Title, string? Description, WorkItemType Type, int? EpicId, int? SprintId, int? AssigneeId, double? EstimateHours);
 record WorkItemPatch(string? Title, string? Description, WorkItemStatus? Status, int? EpicId, int? SprintId, int? AssigneeId, double? EstimateHours);

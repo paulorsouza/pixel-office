@@ -2,9 +2,9 @@
 
 Cliente oficial em **Phaser 3**, acessível por link e sem etapa de build.
 
-A navegação é composta por **várias cenas independentes**. O jogador explora um mundo aberto que
-funciona como hub e escolhe os locais em que quer entrar. Cada local é outro mapa do Tiled; não
-existe conceito de múltiplos andares na arquitetura atual.
+A navegação é composta por **várias cenas independentes**. O jogador explora a cidade e escolhe os
+locais em que quer entrar. Andares também são cenas: elevador e escadas usam portais orientados a
+dados para ligar o Tooq Office às alas pessoais.
 
 > Para editar visualmente no Tiled, veja [`tiled/README.md`](tiled/README.md). Para entender o
 > schema e também editar manualmente, veja [`GUIA-EDICAO.md`](GUIA-EDICAO.md). Para padrões de Phaser e debug, veja
@@ -29,17 +29,20 @@ no Tiled, criar ruas, posicionar fachadas, configurar colisões e conectar novos
 ## O corte vertical atual
 
 ```text
-Mundo Tooq (hub aberto 96×72, expansível no Tiled)
-        │ porta + E
-        ▼
-Escritório Tooq (térreo + quintal privado)
-        │ portão + E
-        └──────────────► Mundo Tooq
+Cidade Tooq (hub cercado 220×150)
+  ├── Tooq Office ── elevador/escadas ── alas pessoais públicas
+  ├── Coworking
+  ├── Dark Company
+  └── Vila dos Jogadores ── 12 portais ── interiores vazios dinâmicos
 ```
 
 - `maps/scenes.json` registra as cenas e define a inicial.
-- `tiled/maps/world.tmj` descreve o pequeno pátio central, a fachada e o portal de entrada.
-- `tiled/maps/tooq-office.tmj` descreve o interior, a mobília, o quintal e o portão de saída.
+- `tiled/maps/world.tmj` descreve a cidade cercada, estradas, três empresas e o vilarejo de 12 casas.
+- `tiled/maps/tooq-office.tmj` é o Coworking, com interior, mobília, quintal e portão de saída.
+- `tiled/maps/tooq-office-1.tmj` é a Dark Company, o escritório grande afastado do spawn.
+- `tiled/maps/tooq-campus.tmj` é o Tooq Office central e contém suas áreas comuns.
+- `tiled/maps/personal-wing.tmj` é o módulo público de 12 salas pessoais por ala.
+- `tiled/maps/player-home-shell.tmj` é o interior vazio compartilhado pelas futuras casas compráveis.
 - `src/TiledRuntimeLoader.js` lê mapas, tilesets externos e templates diretamente no navegador.
 - Ao salvar no Tiled, o servidor valida o projeto e recarrega o jogo; nenhum runtime é gerado.
 - `src/main.js` mantém um único runtime Phaser e reinicia a cena com o mapa e o spawn de destino.
@@ -60,6 +63,7 @@ client-web/
 │   ├── RoomDecorationSystem.js editor de móveis por sala e persistência
 │   ├── GameItemsSystem.js       REST, cache de inventário e SignalR
 │   ├── FurnitureInteractionSystem.js kanban, baú, cadeira, estação e café
+│   ├── CoffeeLifecycle.js       duração da xícara e consumo sentado
 │   ├── DevMapSync.js           feedback e recarga após salvar no Tiled
 │   ├── TiledRuntimeLoader.js   carregamento direto de TMJ, TSJ e templates
 │   ├── mechanics/              registro e handlers reutilizáveis de gameplay
@@ -68,7 +72,7 @@ client-web/
 ├── maps/
 │   ├── scenes.json             manifesto de cenas
 │   ├── world.json              snapshot legado para migração/testes
-│   └── tooq-office.json        snapshot legado para migração/testes
+│   └── *.json                  snapshots legados para migração/testes
 ├── tiled/
 │   ├── office-quest.tiled-project
 │   ├── maps/                    fontes .tmj editáveis no Tiled
@@ -109,7 +113,9 @@ continuam apenas para migração de snapshots antigos e podem sobrescrever traba
   "scenes": [
     { "id": "world", "file": "tiled/maps/world.tmj" },
     { "id": "tooq-office", "file": "tiled/maps/tooq-office.tmj" },
-    { "id": "arcade", "file": "tiled/maps/arcade.tmj" }
+    { "id": "tooq-campus", "file": "tiled/maps/tooq-campus.tmj" },
+    { "id": "personal-wing", "file": "tiled/maps/personal-wing.tmj" },
+    { "id": "player-home-shell", "file": "tiled/maps/player-home-shell.tmj" }
   ]
 }
 ```
@@ -123,8 +129,8 @@ Coordenadas são expressas em tiles; hoje um tile visual tem 16 px.
 ```jsonc
 {
   "id": "tooq-office",
-  "name": "Escritório Tooq",
-  "subtitle": "Térreo · espaço de trabalho e quintal privado",
+  "name": "Coworking",
+  "subtitle": "Área-piloto · recepção, escritórios e quintal privado",
   "kind": "interior",             // "world" ou "interior"
   "tile": 16,
   "w": 56,
@@ -239,21 +245,22 @@ O catálogo associa comportamentos por `InteractionType`, sem colocar IDs no loo
 
 - `kanban`: abre o quadro e permite escolher a atividade ativa;
 - `chest`: mostra itens guardados e transfere unidades entre baú e inventário;
-- `workstation`: inicia/encerra o contador persistido de uma atividade;
-- `seat`: procura um computador/estação próximo e abre o fluxo de trabalho ao sentar.
-- `coffee`: tira um café da bancada; só se bebe sentado (cinco goles de 2,6 s numa poltrona).
+- `workstation`: abre a seleção de atividade em estações genéricas do inventário;
+- `seat`: senta no próprio móvel; estações completas com `interactionKey` iniciam as horas da
+  atividade atual ao sentar;
+- `coffee`: tira um café da bancada; a xícara é consumida sentado ou guardada quando esfria.
 
 O backend expõe `/api/game/inventory`, `/api/game/furniture`, rotas de baú e rotas de estação.
-O cliente usa `?userId=1` por padrão no protótipo; esse cabeçalho deverá ser substituído pela
-identidade autenticada quando login e autorização forem conectados.
+O cliente usa a identidade autenticada. Em desenvolvimento, `?userId=1` ativa o bypass configurado
+por `Auth:DevBypass`.
 
 Cada item do backend possui `InstanceKey`, dono e `Location`. Uma colocação referencia exatamente
 uma instância; portanto, ter duas cadeiras gera dois registros independentes. As operações de
 colocar e recolher são transacionais e a API rejeita reutilização da mesma unidade.
 
 SignalR assina os grupos `game:user:<id>` e `game:room:<scene>:<room>`. Os eventos de inclusão,
-movimento, remoção, inventário, baú e sessão de trabalho atualizam outras abas sem reload. Isso não
-inclui presença de avatares: essa parte continua no fluxo legado do backend.
+movimento, remoção, inventário, baú e sessão de trabalho atualizam outras abas sem reload. Presença,
+aparência e claims de assento/porta/sala usam o hub de presença por cena.
 
 ## Loadout e equipamentos
 
@@ -269,7 +276,9 @@ slots de acessórios e periféricos já têm catálogo e persistência, mas aind
 ou o sprite do personagem. Não existe indicador fixo de veículo no HUD; essa informação fica na
 ficha para deixar a visão do mundo mais limpa.
 
-Os valores ficam em `assets/equipment/catalog.json`, sem hardcode no loop de movimento:
+Os valores ficam em `assets/equipment/catalog.json`, sem hardcode no loop de movimento. A loja e o
+inventário do backend determinam quais itens podem ser equipados; uma conta nova possui somente o
+skate básico. Cada base visual possui ao menos dois modelos compráveis:
 
 | Equipamento | Velocidade atual | Pose do avatar |
 |---|---:|---|
@@ -277,6 +286,8 @@ Os valores ficam em `assets/equipment/catalog.json`, sem hardcode no loop de mov
 | Patins | 166 px/s | deslize com pés fixos |
 | Patinete elétrico | 188 px/s | em pé |
 | Moto | 232 px/s | sentado |
+
+Detalhes do campus, das alas públicas e da economia: [`../docs/PLANO_CAMPUS_V2.md`](../docs/PLANO_CAMPUS_V2.md).
 
 A caminhada base é 112 px/s. Para balancear, altere `walkSpeed` ou a `speed` dos itens cujo
 `slot` é `vehicle` e

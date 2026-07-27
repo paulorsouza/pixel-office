@@ -1,0 +1,463 @@
+{
+  "id": "personal-wing",
+  "name": "Ala pessoal",
+  "subtitle": "12 salas públicas por módulo",
+  "kind": "interior",
+  "tile": 16,
+  "w": 96,
+  "h": 64,
+  "camera": {
+    "zoom": 2.15,
+    "minZoom": 0.65,
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 64
+    }
+  },
+  "visualMode": "procedural",
+  "assets": [
+    "interior_sliding_door",
+    "of_172",
+    "of_196",
+    "of_197"
+  ],
+  "building": {
+    "x": 2,
+    "y": 2,
+    "w": 92,
+    "h": 56,
+    "floor": "wood"
+  },
+  "spawns": {
+    "default": {
+      "x": 8,
+      "y": 31
+    },
+    "from-campus": {
+      "x": 17,
+      "y": 26
+    },
+    "from-campus-elevator": {
+      "x": 17,
+      "y": 26
+    },
+    "from-campus-stairs": {
+      "x": 29.5,
+      "y": 29
+    },
+    "qa-wing-elevator": {
+      "x": 17,
+      "y": 23
+    },
+    "qa-wing-stairs": {
+      "x": 29.5,
+      "y": 26
+    },
+    "from-prev": {
+      "x": 88,
+      "y": 31
+    },
+    "from-next": {
+      "x": 8,
+      "y": 31
+    }
+  },
+  "zones": [
+    {
+      "id": "shared-corridor",
+      "name": "Corredor compartilhado",
+      "x": 3,
+      "y": 20,
+      "w": 90,
+      "h": 20,
+      "floor": "wood"
+    }
+  ],
+  "rooms": [
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "slotIndex": 0,
+      "id": "slot-0",
+      "name": "Sala disponível",
+      "x": 2,
+      "y": 2,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "slotIndex": 1,
+      "id": "slot-1",
+      "name": "Sala disponível",
+      "x": 17,
+      "y": 2,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "slotIndex": 2,
+      "id": "slot-2",
+      "name": "Sala disponível",
+      "x": 32,
+      "y": 2,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "slotIndex": 3,
+      "id": "slot-3",
+      "name": "Sala disponível",
+      "x": 47,
+      "y": 2,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "slotIndex": 4,
+      "id": "slot-4",
+      "name": "Sala disponível",
+      "x": 62,
+      "y": 2,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": true,
+      "slotIndex": 5,
+      "id": "slot-5",
+      "name": "Sala disponível",
+      "x": 77,
+      "y": 2,
+      "w": 17,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "S",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 6,
+      "id": "slot-6",
+      "name": "Sala disponível",
+      "x": 2,
+      "y": 40,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 7,
+      "id": "slot-7",
+      "name": "Sala disponível",
+      "x": 17,
+      "y": 40,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 8,
+      "id": "slot-8",
+      "name": "Sala disponível",
+      "x": 32,
+      "y": 40,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 9,
+      "id": "slot-9",
+      "name": "Sala disponível",
+      "x": 47,
+      "y": 40,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 10,
+      "id": "slot-10",
+      "name": "Sala disponível",
+      "x": 62,
+      "y": 40,
+      "w": 16,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 11,
+      "id": "slot-11",
+      "name": "Sala disponível",
+      "x": 77,
+      "y": 40,
+      "w": 17,
+      "h": 18,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    }
+  ],
+  "furniture": [
+    {
+      "id": "of_172",
+      "x": 47,
+      "y": 27,
+      "interactionType": "timeclock",
+      "interactionKey": "wing:clock"
+    },
+    {
+      "id": "of_196",
+      "x": 42,
+      "y": 33,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    },
+    {
+      "id": "of_197",
+      "x": 51,
+      "y": 33,
+      "interactionType": "seat",
+      "seatX": -0.5,
+      "seatY": -0.875,
+      "seatDir": "left",
+      "seatPose": "sit",
+      "collision": {
+        "x": -0.5,
+        "y": 0,
+        "w": 1,
+        "h": 0.5
+      }
+    }
+  ],
+  "portals": [
+    {
+      "wingDelta": -1,
+      "id": "previous-wing",
+      "x": 1,
+      "y": 27,
+      "w": 2,
+      "h": 8,
+      "targetScene": "personal-wing",
+      "targetSpawn": "from-prev",
+      "label": "Ala anterior"
+    },
+    {
+      "wingDelta": 1,
+      "id": "next-wing",
+      "x": 93,
+      "y": 27,
+      "w": 2,
+      "h": 8,
+      "targetScene": "personal-wing",
+      "targetSpawn": "from-next",
+      "label": "Próxima ala"
+    }
+  ],
+  "entities": [
+    {
+      "id": "wing-elevator",
+      "type": "verticalAccess",
+      "x": 14,
+      "y": 21,
+      "layer": "mechanics",
+      "name": "Ala · elevador",
+      "w": 6,
+      "h": 4,
+      "properties": {
+        "accessType": "elevator",
+        "visualX": 17,
+        "visualY": 21,
+        "floorIndex": 1,
+        "targetScene": "tooq-campus",
+        "targetSpawn": "from-personal-wing-elevator",
+        "label": "Descer de elevador para o térreo"
+      }
+    },
+    {
+      "id": "wing-stairs",
+      "type": "verticalAccess",
+      "x": 26,
+      "y": 24,
+      "layer": "mechanics",
+      "name": "Ala · escadas",
+      "w": 7,
+      "h": 4,
+      "properties": {
+        "accessType": "stairs",
+        "visualX": 29.5,
+        "visualY": 24,
+        "blockX": 28.5,
+        "blockY": 20,
+        "blockW": 2,
+        "blockH": 4,
+        "floorIndex": 1,
+        "targetScene": "tooq-campus",
+        "targetSpawn": "from-personal-wing-stairs",
+        "label": "Descer pelas escadas para o térreo"
+      }
+    }
+  ],
+  "visualLayers": [
+    {
+      "id": "free-draw",
+      "name": "Pincel · Desenho livre",
+      "width": 1,
+      "height": 1,
+      "depth": -85,
+      "tiles": []
+    }
+  ]
+}

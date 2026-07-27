@@ -26,14 +26,14 @@ import { createPresence } from './PresenceSystem.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
 import { ensureSession } from './LoginScreen.js';
+import {
+  createCoffeeLifecycle,
+  updateCoffeeLifecycle,
+} from './CoffeeLifecycle.js';
 
 const DIR = { right: 0, up: 6, left: 12, down: 18 };
 
 const worldAssetPath = (asset) => `assets/world/${asset}.png`;
-
-// ritmo do cafe: um gole a cada 2,6s sentado; a xicara dura ~13s de poltrona
-const GOLE_MS = 2600;
-const GOLES_ATE_ACABAR = 5;
 
 async function fetchJson(path) {
   const response = await fetch(path, { cache: 'no-store' });
@@ -108,11 +108,91 @@ try {
   showBootstrapMapError(error);
   throw error;
 }
+const PERSONAL_WING_SCENE = 'personal-wing';
+const PLAYER_HOME_SCENE = 'player-home-shell';
+const personalDirectory = gameItems.personalRooms();
+
+function sceneTemplateId(sceneRef) {
+  return String(sceneRef || '').split('@', 1)[0];
+}
+
+function personalWingIndex(sceneRef) {
+  const [template, rawWing] = String(sceneRef || '').split('@');
+  if (template !== PERSONAL_WING_SCENE) return null;
+  const wing = Number(rawWing);
+  return Number.isInteger(wing) && wing >= 0 ? wing : 0;
+}
+
+function playerHomeId(sceneRef) {
+  const [template, homeId] = String(sceneRef || '').split('@');
+  return template === PLAYER_HOME_SCENE && /^house-\d{2}$/.test(homeId || '') ? homeId : null;
+}
+
+function sceneExists(sceneRef) {
+  const template = sceneTemplateId(sceneRef);
+  if (!sceneMaps[template]) return false;
+  const wing = personalWingIndex(sceneRef);
+  return wing == null || wing < (personalDirectory?.wingCount || 1);
+}
+
+function materializeScene(sceneRef) {
+  const template = sceneTemplateId(sceneRef);
+  const map = JSON.parse(JSON.stringify(sceneMaps[template]));
+  if (!map) throw new Error(`Cena desconhecida: ${sceneRef}`);
+  const homeId = playerHomeId(sceneRef);
+  if (homeId) {
+    map.id = sceneRef;
+    map.name = `Casa ${Number(homeId.slice(-2))}`;
+    map.subtitle = 'Interior vazio · futura casa comprável';
+    map.portals = (map.portals || []).map((portal) => (
+      portal.id === 'return-home'
+        ? { ...portal, targetSpawn: `${homeId}-exit` }
+        : portal
+    ));
+    return map;
+  }
+  const wing = personalWingIndex(sceneRef);
+  if (wing == null) return map;
+
+  const assignments = new Map((personalDirectory?.rooms || [])
+    .filter((room) => room.wingIndex === wing)
+    .map((room) => [room.slotIndex, room]));
+  map.id = sceneRef;
+  map.name = `Ala pessoal ${wing + 1}`;
+  map.subtitle = 'Salas públicas do time · entre, visite e converse';
+  map.rooms = (map.rooms || []).map((room) => {
+    const assignment = assignments.get(room.slotIndex);
+    if (!assignment) return {
+      ...room,
+      id: `vacant-${wing}-${room.slotIndex}`,
+      name: 'Sala disponível',
+      decoratable: false,
+      vacant: true,
+    };
+    return {
+      ...room,
+      id: assignment.roomKey,
+      name: `Sala de ${assignment.owner.name}`,
+      ownerId: assignment.owner.id,
+      ownerColor: assignment.owner.color,
+      decoratable: assignment.mine,
+      vacant: false,
+    };
+  });
+  map.portals = (map.portals || []).filter((portal) => {
+    if (!portal.wingDelta) return true;
+    const targetWing = wing + portal.wingDelta;
+    return targetWing >= 0 && targetWing < (personalDirectory?.wingCount || 1);
+  });
+  return map;
+}
 let roomDecorationEditor = null;
 const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
+  isOwned: (equipmentId) => gameItems.ownsEquipment(equipmentId),
 });
+gameItems.events.addEventListener('inventory', () => equipmentMenu.refreshOwnership());
 // porta trancada é estado com dono (a automática, não): o claim vem do hub
 const doorLock = (doorKey) => Boolean(doorKey && presence.claimOf(doorKey));
 
@@ -129,7 +209,7 @@ const characterCustomizer = createCharacterCustomizer(characterCatalog, {
 });
 const query = new URLSearchParams(location.search);
 const requestedScene = query.get('scene') || location.hash.replace(/^#/, '');
-const initialScene = sceneMaps[requestedScene] ? requestedScene : manifest.startScene;
+const initialScene = sceneExists(requestedScene) ? requestedScene : manifest.startScene;
 const initialSpawn = query.get('spawn') || 'default';
 const equipmentPreview = vehicleEquipment.find(
   (item) => item.id === query.get('equipmentPreview'),
@@ -163,10 +243,10 @@ class MapScene extends Phaser.Scene {
 
   init(data = {}) {
     this.currentSceneId = data.sceneId || initialScene;
+    this.currentSceneTemplateId = sceneTemplateId(this.currentSceneId);
     this.spawnId = data.spawnId || initialSpawn;
     // O Tiled fornece a estrutura/base; móveis do jogador chegam separadamente pela API.
-    this.map = JSON.parse(JSON.stringify(sceneMaps[this.currentSceneId]));
-    if (!this.map) throw new Error(`Cena desconhecida: ${this.currentSceneId}`);
+    this.map = materializeScene(this.currentSceneId);
   }
 
   preload() {
@@ -454,6 +534,7 @@ class MapScene extends Phaser.Scene {
 
     this.seated = null;
     this.coffee = null;
+    this.activeWorkSession = null;
     this.furnitureInteractions = createFurnitureInteractionSystem(
       this,
       this.map,
@@ -462,6 +543,9 @@ class MapScene extends Phaser.Scene {
       {
         onSeat: (record) => this.sitOn(record),
         onCoffee: () => this.takeCoffee(),
+        onWorkStarted: (session) => { this.activeWorkSession = session; },
+        onWorkStopped: () => { this.activeWorkSession = null; },
+        onWorkStatus: (message) => proximityVoice.toast(message),
       },
     );
     this.interactionPreviewPending = interactionPreview;
@@ -661,7 +745,7 @@ class MapScene extends Phaser.Scene {
 
   // ---- assento: a cadeira vira estado com dono, então ninguém senta em cima de ninguém ----
   async sitOn(record) {
-    if (this.seated || !record?.item) return;
+    if (this.seated || !record?.item) return false;
     // móvel do cenário não tem placement no backend; a posição no mapa é estável
     // e igual em todos os clientes, então serve de chave do claim
     const entityId = record.item.placementId
@@ -685,13 +769,14 @@ class MapScene extends Phaser.Scene {
     if (!(await presence.claimEntity(entityId, 'seat', anchor))) {
       const who = presence.claimOf(entityId)?.name;
       proximityVoice.toast(who ? `${who} já está nessa cadeira` : 'Essa cadeira está ocupada');
-      return;
+      return false;
     }
     this.seated = { entityId, ...anchor };
     this.player.body.setVelocity(0, 0);
     this.player.setPosition(anchor.x, anchor.y);
     this.lastDirection = dir;
     this.showSeatCover(record);
+    return true;
   }
 
   // A estação é mesa + cadeira num quadro só: mesmo desenhando o avatar acima dela,
@@ -722,6 +807,12 @@ class MapScene extends Phaser.Scene {
     presence.releaseEntity(this.seated.entityId);
     this.seated = null;
     this.hideSeatCover();
+    if (this.activeWorkSession) {
+      this.activeWorkSession = null;
+      gameItems.stopWork().catch(() => {
+        proximityVoice.toast('Não foi possível encerrar o contador de horas');
+      });
+    }
   }
 
   // ---- café: tira na bancada, carrega, e bebe sentado ----
@@ -730,8 +821,11 @@ class MapScene extends Phaser.Scene {
     const sprite = this.add.sprite(this.player.x, this.player.y, 'coffee_cup')
       .setOrigin(0.5, 1);
     if (this.anims.exists('coffee-cup-steam')) sprite.play('coffee-cup-steam');
-    this.coffee = { sprite, goles: 0, proximoGoleEm: 0 };
-    proximityVoice.toast('Café na mão — sente numa poltrona para tomar');
+    this.coffee = {
+      sprite,
+      ...createCoffeeLifecycle(this.time.now),
+    };
+    proximityVoice.toast('Café na mão — sente para tomar (a xícara some ao terminar)');
   }
 
   dropCoffee() {
@@ -748,15 +842,13 @@ class MapScene extends Phaser.Scene {
     const dx = sentado ? 0 : (this.lastDirection === 'left' ? -7 : 7);
     cafe.sprite.setPosition(this.player.x + dx, base + (sentado ? -7 : -3));
     cafe.sprite.setDepth(base + 1);
-    // só se bebe sentado: em pé o contador zera e nada acontece
-    if (!sentado) { cafe.proximoGoleEm = 0; return; }
-    if (!cafe.proximoGoleEm) { cafe.proximoGoleEm = this.time.now + GOLE_MS; return; }
-    if (this.time.now < cafe.proximoGoleEm) return;
-    cafe.goles += 1;
-    cafe.proximoGoleEm = this.time.now + GOLE_MS;
-    if (cafe.goles >= GOLES_ATE_ACABAR) {
+    const lifecycle = updateCoffeeLifecycle(cafe, this.time.now, sentado);
+    if (lifecycle) {
       this.dropCoffee();
-      proximityVoice.toast('Café tomado');
+      proximityVoice.toast(lifecycle === 'finished'
+        ? 'Café tomado'
+        : 'O café esfriou e a xícara foi guardada');
+      return;
     }
   }
 
@@ -775,12 +867,19 @@ class MapScene extends Phaser.Scene {
   }
 
   changeScene(portal) {
-    if (this.transitioning || this.roomDecorationEditor?.isOpen() || !sceneMaps[portal.targetScene]) return;
+    let targetScene = portal.targetScene;
+    const currentWing = personalWingIndex(this.currentSceneId);
+    if (portal.wingDelta && currentWing != null) {
+      targetScene = `${PERSONAL_WING_SCENE}@${currentWing + portal.wingDelta}`;
+    } else if (targetScene === PERSONAL_WING_SCENE) {
+      targetScene = `${PERSONAL_WING_SCENE}@${portal.targetWing || 0}`;
+    }
+    if (this.transitioning || this.roomDecorationEditor?.isOpen() || !sceneExists(targetScene)) return;
     this.transitioning = true;
     showPortalPrompt(null);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.restart({
-        sceneId: portal.targetScene,
+        sceneId: targetScene,
         spawnId: portal.targetSpawn || 'default',
       });
     });

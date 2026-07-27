@@ -5,15 +5,16 @@
 
 const STORAGE_KEY = 'oq_auth';
 
-const query = new URLSearchParams(location.search);
+const browserLocation = globalThis.location || new URL('http://localhost:8123/');
+const query = new URLSearchParams(browserLocation.search);
 
 export function resolveApiBase() {
   const override = query.get('api');
   if (override) return override.replace(/\/$/, '');
   // Dev: o servidor estático do jogo roda em :8123 e o backend em :5210.
-  if (location.port === '8123') return 'http://localhost:5210';
+  if (browserLocation.port === '8123') return 'http://localhost:5210';
   // Produção: game e API são servidos na mesma origem (atrás do proxy).
-  return location.origin;
+  return browserLocation.origin;
 }
 
 const apiBase = resolveApiBase();
@@ -58,8 +59,8 @@ function fromTokens(access, refresh, expiresIn) {
 
 // Captura tokens vindos de /auth/google/callback (…#access_token=…&refresh_token=…).
 function captureFromFragment() {
-  if (!location.hash || location.hash.length < 2) return;
-  const frag = new URLSearchParams(location.hash.slice(1));
+  if (!browserLocation.hash || browserLocation.hash.length < 2) return;
+  const frag = new URLSearchParams(browserLocation.hash.slice(1));
   const access = frag.get('access_token');
   if (access) {
     save(fromTokens(access, frag.get('refresh_token'), frag.get('expires_in')));
@@ -69,7 +70,11 @@ function captureFromFragment() {
     frag.delete('token_type');
     const rest = frag.toString();
     // preserva o resto do hash (ex.: #world) sem os tokens
-    history.replaceState(null, '', location.pathname + location.search + (rest ? `#${rest}` : ''));
+    globalThis.history?.replaceState(
+      null,
+      '',
+      browserLocation.pathname + browserLocation.search + (rest ? `#${rest}` : ''),
+    );
   } else if (frag.get('error')) {
     console.warn('Login falhou:', frag.get('error'));
   }
@@ -169,15 +174,15 @@ export const auth = {
   },
 
   // Redireciona para o consentimento do Google; volta para returnUrl com os tokens.
-  login(returnUrl = location.href) {
-    location.href = `${apiBase}/auth/google/login?return=${encodeURIComponent(returnUrl)}`;
+  login(returnUrl = browserLocation.href) {
+    browserLocation.href = `${apiBase}/auth/google/login?return=${encodeURIComponent(returnUrl)}`;
   },
 
   // Mesmo fluxo, mas pendurando o Google na conta já logada (não cria outra).
-  async linkGoogle(returnUrl = location.href) {
+  async linkGoogle(returnUrl = browserLocation.href) {
     const token = await auth.token();
     if (!token) throw new Error('Entre na conta antes de vincular o Google.');
-    location.href = `${apiBase}/auth/google/login?return=${encodeURIComponent(returnUrl)}`
+    browserLocation.href = `${apiBase}/auth/google/login?return=${encodeURIComponent(returnUrl)}`
       + `&link=${encodeURIComponent(token)}`;
   },
 
@@ -204,4 +209,4 @@ export const auth = {
   },
 };
 
-window.__auth = auth;
+if (globalThis.window) window.__auth = auth;

@@ -31,7 +31,7 @@ node client-web/server.js
 Depois:
 
 1. abra `client-web/tiled/office-quest.tiled-project` no Tiled;
-2. abra `maps/world.tmj` ou `maps/tooq-office.tmj`;
+2. abra `maps/world.tmj`, `maps/tooq-campus.tmj` ou o interior que será editado;
 3. abra `http://localhost:8123/#world` no navegador;
 4. edite e pressione `Ctrl+S` no Tiled;
 5. aguarde o aviso `Mapa atualizado`; a página recarrega sozinha.
@@ -50,10 +50,13 @@ src/TiledRuntimeLoader.js        normaliza o formato do Tiled para o renderer
 src/MapRenderer.js               desenha os dados normalizados no Phaser
 maps/world.json                  snapshot legado para migração/testes
 maps/tooq-office.json            snapshot legado para migração/testes
+maps/tooq-campus.json            snapshot legado para migração/testes
+maps/personal-wing.json          snapshot legado para migração/testes
+maps/player-home-shell.json      snapshot legado para migração/testes
 ```
 
-Não edite `maps/world.json` ou `maps/tooq-office.json`: eles não são usados pelo jogo. O conversor
-em `tools/tiled-converter.mjs` permanece apenas para migração e diagnóstico de mapas antigos.
+Não edite `maps/*.json`: eles não são usados pelo jogo. O conversor em
+`tools/tiled-converter.mjs` permanece apenas para migração, diagnóstico e testes de round-trip.
 
 ## 4. O que editar em cada camada
 
@@ -115,6 +118,10 @@ No `world.tmj`, há três paletas dedicadas ao fechamento do terreno:
 Pinte cercas de 16×16 na camada `Pincel · Cercas` para ganhar colisão automática. Use os portões e
 a peça larga `*_pass` como objetos em `Objetos · Props do mundo`; se precisarem bloquear o jogador, desenhe a
 colisão física em `Objetos · Colisões`. O portal de troca de cena continua em `Objetos · Spawns e portais`.
+
+Fachadas são uma exceção importante: cada prédio/casa deve ter uma colisão retangular cobrindo toda
+a imagem. Não abra um vão físico na porta — o avatar interage com o portal do lado de fora. Isso
+impede entrar no prédio pelas laterais ou caminhar sob o telhado.
 
 ## 5. Criar um tileset próprio
 

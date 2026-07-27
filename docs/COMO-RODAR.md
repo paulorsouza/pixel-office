@@ -81,7 +81,7 @@ Dentro de uma sala declarada em `rooms[]`, aparece `Decorar <sala>`.
 
 ## 4. Testar inventário e decoração
 
-1. Entre no `Escritório Tooq` pelo portal do mundo.
+1. Entre no `Coworking` ou no `Tooq Office` pelo portal do mundo.
 2. Caminhe para `Escritório A` ou `Escritório B`.
 3. Clique em `Decorar Escritório A/B`.
 4. Confira que cada cartão mostra uma quantidade, por exemplo `2 no inventário`.
@@ -111,15 +111,13 @@ As interações exigem que o jogador possua e posicione a peça.
 3. Guarde uma unidade disponível; ela deve sair do editor.
 4. Retire a unidade; ela deve voltar ao inventário.
 
-### Cadeira e estação
+### Assento e estação
 
-1. Coloque uma estação/computador e uma cadeira a até `2,75` tiles dela.
-2. Pressione `E` perto da cadeira ou da estação.
-3. Escolha uma atividade: o backend abre um `TimeEntry` e o status vira `🔴 CÓDIGO`.
-4. Abra novamente e use `Encerrar contador`.
-5. Confira o lançamento em `http://localhost:5210`, na área de horas.
-
-Uma cadeira sem computador próximo explica que a composição está incompleta em vez de iniciar horas.
+1. Pressione `E` numa cadeira/poltrona para sentar naquele próprio assento.
+2. Pressione `E` numa estação completa para sentar diante do monitor e iniciar as horas da
+   atividade atual.
+3. Use `E` novamente ou mova o avatar para levantar e encerrar a sessão vinculada ao assento.
+4. Confira o lançamento em `http://localhost:5210`, na área de horas.
 
 ## 6. Testar sincronização SignalR
 
@@ -134,9 +132,9 @@ Uma cadeira sem computador próximo explica que a composição está incompleta 
 4. A segunda deve refletir inclusão, movimento e remoção sem recarregar.
 5. Guarde/retire um item no baú e confira a atualização do estoque.
 
-Os eventos atuais são `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved`,
-`InventoryChanged`, `ChestChanged` e `WorkSessionChanged`. Eles sincronizam mobília e inventário;
-avatares Phaser ainda não possuem presença por cena.
+Os eventos atuais incluem `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved`,
+`InventoryChanged`, `ChestChanged` e `WorkSessionChanged`. Presença, aparência e claims de cena
+também são sincronizados pelo hub.
 
 ## 7. URLs úteis de desenvolvimento
 
@@ -144,8 +142,12 @@ avatares Phaser ainda não possuem presença por cena.
 # Abrir uma cena
 http://localhost:8123/?scene=world
 http://localhost:8123/?scene=tooq-office&spawn=entrance
+http://localhost:8123/?scene=tooq-campus&spawn=entrance
+http://localhost:8123/?scene=personal-wing@0&spawn=elevator-arrival
+http://localhost:8123/?scene=player-home-shell@house-07
 
 # Mostrar colisões
+http://localhost:8123/?scene=world&spawn=default&debug=collisions
 http://localhost:8123/?scene=tooq-office&debug=collisions
 
 # Abrir diretamente o editor de uma sala
@@ -162,7 +164,7 @@ http://localhost:8123/?scene=tooq-office&equipmentPreview=motorcycle&equipmentDi
 
 ## 8. LiveKit opcional
 
-O cliente Phaser ainda não integrou A/V, mas o app web antigo continua usando LiveKit:
+O cliente Phaser usa LiveKit para mic, câmera e compartilhamento de tela nas salas:
 
 ```powershell
 & ".\livekit\start-livekit.ps1"
@@ -191,6 +193,6 @@ terminar.
 | O mapa abre, mas mobília não persiste | O Phaser funciona offline, porém a API é a fonte de verdade; suba o backend. |
 | Móvel do Tiled não pode ser arrastado no editor do jogo | Correto: ele é cenário-base. Só instâncias possuídas são editáveis pelo jogador. |
 | Outro usuário vê o móvel, mas não consegue editá-lo | Correto: a API valida o dono da instância. Permissões compartilhadas ainda não existem. |
-| Cadeira não abre a estação | Posicione um item `workstation` a no máximo `2,75` tiles. |
+| Aparecem ações de outro mapa depois de trocar de cena | Recarregue e confirme que `resetSceneRenderState` é chamado antes de renderizar o destino. |
 | Já existe um contador ativo | Encerre o timer no app web ou na estação antes de iniciar outro. |
 | Build mostra `NU1903` | Alerta conhecido de `SQLitePCLRaw`; não quebra o protótipo, mas deve ser resolvido antes de produção. |

@@ -43,6 +43,20 @@ const SURFACES = [
   { id: 'cream', path: 'assets/floors/floor_cream.png' },
   { id: 'sage', path: 'assets/floors/floor_sage.png' },
   { id: 'water', path: 'assets/floors/floor_water.png' },
+  ...[
+    'asphalt', 'asphalt_2', 'asphalt_3', 'asphalt_4',
+    'mark_line_h', 'mark_line_h_2', 'mark_line_v', 'mark_line_v_2',
+    'mark_dash_h', 'mark_dash_v',
+    'mark_corner_1', 'mark_corner_2', 'mark_corner_3', 'mark_corner_4',
+    'mark_tee_1', 'mark_tee_2', 'mark_tee_3', 'mark_tee_4', 'mark_cross',
+    'sidewalk', 'curb_top', 'curb_bottom', 'curb_left', 'curb_right',
+    'curb_bend_tl', 'curb_bend_tr', 'curb_bend_bl', 'curb_bend_br',
+    'curb_gutter_1', 'curb_gutter_2',
+    'crosswalk_h_l', 'crosswalk_h_r', 'crosswalk_v_t', 'crosswalk_v_b',
+  ].map((name) => ({
+    id: `road_${name}`,
+    path: `assets/world/roads/${name}.png`,
+  })),
 ];
 
 const FLOOR_ALIASES = {
@@ -345,11 +359,17 @@ function writeWallTileset(gravar = true) {
 
 export function generateTilesets(gravar = true) {
   ensureDirectories();
-  const worldEntries = collectionEntries(
-    resolve(CLIENT_ROOT, 'assets/world'),
-    'prop',
-    (name) => name !== 'office_door.png' && name !== 'grass.png',
-  ).map((entry) => ({
+  const worldEntries = [
+    ...collectionEntries(
+      resolve(CLIENT_ROOT, 'assets/world'),
+      'prop',
+      (name) => name !== 'office_door.png' && name !== 'grass.png',
+    ),
+    ...collectionEntries(
+      resolve(CLIENT_ROOT, 'assets/world/fences'),
+      'prop',
+    ).map((entry) => ({ ...entry, assetId: `fence_${entry.assetId}` })),
+  ].map((entry) => ({
     ...entry,
     category: entry.assetId === 'grass_detail' ? 'detail' : 'prop',
   }));
@@ -1631,7 +1651,11 @@ export function tiledToRuntime(tiled, catalogs, sourcePath) {
   for (const entity of entities) appendAsset(requiredAssets, entity.assetId);
   for (const layer of visualLayers) {
     for (const cell of layer.tiles) {
-      if (cell.texture !== 'tiles' && !catalogs.surfaces.byAsset.has(cell.texture)) {
+      const serializedSurface = catalogs.surfaces.byAsset.has(cell.texture)
+        && previousAssets.includes(cell.texture);
+      if (cell.texture !== 'tiles' && (
+        !catalogs.surfaces.byAsset.has(cell.texture) || serializedSurface
+      )) {
         appendAsset(requiredAssets, cell.texture);
       }
     }

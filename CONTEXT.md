@@ -1,6 +1,6 @@
 # CONTEXT — Office Quest (escritório virtual da Tooq)
 
-**Atualizado:** 2026-07-24
+**Atualizado:** 2026-07-27
 
 Visão geral pragmática do projeto: o que é, o que existe, como as peças se conectam e para onde vai.
 Detalhes vivem em docs específicos (linkados no fim) — aqui é o mapa mental.
@@ -13,9 +13,10 @@ Escritório virtual estilo **Gather.town** para a **Tooq**: o time fica logado o
 pessoa com um avatar andando por um escritório 2D top-down, com **chat de proximidade**, **A/V**
 (LiveKit), integração com **tasks/horas** e **gamificação**.
 
-O jogo tem **várias cenas independentes** e um **quintal central caminhável** que funciona como hub:
-nele o jogador escolhe quais locais visitar. O escritório é uma dessas cenas e reúne o interior
-mobiliado com um pequeno quintal privado; o exterior dá contexto e escolha sem virar um mapa vazio.
+O jogo tem **várias cenas independentes** e uma **cidade cercada caminhável** que funciona como hub:
+nela o jogador escolhe entre Tooq Office, Coworking, Dark Company e a Vila dos Jogadores. Escritórios
+reúnem interior mobiliado e áreas externas próprias; elevador/escadas ligam cenas de piso e as casas
+do vilarejo apontam para interiores vazios preparados para futura compra.
 
 Entrar é **por link** (abrir a URL e já estar dentro) — foi o motivo de o cliente ser **web**, não
 Unity (ver §4).
@@ -129,10 +130,10 @@ valida o projeto e atualiza o jogo automaticamente; erros aparecem sobre o jogo.
 
 No modo `visualMode: "tiled"`, chão/ruas, paredes e cercas são tile layers nativas e desbloqueadas,
 não prévias procedurais. Paredes e cercas derivam colisão diretamente dos tiles pintados. O hub
-`world` usa um canvas de 96×72 tiles e não possui objeto manual de limite de câmera. O limite aberto
-acompanha qualquer redimensionamento feito em **Map → Resize Map** e também cresce quando um objeto
-visível é colocado além das bordas do canvas; assim a câmera continua seguindo o avatar até áreas em
-coordenadas negativas ou maiores que o mapa original.
+`world` usa um canvas cercado de 220×150 tiles e não possui objeto manual de limite de câmera.
+O limite aberto acompanha qualquer redimensionamento feito em **Map → Resize Map** e também cresce
+quando um objeto visível é colocado além das bordas do canvas. Estradas e cercas são tile layers; as
+quatro bordas e os footprints completos das 15 fachadas são colisões orientadas a dados.
 
 **Fachada bonita + interior grande (não roof-reveal).** Roof-reveal (entrar = remover o teto) amarra
 o tamanho do interior ao do telhado ⇒ laje cinza feia em interior grande. Os prédios lindos do Modern
@@ -140,21 +141,24 @@ Exteriors são **fachadas em 3/4**, não telhados top-down. Padrão escolhido: f
 entrar ⇒ interior grande (estilo Pokémon/Stardew). A fachada **TOOQ** já está pronta
 (`assets/world/office_tooq.png`).
 
-**Sem múltiplos andares.** A unidade de navegação é a cena. Cada prédio/local aponta para um mapa
-independente, com spawn de entrada e portal de retorno. O escritório atual é apenas térreo.
+**Andares como cenas.** A unidade de navegação continua sendo a cena. Elevador e escadas são
+entidades `verticalAccess` que ligam o térreo do Tooq Office às alas pessoais públicas. Novos pisos
+reutilizam o mesmo contrato `targetScene`/`targetSpawn`, sem empilhar mapas no mesmo mundo Phaser.
 
 **Estrutura de mundo:**
 ```
-Mundo aberto editável (hub 96×72, expansível no Tiled)
-        ├── Escritório Tooq (cena térrea)
-        ├── Local/cena futura A
-        └── Local/cena futura B
+Cidade Tooq (hub cercado 220×150)
+        ├── Tooq Office ── elevador/escadas ── alas pessoais públicas
+        ├── Coworking
+        ├── Dark Company
+        └── Vila dos Jogadores ── 12 casas ── interior-base dinâmico
 ```
 
-**Primeiro corte implementado:** mundo aberto → porta da fachada → escritório + quintal privado →
-portão → hub. Objetos volumosos carregam footprints de colisão no JSON. Cenas fechadas podem manter
-limites de câmera explícitos; no hub a câmera usa toda a dimensão do mapa. O mesmo contrato de
-`portals[]` e `spawns` permite acrescentar novas cenas sem criar outra classe Phaser.
+**Fluxo atual:** cidade → fachada → interior/quintal → cidade. Objetos volumosos carregam footprints
+de colisão no mapa. As fachadas externas bloqueiam todo o retângulo ocupado pelo prédio e o portal
+fica acessível do lado de fora. No `scene.restart()`, o renderer limpa móveis, portas e prompts da
+cena anterior para não vazar ações como sentar ou pegar café para o mundo. Cenas fechadas podem
+manter limites de câmera explícitos; no hub a câmera usa toda a dimensão do mapa.
 
 **Equipamentos implementados:** `Tab` abre um loadout RPG persistente com seis slots (veículo,
 corrente, brincos, pulseira, teclado e mouse) e um baú com os itens disponíveis. Clicar no baú equipa
@@ -210,7 +214,7 @@ da sala; `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved`, `InventoryChan
 `ChestChanged` e `WorkSessionChanged` mantêm sessões abertas convergentes. Isso sincroniza mobília,
 não avatares: presença/movimento ainda precisa ganhar isolamento por `sceneId`.
 
-**Área-piloto de design (`tooq-office`):** 48×44 tiles com recepção, dois escritórios fechados, open
+**Coworking (`tooq-office`):** área-piloto de 48×44 tiles com recepção, dois escritórios fechados, open
 space, lounge, café e quintal privado. O Tiled expõe paletas curadas por uso; móveis multi-tile
 aceitam footprints explícitos e `anim_coffee` prova o fluxo de decoração animada orientada a dados.
 As estações seguem a composição do `Office_Design_2` (mesa, equipamento e cadeira), as salas usam
@@ -218,7 +222,7 @@ painéis brancos do room builder e porta interna deslizante automática do Moder
 sul dessas duas salas tem dois tiles; a porta abre ao aproximar, fecha ao afastar e
 habilita/desabilita a colisão junto com a animação.
 
-**Prédio novo (`tooq-office-1`):** a segunda cena de escritório, `225×153`, mobiliada em cima da
+**Dark Company (`tooq-office-1`):** a segunda cena de escritório, `225×153`, mobiliada em cima da
 casca vazia que já existia. Padrão diferente do piloto: as salas são **recortadas da própria casca**,
 encostadas nas paredes externas e **compartilhando a divisória** com a vizinha — sem corredor nas
 costas de sala nenhuma; a circulação são avenidas centrais alinhadas com as aberturas da casca. São
@@ -228,6 +232,27 @@ recepção. Portas animadas em todas as salas; o quintal é fechado por cerca-vi
 alinhado à saída sul, e o portal de volta ao mundo fica no portão. Foi **gerado por script aditivo**
 sobre a casca — a planta completa e as regras de parede estão em
 [`client-web/tiled/README.md`](client-web/tiled/README.md) §7.1.
+
+**Tooq Office (`tooq-campus` + `personal-wing`):** evolução paralela, sem regenerar o mapa testado.
+O prédio principal possui 5 salas de reunião, 10 salas 1×1, jogos, cozinha e 3 salas de estudos.
+As salas usam faixas contíguas com paredes compartilhadas e portas frontais; um eixo central
+contínuo conecta todas as fileiras à recepção. Prédio, corredores, salas e alas pessoais usam o
+mesmo piso de madeira. Elevador animado e escada completa usam sprites LimeZu no saguão e são
+portais `E` reais entre o térreo e as alas pessoais, com os dois meios disponíveis também para o
+retorno. O elevador fica em um poço técnico fechado e a escada tem blocker próprio separado do
+sensor frontal. O térreo possui saída física para um quintal caminhável; o portão sul usa `E` para
+voltar ao mundo aberto.
+Salas pessoais ocupam slots físicos em alas públicas de 12 cômodos; todos veem e entram, enquanto
+somente o dono decora. Cadastro provisiona `wingIndex`/`slotIndex`, mesa, kanban e skate básico.
+Loja, preços e propriedade de equipamentos agora vêm do backend; há dois modelos de cada base de
+locomoção. Arquitetura, estado e próximas fatias: [`docs/PLANO_CAMPUS_V2.md`](docs/PLANO_CAMPUS_V2.md).
+
+**Mundo aberto v2 (`world` + `player-home-shell`):** hub cercado de `220×150` tiles, com o Tooq
+Office central junto do spawn, Coworking e Dark Company afastados, malha de ruas, calçadas,
+vegetação e cenários. A Vila dos Jogadores ocupa a lateral leste com 12 casas físicas; cada fachada
+aponta para uma instância lógica (`player-home-shell@house-XX`) do mesmo interior vazio. O retorno
+é materializado para a porta correta, permitindo evoluir cada lote para uma casa comprável sem
+duplicar mapas.
 
 **Presença + voz por proximidade (feito):** o cliente Phaser conecta o hub de presença
 (`PresenceSystem.js`), renderiza avatares remotos interpolados (filtro de cena no cliente) e
@@ -290,16 +315,16 @@ paredes, pisos, móveis, exteriores, porta animada):
    `Join/Move/SetScene` e renderiza avatares remotos interpolados (filtro de cena no cliente).
    Ver [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md).
 2. **Adicionar handlers das próximas mecânicas** e seus templates tipados no Tiled.
-3. **Evoluir a economia de itens** com compra, drops, preços e permissões de sala.
-4. ✅ **Segunda cena de destino** — feito. O prédio novo (`tooq-office-1`) entrou no hub pelo mesmo
+3. **Ligar drops à progressão**; compra, preços, propriedade e permissões de sala já funcionam.
+4. ✅ **Segunda cena de destino** — feito. A Dark Company (`tooq-office-1`) entrou no hub pelo mesmo
    contrato de `portals[]`/`spawns`, provando que a arquitetura cresce além do escritório-piloto.
 5. ✅ **A/V por sala** (LiveKit JS) — feito. `ProximityVoice.js`: call isolado por sala declarada
-   ou pelo fone, mic/câmera/tela sob demanda. Falta sincronizar a posse do fone em rede e servir
-   café para outro jogador (ver o doc).
+   ou pelo fone, mic/câmera/tela sob demanda. Posse do fone e estado de reunião passam pela presença.
 6. **Redesenhar os frames `up`/`down` da folha `sit`** nas 23 folhas modulares — hoje são o `idle`
    com a perna encurtada, então sentar de frente/costas não presta (a estação contorna com `idle` de
    costas). É o que destrava sentar encarando o monitor de verdade.
-7. **Polimento visual e conteúdo** do escritório, preservando o mapa como dados do Tiled.
+7. **Persistir casas compráveis**: o vilarejo e os 12 destinos dinâmicos existem; falta propriedade,
+   compra e decoração independente do interior-base.
 
 ---
 

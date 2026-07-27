@@ -21,14 +21,14 @@ gamificação**. O backend em C# é a base definitiva do produto.
 
 ---
 
-## Estado (2026-07-19)
+## Estado (2026-07-27)
 
 | Peça | Estado |
 |---|---|
 | **backend/** — ASP.NET Core (.NET 10) + EF/SQLite + SignalR (porta **5210**) | ✅ Sólido — não refazer |
 | **wwwroot** — app web (kanban, sprints, horas, relatórios, perfil) | ✅ Funciona |
 | **livekit/** — SFU self-hosted (porta **7880**) | ✅ Funciona |
-| **client-web/** — Phaser multi-cena, Tiled direto, inventário e decoração persistentes | ✅ Corte vertical jogável; mobília sincronizada por SignalR |
+| **client-web/** — Phaser multi-cena, Tiled direto, inventário e decoração persistentes | ✅ Cidade, três empresas, campus, alas pessoais e casas futuras jogáveis |
 | **office-unity/** | ⏸️ Abandonado (arquivo) |
 | ~~Tauri (app de tasks)~~ | ❌ Cancelado — o app web cobre |
 
@@ -50,7 +50,8 @@ Push-Location .\backend\VirtualOffice.Api
 # Ctrl+C para encerrar; depois Pop-Location
 ```
 
-Abra **http://localhost:5210** para tasks/horas. Sem senha (protótipo).
+Abra **http://localhost:5210** para tasks/horas e autentique-se. O bypass por `X-User-Id` existe
+somente quando `Auth:DevBypass=true`.
 O SQLite (`backend/VirtualOffice.Api/office.db`) é criado e populado no primeiro boot — **apagar o
 arquivo com o backend parado reseta tudo**, inclusive inventário e decoração.
 
@@ -108,7 +109,7 @@ carrega estão versionados em `client-web/assets/`.
 | **Gamificação** | XP por horas e conclusão; níveis; drops; medalhas; ranking; skins; instâncias únicas de mobília e estoque finito |
 | **Integração office** | Entrar na Sala de Reunião **inicia lançamento de horas automático**; sentar na própria mesa inicia o timer da task ativa; "fone de reunião" permite circular sem sair da call |
 | **A/V** | LiveKit: mic/câmera/tela; token só é emitido se a pessoa está na reunião |
-| **Cliente Phaser** | Mundo aberto e escritório, Tiled direto, veículos, avatar modular, editor de salas, kanban/baú/estação e mobília sincronizada |
+| **Cliente Phaser** | Cidade cercada, Tooq Office, Coworking, Dark Company, alas pessoais públicas, 12 casas futuras, veículos, avatar modular, editor de salas e features reais de mobília |
 
 ## Arquitetura do backend
 
@@ -132,9 +133,9 @@ backend/VirtualOffice.Api      ASP.NET Core (.NET 10) + EF Core (SQLite) + Signa
 - **Auth**: login com Google Workspace + JWT próprio (ver [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md)).
   O antigo `X-User-Id` sobrevive só como fallback de dev (`Auth:DevBypass=true`); em produção
   defina `DevBypass=false` + credenciais Google. Calendar/Meet são o próximo incremento.
-- O cliente Phaser usa `userId=1` por padrão; use `?userId=2` para testar outro inventário.
-- SignalR já sincroniza **mobília e inventário** por sala. Presença de avatares por cena continua
-  sendo o próximo marco de rede.
+- Em desenvolvimento, `?userId=1` ativa o bypass; use `?userId=2` para testar outro inventário.
+- SignalR sincroniza **presença, aparência, claims, mobília e inventário**. Voz, câmera e tela usam
+  LiveKit por sala/reunião.
 - Aviso NuGet **NU1903** (SQLitePCLRaw): vulnerabilidade em dependência transitiva do SQLite;
   some ao migrar pra Postgres.
 - Postgres deve substituir o SQLite quando sair do protótipo.

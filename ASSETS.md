@@ -288,7 +288,33 @@ cadeiras/plantas (são clipboard/teclado/monitor). Confirme pela thumbnail no ed
   `office_door`. No runtime a porta interna usa `0→6` ao aproximar, `6→0` ao afastar e a colisão do
   vão acompanha esse ciclo.
 
-### 4.3 Receita de estação usada no mapa
+### 4.3 Acesso vertical do Campus v2
+
+- `client-web/assets/architecture/limezu_elevator_door.png`: spritesheet LimeZu **448×32**, 14
+  frames de 32×32. Origem:
+  `LimeZu/interiores/animados/spritesheets/animated_elevator_door_entrance_1.png`.
+- `client-web/assets/architecture/limezu_stairs_wood.png`: escada interna LimeZu **48×64**.
+  Origem:
+  `LimeZu/interiores/singles/Theme_Sorter/17_Visibile_Upstairs_System_16x16.png`
+  (recorte sem a barra de demonstração do catálogo).
+- Não redesenhar esses elementos com `Phaser.Graphics`: corrimão, degraus e portas já estão
+  resolvidos nos sprites originais. `VerticalAccessMechanic.js` carrega e posiciona os dois assets.
+- `visualX`/`visualY` posicionam o sprite na parede. O retângulo da entidade começa exatamente na
+  base visual e avança para o corredor: ele é o sensor de `E`, nunca o volume ocupado pela arte.
+  O elevador ainda desenha uma cabine escura atrás da folha e conserva a parede sólida do mapa.
+
+### 4.4 Footprints físicos
+
+- A fonte de verdade para móveis é `client-web/assets/furniture/catalog.json`.
+- Os sprites de 32×48 usam centro-inferior, mas vários objetos ocupam apenas a metade esquerda da
+  imagem. Por isso poltronas, cadeiras e plantas usam `collisionX=-0.5`; usar `0` desloca a caixa
+  um tile para a direita.
+- A colisão cobre somente a base/pés visíveis. Não prolongar a caixa abaixo do último pixel opaco:
+  isso cria paredes invisíveis e invade a pose sentada.
+- `tools/sync-furniture-collisions.mjs` aplica o catálogo a todos os TMJs. Execute após calibrar um
+  footprint; o script é idempotente.
+
+### 4.5 Receita de estação usada no mapa
 
 Uma estação coerente com o `Office_Design_2` é composta por três objetos na mesma área:
 
@@ -299,7 +325,7 @@ Uma estação coerente com o `Office_Design_2` é composta por três objetos na 
 O computador deve ser criado depois da mesa para ficar visualmente por cima. A cadeira permanece
 sem colisão para não prender o avatar em corredores estreitos.
 
-### 4.3.1 IDs com interação no inventário persistente
+### 4.5.1 IDs com interação no inventário persistente
 
 `GameInventorySeed.cs` transforma estes recortes em definições de item. O comportamento não fica no
 renderer; ele chega ao cliente como `InteractionType`:
@@ -309,25 +335,41 @@ renderer; ele chega ao cliente como `InteractionType`:
 | `kanban` | `of_171` | Abre o quadro e permite escolher a atividade ativa. |
 | `chest` | `of_176` | Guarda e retira instâncias; **placeholder visual de baú**. |
 | `workstation` | `of_225`, `227`, `229`, `231`, `233`, `235`, `317`, `318`, `319` | Inicia/encerra horas de uma atividade. |
-| `seat` | `of_196`–`199`, `306`, `307`, `315`, `316` | Procura uma estação a até 2,75 tiles e abre o fluxo de trabalho. |
-| `coffee` | `of_320`–`322` | Tira um café da bancada; o jogador sai carregando a xícara. |
+| `seat` | `of_196`–`199`, `306`, `307`, `315`, `316` | Senta no próprio assento e reserva a cadeira via claim de rede. |
+| `coffee` | `of_320`–`322` | Tira um café da bancada; a xícara é consumida sentado ou expira em pé. |
 
 Ao trocar um asset interativo, atualize juntos `assets/furniture/catalog.json`,
 `GameInventorySeed.cs` e esta tabela. Não use o ID visual como regra de negócio dentro de
 `main.js` ou `MapRenderer.js`.
 
-### 4.4 Equipamentos de locomoção
+### 4.6 Equipamentos de locomoção
 
 A busca nos packs LimeZu por skate, patins, patinete/scooter, moto e bicicleta não encontrou sprites
 pessoais compatíveis; o pack `Vehicles` contém carros, ônibus, barcos e veículos grandes. Para não
 confundir esses assets com os itens pedidos, a primeira versão desenha os quatro veículos como pixel
 art procedural no Phaser. O único recorte novo do pack é `Adam_sit.png`, auditado acima. Quando
 sprites dedicados forem adquiridos, eles podem substituir o desenho sem alterar o catálogo de
-velocidade nem a interação por Shift.
+velocidade nem a interação por Shift. O catálogo atual oferece **dois modelos de cada base visual**
+(skate, patins, patinete e moto); as variantes reutilizam a geometria procedural e mudam paleta,
+velocidade, raridade e preço.
+
+### 4.7 Fachadas e casas do mundo
+
+| Asset | Medida | Footprint no `world` |
+|---|---:|---:|
+| `office_tooq.png` | 304×288 px | 19×18 tiles |
+| `office_generic.png` | 304×288 px | 19×18 tiles |
+| `office_lime.png` | 192×304 px | 12×19 tiles |
+| `house_country.png` | 288×256 px | 18×16 tiles |
+| `house_japanese.png` | 240×240 px | 15×15 tiles |
+
+Esses sprites usam origem esquerda/inferior (`originX=0`, `originY=1`). A colisão externa cobre
+toda a caixa acima da base; não use somente uma faixa nos pés nem abra um corredor físico na porta.
+O sensor do portal fica sobre a borda inferior externa e é acionado pelo pé do avatar.
 
 ---
 
-### 4.3 Ruas e calçadas (`world/roads/*.png`)
+### 4.8 Ruas e calçadas (`world/roads/*.png`)
 
 Origem: `LimeZu/exteriores/theme-sorter/2_City_Terrains_Singles_16x16/`, famílias
 `Asphalt_1_Variation_*` e `Sidewalk_1_*` (das seis variações de calçada do pack, foi recortada só a
@@ -356,7 +398,7 @@ Origem: `LimeZu/exteriores/theme-sorter/2_City_Terrains_Singles_16x16/`, famíli
 
 ---
 
-### 4.4 Interiores: paredes, pisos e móveis de cômodo
+### 4.9 Interiores: paredes, pisos e móveis de cômodo
 
 Importados de `LimeZu/interiores/singles/` para dar variedade de acabamento e mobília além do
 escritório. Os móveis vêm dos **singles já recortados pelo pack** (`Theme_Sorter_Singles`, variante
@@ -403,7 +445,7 @@ Como as paletas `gates`, `access-control`, `fences` e `roads`, estas **não** es
 `tiled/palettes.json` — o runtime lê os tilesets direto do `.tmj`, mas o conversor legado não as
 conhece.
 
-### 4.5 Junção e vão de parede (`tiles/doorways/*.png`)
+### 4.10 Junção e vão de parede (`tiles/doorways/*.png`)
 
 **Junção — começar uma parede lateral na parede de trás.** O `room_builder.png` tem a parede
 horizontal em elevação (topo branco + face lavanda, 2 tiles) e a parede lateral como tira fina
@@ -434,7 +476,7 @@ branca é `356`/`388`, para a pedra `228`/`260`, para o tijolo `292`/`324`. Foi 
 33 salas do `tooq-office-1.tmj`; o mesmo par serve quando a divisória **cruza** a parede horizontal
 em vez de nascer nela (o caso das paredes sul das salas).
 
-### 4.6 Estações de trabalho montadas (`furniture/stations/*.png`)
+### 4.11 Estações de trabalho montadas (`furniture/stations/*.png`)
 
 Peças **compostas**, não recortadas: mesa + itens de bancada + cadeira de costas empilhados num único
 PNG de **32×64** (2×4 tiles). Todas as peças de `of_N` vêm num quadro de 32×48, então sobrepõem
@@ -473,7 +515,7 @@ decrescente ao longo da borda frontal da mesa. O LimeZu não tem nada gamer.
 Coloque em `Objetos · Móveis` com **Insert Tile** (`T`); a origem é o centro inferior, então o clique
 cai nos pés da cadeira. Não têm colisão — se precisar bloquear, desenhe em `Objetos · Colisões`.
 
-### 4.7 Vão de parede (`tiles/doorways/doorway_*.png`)
+### 4.12 Vão de parede (`tiles/doorways/doorway_*.png`)
 
 Peça **montada**, não recortada de pack: as seis peças de `17 · Interiores · Vãos de parede` foram
 compostas a partir das cores exatas dos tiles 177 (topo) e 193 (face) do `room_builder.png`, para

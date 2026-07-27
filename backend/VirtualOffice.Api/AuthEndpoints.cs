@@ -68,6 +68,8 @@ public static class AuthEndpoints
             {
                 user = await UpsertAsync(db, profile, protector);
             }
+            // O mesmo provisionamento atende cadastro local e primeiro login Google.
+            await GameInventorySeed.EnsureUserStockAsync(db, user.Id);
             var access = AppJwt.IssueAccessToken(user);
             var refresh = await AppJwt.IssueRefreshTokenAsync(db, user.Id);
             var fragment = $"access_token={Uri.EscapeDataString(access)}" +

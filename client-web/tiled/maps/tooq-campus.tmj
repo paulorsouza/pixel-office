@@ -1,0 +1,8055 @@
+{
+  "compressionlevel": -1,
+  "height": 162,
+  "width": 152,
+  "infinite": false,
+  "layers": [
+    {
+      "id": 100,
+      "name": "Pincel · Desenho livre",
+      "type": "tilelayer",
+      "width": 1,
+      "height": 1,
+      "data": [
+        0
+      ],
+      "visible": true,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "visual"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "value": "free-draw"
+        },
+        {
+          "name": "depth",
+          "type": "int",
+          "value": -85
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Objetos · Prédio",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 176,
+          "name": "Quintal do campus",
+          "type": "yard",
+          "x": 0,
+          "y": 0,
+          "width": 2432,
+          "height": 2592,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "ground",
+              "type": "string",
+              "value": "grass"
+            }
+          ]
+        },
+        {
+          "id": 177,
+          "name": "Prédio principal",
+          "type": "building",
+          "x": 224,
+          "y": 512,
+          "width": 1984,
+          "height": 1792,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            }
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "structures"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Objetos · Zonas abertas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 178,
+          "name": "Recepção e convivência",
+          "type": "zone",
+          "x": 240,
+          "y": 1936,
+          "width": 1952,
+          "height": 352,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "reception"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            }
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "zones"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Objetos · Salas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 1,
+          "name": "Sala Aurora",
+          "type": "room",
+          "x": 224,
+          "y": 512,
+          "width": 320,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "meeting-1"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"stone\",\"southWall3d\":true,\"meeting\":true}"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Sala Vega",
+          "type": "room",
+          "x": 528,
+          "y": 512,
+          "width": 320,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "meeting-2"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"stone\",\"southWall3d\":true,\"meeting\":true}"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "Sala Órion",
+          "type": "room",
+          "x": 832,
+          "y": 512,
+          "width": 304,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "meeting-3"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"stone\",\"southWall3d\":true,\"meeting\":true}"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "Sala Íris",
+          "type": "room",
+          "x": 1312,
+          "y": 512,
+          "width": 464,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "meeting-4"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"stone\",\"southWall3d\":true,\"meeting\":true}"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "name": "Sala Atlas",
+          "type": "room",
+          "x": 1760,
+          "y": 512,
+          "width": 448,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "meeting-5"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"stone\",\"southWall3d\":true,\"meeting\":true}"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "name": "Sala 1×1 1",
+          "type": "room",
+          "x": 224,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-1"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "name": "Sala 1×1 2",
+          "type": "room",
+          "x": 400,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-2"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "name": "Sala 1×1 3",
+          "type": "room",
+          "x": 576,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-3"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "name": "Sala 1×1 4",
+          "type": "room",
+          "x": 752,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-4"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "name": "Sala 1×1 5",
+          "type": "room",
+          "x": 928,
+          "y": 896,
+          "width": 208,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-5"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "name": "Sala 1×1 6",
+          "type": "room",
+          "x": 1312,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-6"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "Sala 1×1 7",
+          "type": "room",
+          "x": 1488,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-7"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "name": "Sala 1×1 8",
+          "type": "room",
+          "x": 1664,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-8"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "name": "Sala 1×1 9",
+          "type": "room",
+          "x": 1840,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-9"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 15,
+          "name": "Sala 1×1 10",
+          "type": "room",
+          "x": 2016,
+          "y": 896,
+          "width": 192,
+          "height": 176,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-10"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "name": "Sala de jogos",
+          "type": "room",
+          "x": 224,
+          "y": 1184,
+          "width": 912,
+          "height": 352,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "games"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "name": "Cozinha",
+          "type": "room",
+          "x": 1312,
+          "y": 1184,
+          "width": 464,
+          "height": 352,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "kitchen"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 18,
+          "name": "Sala de estudos 1",
+          "type": "room",
+          "x": 1760,
+          "y": 1184,
+          "width": 448,
+          "height": 352,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "study-1"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "name": "Sala de estudos 2",
+          "type": "room",
+          "x": 224,
+          "y": 1648,
+          "width": 912,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "study-2"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 20,
+          "name": "Sala de estudos 3",
+          "type": "room",
+          "x": 1312,
+          "y": 1648,
+          "width": 896,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "study-3"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true}"
+            }
+          ]
+        },
+        {
+          "id": 21,
+          "name": "",
+          "type": "room",
+          "x": 832,
+          "y": 2144,
+          "width": 80,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "elevator-shaft"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "wood"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true,\"hideLabel\":true}"
+            }
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "rooms"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Objetos · Móveis",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 42,
+          "name": "of_171",
+          "type": "",
+          "x": 392,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_171"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "kanban"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-1:kanban"
+            }
+          ],
+          "gid": 4253
+        },
+        {
+          "id": 43,
+          "name": "of_172",
+          "type": "",
+          "x": 440,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_172"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "timeclock"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-1:clock"
+            }
+          ],
+          "gid": 4254
+        },
+        {
+          "id": 44,
+          "name": "station_white_dual",
+          "type": "",
+          "x": 392,
+          "y": 704,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-1:station"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5180
+        },
+        {
+          "id": 45,
+          "name": "of_196",
+          "type": "",
+          "x": 328,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 46,
+          "name": "of_197",
+          "type": "",
+          "x": 472,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 47,
+          "name": "of_171",
+          "type": "",
+          "x": 696,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_171"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "kanban"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-2:kanban"
+            }
+          ],
+          "gid": 4253
+        },
+        {
+          "id": 48,
+          "name": "of_172",
+          "type": "",
+          "x": 744,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_172"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "timeclock"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-2:clock"
+            }
+          ],
+          "gid": 4254
+        },
+        {
+          "id": 49,
+          "name": "station_white_dual",
+          "type": "",
+          "x": 696,
+          "y": 704,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-2:station"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5180
+        },
+        {
+          "id": 50,
+          "name": "of_196",
+          "type": "",
+          "x": 632,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 51,
+          "name": "of_197",
+          "type": "",
+          "x": 776,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 52,
+          "name": "of_171",
+          "type": "",
+          "x": 1000,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_171"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "kanban"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-3:kanban"
+            }
+          ],
+          "gid": 4253
+        },
+        {
+          "id": 53,
+          "name": "of_172",
+          "type": "",
+          "x": 1048,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_172"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "timeclock"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-3:clock"
+            }
+          ],
+          "gid": 4254
+        },
+        {
+          "id": 54,
+          "name": "station_white_dual",
+          "type": "",
+          "x": 1000,
+          "y": 704,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-3:station"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5180
+        },
+        {
+          "id": 55,
+          "name": "of_196",
+          "type": "",
+          "x": 936,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 56,
+          "name": "of_197",
+          "type": "",
+          "x": 1080,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 57,
+          "name": "of_171",
+          "type": "",
+          "x": 1480,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_171"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "kanban"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-4:kanban"
+            }
+          ],
+          "gid": 4253
+        },
+        {
+          "id": 58,
+          "name": "of_172",
+          "type": "",
+          "x": 1528,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_172"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "timeclock"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-4:clock"
+            }
+          ],
+          "gid": 4254
+        },
+        {
+          "id": 59,
+          "name": "station_white_dual",
+          "type": "",
+          "x": 1480,
+          "y": 704,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-4:station"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5180
+        },
+        {
+          "id": 60,
+          "name": "of_196",
+          "type": "",
+          "x": 1416,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 61,
+          "name": "of_197",
+          "type": "",
+          "x": 1560,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 62,
+          "name": "of_171",
+          "type": "",
+          "x": 1928,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_171"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "kanban"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-5:kanban"
+            }
+          ],
+          "gid": 4253
+        },
+        {
+          "id": 63,
+          "name": "of_172",
+          "type": "",
+          "x": 1976,
+          "y": 584,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_172"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "timeclock"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-5:clock"
+            }
+          ],
+          "gid": 4254
+        },
+        {
+          "id": 64,
+          "name": "station_white_dual",
+          "type": "",
+          "x": 1928,
+          "y": 704,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "meeting-5:station"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5180
+        },
+        {
+          "id": 65,
+          "name": "of_196",
+          "type": "",
+          "x": 1864,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 66,
+          "name": "of_197",
+          "type": "",
+          "x": 2008,
+          "y": 720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 67,
+          "name": "of_196",
+          "type": "",
+          "x": 280,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 68,
+          "name": "of_197",
+          "type": "",
+          "x": 360,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 69,
+          "name": "of_196",
+          "type": "",
+          "x": 456,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 70,
+          "name": "of_197",
+          "type": "",
+          "x": 536,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 71,
+          "name": "of_196",
+          "type": "",
+          "x": 632,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 72,
+          "name": "of_197",
+          "type": "",
+          "x": 712,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 73,
+          "name": "of_196",
+          "type": "",
+          "x": 808,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 74,
+          "name": "of_197",
+          "type": "",
+          "x": 888,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 75,
+          "name": "of_196",
+          "type": "",
+          "x": 984,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 76,
+          "name": "of_197",
+          "type": "",
+          "x": 1064,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 77,
+          "name": "of_196",
+          "type": "",
+          "x": 1368,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 78,
+          "name": "of_197",
+          "type": "",
+          "x": 1448,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 79,
+          "name": "of_196",
+          "type": "",
+          "x": 1544,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 80,
+          "name": "of_197",
+          "type": "",
+          "x": 1624,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 81,
+          "name": "of_196",
+          "type": "",
+          "x": 1720,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 82,
+          "name": "of_197",
+          "type": "",
+          "x": 1800,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 83,
+          "name": "of_196",
+          "type": "",
+          "x": 1896,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 84,
+          "name": "of_197",
+          "type": "",
+          "x": 1976,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 85,
+          "name": "of_196",
+          "type": "",
+          "x": 2072,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 86,
+          "name": "of_197",
+          "type": "",
+          "x": 2152,
+          "y": 1008,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 87,
+          "name": "of_170",
+          "type": "",
+          "x": 1992,
+          "y": 1256,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_170"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "whiteboard"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-1:whiteboard"
+            }
+          ],
+          "gid": 4252
+        },
+        {
+          "id": 88,
+          "name": "station_white_pc",
+          "type": "",
+          "x": 1912,
+          "y": 1392,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_pc"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-1:station-a"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5181
+        },
+        {
+          "id": 89,
+          "name": "station_dark_dual",
+          "type": "",
+          "x": 2056,
+          "y": 1392,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_dark_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-1:station-b"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5183
+        },
+        {
+          "id": 90,
+          "name": "of_170",
+          "type": "",
+          "x": 680,
+          "y": 1720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_170"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "whiteboard"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-2:whiteboard"
+            }
+          ],
+          "gid": 4252
+        },
+        {
+          "id": 91,
+          "name": "station_white_pc",
+          "type": "",
+          "x": 536,
+          "y": 1856,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_pc"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-2:station-a"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5181
+        },
+        {
+          "id": 92,
+          "name": "station_dark_dual",
+          "type": "",
+          "x": 824,
+          "y": 1856,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_dark_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-2:station-b"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5183
+        },
+        {
+          "id": 93,
+          "name": "of_170",
+          "type": "",
+          "x": 1768,
+          "y": 1720,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_170"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "whiteboard"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-3:whiteboard"
+            }
+          ],
+          "gid": 4252
+        },
+        {
+          "id": 94,
+          "name": "station_white_pc",
+          "type": "",
+          "x": 1624,
+          "y": 1856,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_white_pc"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-3:station-a"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5181
+        },
+        {
+          "id": 95,
+          "name": "station_dark_dual",
+          "type": "",
+          "x": 1896,
+          "y": 1856,
+          "width": 32,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "station_dark_dual"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "study-3:station-b"
+            },
+            {
+              "name": "seatX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -1.625
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "idle"
+            },
+            {
+              "name": "seatCover",
+              "type": "int",
+              "value": 20
+            }
+          ],
+          "gid": 5183
+        },
+        {
+          "id": 96,
+          "name": "of_320",
+          "type": "",
+          "x": 1480,
+          "y": 1328,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_320"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.3
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 1.65
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.55
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "coffee"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "kitchen:coffee-a"
+            }
+          ],
+          "gid": 4402
+        },
+        {
+          "id": 97,
+          "name": "of_321",
+          "type": "",
+          "x": 1576,
+          "y": 1328,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_321"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.3
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 1.65
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.55
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "coffee"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "kitchen:coffee-b"
+            }
+          ],
+          "gid": 4403
+        },
+        {
+          "id": 98,
+          "name": "of_196",
+          "type": "",
+          "x": 1512,
+          "y": 1440,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_196"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4278
+        },
+        {
+          "id": 99,
+          "name": "of_197",
+          "type": "",
+          "x": 1736,
+          "y": 1440,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_197"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "seat"
+            },
+            {
+              "name": "seatX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "seatY",
+              "type": "float",
+              "value": -0.875
+            },
+            {
+              "name": "seatDir",
+              "type": "string",
+              "value": "left"
+            },
+            {
+              "name": "seatPose",
+              "type": "string",
+              "value": "sit"
+            }
+          ],
+          "gid": 4279
+        },
+        {
+          "id": 100,
+          "name": "of_323",
+          "type": "",
+          "x": 664,
+          "y": 2160,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_323"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.3
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 1.6
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.55
+            },
+            {
+              "name": "solid",
+              "type": "bool",
+              "value": true
+            }
+          ],
+          "gid": 4405
+        },
+        {
+          "id": 101,
+          "name": "of_172",
+          "type": "",
+          "x": 744,
+          "y": 2088,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_172"
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "timeclock"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "reception:clock"
+            }
+          ],
+          "gid": 4254
+        },
+        {
+          "id": 102,
+          "name": "of_175",
+          "type": "",
+          "x": 1704,
+          "y": 2160,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_175"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.25
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 1.5
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.55
+            },
+            {
+              "name": "interactionType",
+              "type": "string",
+              "value": "store"
+            },
+            {
+              "name": "interactionKey",
+              "type": "string",
+              "value": "reception:store"
+            },
+            {
+              "name": "solid",
+              "type": "bool",
+              "value": true
+            }
+          ],
+          "gid": 4257
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "furniture"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Objetos · Portas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 22,
+          "name": "Porta · meeting-1",
+          "type": "door",
+          "x": 368,
+          "y": 800,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-1"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 23,
+          "name": "Porta · meeting-2",
+          "type": "door",
+          "x": 672,
+          "y": 800,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-2"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 24,
+          "name": "Porta · meeting-3",
+          "type": "door",
+          "x": 960,
+          "y": 800,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-3"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 25,
+          "name": "Porta · meeting-4",
+          "type": "door",
+          "x": 1520,
+          "y": 800,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-4"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 26,
+          "name": "Porta · meeting-5",
+          "type": "door",
+          "x": 1968,
+          "y": 800,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-5"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 27,
+          "name": "Porta · one-on-one-1",
+          "type": "door",
+          "x": 304,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-1"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 28,
+          "name": "Porta · one-on-one-2",
+          "type": "door",
+          "x": 480,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-2"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "name": "Porta · one-on-one-3",
+          "type": "door",
+          "x": 656,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-3"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 30,
+          "name": "Porta · one-on-one-4",
+          "type": "door",
+          "x": 832,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-4"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 31,
+          "name": "Porta · one-on-one-5",
+          "type": "door",
+          "x": 1008,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-5"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 32,
+          "name": "Porta · one-on-one-6",
+          "type": "door",
+          "x": 1392,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-6"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "name": "Porta · one-on-one-7",
+          "type": "door",
+          "x": 1568,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-7"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 34,
+          "name": "Porta · one-on-one-8",
+          "type": "door",
+          "x": 1744,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-8"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 35,
+          "name": "Porta · one-on-one-9",
+          "type": "door",
+          "x": 1920,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-9"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 36,
+          "name": "Porta · one-on-one-10",
+          "type": "door",
+          "x": 2096,
+          "y": 1072,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "one-on-one-10"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 37,
+          "name": "Porta · games",
+          "type": "door",
+          "x": 656,
+          "y": 1536,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "games"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 38,
+          "name": "Porta · kitchen",
+          "type": "door",
+          "x": 1520,
+          "y": 1536,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "kitchen"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 39,
+          "name": "Porta · study-1",
+          "type": "door",
+          "x": 1968,
+          "y": 1536,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "study-1"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 40,
+          "name": "Porta · study-2",
+          "type": "door",
+          "x": 656,
+          "y": 1936,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "study-2"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 41,
+          "name": "Porta · study-3",
+          "type": "door",
+          "x": 1744,
+          "y": 1936,
+          "width": 32,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "study-3"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "interior_sliding_door"
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true}"
+            }
+          ]
+        },
+        {
+          "id": 111,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 1184,
+          "y": 2304,
+          "width": 64,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "S"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 112,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 224,
+          "y": 2080,
+          "width": 0,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "W"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 113,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 2208,
+          "y": 2080,
+          "width": 0,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "E"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 114,
+          "name": "Porta · games",
+          "type": "door",
+          "x": 224,
+          "y": 1328,
+          "width": 0,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "games"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "W"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 115,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 224,
+          "y": 1328,
+          "width": 0,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "W"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 116,
+          "name": "Porta · study-1",
+          "type": "door",
+          "x": 2208,
+          "y": 1328,
+          "width": 0,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "study-1"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "E"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 117,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 2208,
+          "y": 1328,
+          "width": 0,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "E"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 107,
+          "name": "Porta · meeting-1",
+          "type": "door",
+          "x": 368,
+          "y": 512,
+          "width": 48,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-1"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "N"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 108,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 368,
+          "y": 512,
+          "width": 48,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "N"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 109,
+          "name": "Porta · meeting-5",
+          "type": "door",
+          "x": 1968,
+          "y": 512,
+          "width": 48,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "meeting-5"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "N"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        },
+        {
+          "id": 110,
+          "name": "Porta · building",
+          "type": "door",
+          "x": 1968,
+          "y": 512,
+          "width": 48,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "parent",
+              "type": "string",
+              "value": "building"
+            },
+            {
+              "name": "side",
+              "type": "string",
+              "value": "N"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "frame",
+              "type": "int",
+              "value": 6
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"automatic\":true,\"openExit\":true}"
+            }
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "doors"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Objetos · Jardim",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 179,
+          "name": "Passeio dos fundos",
+          "type": "path",
+          "x": 192,
+          "y": 416,
+          "width": 2048,
+          "height": 96,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 180,
+          "name": "Praça dos fundos",
+          "type": "path",
+          "x": 1056,
+          "y": 176,
+          "width": 320,
+          "height": 144,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 181,
+          "name": "Caminho traseiro esquerdo",
+          "type": "path",
+          "x": 336,
+          "y": 0,
+          "width": 96,
+          "height": 512,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 182,
+          "name": "Caminho traseiro direito",
+          "type": "path",
+          "x": 2000,
+          "y": 0,
+          "width": 96,
+          "height": 512,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 183,
+          "name": "Passeio lateral oeste",
+          "type": "path",
+          "x": 128,
+          "y": 480,
+          "width": 96,
+          "height": 1904,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 184,
+          "name": "Passeio lateral leste",
+          "type": "path",
+          "x": 2208,
+          "y": 480,
+          "width": 96,
+          "height": 1904,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 185,
+          "name": "Terraço frontal",
+          "type": "path",
+          "x": 192,
+          "y": 2304,
+          "width": 2048,
+          "height": 80,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 186,
+          "name": "Caminho frontal",
+          "type": "path",
+          "x": 1168,
+          "y": 2304,
+          "width": 96,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 187,
+          "name": "Saída oeste jogos",
+          "type": "path",
+          "x": 0,
+          "y": 1312,
+          "width": 224,
+          "height": 96,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 188,
+          "name": "Saída leste estudos",
+          "type": "path",
+          "x": 2208,
+          "y": 1312,
+          "width": 224,
+          "height": 96,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 189,
+          "name": "Saída oeste recepção",
+          "type": "path",
+          "x": 0,
+          "y": 2048,
+          "width": 224,
+          "height": 128,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 190,
+          "name": "Saída leste recepção",
+          "type": "path",
+          "x": 2208,
+          "y": 2048,
+          "width": 224,
+          "height": 128,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "cream"
+            }
+          ]
+        },
+        {
+          "id": 118,
+          "name": "fountain",
+          "type": "prop",
+          "x": 1216,
+          "y": 240,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "fountain"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.8
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.8
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 1.6
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.8
+            }
+          ],
+          "gid": 5192
+        },
+        {
+          "id": 119,
+          "name": "bench",
+          "type": "prop",
+          "x": 976,
+          "y": 320,
+          "width": 48,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bench"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            }
+          ],
+          "gid": 5187
+        },
+        {
+          "id": 120,
+          "name": "bench",
+          "type": "prop",
+          "x": 1456,
+          "y": 320,
+          "width": 48,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bench"
+            },
+            {
+              "name": "flipX",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            }
+          ],
+          "gid": 5187
+        },
+        {
+          "id": 121,
+          "name": "tree1",
+          "type": "prop",
+          "x": 608,
+          "y": 176,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 122,
+          "name": "tree2",
+          "type": "prop",
+          "x": 1824,
+          "y": 176,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 123,
+          "name": "tree2",
+          "type": "prop",
+          "x": 784,
+          "y": 384,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 124,
+          "name": "tree1",
+          "type": "prop",
+          "x": 1648,
+          "y": 384,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 125,
+          "name": "bush1",
+          "type": "prop",
+          "x": 864,
+          "y": 208,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 126,
+          "name": "bush2",
+          "type": "prop",
+          "x": 1568,
+          "y": 208,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 127,
+          "name": "flower1",
+          "type": "prop",
+          "x": 928,
+          "y": 272,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "flower1"
+            }
+          ],
+          "gid": 5190
+        },
+        {
+          "id": 128,
+          "name": "flower2",
+          "type": "prop",
+          "x": 1504,
+          "y": 272,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "flower2"
+            }
+          ],
+          "gid": 5191
+        },
+        {
+          "id": 129,
+          "name": "tree1",
+          "type": "prop",
+          "x": 112,
+          "y": 688,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 130,
+          "name": "tree2",
+          "type": "prop",
+          "x": 2320,
+          "y": 768,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 131,
+          "name": "tree2",
+          "type": "prop",
+          "x": 96,
+          "y": 1072,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 132,
+          "name": "tree1",
+          "type": "prop",
+          "x": 2336,
+          "y": 1168,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 133,
+          "name": "tree1",
+          "type": "prop",
+          "x": 96,
+          "y": 1680,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 134,
+          "name": "tree2",
+          "type": "prop",
+          "x": 2336,
+          "y": 1616,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 135,
+          "name": "tree2",
+          "type": "prop",
+          "x": 80,
+          "y": 1376,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 136,
+          "name": "tree1",
+          "type": "prop",
+          "x": 2352,
+          "y": 1376,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 137,
+          "name": "bush1",
+          "type": "prop",
+          "x": 128,
+          "y": 880,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 138,
+          "name": "bush2",
+          "type": "prop",
+          "x": 2304,
+          "y": 944,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 139,
+          "name": "flower2",
+          "type": "prop",
+          "x": 128,
+          "y": 1472,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "flower2"
+            }
+          ],
+          "gid": 5191
+        },
+        {
+          "id": 140,
+          "name": "flower1",
+          "type": "prop",
+          "x": 2304,
+          "y": 1456,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "flower1"
+            }
+          ],
+          "gid": 5190
+        },
+        {
+          "id": 141,
+          "name": "bench",
+          "type": "prop",
+          "x": 128,
+          "y": 1856,
+          "width": 48,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bench"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            }
+          ],
+          "gid": 5187
+        },
+        {
+          "id": 142,
+          "name": "bench",
+          "type": "prop",
+          "x": 2304,
+          "y": 1856,
+          "width": 48,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bench"
+            },
+            {
+              "name": "flipX",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            }
+          ],
+          "gid": 5187
+        },
+        {
+          "id": 143,
+          "name": "tree1",
+          "type": "prop",
+          "x": 464,
+          "y": 2464,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree1"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5213
+        },
+        {
+          "id": 144,
+          "name": "tree2",
+          "type": "prop",
+          "x": 1968,
+          "y": 2464,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree2"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -1.4
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": -1.2
+            },
+            {
+              "name": "collisionW",
+              "type": "float",
+              "value": 2.8
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 1.2
+            }
+          ],
+          "gid": 5214
+        },
+        {
+          "id": 145,
+          "name": "bush1",
+          "type": "prop",
+          "x": 768,
+          "y": 2448,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 146,
+          "name": "bush2",
+          "type": "prop",
+          "x": 1664,
+          "y": 2448,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 147,
+          "name": "flower1",
+          "type": "prop",
+          "x": 912,
+          "y": 2416,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "flower1"
+            }
+          ],
+          "gid": 5190
+        },
+        {
+          "id": 148,
+          "name": "flower2",
+          "type": "prop",
+          "x": 1520,
+          "y": 2416,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "flower2"
+            }
+          ],
+          "gid": 5191
+        },
+        {
+          "id": 149,
+          "name": "bush1",
+          "type": "prop",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 150,
+          "name": "bush1",
+          "type": "prop",
+          "x": 320,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 151,
+          "name": "bush1",
+          "type": "prop",
+          "x": 544,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 152,
+          "name": "bush1",
+          "type": "prop",
+          "x": 768,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 153,
+          "name": "bush1",
+          "type": "prop",
+          "x": 992,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 154,
+          "name": "bush1",
+          "type": "prop",
+          "x": 1216,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 155,
+          "name": "bush1",
+          "type": "prop",
+          "x": 1440,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 156,
+          "name": "bush1",
+          "type": "prop",
+          "x": 1664,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 157,
+          "name": "bush1",
+          "type": "prop",
+          "x": 1888,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 158,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 159,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2336,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 160,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 256,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 161,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 256,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 162,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 528,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 163,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 528,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 164,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 800,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 165,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 800,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 166,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 1072,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 167,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 1072,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 168,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 1344,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 169,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 1344,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 170,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 1616,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 171,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 1616,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 172,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 1888,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 173,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 1888,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        },
+        {
+          "id": 174,
+          "name": "bush2",
+          "type": "prop",
+          "x": 48,
+          "y": 2160,
+          "width": 16,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush2"
+            }
+          ],
+          "gid": 5189
+        },
+        {
+          "id": 175,
+          "name": "bush1",
+          "type": "prop",
+          "x": 2384,
+          "y": 2160,
+          "width": 16,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "bush1"
+            }
+          ],
+          "gid": 5188
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "landscape"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Objetos · Colisões",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 191,
+          "name": "Limite norte",
+          "type": "collision",
+          "x": 0,
+          "y": 0,
+          "width": 2432,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        },
+        {
+          "id": 192,
+          "name": "Limite oeste",
+          "type": "collision",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 2592,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        },
+        {
+          "id": 193,
+          "name": "Limite leste",
+          "type": "collision",
+          "x": 2416,
+          "y": 0,
+          "width": 16,
+          "height": 2592,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        },
+        {
+          "id": 194,
+          "name": "Limite sul",
+          "type": "collision",
+          "x": 0,
+          "y": 2576,
+          "width": 2432,
+          "height": 16,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "collisions"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Objetos · Navegação",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 195,
+          "name": "default",
+          "type": "spawn",
+          "x": 1224,
+          "y": 2224,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "default"
+            }
+          ]
+        },
+        {
+          "id": 196,
+          "name": "entrance",
+          "type": "spawn",
+          "x": 1224,
+          "y": 2416,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "entrance"
+            }
+          ]
+        },
+        {
+          "id": 197,
+          "name": "from-personal-wing",
+          "type": "spawn",
+          "x": 880,
+          "y": 2272,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-personal-wing"
+            }
+          ]
+        },
+        {
+          "id": 198,
+          "name": "from-personal-wing-elevator",
+          "type": "spawn",
+          "x": 880,
+          "y": 2272,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-personal-wing-elevator"
+            }
+          ]
+        },
+        {
+          "id": 199,
+          "name": "from-personal-wing-stairs",
+          "type": "spawn",
+          "x": 1408,
+          "y": 2080,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-personal-wing-stairs"
+            }
+          ]
+        },
+        {
+          "id": 200,
+          "name": "from-yard",
+          "type": "spawn",
+          "x": 1224,
+          "y": 2368,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-yard"
+            }
+          ]
+        },
+        {
+          "id": 201,
+          "name": "yard-center",
+          "type": "spawn",
+          "x": 1224,
+          "y": 240,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "yard-center"
+            }
+          ]
+        },
+        {
+          "id": 202,
+          "name": "circulation-top",
+          "type": "spawn",
+          "x": 1224,
+          "y": 832,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "circulation-top"
+            }
+          ]
+        },
+        {
+          "id": 203,
+          "name": "circulation-middle",
+          "type": "spawn",
+          "x": 1224,
+          "y": 1584,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "circulation-middle"
+            }
+          ]
+        },
+        {
+          "id": 204,
+          "name": "qa-elevator",
+          "type": "spawn",
+          "x": 880,
+          "y": 2224,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-elevator"
+            }
+          ]
+        },
+        {
+          "id": 205,
+          "name": "qa-stairs",
+          "type": "spawn",
+          "x": 1408,
+          "y": 2032,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-stairs"
+            }
+          ]
+        },
+        {
+          "id": 206,
+          "name": "qa-meeting",
+          "type": "spawn",
+          "x": 392,
+          "y": 720,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-meeting"
+            }
+          ]
+        },
+        {
+          "id": 207,
+          "name": "qa-kitchen",
+          "type": "spawn",
+          "x": 1544,
+          "y": 1440,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-kitchen"
+            }
+          ]
+        },
+        {
+          "id": 208,
+          "name": "qa-yard-fountain",
+          "type": "spawn",
+          "x": 1224,
+          "y": 288,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-yard-fountain"
+            }
+          ]
+        },
+        {
+          "id": 209,
+          "name": "qa-yard-west",
+          "type": "spawn",
+          "x": 152,
+          "y": 1392,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-yard-west"
+            }
+          ]
+        },
+        {
+          "id": 210,
+          "name": "qa-yard-east",
+          "type": "spawn",
+          "x": 2296,
+          "y": 1392,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-yard-east"
+            }
+          ]
+        },
+        {
+          "id": 211,
+          "name": "qa-yard-front",
+          "type": "spawn",
+          "x": 1224,
+          "y": 2448,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-yard-front"
+            }
+          ]
+        },
+        {
+          "id": 212,
+          "name": "qa-rear-exit",
+          "type": "spawn",
+          "x": 376,
+          "y": 560,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-rear-exit"
+            }
+          ]
+        },
+        {
+          "id": 213,
+          "name": "qa-edge-south",
+          "type": "spawn",
+          "x": 1224,
+          "y": 2560,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "qa-edge-south"
+            }
+          ]
+        },
+        {
+          "id": 214,
+          "name": "one-on-one-left",
+          "type": "spawn",
+          "x": 328,
+          "y": 1008,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-left"
+            }
+          ]
+        },
+        {
+          "id": 215,
+          "name": "one-on-one-right",
+          "type": "spawn",
+          "x": 2104,
+          "y": 1008,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-right"
+            }
+          ]
+        },
+        {
+          "id": 216,
+          "name": "one-on-one-left-door",
+          "type": "spawn",
+          "x": 328,
+          "y": 1104,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "one-on-one-left-door"
+            }
+          ]
+        },
+        {
+          "id": 217,
+          "name": "yard-exit-north",
+          "type": "portal",
+          "x": 0,
+          "y": 0,
+          "width": 2432,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "yard-exit-north"
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "world"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-campus"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Voltar ao mundo aberto"
+            }
+          ]
+        },
+        {
+          "id": 218,
+          "name": "yard-exit-south",
+          "type": "portal",
+          "x": 0,
+          "y": 2560,
+          "width": 2432,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "yard-exit-south"
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "world"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-campus"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Voltar ao mundo aberto"
+            }
+          ]
+        },
+        {
+          "id": 219,
+          "name": "yard-exit-west",
+          "type": "portal",
+          "x": 0,
+          "y": 32,
+          "width": 32,
+          "height": 2528,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "yard-exit-west"
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "world"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-campus"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Voltar ao mundo aberto"
+            }
+          ]
+        },
+        {
+          "id": 220,
+          "name": "yard-exit-east",
+          "type": "portal",
+          "x": 2400,
+          "y": 32,
+          "width": 32,
+          "height": 2528,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "yard-exit-east"
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "world"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-campus"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Voltar ao mundo aberto"
+            }
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "navigation"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Objetos · Câmera",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 221,
+          "name": "Limite da câmera",
+          "type": "camera",
+          "x": 0,
+          "y": 0,
+          "width": 2432,
+          "height": 2592,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "camera"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Objetos · Mecânicas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 103,
+          "name": "Xadrez A",
+          "type": "chess",
+          "x": 384,
+          "y": 1296,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "games-chess-a"
+            },
+            {
+              "name": "boardId",
+              "type": "string",
+              "value": "campus-games-a"
+            }
+          ]
+        },
+        {
+          "id": 104,
+          "name": "Xadrez B",
+          "type": "chess",
+          "x": 672,
+          "y": 1296,
+          "width": 48,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "games-chess-b"
+            },
+            {
+              "name": "boardId",
+              "type": "string",
+              "value": "campus-games-b"
+            }
+          ]
+        },
+        {
+          "id": 105,
+          "name": "Núcleo · elevador",
+          "type": "verticalAccess",
+          "x": 824,
+          "y": 2192,
+          "width": 96,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "campus-elevator"
+            },
+            {
+              "name": "accessType",
+              "type": "string",
+              "value": "elevator"
+            },
+            {
+              "name": "visualX",
+              "type": "float",
+              "value": 54.5
+            },
+            {
+              "name": "visualY",
+              "type": "int",
+              "value": 137
+            },
+            {
+              "name": "floorIndex",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "personal-wing"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-campus-elevator"
+            },
+            {
+              "name": "targetWing",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Subir de elevador para as salas pessoais"
+            }
+          ]
+        },
+        {
+          "id": 106,
+          "name": "Núcleo · escadas",
+          "type": "verticalAccess",
+          "x": 1344,
+          "y": 2000,
+          "width": 112,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "campus-stairs"
+            },
+            {
+              "name": "accessType",
+              "type": "string",
+              "value": "stairs"
+            },
+            {
+              "name": "visualX",
+              "type": "float",
+              "value": 87.5
+            },
+            {
+              "name": "visualY",
+              "type": "int",
+              "value": 125
+            },
+            {
+              "name": "blockX",
+              "type": "float",
+              "value": 86.5
+            },
+            {
+              "name": "blockY",
+              "type": "int",
+              "value": 121
+            },
+            {
+              "name": "blockW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "blockH",
+              "type": "int",
+              "value": 4
+            },
+            {
+              "name": "floorIndex",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "personal-wing"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-campus-stairs"
+            },
+            {
+              "name": "targetWing",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Subir pelas escadas para as salas pessoais"
+            }
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "oqRole",
+          "type": "string",
+          "value": "mechanics"
+        }
+      ]
+    }
+  ],
+  "nextlayerid": 101,
+  "nextobjectid": 223,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tiledversion": "1.11.2",
+  "tileheight": 16,
+  "tilewidth": 16,
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "source": "../tilesets/tileset-construcao.tsj"
+    },
+    {
+      "firstgid": 4033,
+      "source": "../tilesets/tileset-superficies.tsj"
+    },
+    {
+      "firstgid": 4083,
+      "source": "../tilesets/tileset-moveis.tsj"
+    },
+    {
+      "firstgid": 5187,
+      "source": "../tilesets/tileset-exterior.tsj"
+    }
+  ],
+  "type": "map",
+  "version": "1.10",
+  "properties": [
+    {
+      "name": "oqSchema",
+      "type": "string",
+      "value": "office-quest@1"
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "value": "tooq-campus"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "value": "Tooq Office"
+    },
+    {
+      "name": "subtitle",
+      "type": "string",
+      "value": "Reuniões, 1×1, jogos, cozinha, estudos e acesso às alas pessoais"
+    },
+    {
+      "name": "kind",
+      "type": "string",
+      "value": "interior"
+    },
+    {
+      "name": "visualMode",
+      "type": "string",
+      "value": "procedural"
+    },
+    {
+      "name": "runtimeFile",
+      "type": "string",
+      "value": "tooq-campus.json"
+    },
+    {
+      "name": "cameraZoom",
+      "type": "float",
+      "value": 2.15
+    },
+    {
+      "name": "cameraMinZoom",
+      "type": "float",
+      "value": 0.38
+    },
+    {
+      "name": "assetsJson",
+      "type": "string",
+      "value": "[\"interior_sliding_door\",\"interior_door_glass_double\"]"
+    }
+  ]
+}

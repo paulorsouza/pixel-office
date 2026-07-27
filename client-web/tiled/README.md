@@ -18,9 +18,12 @@ tiled/maps/*.tmj + tilesets/*.tsj + templates/*.tj
 2. No Tiled, escolha **File → Open File or Project**.
 3. Abra `client-web/tiled/office-quest.tiled-project`.
 4. Abra um dos mapas:
-   - `maps/world.tmj` — quintal central;
-   - `maps/tooq-office.tmj` — escritório e quintal privado;
-   - `maps/tooq-office-1.tmj` — prédio novo, `225×153`; a planta está na §7.1.
+   - `maps/world.tmj` — cidade cercada, estradas, três empresas e vilarejo;
+   - `maps/tooq-campus.tmj` — Tooq Office;
+   - `maps/personal-wing.tmj` — módulo público de 12 salas pessoais;
+   - `maps/tooq-office.tmj` — Coworking e quintal privado;
+   - `maps/tooq-office-1.tmj` — Dark Company, `225×153`; a planta está na §7.1;
+   - `maps/player-home-shell.tmj` — interior vazio compartilhado pelas casas futuras.
 
 Os tilesets completos continuam disponíveis, mas o mapa também carrega paletas menores numeradas:
 `01 · Construção`, `02 · Escritório`, `03 · Decoração`, `04 · Exterior`, `05 · Animações`,
@@ -83,8 +86,9 @@ estão desbloqueadas e são fontes do runtime.
 
 ### Mudar a estrutura inteira do mundo
 
-O mundo atual tem `96×72` tiles, com a construção antiga centralizada e espaço livre em todas as
-direções. Para crescer além disso:
+O mundo atual tem `220×150` tiles, cercado nas quatro bordas. O Tooq Office fica perto do spawn,
+Coworking e Dark Company ficam afastados, e o vilarejo ocupa a lateral leste. Para crescer além
+disso:
 
 1. use **Map → Resize Map**;
 2. informe o novo `Width` e `Height` e escolha a âncora;
@@ -310,9 +314,9 @@ O caminho mais seguro é duplicar uma sala existente:
 O objeto precisa manter a classe `room`. As dimensões incluem a parede; deixe espaço interno para
 móveis e circulação.
 
-## 7.1 A planta do `tooq-office-1`
+## 7.1 A planta da Dark Company (`tooq-office-1`)
 
-O prédio novo não usa caixas de sala soltas como o `tooq-office`: as salas são **recortadas da
+A Dark Company não usa caixas de sala soltas como o Coworking (`tooq-office`): as salas são **recortadas da
 própria casca**, encostadas nas paredes externas e **compartilhando a divisória** com a sala
 vizinha. Não existe corredor nas costas de sala nenhuma — só as avenidas, que são a circulação.
 
@@ -397,6 +401,10 @@ Para criar um objeto geométrico novo, desenhe um retângulo na camada correta e
 | `room` | Sala com piso e paredes. |
 
 Prefira duplicar um objeto do mesmo tipo: a classe e as propriedades necessárias vêm juntas.
+
+No mundo, cada fachada também possui um retângulo `collision` cobrindo **toda a caixa ocupada pelo
+PNG**, não apenas sua base. O portal fica sobre a borda externa da entrada. Ao mover ou trocar uma
+fachada, mova/recalibre juntos o prop, o footprint, o portal e o spawn de retorno.
 
 ## 10. Spawns e portais
 

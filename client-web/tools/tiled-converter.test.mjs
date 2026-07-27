@@ -48,6 +48,24 @@ const mechanicsModule = await import(
   `${pathToFileURL(resolve(CLIENT_ROOT, 'src/mechanics/MechanicsRegistry.js')).href}?test=${Date.now()}`
 );
 
+test('reinício de cena descarta interações e portas do mapa anterior', () => {
+  const scene = {
+    furnitureObjects: [{ item: { interactionType: 'coffee' } }],
+    automaticDoors: [{ key: 'door:old' }],
+  };
+  rendererModule.resetSceneRenderState(scene);
+  assert.deepEqual(scene.furnitureObjects, []);
+  assert.deepEqual(scene.automaticDoors, []);
+});
+
+test('profundidade de móvel usa a borda da colisão como linha dos pés', () => {
+  const desk = { x: 4, y: 10, collision: { x: -0.5, y: 0.1, w: 2, h: 0.75 } };
+  const depth = rendererModule.furnitureSortDepth(desk, 16, 176);
+  assert.equal(depth, (10 + 0.1 + 0.75) * 16);
+  assert.ok(10.7 * 16 < depth, 'avatar atrás deve ficar sob a mesa');
+  assert.ok(11 * 16 > depth, 'avatar à frente deve ficar sobre a mesa');
+});
+
 test('registro de mecânicas recebe entidades novas sem alterar o renderer', () => {
   const registry = new mechanicsModule.MechanicsRegistry();
   registry.register('meetingZone', { create: () => ({}) });
@@ -289,18 +307,20 @@ test('modo editável transforma o visual procedural em tile layers desbloqueadas
 test('canvas ampliado centraliza o mundo e deixa a câmera seguir o tamanho do mapa', () => {
   const catalogs = generateTilesets(false);
   const original = readJson(resolve(CLIENT_ROOT, 'maps/world.json'));
-  const expanded = expandMapCanvas(original, 96, 72, catalogs);
-  const offsetX = Math.floor((96 - original.w) / 2);
-  const offsetY = Math.floor((72 - original.h) / 2);
+  const expandedWidth = original.w + 24;
+  const expandedHeight = original.h + 18;
+  const expanded = expandMapCanvas(original, expandedWidth, expandedHeight, catalogs);
+  const offsetX = Math.floor((expandedWidth - original.w) / 2);
+  const offsetY = Math.floor((expandedHeight - original.h) / 2);
   const floors = expanded.visualLayers.find((layer) => layer.id === 'base-floors');
 
-  assert.equal(expanded.w, 96);
-  assert.equal(expanded.h, 72);
+  assert.equal(expanded.w, expandedWidth);
+  assert.equal(expanded.h, expandedHeight);
   assert.equal(expanded.camera.bounds, undefined);
-  assert.equal(expanded.camera.minZoom, 0.35);
+  assert.equal(expanded.camera.minZoom, original.camera.minZoom);
   assert.equal(expanded.spawns.default.x, original.spawns.default.x + offsetX);
   assert.equal(expanded.spawns.default.y, original.spawns.default.y + offsetY);
-  assert.equal(floors.tiles.length, 96 * 72);
+  assert.equal(floors.tiles.length, expandedWidth * expandedHeight);
   assert.equal(expanded.paths, undefined);
   assert.equal(expanded.hedges, undefined);
 
@@ -464,20 +484,17 @@ test('seleção inválida volta ao padrão e poses respeitam direção e veícul
   );
 });
 
-test('catálogo oferece quatro veículos progressivos e os slots do loadout RPG', () => {
+test('catálogo oferece vários modelos por meio de locomoção e os slots do loadout RPG', () => {
   const vehicles = equipmentCatalog.items.filter((item) => item.slot === 'vehicle');
-  assert.deepEqual(
-    vehicles.map((item) => item.id),
-    ['skate', 'roller-skates', 'electric-scooter', 'motorcycle'],
-  );
+  for (const visual of ['skate', 'roller-skates', 'electric-scooter', 'motorcycle']) {
+    assert.ok(vehicles.filter((item) => (item.visual || item.id) === visual).length >= 2, visual);
+  }
+  assert.equal(equipmentCatalog.defaultEquipment, 'skate');
   assert.deepEqual(
     equipmentCatalog.slots.map((slot) => slot.id),
     ['earrings', 'necklace', 'bracelet', 'mouse', 'keyboard', 'vehicle'],
   );
   assert.ok(existsSync(resolve(CLIENT_ROOT, 'assets/chars/Adam_sit.png')));
-  for (let index = 1; index < vehicles.length; index += 1) {
-    assert.ok(vehicles[index].speed > vehicles[index - 1].speed);
-  }
   for (const item of equipmentCatalog.items) {
     assert.ok(equipmentCatalog.slots.some((slot) => slot.id === item.slot), `${item.id}: slot válido`);
   }
@@ -614,6 +631,19 @@ test('porta automática abre sem colisão e só a restaura depois de fechar', ()
   } finally {
     globalThis.Phaser = previousPhaser;
   }
+});
+
+test('porta lateral gira a animação e usa o centro do vão como âncora', () => {
+  const rect = { x: 4, y: 26, w: 10, h: 10 };
+  const west = rendererModule.doorFixtureTransform(rect, { side: 'W', at: 4, len: 2 }, 16);
+  const east = rendererModule.doorFixtureTransform(rect, { side: 'E', at: 4, len: 2 }, 16);
+
+  assert.deepEqual(west, {
+    x: 72, y: 496, originX: 0.5, originY: 0.5, angle: 90,
+  });
+  assert.deepEqual(east, {
+    x: 216, y: 496, originX: 0.5, originY: 0.5, angle: -90,
+  });
 });
 
 test('todos os PNGs referenciados pelos tilesets existem', () => {

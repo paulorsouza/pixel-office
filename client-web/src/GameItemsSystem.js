@@ -27,6 +27,7 @@ export function createGameItemsClient(options = {}) {
   let connection = null;
   let room = null;
   let online = false;
+  let personalDirectory = null;
 
   async function request(path, init = {}) {
     const token = await auth.token();
@@ -97,6 +98,7 @@ export function createGameItemsClient(options = {}) {
     isOnline: () => online,
     async initialize() {
       try {
+        personalDirectory = await request('/api/game/personal-rooms');
         await refreshInventory();
         await connectRealtime();
       } catch (error) {
@@ -106,6 +108,16 @@ export function createGameItemsClient(options = {}) {
       }
     },
     inventory: () => clone(inventory),
+    personalRooms: () => clone(personalDirectory),
+    currentPersonalRoom: () => clone(personalDirectory?.current || null),
+    ownedEquipmentIds() {
+      return [...new Set(inventory
+        .filter((item) => item.definition.itemType === 'vehicle' || item.definition.itemType === 'equipment')
+        .map((item) => item.definition.catalogKey.replace(/^equipment:/, '')))];
+    },
+    ownsEquipment(equipmentId) {
+      return this.ownedEquipmentIds().includes(equipmentId);
+    },
     available(catalogKey) {
       return inventory.filter((item) => (
         item.location === 'inventory' && item.definition.catalogKey === catalogKey
@@ -117,6 +129,20 @@ export function createGameItemsClient(options = {}) {
     async refreshInventory() {
       return refreshInventory();
     },
+    async refreshPersonalRooms() {
+      personalDirectory = await request('/api/game/personal-rooms');
+      return clone(personalDirectory);
+    },
+    async purchase(catalogKey) {
+      const result = await request(`/api/game/catalog/${encodeURIComponent(catalogKey)}/purchase`, {
+        method: 'POST', body: '{}',
+      });
+      await refreshInventory();
+      return result;
+    },
+    async storeCatalog() {
+      return request('/api/game/catalog');
+    },
     async joinRoom(sceneId, roomId) {
       if (connection && room) {
         await connection.invoke('LeaveGameRoom', room.sceneId, room.roomId).catch(() => {});
@@ -124,6 +150,9 @@ export function createGameItemsClient(options = {}) {
       room = { sceneId, roomId };
       if (connection) await connection.invoke('JoinGame', userId, sceneId, roomId).catch(() => {});
       return request(`/api/game/rooms/${encodeURIComponent(sceneId)}/${encodeURIComponent(roomId)}/furniture`);
+    },
+    async sceneFurniture(sceneId) {
+      return request(`/api/game/scenes/${encodeURIComponent(sceneId)}/furniture`);
     },
     async place(catalogKey, sceneId, roomId, x, y, flipX = false) {
       const instance = this.available(catalogKey)[0];
@@ -161,13 +190,19 @@ export function createGameItemsClient(options = {}) {
         method: 'POST', body: JSON.stringify({ workItemId }),
       });
     },
-    async startWork(placementId, workItemId) {
-      return request(`/api/game/workstations/${placementId}/start`, {
+    async startWork(target, workItemId) {
+      const path = Number.isInteger(Number(target))
+        ? `/api/game/workstations/${target}/start`
+        : `/api/game/workstations/scenery/${encodeURIComponent(target)}/start`;
+      return request(path, {
         method: 'POST', body: JSON.stringify({ workItemId }),
       });
     },
     async stopWork() {
       return request('/api/game/workstations/stop', { method: 'POST', body: '{}' });
+    },
+    async hoursSummary(days = 14) {
+      return request(`/api/reports/summary?days=${Math.max(1, Math.min(90, Number(days) || 14))}`);
     },
   };
 }

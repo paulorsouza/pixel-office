@@ -159,6 +159,8 @@ mechanicsRegistry.register('portal', {
         h: Number(value(entity, 'h')),
         targetScene: value(entity, 'targetScene'),
         targetSpawn: value(entity, 'targetSpawn'),
+        targetWing: Number(value(entity, 'targetWing', 0)),
+        wingDelta: Number(value(entity, 'wingDelta', 0)),
         label: value(entity, 'label'),
       },
     };

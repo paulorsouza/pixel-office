@@ -677,6 +677,14 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   gameItems?.events.addEventListener('FurniturePlaced', onPlaced);
   gameItems?.events.addEventListener('FurnitureMoved', onMoved);
   gameItems?.events.addEventListener('FurnitureRemoved', onRemoved);
+  // Salas pessoais são parte visível da ala: do corredor, todos devem enxergar a
+  // decoração já persistida. A assinatura SignalR detalhada continua seguindo a sala ativa.
+  gameItems?.sceneFurniture(scene.currentSceneId)
+    .then((placements) => {
+      placements.forEach(addServerPlacement);
+      updateActions();
+    })
+    .catch((error) => setStatus(error.message, 'error'));
 
   const loadServerRoom = (roomId) => {
     if (!gameItems || roomId === loadingRoomId) return;
@@ -727,7 +735,12 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
         return activeRoom;
       }
       const tile = map.tile || 16;
-      availableRoom = roomAtPoint(map, player.body.center.x / tile, player.body.center.y / tile);
+      const room = roomAtPoint(map, player.body.center.x / tile, player.body.center.y / tile);
+      availableRoom = room
+        && room.decoratable !== false
+        && (!room.ownerId || room.ownerId === gameItems?.userId)
+        ? room
+        : null;
       if (gameItems && availableRoom && availableRoom.id !== subscribedRoomId && availableRoom.id !== loadingRoomId) {
         loadServerRoom(availableRoom.id);
       }

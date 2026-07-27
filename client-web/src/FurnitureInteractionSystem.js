@@ -6,12 +6,17 @@ const labels = {
   kanban: 'Abrir quadro de atividades',
   chest: 'Abrir baú',
   workstation: 'Usar computador',
-  seat: 'Sentar e trabalhar',
+  seat: 'Sentar',
   coffee: 'Fazer um café',
+  timeclock: 'Ver relatório de horas',
+  whiteboard: 'Abrir quadro branco',
+  store: 'Abrir loja',
 };
 
 // interações que funcionam sem um GameItemInstance por trás
-const SCENERY_INTERACTIONS = new Set(['seat', 'coffee']);
+const SCENERY_INTERACTIONS = new Set([
+  'seat', 'coffee', 'kanban', 'workstation', 'timeclock', 'whiteboard', 'store',
+]);
 
 function distanceToPlayer(record, player, tile) {
   return Phaser.Math.Distance.Between(
@@ -30,7 +35,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   const closeButton = document.querySelector('#furniture-interaction-close');
   let open = false;
   let nearby = null;
-  let workingPlacementId = null;
+  let workingTarget = null;
 
   // Móvel do inventário: tem placement no backend, então serve para qualquer interação.
   const ownedInteractive = () => (scene.furnitureObjects || []).filter((record) => (
@@ -119,7 +124,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   }
 
   async function renderWorkstation(record) {
-    workingPlacementId = record.item.placementId;
+    workingTarget = record.item.placementId || record.item.interactionKey;
     title.textContent = 'Estação de trabalho';
     subtitle.textContent = 'O tempo será registrado na atividade escolhida';
     status('Carregando atividades…');
@@ -140,9 +145,11 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         try {
           if (stop) {
             await gameItems.stopWork();
+            options.onWorkStopped?.();
             subtitle.textContent = 'Contador encerrado e horas registradas';
           } else {
-            const session = await gameItems.startWork(workingPlacementId, Number(start.dataset.startWork));
+            const session = await gameItems.startWork(workingTarget, Number(start.dataset.startWork));
+            options.onWorkStarted?.(session);
             subtitle.textContent = `Contando tempo em ${session.code}`;
           }
         } catch (error) {
@@ -154,23 +161,85 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     }
   }
 
+  async function renderTimeclock() {
+    title.textContent = 'Relógio de horas';
+    subtitle.textContent = 'Resumo real dos últimos 14 dias';
+    status('Carregando lançamentos…');
+    try {
+      const summary = await gameItems.hoursSummary(14);
+      const total = (summary.perDay || []).reduce((sum, day) => sum + day.minutes, 0);
+      content.innerHTML = `<div class="interaction-workstation">
+        <div class="workstation-timer"><span>⏱</span><strong>${Math.floor(total / 60)}h ${total % 60}min lançados</strong></div>
+        <div class="workstation-tasks">${(summary.perCategory || []).map((entry) => `
+          <div><small>${escapeHtml(entry.category)}</small><strong>${Math.floor(entry.minutes / 60)}h ${entry.minutes % 60}min</strong></div>
+        `).join('') || '<em>Nenhum lançamento no período</em>'}</div>
+      </div>`;
+    } catch (error) {
+      status(error.message, true);
+    }
+  }
+
+  function renderWhiteboard(record) {
+    const boardKey = record.item.interactionKey || `${scene.currentSceneId}:whiteboard`;
+    title.textContent = 'Quadro branco';
+    subtitle.textContent = 'Abra o diagrams.net para desenhar diagramas';
+    content.innerHTML = `<p class="interaction-message">O quadro usa uma chave estável desta sala: <strong>${escapeHtml(boardKey)}</strong>.</p>
+      <p><a class="interaction-primary" href="https://app.diagrams.net/?ui=kennedy&spin=1"
+        target="_blank" rel="noopener noreferrer">Abrir no draw.io</a></p>`;
+  }
+
+  async function renderStore() {
+    title.textContent = 'Loja Tooq';
+    subtitle.textContent = 'Móveis e meios de locomoção são instâncias únicas';
+    status('Carregando catálogo…');
+    try {
+      const catalog = await gameItems.storeCatalog();
+      const purchasable = (catalog.definitions || []).filter((item) => item.isPurchasable);
+      content.innerHTML = `<div class="interaction-workstation">
+        <div class="workstation-timer"><span>🪙</span><strong>${catalog.coins} moedas</strong></div>
+        <div class="workstation-tasks">${purchasable.map((item) => `
+          <button type="button" data-buy-item="${escapeHtml(item.catalogKey)}">
+            <small>${escapeHtml(item.itemType)} · ${escapeHtml(item.rarity)}</small>
+            <strong>${escapeHtml(item.name)} · ${item.price} 🪙</strong>
+          </button>
+        `).join('')}</div>
+      </div>`;
+      content.onclick = async (event) => {
+        const button = event.target.closest('[data-buy-item]');
+        if (!button) return;
+        button.disabled = true;
+        try {
+          await gameItems.purchase(button.dataset.buyItem);
+          await renderStore();
+        } catch (error) {
+          subtitle.textContent = error.message;
+          button.disabled = false;
+        }
+      };
+    } catch (error) {
+      status(error.message, true);
+    }
+  }
+
   const handlers = {
     kanban: (record) => renderKanban(record),
     chest: (record) => renderChest(record),
     workstation: (record) => renderWorkstation(record),
-    seat(record) {
+    timeclock: () => renderTimeclock(),
+    whiteboard: (record) => renderWhiteboard(record),
+    store: () => renderStore(),
+    async seat(record) {
       // sentar de fato é estado com dono (a cadeira fica ocupada para todos)
-      options.onSeat?.(record);
-      const tile = map.tile || 16;
-      const workstation = ownedInteractive()
-        .filter((candidate) => candidate.item.interactionType === 'workstation')
-        .map((candidate) => ({ candidate, distance: Phaser.Math.Distance.Between(
-          record.display.x, record.display.y, candidate.display.x, candidate.display.y,
-        ) / tile }))
-        .filter((entry) => entry.distance <= 2.75)
-        .sort((a, b) => a.distance - b.distance)[0]?.candidate;
-      if (workstation) return renderWorkstation(workstation);
-      // sem estação por perto não há painel: o jogador só senta
+      if ((await options.onSeat?.(record)) === false) return false;
+      if (record.item.interactionKey) {
+        try {
+          const session = await gameItems.startWork(record.item.interactionKey, null);
+          options.onWorkStarted?.(session);
+          options.onWorkStatus?.(`Contando tempo em ${session.code}`);
+        } catch (error) {
+          options.onWorkStatus?.(error.message);
+        }
+      }
       return false;
     },
     coffee(record) {
@@ -209,10 +278,11 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     close: () => setOpen(false),
     interact,
     openForType(type) {
-      const record = ownedInteractive().find((candidate) => candidate.item.interactionType === type);
+      const record = interactive().find((candidate) => candidate.item.interactionType === type);
       if (!record) return false;
       setOpen(true);
-      handlers[type]?.(record);
+      const rendered = handlers[type]?.(record);
+      if (rendered === false) setOpen(false);
       return true;
     },
     update(player, blocked = false) {
@@ -220,7 +290,11 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         .map((record) => ({ record, distance: distanceToPlayer(record, player, map.tile || 16) }))
         .filter((entry) => entry.distance <= 2.2)
         .sort((a, b) => a.distance - b.distance)[0]?.record || null;
-      return nearby ? { label: labels[nearby.item.interactionType] || 'Interagir' } : null;
+      if (!nearby) return null;
+      const label = nearby.item.interactionType === 'seat' && nearby.item.interactionKey
+        ? 'Sentar e trabalhar'
+        : (labels[nearby.item.interactionType] || 'Interagir');
+      return { label };
     },
   };
 }

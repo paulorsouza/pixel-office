@@ -483,7 +483,7 @@ export async function loadTiledMap(mapReference, options = {}) {
     // `seatX/seatY/seatDir` dizem onde e para que lado o avatar senta nele
     for (const key of [
       'offsetX', 'offsetY', 'originX', 'originY', 'depth', 'solid',
-      'interactionType', 'seatX', 'seatY', 'seatDir', 'seatPose', 'seatCover',
+      'interactionType', 'interactionKey', 'seatX', 'seatY', 'seatDir', 'seatPose', 'seatCover',
     ]) {
       optional(result, key, properties[key], properties);
     }
@@ -662,7 +662,8 @@ export function validateSceneMaps(sceneMaps) {
     }
     if (!map.spawns?.default) throw new Error(`Cena ${sceneId} não possui spawn default`);
     for (const portal of map.portals || []) {
-      const target = sceneMaps[portal.targetScene];
+      const targetSceneId = String(portal.targetScene || '').split('@', 1)[0];
+      const target = sceneMaps[targetSceneId];
       if (!target) throw new Error(`Portal ${portal.id} aponta para cena inexistente: ${portal.targetScene}`);
       if (portal.targetSpawn && !target.spawns?.[portal.targetSpawn]) {
         throw new Error(`Portal ${portal.id} aponta para spawn inexistente: ${portal.targetScene}.${portal.targetSpawn}`);

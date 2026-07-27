@@ -12,6 +12,18 @@
     {
       "id": "tooq-office-1",
       "file": "tiled/maps/tooq-office-1.tmj"
+    },
+    {
+      "id": "tooq-campus",
+      "file": "tiled/maps/tooq-campus.tmj"
+    },
+    {
+      "id": "personal-wing",
+      "file": "tiled/maps/personal-wing.tmj"
+    },
+    {
+      "id": "player-home-shell",
+      "file": "tiled/maps/player-home-shell.tmj"
     }
   ]
 }
