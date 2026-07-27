@@ -10,16 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 AuthOptions.Configure(builder.Configuration);
 
-// Provider por config: sqlite (dev, default) ou postgres (produção).
-var dbProvider = builder.Configuration["Database:Provider"] ?? "sqlite";
-var dbConn = builder.Configuration.GetConnectionString("Default");
-builder.Services.AddDbContextFactory<AppDb>(o =>
-{
-    if (dbProvider.Equals("postgres", StringComparison.OrdinalIgnoreCase))
-        o.UseNpgsql(dbConn ?? "Host=localhost;Database=officequest;Username=postgres;Password=postgres");
-    else
-        o.UseSqlite(dbConn ?? "Data Source=office.db");
-});
+// Postgres é o único provider: dev, beta e produção rodam o mesmo schema, versionado
+// por migrations EF. Ver docs/BANCO_POSTGRES.md para subir o banco local.
+GameOptions.Configure(builder.Configuration);
+var dbConn = builder.Configuration.GetConnectionString("Default")
+    ?? "Host=localhost;Port=5432;Database=officequest;Username=postgres;Password=postgres";
+builder.Services.AddDbContextFactory<AppDb>(o => o.UseNpgsql(dbConn));
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddHostedService<BotService>();
@@ -75,13 +71,16 @@ LiveKitService.Configure(app.Configuration);
 
 await using (var db = await app.Services.GetRequiredService<IDbContextFactory<AppDb>>().CreateDbContextAsync())
 {
-    await Seed.RunAsync(db);
-    await AuthSchema.EnsureAsync(db);
+    await db.Database.MigrateAsync();
+    // Em produção o banco nasce só com o catálogo curado: nada de time fictício.
+    await Seed.RunAsync(db, app.Configuration.GetValue("Seed:DemoData", true));
 }
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+// CORS antes dos estáticos: o cliente do jogo (porta 8123 em dev) carrega
+// wwwroot/shared/* desta origem. Em beta/produção tudo fica atrás do mesmo proxy.
 app.UseCors();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHub<OfficeHub>("/hub/office");
@@ -91,13 +90,12 @@ var api = app.MapGroup("/api");
 // Em produção (DevBypass=false), toda a API exige token; em dev deixamos aberto p/ o X-User-Id.
 if (!AuthOptions.DevBypass) api.RequireAuthorization();
 
+// Kanban, horas e objetivos vivem em WorkEndpoints — é a API que o app web e o
+// cliente do jogo compartilham.
+api.MapWorkEndpoints();
+
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
-static int? UserId(HttpRequest req)
-{
-    if (req.HttpContext.User?.FindFirst("uid")?.Value is string s && int.TryParse(s, out var id)) return id;
-    if (AuthOptions.DevBypass && int.TryParse(req.Headers["X-User-Id"], out var dev)) return dev;
-    return null;
-}
+static int? UserId(HttpRequest req) => Identity.UserId(req);
 
 static object LevelInfo(int xp)
 {
@@ -127,7 +125,10 @@ api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContex
     var user = await db.Users.FindAsync(uid);
     if (user is null) return Results.NotFound();
 
-    // SQLite não traduz Sum de TimeSpan — soma em memória (volume pequeno)
+    // Bônus de boas-vindas também para quem se cadastrou antes de o beta abrir a torneira.
+    if (await Game.EnsureWelcomeGrantAsync(db, user)) await db.SaveChangesAsync();
+
+    // Soma de TimeSpan em memória (volume pequeno, e evita depender de tradução SQL).
     var finished = await db.TimeEntries
         .Where(t => t.UserId == uid && t.EndUtc != null)
         .Select(t => new { t.Category, t.StartUtc, EndUtc = t.EndUtc!.Value })
@@ -175,10 +176,17 @@ api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContex
     var nonBotIds = await db.Users.Where(u => !u.IsBot).OrderBy(u => u.Id).Select(u => u.Id).ToListAsync();
     var deskDef = OfficeLayout.ForIndex(nonBotIds.IndexOf(uid));
 
+    var todayRange = Periods.DayRange(DateTime.UtcNow);
+    var minutesToday = finished
+        .Where(t => t.StartUtc >= todayRange.Start && t.StartUtc < todayRange.End)
+        .Sum(t => (t.EndUtc - t.StartUtc).TotalMinutes);
+
     return Results.Ok(new
     {
-        user = new { user.Id, user.Name, user.Role, user.Color },
+        user = new { user.Id, user.Name, user.Role, user.Color, user.Coins },
         levelInfo = LevelInfo(user.Xp),
+        coins = user.Coins,
+        minutesToday = (int)minutesToday,
         activeTask = activeTask is null ? null : new { activeTask.Id, activeTask.Code, activeTask.Title, activeTask.Type },
         desk = deskDef is null ? null : new { deskDef.DeskX, deskDef.DeskY, deskDef.KanbanX, deskDef.KanbanY },
         activeTimer = active is null ? null : new
@@ -264,105 +272,9 @@ api.MapGet("/sprints", async (IDbContextFactory<AppDb> f) =>
     return await db.Sprints.OrderBy(s => s.StartUtc).ToListAsync();
 });
 
-// ---------- work items ----------
-api.MapGet("/workitems", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
-{
-    await using var db = await f.CreateDbContextAsync();
-    var q = db.WorkItems.AsQueryable();
-    if (int.TryParse(req.Query["sprintId"], out var sid))
-        q = sid == 0 ? q.Where(w => w.SprintId == null) : q.Where(w => w.SprintId == sid);
-    if (Enum.TryParse<WorkItemType>(req.Query["type"], out var type)) q = q.Where(w => w.Type == type);
-    if (int.TryParse(req.Query["epicId"], out var eid)) q = q.Where(w => w.EpicId == eid);
-
-    var items = await q.OrderBy(w => w.Id).ToListAsync();
-    var users = await db.Users.ToDictionaryAsync(u => u.Id);
-    var epics = await db.Epics.ToDictionaryAsync(e => e.Id);
-    var logged = (await db.TimeEntries
-        .Where(t => t.WorkItemId != null && t.EndUtc != null)
-        .Select(t => new { WorkItemId = t.WorkItemId!.Value, t.StartUtc, EndUtc = t.EndUtc!.Value })
-        .ToListAsync())
-        .GroupBy(x => x.WorkItemId)
-        .ToDictionary(g => g.Key, g => (int)g.Sum(x => (x.EndUtc - x.StartUtc).TotalMinutes));
-
-    return Results.Ok(items.Select(w => new
-    {
-        w.Id, w.Code, w.Title, w.Description, w.Type, w.Status,
-        w.EpicId, w.SprintId, w.AssigneeId, w.EstimateHours, w.CreatedUtc, w.DoneUtc,
-        assignee = w.AssigneeId is int a && users.TryGetValue(a, out var u) ? new { u.Id, u.Name, u.Color } : null,
-        epic = w.EpicId is int e && epics.TryGetValue(e, out var ep) ? new { ep.Id, ep.Name, ep.Color } : null,
-        loggedMinutes = logged.GetValueOrDefault(w.Id),
-    }));
-});
-
-api.MapPost("/workitems", async (WorkItemCreate dto, IDbContextFactory<AppDb> f) =>
-{
-    await using var db = await f.CreateDbContextAsync();
-    var prefix = dto.Type switch
-    {
-        WorkItemType.Bug => "BUG",
-        WorkItemType.Atendimento => "ATD",
-        _ => "TSK",
-    };
-    var count = await db.WorkItems.CountAsync(w => w.Type == dto.Type);
-    var item = new WorkItem
-    {
-        Code = $"{prefix}-{count + 1}",
-        Title = dto.Title,
-        Description = dto.Description ?? "",
-        Type = dto.Type,
-        Status = dto.SprintId is null or 0 ? WorkItemStatus.Backlog : WorkItemStatus.Todo,
-        EpicId = dto.EpicId is 0 ? null : dto.EpicId,
-        SprintId = dto.SprintId is 0 ? null : dto.SprintId,
-        AssigneeId = dto.AssigneeId is 0 ? null : dto.AssigneeId,
-        EstimateHours = dto.EstimateHours,
-        CreatedUtc = DateTime.UtcNow,
-    };
-    db.WorkItems.Add(item);
-    await db.SaveChangesAsync();
-    return Results.Ok(item);
-});
-
-api.MapPatch("/workitems/{id:int}", async (int id, WorkItemPatch dto, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
-{
-    await using var db = await f.CreateDbContextAsync();
-    var item = await db.WorkItems.FindAsync(id);
-    if (item is null) return Results.NotFound();
-
-    if (dto.Title is not null) item.Title = dto.Title;
-    if (dto.Description is not null) item.Description = dto.Description;
-    if (dto.EpicId is int e) item.EpicId = e == 0 ? null : e;
-    if (dto.SprintId is int s) item.SprintId = s == 0 ? null : s;
-    if (dto.AssigneeId is int a) item.AssigneeId = a == 0 ? null : a;
-    if (dto.EstimateHours is double est) item.EstimateHours = est == 0 ? null : est;
-
-    object? xpInfo = null;
-    if (dto.Status is WorkItemStatus st && st != item.Status)
-    {
-        var wasDone = item.Status == WorkItemStatus.Done;
-        item.Status = st;
-        item.DoneUtc = st == WorkItemStatus.Done ? DateTime.UtcNow : null;
-        if (st == WorkItemStatus.Done && !wasDone && item.AssigneeId is int assignee)
-        {
-            var user = await db.Users.FindAsync(assignee);
-            if (user is not null)
-            {
-                var bonus = item.Type switch
-                {
-                    WorkItemType.Bug => 60,
-                    WorkItemType.Atendimento => 40,
-                    _ => 50,
-                };
-                var xp = await Game.AwardXpAsync(db, user, bonus, $"concluiu {item.Code}");
-                await Notify.SendXpAsync(hub, user.Id, xp, $"{item.Code} concluída! +{bonus} XP");
-                xpInfo = new { bonus, xp.LeveledUp };
-            }
-        }
-    }
-    await db.SaveChangesAsync();
-    return Results.Ok(new { item.Id, item.Status, xpInfo });
-});
-
-// ---------- timer ----------
+// ---------- timer (contador ao vivo) ----------
+// Um contador aberto por usuário. Parar fecha o lançamento e paga a recompensa
+// pelo mesmo caminho do lançamento manual (WorkEndpoints), sem regra paralela.
 async Task<object?> StopOpenTimerAsync(AppDb db, int uid, IHubContext<OfficeHub> hub)
 {
     var open = await db.TimeEntries
@@ -372,13 +284,20 @@ async Task<object?> StopOpenTimerAsync(AppDb db, int uid, IHubContext<OfficeHub>
 
     open.EndUtc = DateTime.UtcNow;
     var minutes = Math.Max(1, (int)Math.Round((open.EndUtc.Value - open.StartUtc).TotalMinutes));
+    open.EndUtc = open.StartUtc.AddMinutes(minutes);
+
+    var activity = await db.ActivityTypes.FirstOrDefaultAsync(a => a.Key == open.Category);
     var user = await db.Users.FindAsync(uid);
     XpResult? xp = null;
-    if (user is not null)
+    if (user is not null && activity is not null)
     {
-        var amount = await Game.XpFromTimeMinutesAsync(db, uid, minutes);
-        if (amount > 0)
-            xp = await Game.AwardXpAsync(db, user, amount, $"tempo: {open.Category} ({minutes}min)");
+        var reward = await Game.CapDailyAsync(db, uid, Game.RewardFor(activity, minutes), open.StartUtc);
+        if (!reward.IsEmpty)
+        {
+            xp = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
+            open.XpAwarded = reward.Xp;
+            open.GoldAwarded = reward.Gold;
+        }
         // drop de foco: sessões de 25min+ têm chance de drop
         if (xp is { Drop: null } && minutes >= 25 && Random.Shared.NextDouble() < 0.25)
         {
@@ -387,38 +306,53 @@ async Task<object?> StopOpenTimerAsync(AppDb db, int uid, IHubContext<OfficeHub>
         }
     }
     await db.SaveChangesAsync();
+    var completions = await ObjectiveEngine.RecalculateAsync(db, uid);
+    await db.SaveChangesAsync();
 
     foreach (var p in Presence.Players.Values.Where(p => p.UserId == uid)) p.Status = "";
     await hub.Clients.All.SendAsync("Status", new { userId = uid, status = "" });
     if (xp is not null)
-        await Notify.SendXpAsync(hub, uid, xp, $"Timer parado: {minutes}min registrados (+{xp.Amount} XP)");
-    return new { minutes, xp = xp?.Amount ?? 0 };
+        await Notify.SendRewardAsync(hub, uid, xp, $"Contador parado: {minutes}min (+{xp.Amount} XP · +{xp.Gold} 🪙)");
+    await Notify.SendObjectivesAsync(hub, uid, completions);
+    await Notify.TimeChangedAsync(hub, uid);
+    return new { minutes, xp = xp?.Amount ?? 0, gold = xp?.Gold ?? 0 };
 }
 
 api.MapPost("/timer/start", async (TimerStart dto, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
 {
     if (UserId(req) is not int uid) return Results.Unauthorized();
     await using var db = await f.CreateDbContextAsync();
-    await StopOpenTimerAsync(db, uid, hub);
+    var key = string.IsNullOrWhiteSpace(dto.Category) ? (dto.WorkItemId > 0 ? "task" : "outro") : dto.Category!;
+    var activity = await db.ActivityTypes.FirstOrDefaultAsync(a => a.Key == key && a.IsActive);
+    if (activity is null) return Results.BadRequest(new { error = "Tipo de lançamento desconhecido." });
 
+    var user = await db.Users.FindAsync(uid);
+    var workItemId = dto.WorkItemId is 0 or null ? user?.ActiveWorkItemId : dto.WorkItemId;
+    if (activity.RequiresWorkItem && workItemId is null)
+        return Results.BadRequest(new { error = $"{activity.Name} precisa de uma atividade do quadro." });
+
+    await StopOpenTimerAsync(db, uid, hub);
     var entry = new TimeEntry
     {
         UserId = uid,
-        WorkItemId = dto.WorkItemId is 0 ? null : dto.WorkItemId,
-        Category = dto.Category ?? (dto.WorkItemId > 0 ? "task" : "outro"),
+        WorkItemId = workItemId,
+        Category = activity.Key,
         Note = dto.Note ?? "",
+        Source = "timer",
+        PairUserId = dto.PairUserId is 0 ? null : dto.PairUserId,
         StartUtc = DateTime.UtcNow,
     };
     db.TimeEntries.Add(entry);
+    // Contar tempo é declarar no que se está trabalhando: a atividade ativa segue o contador.
+    if (user is not null && workItemId is int wid) user.ActiveWorkItemId = wid;
     await db.SaveChangesAsync();
 
-    var status = "⏱️ Focado";
-    if (entry.Category == "reuniao") status = "📅 Reunião";
-    else if (entry.WorkItemId is int wi && await db.WorkItems.FindAsync(wi) is { } item)
-        status = $"🔴 {item.Code}";
+    var status = $"{activity.Icon} {activity.Name}";
+    if (entry.WorkItemId is int wi && await db.WorkItems.FindAsync(wi) is { } item) status = $"🔴 {item.Code}";
     foreach (var p in Presence.Players.Values.Where(p => p.UserId == uid)) p.Status = status;
     await hub.Clients.All.SendAsync("Status", new { userId = uid, status });
-    return Results.Ok(entry);
+    await Notify.TimeChangedAsync(hub, uid);
+    return Results.Ok(new { entry.Id, entry.Category, entry.StartUtc, entry.WorkItemId });
 });
 
 api.MapPost("/timer/stop", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
@@ -429,74 +363,13 @@ api.MapPost("/timer/stop", async (HttpRequest req, IDbContextFactory<AppDb> f, I
     return result is null ? Results.NoContent() : Results.Ok(result);
 });
 
-// ---------- lançamentos ----------
-api.MapGet("/timeentries", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
-{
-    if (UserId(req) is not int uid) return Results.Unauthorized();
-    await using var db = await f.CreateDbContextAsync();
-    var from = DateTime.TryParse(req.Query["from"], out var fr) ? fr.ToUniversalTime() : DateTime.UtcNow.AddDays(-7);
-    var to = DateTime.TryParse(req.Query["to"], out var t) ? t.ToUniversalTime() : DateTime.UtcNow.AddDays(1);
-
-    var entries = await db.TimeEntries
-        .Where(e => e.UserId == uid && e.StartUtc >= from && e.StartUtc < to)
-        .OrderByDescending(e => e.StartUtc).ToListAsync();
-    var wiIds = entries.Where(e => e.WorkItemId != null).Select(e => e.WorkItemId!.Value).Distinct().ToList();
-    var wis = await db.WorkItems.Where(w => wiIds.Contains(w.Id)).ToDictionaryAsync(w => w.Id);
-
-    return Results.Ok(entries.Select(e => new
-    {
-        e.Id, e.Category, e.Note, e.StartUtc, e.EndUtc,
-        minutes = e.EndUtc == null ? 0 : (int)Math.Round((e.EndUtc.Value - e.StartUtc).TotalMinutes),
-        workItem = e.WorkItemId is int w && wis.TryGetValue(w, out var wi) ? new { wi.Id, wi.Code, wi.Title } : null,
-    }));
-});
-
-api.MapPost("/timeentries", async (ManualEntry dto, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
-{
-    if (UserId(req) is not int uid) return Results.Unauthorized();
-    if (dto.Minutes <= 0 || dto.Minutes > 24 * 60) return Results.BadRequest(new { error = "Duração inválida" });
-    await using var db = await f.CreateDbContextAsync();
-
-    var start = dto.Date.Date.AddHours(12);
-    db.TimeEntries.Add(new TimeEntry
-    {
-        UserId = uid,
-        WorkItemId = dto.WorkItemId is 0 ? null : dto.WorkItemId,
-        Category = dto.Category ?? "task",
-        Note = dto.Note ?? "",
-        StartUtc = start,
-        EndUtc = start.AddMinutes(dto.Minutes),
-    });
-    var user = await db.Users.FindAsync(uid);
-    XpResult? xp = null;
-    if (user is not null)
-    {
-        var amount = await Game.XpFromTimeMinutesAsync(db, uid, dto.Minutes);
-        if (amount > 0) xp = await Game.AwardXpAsync(db, user, amount, $"tempo: lançamento manual ({dto.Minutes}min)");
-    }
-    await db.SaveChangesAsync();
-    if (xp is not null)
-        await Notify.SendXpAsync(hub, uid, xp, $"Lançamento de {dto.Minutes}min (+{xp.Amount} XP)");
-    return Results.Ok();
-});
-
-api.MapDelete("/timeentries/{id:int}", async (int id, HttpRequest req, IDbContextFactory<AppDb> f) =>
-{
-    if (UserId(req) is not int uid) return Results.Unauthorized();
-    await using var db = await f.CreateDbContextAsync();
-    var entry = await db.TimeEntries.FirstOrDefaultAsync(e => e.Id == id && e.UserId == uid);
-    if (entry is null) return Results.NotFound();
-    db.TimeEntries.Remove(entry);
-    await db.SaveChangesAsync();
-    return Results.NoContent();
-});
-
 // ---------- relatórios ----------
 api.MapGet("/reports/summary", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
 {
     await using var db = await f.CreateDbContextAsync();
     var days = int.TryParse(req.Query["days"], out var d) ? Math.Clamp(d, 1, 90) : 14;
-    var from = DateTime.UtcNow.Date.AddDays(-(days - 1));
+    // Os dias do relatorio sao dias do time (fuso de GameOptions), nao dias UTC.
+    var from = Periods.DayStart(DateTime.UtcNow).AddDays(-(days - 1));
 
     var entries = await db.TimeEntries
         .Where(e => e.EndUtc != null && e.StartUtc >= from)
@@ -504,19 +377,29 @@ api.MapGet("/reports/summary", async (HttpRequest req, IDbContextFactory<AppDb> 
     var users = await db.Users.ToDictionaryAsync(u => u.Id);
     var epics = await db.Epics.ToDictionaryAsync(e => e.Id);
     var workItems = await db.WorkItems.ToDictionaryAsync(w => w.Id);
+    var activities = await db.ActivityTypes.ToDictionaryAsync(a => a.Key);
 
     int Minutes(TimeEntry e) => (int)Math.Round((e.EndUtc!.Value - e.StartUtc).TotalMinutes);
 
+    var byDay = entries.GroupBy(e => Periods.LocalDate(e.StartUtc))
+        .ToDictionary(g => g.Key, g => g.Sum(Minutes));
     var perDay = Enumerable.Range(0, days)
-        .Select(i => from.AddDays(i))
+        .Select(i => Periods.LocalDate(from.AddDays(i)))
         .Select(day => new
         {
             date = day.ToString("yyyy-MM-dd"),
-            minutes = entries.Where(e => e.StartUtc.Date == day).Sum(Minutes),
+            minutes = byDay.GetValueOrDefault(day),
         });
 
     var perCategory = entries.GroupBy(e => e.Category)
-        .Select(g => new { category = g.Key, minutes = g.Sum(Minutes) })
+        .Select(g => new
+        {
+            category = g.Key,
+            name = activities.TryGetValue(g.Key, out var a) ? a.Name : g.Key,
+            icon = activities.TryGetValue(g.Key, out var a2) ? a2.Icon : "",
+            color = activities.TryGetValue(g.Key, out var a3) ? a3.Color : "#8b929d",
+            minutes = g.Sum(Minutes),
+        })
         .OrderByDescending(x => x.minutes);
 
     var perUser = entries.GroupBy(e => e.UserId)
@@ -894,7 +777,7 @@ api.MapPost("/game/workstations/{placementId:int}/start", async (
     if (UserId(req) is not int uid) return Results.Unauthorized();
     await using var db = await f.CreateDbContextAsync();
     if (!await IsOwnedInteraction(db, placementId, uid, "workstation")) return Results.NotFound();
-    return await StartWorkSession(db, hub, uid, dto.WorkItemId, $"Estação #{placementId}");
+    return await StartWorkSession(db, hub, uid, dto.WorkItemId, $"Estação #{placementId}", dto.ActivityKey);
 });
 
 api.MapPost("/game/workstations/scenery/{entityKey}/start", async (
@@ -905,7 +788,7 @@ api.MapPost("/game/workstations/scenery/{entityKey}/start", async (
     var safeKey = new string(entityKey.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_' or ':').ToArray());
     if (safeKey.Length == 0 || safeKey.Length > 100) return Results.BadRequest(new { error = "Estação inválida" });
     await using var db = await f.CreateDbContextAsync();
-    return await StartWorkSession(db, hub, uid, dto.WorkItemId, $"Estação pública {safeKey}");
+    return await StartWorkSession(db, hub, uid, dto.WorkItemId, $"Estação pública {safeKey}", dto.ActivityKey);
 });
 
 api.MapPost("/game/workstations/stop", async (
@@ -913,14 +796,12 @@ api.MapPost("/game/workstations/stop", async (
 {
     if (UserId(req) is not int uid) return Results.Unauthorized();
     await using var db = await f.CreateDbContextAsync();
-    var entry = await db.TimeEntries.Where(x => x.UserId == uid && x.EndUtc == null)
-        .OrderByDescending(x => x.StartUtc).FirstOrDefaultAsync();
-    if (entry is null) return Results.NotFound(new { error = "Nenhum contador ativo" });
-    entry.EndUtc = DateTime.UtcNow;
-    await db.SaveChangesAsync();
-    await hub.Clients.All.SendAsync("Status", new { userId = uid, status = "" });
-    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("WorkSessionChanged", new { active = false, entry.Id, entry.EndUtc });
-    return Results.Ok(new { entry.Id, entry.EndUtc });
+    // Mesmo caminho do /timer/stop: encerrar na estação também paga XP e gold.
+    // Antes a estação só fechava a linha e o tempo do jogo não valia nada.
+    var result = await StopOpenTimerAsync(db, uid, hub);
+    if (result is null) return Results.NotFound(new { error = "Nenhum contador ativo" });
+    await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("WorkSessionChanged", new { active = false });
+    return Results.Ok(result);
 });
 
 app.Run();
@@ -947,7 +828,8 @@ static async Task<IResult> StartWorkSession(
     IHubContext<OfficeHub> hub,
     int userId,
     int? requestedWorkItemId,
-    string source)
+    string source,
+    string? activityKey = null)
 {
     var user = await db.Users.FindAsync(userId);
     var workItemId = requestedWorkItemId ?? user?.ActiveWorkItemId;
@@ -957,12 +839,15 @@ static async Task<IResult> StartWorkSession(
     if (await db.TimeEntries.AnyAsync(x => x.UserId == userId && x.EndUtc == null))
         return Results.Conflict(new { error = "Já existe um contador ativo" });
     if (user is not null) user.ActiveWorkItemId = workItem.Id;
+    var key = string.IsNullOrWhiteSpace(activityKey) ? "task" : activityKey!;
+    if (!await db.ActivityTypes.AnyAsync(a => a.Key == key && a.IsActive)) key = "task";
     var entry = new TimeEntry
     {
         UserId = userId,
         WorkItemId = workItem.Id,
-        Category = "task",
+        Category = key,
         Note = $"{source}: {workItem.Code}",
+        Source = "game",
         StartUtc = DateTime.UtcNow,
     };
     db.TimeEntries.Add(entry);
@@ -987,10 +872,7 @@ static async Task<IResult> StartWorkSession(
     });
 }
 
-record WorkItemCreate(string Title, string? Description, WorkItemType Type, int? EpicId, int? SprintId, int? AssigneeId, double? EstimateHours);
-record WorkItemPatch(string? Title, string? Description, WorkItemStatus? Status, int? EpicId, int? SprintId, int? AssigneeId, double? EstimateHours);
-record TimerStart(int? WorkItemId, string? Category, string? Note);
-record ManualEntry(DateTime Date, int Minutes, int? WorkItemId, string? Category, string? Note);
+record TimerStart(int? WorkItemId, string? Category, string? Note, int? PairUserId);
 record RoomLayout(List<RoomPlacement> Items);
 record RoomPlacement(int ItemDefinitionId, int X, int Y);
 record SetActiveTask(int? WorkItemId);
@@ -998,4 +880,4 @@ record ProximityTokenRequest(string? SceneId, string? RoomId);
 record PlaceFurniture(int InventoryItemId, string SceneId, string RoomId, double X, double Y, bool FlipX);
 record MoveFurniture(double X, double Y, bool FlipX);
 record ChestTransfer(int InventoryItemId);
-record WorkstationStart(int? WorkItemId);
+record WorkstationStart(int? WorkItemId, string? ActivityKey);

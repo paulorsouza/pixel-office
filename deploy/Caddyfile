@@ -6,9 +6,13 @@
 
 # Produto principal: o game (Phaser) na raiz, com API/hub/auth proxiados para o backend
 # na MESMA origem (assim o cliente fala /api sem CORS e o SignalR faz upgrade de WebSocket).
+#
+# /shared/* também vai para o backend: é a UI de kanban/horas/objetivos que o app web
+# e o jogo compartilham (wwwroot/shared). Ela não existe na imagem do game — sem esta
+# rota o painel do jogo abre vazio em produção.
 localhost {
 	tls internal
-	@backend path /api/* /hub/* /auth/*
+	@backend path /api/* /hub/* /auth/* /shared/*
 	reverse_proxy @backend backend:8080
 	reverse_proxy game:80
 }
@@ -17,6 +21,38 @@ localhost {
 localhost:8443 {
 	tls internal
 	reverse_proxy backend:8080
+}
+
+# Origem HTTP única para o Cloudflare Tunnel (o cloudflared põe o HTTPS público).
+# É a mesma ideia do beta: uma porta só, tudo na mesma origem, sem CORS.
+# Diferença para o :8443 acima: aqui o app web fica sob /app/ porque a raiz é do game
+# e o quick tunnel só expõe UMA porta.
+:8080 {
+	# App web (kanban/horas/objetivos). handle_path tira o /app antes de repassar,
+	# e os caminhos relativos do index.html (css/, js/) voltam certos por baixo dele.
+	redir /app /app/
+	handle_path /app/* {
+		reverse_proxy backend:8080
+	}
+
+	# API, SignalR, auth e a UI compartilhada — precisam da raiz, não do /app.
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+	handle /hub/* {
+		reverse_proxy backend:8080
+	}
+	handle /auth/* {
+		reverse_proxy backend:8080
+	}
+	handle /shared/* {
+		reverse_proxy backend:8080
+	}
+
+	# resto: o game (Phaser)
+	handle {
+		reverse_proxy game:80
+	}
 }
 
 # LiveKit — sinalização wss (a mídia trafega direto pelas portas UDP do serviço livekit).

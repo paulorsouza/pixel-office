@@ -4,16 +4,39 @@ namespace VirtualOffice.Api;
 
 public static class Seed
 {
-    public static async Task RunAsync(AppDb db)
+    /// <summary>
+    /// Ordem importa: catálogo (tipos de lançamento, objetivos, etiquetas) sempre;
+    /// dados de demonstração só num banco vazio; estoque e bônus por último, quando
+    /// os usuários já existem.
+    /// </summary>
+    /// <param name="demoData">
+    /// Cria o time fictício (Paulo, Marina, Diego, Aline, bots) com sprints, cards e
+    /// horas inventadas. Serve para desenvolver com o app cheio — <b>num ambiente de
+    /// produção isso é lixo</b>, e é por isso que o compose desliga (<c>Seed:DemoData</c>).
+    /// O catálogo curado entra dos dois jeitos: sem ele não existem tipos de lançamento
+    /// nem objetivos, e o produto não funciona.
+    /// </param>
+    public static async Task RunAsync(AppDb db, bool demoData = true)
     {
-        await db.Database.EnsureCreatedAsync();
-        await GameInventorySeed.EnsureSchemaAsync(db);
-        if (await db.Users.AnyAsync())
-        {
-            await GameInventorySeed.RunAsync(db);
-            return;
-        }
+        await WorkCatalogSeed.RunAsync(db);
+        if (demoData && !await db.Users.AnyAsync()) await DemoAsync(db);
+        await GameInventorySeed.RunAsync(db);
+        await GrantWelcomeAsync(db);
+    }
 
+    /// <summary>Bônus de boas-vindas do beta: idempotente e válido também para quem já existe.</summary>
+    private static async Task GrantWelcomeAsync(AppDb db)
+    {
+        if (GameOptions.WelcomeGrantCoins <= 0) return;
+        var users = await db.Users.Where(u => !u.IsBot).ToListAsync();
+        var granted = 0;
+        foreach (var user in users)
+            if (await Game.EnsureWelcomeGrantAsync(db, user)) granted++;
+        if (granted > 0) await db.SaveChangesAsync();
+    }
+
+    private static async Task DemoAsync(AppDb db)
+    {
         var paulo = new User { Name = "Paulo", Role = "Tech Lead", Color = "#7c5cff", Xp = 2650 };
         var marina = new User { Name = "Marina", Role = "Dev Backend", Color = "#f472b6", Xp = 1900 };
         var diego = new User { Name = "Diego", Role = "Dev Frontend", Color = "#22d3ee", Xp = 1450 };
@@ -28,18 +51,23 @@ public static class Seed
         var epicSup = new Epic { Name = "Suporte & Operação", Color = "#f59e0b" };
         db.Epics.AddRange(epicWeb, epicApp, epicSup);
 
-        var today = DateTime.UtcNow.Date;
+        // Postgres guarda timestamptz: todo DateTime gravado precisa ter Kind=Utc.
+        var today = Periods.DayStart(DateTime.UtcNow);
         var sprint12 = new Sprint { Name = "Sprint 12", StartUtc = today.AddDays(-7), EndUtc = today.AddDays(7), IsActive = true };
         var sprint13 = new Sprint { Name = "Sprint 13", StartUtc = today.AddDays(7), EndUtc = today.AddDays(21) };
         db.Sprints.AddRange(sprint12, sprint13);
         await db.SaveChangesAsync();
 
+        var order = 0;
         WorkItem Wi(string code, string title, WorkItemType type, WorkItemStatus status, Epic epic, Sprint? sprint, User? assignee, double? est = null, string desc = "") => new()
         {
             Code = code, Title = title, Type = type, Status = status,
+            Priority = type == WorkItemType.Bug ? WorkItemPriority.High : WorkItemPriority.Medium,
             EpicId = epic.Id, SprintId = sprint?.Id, AssigneeId = assignee?.Id,
             EstimateHours = est, Description = desc,
+            BoardOrder = (++order) * 1000.0,
             CreatedUtc = today.AddDays(-Random.Shared.Next(3, 20)),
+            UpdatedUtc = today,
             DoneUtc = status == WorkItemStatus.Done ? today.AddDays(-Random.Shared.Next(0, 5)) : null,
         };
 
@@ -86,18 +114,21 @@ public static class Seed
                 var day = today.AddDays(-d);
                 if (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
                 var cursor = day.AddHours(12); // 9h local aprox. (UTC-3)
+                // Mistura de categorias para o painel nascer com dados que mostram a economia.
+                string[] mix = ["task", "task", "task", "reuniao", "pair", "estudo", "review"];
                 var blocks = Random.Shared.Next(2, 5);
                 for (var b = 0; b < blocks; b++)
                 {
                     var minutes = Random.Shared.Next(30, 150);
-                    var isMeeting = Random.Shared.NextDouble() < 0.25;
+                    var category = mix[Random.Shared.Next(mix.Length)];
                     var wi = byUser[u.Id][Random.Shared.Next(byUser[u.Id].Length)];
                     db.TimeEntries.Add(new TimeEntry
                     {
                         UserId = u.Id,
-                        WorkItemId = isMeeting ? null : wi.Id,
-                        Category = isMeeting ? "reuniao" : "task",
-                        Note = isMeeting ? "Reunião de alinhamento" : "",
+                        WorkItemId = category == "task" ? wi.Id : null,
+                        Category = category,
+                        Note = category == "reuniao" ? "Reunião de alinhamento" : "",
+                        Source = "manual",
                         StartUtc = cursor,
                         EndUtc = cursor.AddMinutes(minutes),
                     });
@@ -156,14 +187,11 @@ public static class Seed
         await db.SaveChangesAsync();
 
         // sala pessoal do Paulo já com alguns itens posicionados
-        var pauloInv = await db.Inventory.Where(i => i.UserId == paulo.Id).ToListAsync();
         var place = new (int defIdx, int x, int y)[] { (7, 2, 2), (8, 3, 2), (9, 8, 1), (12, 5, 5), (15, 9, 6) };
         foreach (var (defIdx, x, y) in place)
         {
             db.RoomItems.Add(new RoomItem { UserId = paulo.Id, ItemDefinitionId = defs[defIdx].Id, X = x, Y = y });
         }
         await db.SaveChangesAsync();
-        _ = pauloInv;
-        await GameInventorySeed.RunAsync(db);
     }
 }

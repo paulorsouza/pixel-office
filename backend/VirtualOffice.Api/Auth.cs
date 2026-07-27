@@ -87,50 +87,6 @@ public static class AuthOptions
     public static SymmetricSecurityKey SigningKey => new(Encoding.UTF8.GetBytes(JwtKey));
 }
 
-/// <summary>Cria as colunas/tabelas de auth em bancos SQLite já existentes (schema aditivo).</summary>
-public static class AuthSchema
-{
-    public static async Task EnsureAsync(AppDb db)
-    {
-        // Aditivo específico de SQLite (pragma/ALTER). No Postgres o EnsureCreated
-        // já cria as colunas/tabelas de auth a partir do modelo EF.
-        if (db.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) != true) return;
-        await AddColumnIfMissing(db, "Users", "GoogleSubject", "TEXT NULL");
-        await AddColumnIfMissing(db, "Users", "Email", "TEXT NULL");
-        await AddColumnIfMissing(db, "Users", "AppRole", "INTEGER NOT NULL DEFAULT 0");
-        await AddColumnIfMissing(db, "Users", "Username", "TEXT NULL");
-        await AddColumnIfMissing(db, "Users", "PasswordHash", "TEXT NULL");
-        await AddColumnIfMissing(db, "Users", "PasswordUpdatedUtc", "TEXT NULL");
-        await db.Database.ExecuteSqlRawAsync("""
-            CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Username" ON "Users" ("Username");
-            """);
-        await db.Database.ExecuteSqlRawAsync("""
-            CREATE TABLE IF NOT EXISTS "GoogleCredentials" (
-              "Id" INTEGER NOT NULL CONSTRAINT "PK_GoogleCredentials" PRIMARY KEY AUTOINCREMENT,
-              "UserId" INTEGER NOT NULL, "RefreshTokenEnc" TEXT NOT NULL,
-              "Scopes" TEXT NOT NULL, "UpdatedUtc" TEXT NOT NULL);
-            CREATE UNIQUE INDEX IF NOT EXISTS "IX_GoogleCredentials_UserId" ON "GoogleCredentials" ("UserId");
-            CREATE TABLE IF NOT EXISTS "AppRefreshTokens" (
-              "Id" INTEGER NOT NULL CONSTRAINT "PK_AppRefreshTokens" PRIMARY KEY AUTOINCREMENT,
-              "UserId" INTEGER NOT NULL, "TokenHash" TEXT NOT NULL,
-              "ExpiresUtc" TEXT NOT NULL, "CreatedUtc" TEXT NOT NULL, "RevokedUtc" TEXT NULL);
-            CREATE INDEX IF NOT EXISTS "IX_AppRefreshTokens_TokenHash" ON "AppRefreshTokens" ("TokenHash");
-            """);
-    }
-
-    private static async Task AddColumnIfMissing(AppDb db, string table, string column, string definition)
-    {
-        // SQLite não tem "ADD COLUMN IF NOT EXISTS"; consultamos o pragma primeiro.
-        var conn = db.Database.GetDbConnection();
-        if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
-        await using var check = conn.CreateCommand();
-        check.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = '{column}';";
-        var exists = Convert.ToInt64(await check.ExecuteScalarAsync()) > 0;
-        if (!exists)
-            await db.Database.ExecuteSqlRawAsync($"ALTER TABLE \"{table}\" ADD COLUMN \"{column}\" {definition};");
-    }
-}
-
 /// <summary>Emissão e validação do JWT próprio + refresh tokens rotativos.</summary>
 public static class AppJwt
 {

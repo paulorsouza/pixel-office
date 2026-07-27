@@ -546,8 +546,27 @@ class MapScene extends Phaser.Scene {
         onWorkStarted: (session) => { this.activeWorkSession = session; },
         onWorkStopped: () => { this.activeWorkSession = null; },
         onWorkStatus: (message) => proximityVoice.toast(message),
+        activeTaskId: this.activeTaskId,
+        onActiveTaskChange: (item) => { this.activeTaskId = item?.id ?? null; },
+        onTimerChange: () => { this.activeWorkSession = null; },
+        onReward: (reward) => {
+          if (reward?.xp || reward?.gold) {
+            proximityVoice.toast(`+${reward.xp ?? 0} XP · +${reward.gold ?? 0} 🪙`);
+          }
+        },
       },
     );
+
+    // Recompensas e objetivos chegam pelo hub e valem mesmo com o painel fechado.
+    gameItems.events.addEventListener('RewardGranted', (event) => {
+      const { message } = event.detail ?? {};
+      if (message) proximityVoice.toast(message);
+    });
+    gameItems.events.addEventListener('ObjectiveCompleted', (event) => {
+      const completions = event.detail ?? [];
+      this.furnitureInteractions.celebrate(completions);
+      for (const c of completions) proximityVoice.toast(`${c.icon} Objetivo: ${c.name} · +${c.gold} 🪙`);
+    });
     this.interactionPreviewPending = interactionPreview;
 
     window.__scene = this;

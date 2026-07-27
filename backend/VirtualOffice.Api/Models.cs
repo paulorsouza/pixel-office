@@ -2,8 +2,12 @@ namespace VirtualOffice.Api;
 
 public enum WorkItemType { Task, Bug, Atendimento }
 public enum WorkItemStatus { Backlog, Todo, InProgress, Review, Done }
+public enum WorkItemPriority { Low, Medium, High, Urgent }
 public enum ItemKind { Skin, Furniture, Medal }
 public enum Rarity { Common, Rare, Epic, Legendary }
+
+/// <summary>Janela em que um objetivo é medido e reiniciado.</summary>
+public enum ObjectiveScope { Daily, Weekly }
 
 // Papel de permissão da aplicação (independe de Role, que é o cargo decorativo).
 public enum UserRole { Member, Manager, Admin }
@@ -79,12 +83,97 @@ public class WorkItem
     public string Description { get; set; } = "";
     public WorkItemType Type { get; set; }
     public WorkItemStatus Status { get; set; }
+    public WorkItemPriority Priority { get; set; } = WorkItemPriority.Medium;
     public int? EpicId { get; set; }
     public int? SprintId { get; set; }
     public int? AssigneeId { get; set; }
+    public int? CreatedById { get; set; }
     public double? EstimateHours { get; set; }
     public DateTime CreatedUtc { get; set; }
+    public DateTime UpdatedUtc { get; set; }
+    public DateTime? StartedUtc { get; set; }
     public DateTime? DoneUtc { get; set; }
+    public DateTime? DueUtc { get; set; }
+    // Arquivar tira do quadro sem perder histórico de horas.
+    public DateTime? ArchivedUtc { get; set; }
+    // Impedimento é atributo do card, não uma coluna — um card bloqueado continua no fluxo.
+    public bool IsBlocked { get; set; }
+    public string BlockedReason { get; set; } = "";
+    /// <summary>Posição dentro da coluna. Espaçada de 1000 em 1000 para reordenar sem renumerar tudo.</summary>
+    public double BoardOrder { get; set; }
+}
+
+public class Label
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string Color { get; set; } = "#7c5cff";
+}
+
+public class WorkItemLabel
+{
+    public int WorkItemId { get; set; }
+    public int LabelId { get; set; }
+}
+
+public class WorkItemComment
+{
+    public int Id { get; set; }
+    public int WorkItemId { get; set; }
+    public int UserId { get; set; }
+    public string Body { get; set; } = "";
+    public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+    public DateTime? EditedUtc { get; set; }
+}
+
+public class ChecklistItem
+{
+    public int Id { get; set; }
+    public int WorkItemId { get; set; }
+    public string Text { get; set; } = "";
+    public bool Done { get; set; }
+    public int Position { get; set; }
+}
+
+/// <summary>Trilha de auditoria do card: quem moveu, atribuiu ou concluiu, e quando.</summary>
+public class WorkItemEvent
+{
+    public int Id { get; set; }
+    public int WorkItemId { get; set; }
+    public int? UserId { get; set; }
+    // created | status | assignee | priority | sprint | blocked | comment | checklist
+    public string Kind { get; set; } = "";
+    public string FromValue { get; set; } = "";
+    public string ToValue { get; set; } = "";
+    public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Catálogo de tipos de lançamento. É dado, não enum: a economia (XP/gold por hora),
+/// o atalho de lançamento rápido e a meta diária saem daqui, então dá para ajustar
+/// balanceamento sem recompilar.
+/// </summary>
+public class ActivityType
+{
+    public int Id { get; set; }
+    public string Key { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Icon { get; set; } = "";
+    public string Color { get; set; } = "#7c5cff";
+    public int XpPerHour { get; set; }
+    public int GoldPerHour { get; set; }
+    /// <summary>Lançamento exige um card do kanban (ex.: desenvolvimento sim, estudo não).</summary>
+    public bool RequiresWorkItem { get; set; }
+    /// <summary>Duração sugerida no botão de lançamento rápido (minutos).</summary>
+    public int DefaultMinutes { get; set; } = 60;
+    /// <summary>Meta diária em minutos; 0 = sem meta.</summary>
+    public int DailyTargetMinutes { get; set; }
+    /// <summary>Entra no total da jornada (pausa e café, por exemplo, não entrariam).</summary>
+    public bool CountsAsWork { get; set; } = true;
+    /// <summary>Permite apontar a dupla (pair programming).</summary>
+    public bool AllowsPair { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsActive { get; set; } = true;
 }
 
 public class TimeEntry
@@ -92,11 +181,18 @@ public class TimeEntry
     public int Id { get; set; }
     public int UserId { get; set; }
     public int? WorkItemId { get; set; }
-    // "task" | "reuniao" | "outro"
+    /// <summary>Chave de <see cref="ActivityType"/>. Mantém o nome antigo por compatibilidade dos dados.</summary>
     public string Category { get; set; } = "task";
     public string Note { get; set; } = "";
     public DateTime StartUtc { get; set; }
     public DateTime? EndUtc { get; set; }
+    // timer | manual | game
+    public string Source { get; set; } = "manual";
+    /// <summary>Dupla do pair programming — rende o lançamento espelhado para os dois.</summary>
+    public int? PairUserId { get; set; }
+    // Recompensa concedida por este lançamento: apagar o lançamento devolve exatamente isto.
+    public int XpAwarded { get; set; }
+    public int GoldAwarded { get; set; }
 }
 
 public class XpEvent
@@ -104,8 +200,46 @@ public class XpEvent
     public int Id { get; set; }
     public int UserId { get; set; }
     public int Amount { get; set; }
+    public int Gold { get; set; }
     public string Reason { get; set; } = "";
+    // time | workitem | objective | grant | drop
+    public string Source { get; set; } = "";
     public DateTime CreatedUtc { get; set; }
+}
+
+/// <summary>Definição de objetivo (diário ou semanal). Progresso vive em <see cref="ObjectiveProgress"/>.</summary>
+public class Objective
+{
+    public int Id { get; set; }
+    public string Key { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Icon { get; set; } = "🎯";
+    public ObjectiveScope Scope { get; set; }
+    /// <summary>minutes | entries | tasks_done | active_days</summary>
+    public string Metric { get; set; } = "minutes";
+    /// <summary>Restringe a métrica a um tipo de lançamento; vazio = todos os que contam como trabalho.</summary>
+    public string ActivityKey { get; set; } = "";
+    public int Target { get; set; }
+    public int XpReward { get; set; }
+    public int GoldReward { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
+/// Uma linha por usuário/objetivo/período. O período é a data-âncora em UTC
+/// (o dia, ou a segunda-feira da semana), o que torna a concessão idempotente.
+/// </summary>
+public class ObjectiveProgress
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int ObjectiveId { get; set; }
+    public DateTime PeriodStart { get; set; }
+    public int Value { get; set; }
+    public DateTime? CompletedUtc { get; set; }
+    public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 }
 
 public class ItemDefinition

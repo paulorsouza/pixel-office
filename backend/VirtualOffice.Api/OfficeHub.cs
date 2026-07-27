@@ -500,21 +500,30 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
         var entry = await db.TimeEntries.FindAsync(id);
         if (entry is not null && entry.EndUtc is null)
         {
-            entry.EndUtc = DateTime.UtcNow;
-            var minutes = Math.Max(1, (int)Math.Round((entry.EndUtc.Value - entry.StartUtc).TotalMinutes));
+            var minutes = Math.Max(1, (int)Math.Round((DateTime.UtcNow - entry.StartUtc).TotalMinutes));
+            entry.EndUtc = entry.StartUtc.AddMinutes(minutes);
             var user = await db.Users.FindAsync(p.UserId);
+            var activity = await db.ActivityTypes.FirstOrDefaultAsync(a => a.Key == entry.Category);
             XpResult? xp = null;
-            if (user is not null)
+            if (user is not null && activity is not null)
             {
-                var amount = await Game.XpFromTimeMinutesAsync(db, user.Id, minutes);
-                if (amount > 0) xp = await Game.AwardXpAsync(db, user, amount, $"tempo: {entry.Category} ({minutes}min)");
+                var reward = await Game.CapDailyAsync(db, user.Id, Game.RewardFor(activity, minutes), entry.StartUtc);
+                if (!reward.IsEmpty)
+                {
+                    xp = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
+                    entry.XpAwarded = reward.Xp;
+                    entry.GoldAwarded = reward.Gold;
+                }
             }
+            await db.SaveChangesAsync();
+            var completions = await ObjectiveEngine.RecalculateAsync(db, p.UserId);
             await db.SaveChangesAsync();
             if (xp is not null)
             {
                 var label = kind == "meeting" ? $"Reunião registrada: {minutes}min" : $"Foco na mesa: {minutes}min";
-                await Notify.SendXpAsync(hubContext, p.UserId, xp, label);
+                await Notify.SendRewardAsync(hubContext, p.UserId, xp, $"{label} (+{xp.Amount} XP · +{xp.Gold} 🪙)");
             }
+            await Notify.SendObjectivesAsync(hubContext, p.UserId, completions);
         }
 
         p.Status = "";
@@ -538,4 +547,59 @@ public static class Notify
             drop = xp.Drop is null ? null : new { name = xp.Drop.Item.Name, icon = xp.Drop.Item.Icon, rarity = xp.Drop.Rarity.ToString() },
         });
     }
+
+    /// <summary>
+    /// Recompensa (XP + gold) para todas as sessões do usuário. Vai pelo grupo do
+    /// usuário — que o jogo e o app web assinam — e não só pelas conexões com avatar,
+    /// senão quem está apenas no painel nunca via a moeda entrar.
+    /// </summary>
+    public static async Task SendRewardAsync(IHubContext<OfficeHub> hub, int userId, XpResult xp, string message)
+    {
+        await SendXpAsync(hub, userId, xp, message);
+        await hub.Clients.Group(OfficeHub.UserGroup(userId)).SendAsync("RewardGranted", new
+        {
+            message,
+            xp = xp.Amount,
+            gold = xp.Gold,
+            totalXp = xp.TotalXp,
+            coins = xp.Coins,
+            level = xp.Level,
+            leveledUp = xp.LeveledUp,
+        });
+    }
+
+    public static async Task SendObjectivesAsync(
+        IHubContext<OfficeHub> hub, int userId, IReadOnlyCollection<ObjectiveCompletion> completions)
+    {
+        if (completions.Count == 0) return;
+        await hub.Clients.Group(OfficeHub.UserGroup(userId)).SendAsync("ObjectiveCompleted", completions.Select(c => new
+        {
+            c.Objective.Key,
+            c.Objective.Name,
+            c.Objective.Icon,
+            xp = c.Objective.XpReward,
+            gold = c.Objective.GoldReward,
+            coins = c.Reward.Coins,
+            totalXp = c.Reward.TotalXp,
+        }));
+        var keys = Presence.Players.Values.Where(p => p.UserId == userId && !p.IsBot).Select(p => p.Key).ToList();
+        if (keys.Count == 0) return;
+        foreach (var c in completions)
+            await hub.Clients.Clients(keys).SendAsync("Notify", new
+            {
+                message = $"{c.Objective.Icon} Objetivo concluído: {c.Objective.Name} · +{c.Objective.XpReward} XP · +{c.Objective.GoldReward} 🪙",
+                xp = c.Objective.XpReward,
+                level = c.Reward.Level,
+                leveledUp = c.Reward.LeveledUp,
+                drop = (object?)null,
+            });
+    }
+
+    /// <summary>O quadro é do time inteiro: qualquer mudança vale para todo mundo conectado.</summary>
+    public static Task BoardChangedAsync(IHubContext<OfficeHub> hub, int workItemId, string change) =>
+        hub.Clients.All.SendAsync("BoardChanged", new { workItemId, change });
+
+    /// <summary>Horas são pessoais: só as sessões do próprio usuário precisam recarregar.</summary>
+    public static Task TimeChangedAsync(IHubContext<OfficeHub> hub, int userId) =>
+        hub.Clients.Group(OfficeHub.UserGroup(userId)).SendAsync("TimeChanged", new { userId });
 }

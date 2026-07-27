@@ -27,9 +27,10 @@ Unity (ver §4).
 
 | Peça | Onde | Estado |
 |---|---|---|
-| **Backend C#** | `backend/VirtualOffice.Api` | ✅ ASP.NET + EF + SignalR. Porta **5210**. SQLite (dev) ou **Postgres** (`Database:Provider`). |
+| **Backend C#** | `backend/VirtualOffice.Api` | ✅ ASP.NET + EF + SignalR. Porta **5210**. **Postgres em tudo**, schema por migrations EF. Ver [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md). |
 | **Auth** | `backend/.../Auth.cs`, `AuthEndpoints.cs` | ✅ Login Google (OIDC) + JWT próprio; papéis Member/Manager/Admin. `X-User-Id` sobrevive só via `Auth:DevBypass` (dev). Ver [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md). |
-| **App web** (tasks/horas) | `backend/.../wwwroot` | ✅ Kanban, sprints, horas, relatórios, perfil. ES modules, sem build. |
+| **App web** (tasks/horas) | `backend/.../wwwroot` | ✅ Kanban, backlog, horas, objetivos, relatórios, perfil. ES modules, sem build. |
+| **UI de trabalho compartilhada** | `backend/.../wwwroot/shared` | ✅ Kanban/horas/objetivos existem **uma vez só** e rodam no app web e dentro do jogo. Ver [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md). |
 | **LiveKit** | `livekit/` (local) ou **LiveKit Cloud** | ✅ SFU. Local (LAN) ou Cloud (entre redes). URL vem do backend (`LiveKit:Url`). |
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
 | **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez. |
@@ -77,8 +78,8 @@ GameItemInstance    unidade única, dono e localização
 FurniturePlacement  instância colocada, sceneId/roomId/x/y/flipX
 ```
 
-`GameInventorySeed.EnsureSchemaAsync` cria o schema aditivo em bancos SQLite existentes; não há
-migration EF formal ainda. `GameInventorySeed.RunAsync` **reconcilia** o catálogo curado (acrescenta o que
+O schema vem de **migrations EF** (`Migrations/`), aplicadas no boot — os scripts aditivos de SQLite
+foram removidos junto com o provider. `GameInventorySeed.RunAsync` **reconcilia** o catálogo curado (acrescenta o que
 falta e corrige a interação do que mudou) e dá o estoque inicial. Antes ele só inseria com a tabela
 vazia, então mudar a interação de um item não tinha efeito em banco já semeado. Endpoints atuais: `/api/game/inventory`, `/api/game/rooms/{scene}/{room}/furniture`,
 `/api/game/furniture`, `/api/game/chests/*` e `/api/game/workstations/*`.
@@ -189,6 +190,19 @@ O seed cria duas unidades de cada item curado para cada usuário humano, apenas 
 economia; não é uma regra definitiva de balanceamento. O cliente usa `X-User-Id`/`?userId=` no
 protótipo e precisa migrar para autenticação real antes de produção.
 
+**Kanban, horas e objetivos — uma UI, dois clientes (feito).** A tela de trabalho não é
+reimplementada no jogo: `wwwroot/shared/*` é servido pelo backend e importado tanto pelo
+app web quanto pelo `client-web/src/WorkPanel.js` (que só monta as abas e liga o tema
+escuro). O quadro ganhou prioridade, etiquetas, checklist, comentários, prazo, bloqueio,
+arquivamento, trilha de auditoria e **ordem persistida na coluna**. As horas passaram de
+três categorias fixas para um **catálogo de tipos** (`ActivityTypes`) com XP/gold por hora,
+atalho de lançamento rápido (6 h de dev, 1 h de pair, 30 min de estudo) e meta diária —
+tudo dado, ajustável em `WorkCatalogSeed.cs` sem recompilar. **Objetivos** diários e
+semanais recalculam o progresso a partir dos lançamentos (nunca incrementam), então
+corrigir um lançamento acerta a meta sozinho. Apagar lançamento **estorna** o que ele
+pagou. `Game:WelcomeGrantCoins` credita o bônus do beta (10 000 moedas) uma vez por
+usuário, inclusive nos já existentes. Detalhes: [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md).
+
 **Interações de mobília:** definições declaram um `InteractionType`, resolvido por um registro
 extensível no cliente. `of_171` abre o kanban e escolhe a atividade ativa; `of_176` funciona como
 baú e transfere instâncias; estações/computadores iniciam e encerram lançamentos de horas. Cadeiras
@@ -287,9 +301,24 @@ em qualquer domínio real o parâmetro é ignorado, então não vira porta dos f
 (`LoginScreen.isLocalDevBypass`). Nesse modo o jogo roda offline; ver [`docs/COMO-RODAR.md`](docs/COMO-RODAR.md) §0.
 
 **Deploy — produção (Docker) e beta (túnel):**
-- **Docker** (`docker-compose.yml`): Postgres + backend + game (nginx) + LiveKit + Caddy (TLS). O
-  backend suporta Postgres via `Database:Provider` (no Postgres o `EnsureCreated` cria o schema; os
-  scripts aditivos de SQLite são pulados). Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md).
+- **Produção local v1** (`run-prod-local.ps1`): sobe o stack Docker inteiro na máquina.
+  **Preserva os dados entre execuções** — é produção; zerar exige `-Reset`. Um banco novo nasce
+  com só o catálogo curado (tipos de lançamento, objetivos, etiquetas, loja), sem o time fictício
+  (`Seed:DemoData=false`); `-Demo` traz a demonstração de volta. Gera senha do Postgres,
+  `JWT_KEY` e segredo do LiveKit, e recusa subir com `AUTH_DEV_BYPASS=true`.
+  **O túnel do Cloudflare sobe por padrão** (`-NoTunnel` desliga) e o link para compartilhar
+  aparece em destaque, na área de transferência e em `deploy/tunnel-url.txt`.
+  Publica como o beta: origem HTTP única (`:8080`
+  do Caddy), game na raiz e **app web em `/app/`** (o quick tunnel só expõe uma porta). A/V usa
+  **LiveKit Cloud por padrão** — UDP não passa por túnel HTTP, então o SFU em container virou
+  opcional (perfil `local-livekit`) e só serve para a LAN.
+- **Docker** (`docker-compose.yml`): Postgres + backend + game (nginx) + Caddy (TLS); o LiveKit
+  local é opcional (perfil `local-livekit`). O schema é aplicado por migrations EF no start do
+  container. O Caddy roteia `/api`, `/hub`, `/auth` **e `/shared`** para o backend — `/shared` é
+  a UI compartilhada, que não existe na imagem do game — e publica `:8080` como origem HTTP
+  única para o túnel. Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md).
+- **Postgres em dev** (`docker-compose.dev.yml`): só o banco; backend e jogo continuam fora do
+  Docker. Ver [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md).
 - **Beta sem Docker** (`run-beta.ps1`): Caddy nativo (origem única `:8080`) + Cloudflare Tunnel expõem
   a máquina sem port-forward. **A/V entre redes exige um relay público** — voz por túnel com LiveKit
   local **não funciona** (UDP não passa em túnel HTTP); a beta usa **LiveKit Cloud** (chaves em
@@ -345,6 +374,8 @@ paredes, pisos, móveis, exteriores, porta animada):
   novos interiores pelo Tiled.
 - [`client-web/tiled/README.md`](client-web/tiled/README.md) — operação do editor visual Tiled.
 - [`client-web/TUTORIAL.md`](client-web/TUTORIAL.md) — padrões de Phaser + debug no navegador.
+- [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md) — quadro, lançamento de horas, objetivos, economia e a UI compartilhada.
+- [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md) — Postgres local, migrations EF, datas em UTC.
 - [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md) — auth Google + JWT, permissões, passo a passo do OAuth.
 - [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md) — presença em rede + A/V por proximidade.
 - [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md) — build de produção completo (Docker/Postgres/Caddy).

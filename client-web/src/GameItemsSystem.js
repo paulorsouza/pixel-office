@@ -79,6 +79,11 @@ export function createGameItemsClient(options = {}) {
     connection.on('InventoryChanged', () => refreshInventory().catch(() => {}));
     connection.on('ChestChanged', (payload) => emit('ChestChanged', payload));
     connection.on('WorkSessionChanged', (payload) => emit('WorkSessionChanged', payload));
+    // Economia e metas: o backend avisa quem lançou horas ou concluiu um objetivo,
+    // venha o lançamento do jogo ou do app web.
+    for (const eventName of ['RewardGranted', 'ObjectiveCompleted', 'TimeChanged', 'BoardChanged']) {
+      connection.on(eventName, (payload) => emit(eventName, payload));
+    }
     connection.onreconnected(() => {
       if (room) connection.invoke('JoinGame', userId, room.sceneId, room.roomId).catch(() => {});
       refreshInventory().catch(() => {});
@@ -190,19 +195,23 @@ export function createGameItemsClient(options = {}) {
         method: 'POST', body: JSON.stringify({ workItemId }),
       });
     },
-    async startWork(target, workItemId) {
+    async activityTypes() {
+      return request('/api/activity-types');
+    },
+    async activeTaskId() {
+      const me = await request('/api/me');
+      return me?.activeTask?.id ?? null;
+    },
+    async startWork(target, workItemId, activityKey = null) {
       const path = Number.isInteger(Number(target))
         ? `/api/game/workstations/${target}/start`
         : `/api/game/workstations/scenery/${encodeURIComponent(target)}/start`;
       return request(path, {
-        method: 'POST', body: JSON.stringify({ workItemId }),
+        method: 'POST', body: JSON.stringify({ workItemId, activityKey }),
       });
     },
     async stopWork() {
       return request('/api/game/workstations/stop', { method: 'POST', body: '{}' });
-    },
-    async hoursSummary(days = 14) {
-      return request(`/api/reports/summary?days=${Math.max(1, Math.min(90, Number(days) || 14))}`);
     },
   };
 }

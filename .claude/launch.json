@@ -7,6 +7,12 @@
       "runtimeArgs": ["server.js"],
       "cwd": "client-web",
       "port": 8123
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "backend/VirtualOffice.Api", "--urls", "http://localhost:5210"],
+      "port": 5210
     }
   ]
 }

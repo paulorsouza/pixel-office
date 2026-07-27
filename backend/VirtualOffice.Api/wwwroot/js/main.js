@@ -2,6 +2,7 @@ import { API, h, esc, avatar, initials, colorFor } from "./api.js";
 import { renderBoard } from "./board.js";
 import { renderBacklog } from "./backlog.js";
 import { renderHours } from "./hours.js";
+import { renderGoals } from "./goals.js";
 import { renderReports } from "./reports.js";
 import { renderMeeting } from "./meeting.js";
 import { renderChat } from "./chat.js";
@@ -11,6 +12,7 @@ const PAGES = {
   board: { title: "Kanban", sub: "arraste os cards entre as colunas", render: renderBoard },
   backlog: { title: "Backlog", sub: "todas as atividades", render: renderBacklog },
   hours: { title: "Horas", sub: "sua semana de trabalho", render: renderHours },
+  goals: { title: "Objetivos", sub: "metas do dia e da semana", render: renderGoals },
   reports: { title: "Relatórios", sub: "horas do time", render: renderReports },
   meeting: { title: "Reunião", sub: "entre na call sem abrir o jogo", render: renderMeeting },
   chat: { title: "Chat do jogo", sub: "quem está no escritório agora", render: renderChat },
@@ -197,9 +199,13 @@ export const App = {
 
   renderMe() {
     const u = App.me.user;
+    const lvl = App.me.levelInfo;
     document.getElementById("me-card").replaceChildren(
       avatar(u),
-      h("div", { class: "info" }, h("b", {}, u.name), h("span", {}, u.role)),
+      h("div", { class: "info" },
+        h("b", {}, u.name),
+        // Nível e moedas ficam à vista: é a mesma economia que o jogo mostra.
+        h("span", {}, `Nv ${lvl?.level ?? 1} · ${App.me.coins ?? 0} 🪙`)),
       h("div", { class: "spacer" }),
       h("button", { class: "btn icon ghost sm", title: "Sair", onclick: () => App.logout() }, "⎋"));
   },
@@ -219,6 +225,11 @@ export const App = {
 
   userById(id) { return App.users.find((u) => u.id === id); },
 
+  // Ganchos preenchidos pela página aberta; o hub avisa e a página se atualiza.
+  onBoardChanged: null,
+  onTimeChanged: null,
+  onObjectiveCompleted: null,
+
   // hub compartilhado (presença + chat do jogo)
   async connectHub() {
     if (App.hub) return;
@@ -226,6 +237,11 @@ export const App = {
       .withUrl("/hub/office", API.token ? { accessTokenFactory: () => Session.freshToken() } : {})
       .withAutomaticReconnect().build();
     // handlers específicos são registrados pelas páginas chat/meeting
+    // Kanban e horas são compartilhados com o jogo: mudar num lado reflete no outro.
+    App.hub.on("BoardChanged", () => App.onBoardChanged?.());
+    App.hub.on("TimeChanged", () => App.onTimeChanged?.());
+    App.hub.on("ObjectiveCompleted", (list) => App.onObjectiveCompleted?.(list));
+    App.hub.on("RewardGranted", () => App.refreshMe());
     try {
       await App.hub.start();
       // com token o servidor deriva o usuário do JWT; o argumento é fallback de dev.

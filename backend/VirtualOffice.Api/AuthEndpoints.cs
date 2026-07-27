@@ -179,6 +179,7 @@ public static class AuthEndpoints
                 PasswordHash = PasswordAuth.Hash(dto.Password!),
                 PasswordUpdatedUtc = DateTime.UtcNow,
                 Email = email.Length > 0 ? email : null,
+                Coins = GameOptions.StartingCoins,
             };
             if (email.Length > 0 && AuthOptions.AdminEmails.Contains(email)) user.AppRole = UserRole.Admin;
             db.Users.Add(user);
@@ -186,6 +187,8 @@ public static class AuthEndpoints
 
             // Conta nova começa com o estoque inicial — senão entra num mundo sem nada.
             await GameInventorySeed.EnsureUserStockAsync(db, user.Id);
+            // Bônus de boas-vindas do beta (config Game:WelcomeGrantCoins).
+            if (await Game.EnsureWelcomeGrantAsync(db, user)) await db.SaveChangesAsync();
 
             LoginThrottle.Clear(ClientIp(req));
             return Results.Ok(await IssueSessionAsync(db, user));

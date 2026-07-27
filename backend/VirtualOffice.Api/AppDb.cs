@@ -19,9 +19,30 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<PersonalRoom> PersonalRooms => Set<PersonalRoom>();
     public DbSet<GoogleCredential> GoogleCredentials => Set<GoogleCredential>();
     public DbSet<AppRefreshToken> AppRefreshTokens => Set<AppRefreshToken>();
+    public DbSet<Label> Labels => Set<Label>();
+    public DbSet<WorkItemLabel> WorkItemLabels => Set<WorkItemLabel>();
+    public DbSet<WorkItemComment> WorkItemComments => Set<WorkItemComment>();
+    public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
+    public DbSet<WorkItemEvent> WorkItemEvents => Set<WorkItemEvent>();
+    public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
+    public DbSet<Objective> Objectives => Set<Objective>();
+    public DbSet<ObjectiveProgress> ObjectiveProgress => Set<ObjectiveProgress>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<WorkItemLabel>().HasKey(x => new { x.WorkItemId, x.LabelId });
+        modelBuilder.Entity<Label>().HasIndex(x => x.Name).IsUnique();
+        modelBuilder.Entity<WorkItemComment>().HasIndex(x => x.WorkItemId);
+        modelBuilder.Entity<ChecklistItem>().HasIndex(x => x.WorkItemId);
+        modelBuilder.Entity<WorkItemEvent>().HasIndex(x => x.WorkItemId);
+        modelBuilder.Entity<WorkItem>().HasIndex(x => new { x.Status, x.BoardOrder });
+        modelBuilder.Entity<ActivityType>().HasIndex(x => x.Key).IsUnique();
+        modelBuilder.Entity<Objective>().HasIndex(x => x.Key).IsUnique();
+        // Uma linha por usuário/objetivo/período: é o que torna a concessão idempotente.
+        modelBuilder.Entity<ObjectiveProgress>()
+            .HasIndex(x => new { x.UserId, x.ObjectiveId, x.PeriodStart }).IsUnique();
+        modelBuilder.Entity<TimeEntry>().HasIndex(x => new { x.UserId, x.StartUtc });
+        modelBuilder.Entity<XpEvent>().HasIndex(x => new { x.UserId, x.CreatedUtc });
         modelBuilder.Entity<GameItemDefinition>().HasIndex(x => x.CatalogKey).IsUnique();
         modelBuilder.Entity<GameItemInstance>().HasIndex(x => x.InstanceKey).IsUnique();
         modelBuilder.Entity<FurniturePlacement>().HasIndex(x => x.ItemInstanceId).IsUnique();

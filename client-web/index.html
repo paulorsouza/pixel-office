@@ -265,6 +265,13 @@
   .interaction-header h2{margin:0;color:#f3c478;font-size:14px}.interaction-header p{margin:6px 0 0;color:#cba68c;font-size:8px}
   #furniture-interaction-close{width:34px;height:34px;border:3px solid #26191d;color:#ffe9c9;background:#744a49;font:inherit}
   #furniture-interaction-content{max-height:570px;overflow:auto;padding:12px}
+  /* Modo "trabalho": kanban/horas/objetivos usam a UI compartilhada do backend e
+     precisam de uma janela grande. A moldura continua pixel; o conteúdo é o mesmo
+     do app web, em tema escuro. */
+  #furniture-interaction-panel.work{width:min(1280px,calc(100vw - 24px));max-height:min(880px,calc(100vh - 24px));
+    display:flex;flex-direction:column}
+  #furniture-interaction-panel.work #furniture-interaction-content{flex:1;min-height:0;max-height:none;padding:14px;
+    background:#1b1216}
   .interaction-message{padding:24px;text-align:center;color:#d8b89d;font-size:9px}.interaction-message.error{color:#ff9e91}
   .interaction-kanban{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px;min-width:720px}
   .interaction-kanban section,.interaction-chest section{padding:7px;border:2px solid #2a1b20;background:#2c1e23}
@@ -277,6 +284,9 @@
   .interaction-chest img{max-width:40px;max-height:40px;image-rendering:pixelated}.interaction-chest button span{display:flex;min-width:0;flex-direction:column;gap:5px}
   .workstation-timer{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:12px;border:2px solid #2a1b20;background:#2c1e23}.workstation-timer span{font-size:24px}.workstation-timer strong{font-size:9px;flex:1}
   .workstation-timer button{padding:8px;border:2px solid #2b1c20;color:#ffe4c3;background:#774443;font:inherit;font-size:7px}.workstation-tasks{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  .workstation-kinds{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .workstation-kinds button{padding:7px 9px;border:2px solid #352126;color:#cba68c;background:#2c1e23;font:inherit;font-size:7px}
+  .workstation-kinds button.selected{border-color:#efbc68;color:#ffe9c9;background:#5b3c40}
   @media(max-width:650px){.interaction-chest,.workstation-tasks{grid-template-columns:1fr}}
   @media(max-width:440px){
     #scene-card{max-width:calc(100vw - 32px)}#controls{display:none}

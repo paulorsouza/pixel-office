@@ -10,7 +10,6 @@ export async function renderReports(view, { actions }) {
       ...[7, 14, 30, 60].map((d) => h("option", { value: d, selected: d === days ? "selected" : null }, `últimos ${d} dias`))));
 
   const maxDay = Math.max(1, ...data.perDay.map((d) => d.minutes));
-  const catLabel = (c) => ({ task: "Tasks", reuniao: "Reuniões", outro: "Outro" }[c] ?? c);
 
   view.innerHTML = "";
   view.append(
@@ -32,7 +31,7 @@ export async function renderReports(view, { actions }) {
         }))),
 
     h("div", { class: "grid", style: { gridTemplateColumns: "1fr 1fr" } },
-      hbarPanel("Por categoria", data.perCategory.map((c) => ({ label: catLabel(c.category), minutes: c.minutes, color: "#7c5cff" }))),
+      hbarPanel("Por tipo de lançamento", data.perCategory.map((c) => ({ label: `${c.icon} ${c.name}`, minutes: c.minutes, color: c.color }))),
       hbarPanel("Por pessoa", data.perUser.map((u) => ({ label: u.name, minutes: u.minutes, color: u.color })))),
     h("div", { style: { marginTop: "16px" } },
       hbarPanel("Por épico", data.perEpic.map((e) => ({ label: e.name, minutes: e.minutes, color: e.color })))));

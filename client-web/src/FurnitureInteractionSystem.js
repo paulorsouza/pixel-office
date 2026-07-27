@@ -1,3 +1,6 @@
+import { createWorkPanel } from './WorkPanel.js';
+import { auth } from './auth.js';
+
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
 })[character]);
@@ -8,7 +11,7 @@ const labels = {
   workstation: 'Usar computador',
   seat: 'Sentar',
   coffee: 'Fazer um café',
-  timeclock: 'Ver relatório de horas',
+  timeclock: 'Lançar horas e ver objetivos',
   whiteboard: 'Abrir quadro branco',
   store: 'Abrir loja',
 };
@@ -36,6 +39,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   let open = false;
   let nearby = null;
   let workingTarget = null;
+  let activeTaskId = options.activeTaskId ?? null;
 
   // Móvel do inventário: tem placement no backend, então serve para qualquer interação.
   const ownedInteractive = () => (scene.furnitureObjects || []).filter((record) => (
@@ -51,43 +55,56 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   const setOpen = (value) => {
     open = value;
     panel.hidden = !value;
+    // O painel de trabalho tem timers e listeners próprios; fechar precisa desmontar.
+    if (!value) {
+      workPanel.close();
+      panel.classList.remove('work');
+    }
     if (value) {
       equipmentMenu.setOpen(false);
       scene.player.body.setVelocity(0, 0);
       scene.input.keyboard.resetKeys();
     }
+    // O painel tem campos de texto (busca, título, comentário) e o Phaser captura
+    // W/A/S/D e E/F: sem desligar o teclado da cena, digitar "casa" andava com o
+    // avatar e sumia com as letras. O Escape continua funcionando porque é um
+    // listener de window, não da cena.
+    scene.input.keyboard.enabled = !value;
   };
 
   const status = (message, error = false) => {
     content.innerHTML = `<p class="interaction-message${error ? ' error' : ''}">${escapeHtml(message)}</p>`;
   };
 
-  async function renderKanban() {
-    title.textContent = 'Quadro de atividades';
-    subtitle.textContent = 'Escolha a atividade que será contada na estação';
-    status('Carregando quadro…');
+  // Quadro, backlog, horas e objetivos são a MESMA UI do app web, servida pelo
+  // backend (wwwroot/shared). O painel do jogo só a hospeda e escurece o tema.
+  const workPanel = createWorkPanel({
+    apiBase: gameItems.apiBase,
+    token: () => auth.token(),
+    userId: gameItems.userId,
+    activeTaskId: () => activeTaskId,
+    onActiveTaskChange: (item) => {
+      activeTaskId = item?.id ?? null;
+      options.onActiveTaskChange?.(item);
+    },
+    onTimerChange: () => options.onTimerChange?.(),
+    onReward: (reward) => options.onReward?.(reward),
+  });
+
+  async function renderWork(tab) {
+    // Limpa o handler herdado dos painéis em HTML puro (baú, loja, estação).
+    content.onclick = null;
+    // O quadro precisa de uma janela bem maior que o baú; a classe troca o tamanho.
+    panel.classList.add('work');
+    status('Carregando…');
+    // A ★ da atividade ativa vem do backend; o jogo pode ainda não ter perguntado.
+    if (activeTaskId === null) {
+      activeTaskId = await gameItems.activeTaskId().catch(() => null);
+    }
     try {
-      const items = await gameItems.workItems();
-      const columns = ['Backlog', 'Todo', 'InProgress', 'Review', 'Done'];
-      content.innerHTML = `<div class="interaction-kanban">${columns.map((column) => `
-        <section><h3>${column}</h3>${items.filter((item) => item.status === column).map((item) => `
-          <button type="button" data-work-item="${item.id}" ${item.status === 'Done' ? 'disabled' : ''}>
-            <small>${escapeHtml(item.code)}</small><strong>${escapeHtml(item.title)}</strong>
-          </button>`).join('') || '<em>Vazio</em>'}</section>
-      `).join('')}</div>`;
-      content.onclick = async (event) => {
-        const button = event.target.closest('[data-work-item]');
-        if (!button) return;
-        try {
-          await gameItems.setActiveTask(Number(button.dataset.workItem));
-          for (const candidate of content.querySelectorAll('[data-work-item]')) candidate.classList.toggle('selected', candidate === button);
-          subtitle.textContent = 'Atividade ativa atualizada';
-        } catch (error) {
-          subtitle.textContent = error.message;
-        }
-      };
+      await workPanel.open(content, { title, subtitle }, tab);
     } catch (error) {
-      status(error.message, true);
+      status(`Não deu para abrir o painel: ${error.message}`, true);
     }
   }
 
@@ -129,27 +146,48 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     subtitle.textContent = 'O tempo será registrado na atividade escolhida';
     status('Carregando atividades…');
     try {
-      const items = (await gameItems.workItems()).filter((item) => (
+      const [items, activities] = await Promise.all([
+        gameItems.workItems(),
+        gameItems.activityTypes(),
+      ]);
+      const mine = items.filter((item) => (
         item.status !== 'Done' && (!item.assigneeId || item.assigneeId === gameItems.userId)
       ));
+      // O contador da estação também aceita pair e code review, não só desenvolvimento.
       content.innerHTML = `<div class="interaction-workstation">
         <div class="workstation-timer"><span>⏱</span><strong>Pronto para focar</strong><button type="button" data-stop-work>Encerrar contador</button></div>
-        <div class="workstation-tasks">${items.map((item) => `
+        <div class="workstation-kinds">${activities.map((activity, index) => `
+          <button type="button" data-kind="${escapeHtml(activity.key)}" class="${index === 0 ? 'selected' : ''}">${activity.icon} ${escapeHtml(activity.name)}</button>
+        `).join('')}</div>
+        <div class="workstation-tasks">${mine.map((item) => `
           <button type="button" data-start-work="${item.id}"><small>${escapeHtml(item.code)} · ${escapeHtml(item.status)}</small><strong>${escapeHtml(item.title)}</strong></button>
         `).join('') || '<em>Nenhuma atividade disponível</em>'}</div>
       </div>`;
+      let activityKey = activities[0]?.key ?? 'task';
       content.onclick = async (event) => {
+        const kind = event.target.closest('[data-kind]');
+        if (kind) {
+          activityKey = kind.dataset.kind;
+          for (const button of content.querySelectorAll('[data-kind]')) {
+            button.classList.toggle('selected', button === kind);
+          }
+          return;
+        }
         const start = event.target.closest('[data-start-work]');
         const stop = event.target.closest('[data-stop-work]');
         if (!start && !stop) return;
         try {
           if (stop) {
-            await gameItems.stopWork();
+            const result = await gameItems.stopWork();
             options.onWorkStopped?.();
-            subtitle.textContent = 'Contador encerrado e horas registradas';
+            options.onReward?.(result);
+            subtitle.textContent = result?.minutes
+              ? `${result.minutes}min registrados · +${result.xp} XP · +${result.gold} 🪙`
+              : 'Contador encerrado e horas registradas';
           } else {
-            const session = await gameItems.startWork(workingTarget, Number(start.dataset.startWork));
+            const session = await gameItems.startWork(workingTarget, Number(start.dataset.startWork), activityKey);
             options.onWorkStarted?.(session);
+            options.onActiveTaskChange?.({ id: session.workItemId });
             subtitle.textContent = `Contando tempo em ${session.code}`;
           }
         } catch (error) {
@@ -161,23 +199,6 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     }
   }
 
-  async function renderTimeclock() {
-    title.textContent = 'Relógio de horas';
-    subtitle.textContent = 'Resumo real dos últimos 14 dias';
-    status('Carregando lançamentos…');
-    try {
-      const summary = await gameItems.hoursSummary(14);
-      const total = (summary.perDay || []).reduce((sum, day) => sum + day.minutes, 0);
-      content.innerHTML = `<div class="interaction-workstation">
-        <div class="workstation-timer"><span>⏱</span><strong>${Math.floor(total / 60)}h ${total % 60}min lançados</strong></div>
-        <div class="workstation-tasks">${(summary.perCategory || []).map((entry) => `
-          <div><small>${escapeHtml(entry.category)}</small><strong>${Math.floor(entry.minutes / 60)}h ${entry.minutes % 60}min</strong></div>
-        `).join('') || '<em>Nenhum lançamento no período</em>'}</div>
-      </div>`;
-    } catch (error) {
-      status(error.message, true);
-    }
-  }
 
   function renderWhiteboard(record) {
     const boardKey = record.item.interactionKey || `${scene.currentSceneId}:whiteboard`;
@@ -222,10 +243,10 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   }
 
   const handlers = {
-    kanban: (record) => renderKanban(record),
+    kanban: () => renderWork('board'),
     chest: (record) => renderChest(record),
     workstation: (record) => renderWorkstation(record),
-    timeclock: () => renderTimeclock(),
+    timeclock: () => renderWork('hours'),
     whiteboard: (record) => renderWhiteboard(record),
     store: () => renderStore(),
     async seat(record) {
@@ -260,10 +281,13 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
 
   closeButton.onclick = () => setOpen(false);
   const keydown = (event) => {
-    if (open && event.code === 'Escape') {
-      event.preventDefault();
-      setOpen(false);
-    }
+    if (!open || event.code !== 'Escape') return;
+    event.preventDefault();
+    // Escape fecha o de dentro para fora: primeiro o diálogo do card, depois o painel.
+    // O diálogo vive na camada presa à viewport, fora do painel.
+    const dialog = document.querySelector('body > .wq-layer.fixed .wq-backdrop');
+    if (dialog) dialog.remove();
+    else setOpen(false);
   };
   window.addEventListener('keydown', keydown);
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -277,6 +301,15 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     isOpen: () => open,
     close: () => setOpen(false),
     interact,
+    /** A estação/mesa mudou a atividade ativa: o quadro precisa mover a ★. */
+    setActiveTask(id) {
+      activeTaskId = id ?? null;
+      workPanel.refresh();
+    },
+    /** Objetivo concluído chegou pelo SignalR — mostra o toast se o painel estiver aberto. */
+    celebrate(completions) {
+      if (open) workPanel.celebrate(completions);
+    },
     openForType(type) {
       const record = interactive().find((candidate) => candidate.item.interactionType === type);
       if (!record) return false;

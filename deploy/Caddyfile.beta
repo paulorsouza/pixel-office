@@ -15,6 +15,11 @@
 	handle /auth/* {
 		reverse_proxy localhost:5210
 	}
+	# UI de kanban/horas/objetivos compartilhada com o app web (wwwroot/shared).
+	# Sem esta rota o painel do jogo abre vazio fora do dev.
+	handle /shared/* {
+		reverse_proxy localhost:5210
+	}
 
 	# resto -> arquivos estaticos do game (Phaser). Aspas por causa do espaco no caminho.
 	handle {

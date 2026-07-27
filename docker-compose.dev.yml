@@ -1,0 +1,30 @@
+# Postgres de desenvolvimento — a única peça de infraestrutura que o dev local precisa.
+# O backend, o cliente do jogo e o LiveKit continuam rodando fora do Docker.
+#
+#   docker compose -f docker-compose.dev.yml up -d      # sobe
+#   docker compose -f docker-compose.dev.yml down       # para (mantém os dados)
+#   docker compose -f docker-compose.dev.yml down -v    # zera o banco
+#
+# A string de conexão correspondente já é o padrão do appsettings.json.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: officequest-dev-db
+    environment:
+      POSTGRES_USER: officequest
+      POSTGRES_PASSWORD: officequest
+      POSTGRES_DB: officequest
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U officequest -d officequest"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata-dev:

@@ -35,6 +35,10 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 - ⏸️ `office-unity/` — abandonado, mantido só como arquivo.
 - ✅ **Inventário/mobília** — instâncias únicas persistidas no backend; editor consome estoque,
   interações de kanban/baú/estação e sincronização SignalR por sala. Ver `CONTEXT.md` §4.
+- ✅ **Kanban / horas / objetivos** — a UI existe **uma vez só**, em `backend/.../wwwroot/shared/`,
+  e roda no app web e dentro do jogo. Não reimplemente essas telas no `client-web`: ele importa
+  esses módulos do backend. Ver [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md).
+- ✅ **Banco** — **Postgres só**, schema por migrations EF. Ver [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md).
 
 ## Regras de trabalho
 
@@ -47,18 +51,28 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 
 ## Rodar
 
+```bash
+# Postgres (obrigatório — é o único provider). Uma vez só; os dados ficam num volume.
+docker compose -f docker-compose.dev.yml up -d
+```
+
 ```powershell
 # LiveKit (opcional)
 & ".\livekit\start-livekit.ps1"
 
-# Backend, porta 5210 — execute nessa pasta para o office.db ficar previsível
+# Backend, porta 5210 — as migrations EF são aplicadas sozinhas no boot
 Push-Location .\backend\VirtualOffice.Api
-.\bin\Debug\net10.0\VirtualOffice.Api.dll
+dotnet run
 ```
 
 ```bash
 # Cliente do jogo, porta 8123 — estático Node, sem dependências
 node client-web/server.js
+```
+
+```powershell
+# Produção local v1 (stack Docker completo, banco limpo, HTTPS em https://localhost)
+.\run-prod-local.ps1
 ```
 
 ## Assets
