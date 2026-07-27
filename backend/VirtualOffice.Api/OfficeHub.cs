@@ -16,7 +16,7 @@ public class ChessMatch
     public readonly List<ChessMoveDto> Moves = new();
 }
 
-public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub> hubContext) : Hub
+public partial class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub> hubContext) : Hub
 {
     public static string UserGroup(int userId) => $"game:user:{userId}";
     public static string RoomGroup(string sceneId, string roomId) => $"game:room:{sceneId}:{roomId}";
@@ -469,6 +469,7 @@ public class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<OfficeHub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         LiveConnections.TryRemove(Context.ConnectionId, out _);
+        await CleanupCardGameConnectionAsync(Context.ConnectionId);
 
         // libera assentos de xadrez ocupados por esta conexão
         foreach (var (boardId, match) in ChessMatches)

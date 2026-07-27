@@ -44,6 +44,7 @@ export function createPresence(options = {}) {
     rec.userId = state.userId;
     rec.name = state.name || '';
     rec.color = state.color || '#7c5cff';
+    rec.isBot = Boolean(state.isBot);
     rec.scene = state.scene || '';
     rec.x = existing ? rec.x : state.x;
     rec.y = existing ? rec.y : state.y;
@@ -167,8 +168,12 @@ export function createPresence(options = {}) {
       emit('session-ended', { message });
     });
 
-    // xadrez: repassa os eventos do hub para quem escutar (a mecânica de xadrez)
-    for (const name of ['ChessState', 'ChessMoved', 'ChessSeats', 'ChessReset']) {
+    // Jogos sociais: repassa os eventos do hub para os painéis especializados.
+    for (const name of [
+      'ChessState', 'ChessMoved', 'ChessSeats', 'ChessReset',
+      'CardChallengeReceived', 'CardChallengeSent', 'CardChallengeDeclined',
+      'CardChallengeCancelled', 'CardMatchStarted', 'CardMatchState', 'CardGameError',
+    ]) {
       connection.on(name, (payload) => emit(name, payload));
     }
 
@@ -256,6 +261,21 @@ export function createPresence(options = {}) {
     chessReset(boardId) { connection?.invoke('ChessReset', boardId).catch(() => {}); },
     chessLeave(boardId) { connection?.invoke('LeaveChess', boardId).catch(() => {}); },
 
+    // ---- cardgame PvP por proximidade ----
+    cardGameChallenge(targetConnectionId, deckIds) {
+      connection?.invoke('ChallengeCardGame', targetConnectionId, deckIds).catch(() => {});
+    },
+    cardGameAccept(challengeId, deckIds) {
+      connection?.invoke('AcceptCardGameChallenge', challengeId, deckIds).catch(() => {});
+    },
+    cardGameDecline(challengeId) {
+      connection?.invoke('DeclineCardGameChallenge', challengeId).catch(() => {});
+    },
+    cardGameMove(matchId, cardId, cellIndex, expectedVersion) {
+      connection?.invoke('CardGameMove', matchId, cardId, cellIndex, expectedVersion).catch(() => {});
+    },
+    cardGameResign(matchId) { connection?.invoke('ResignCardGame', matchId).catch(() => {}); },
+
     // aparência do avatar (camadas modulares + veículo ativo); só vai à rede quando muda
     setAppearance(appearance) {
       const json = JSON.stringify({
@@ -305,6 +325,18 @@ export function createPresence(options = {}) {
         if (rec.scene === sceneId) out.push({ key: rec.key, userId: rec.userId, name: rec.name, x: rec.x, y: rec.y });
       }
       return out;
+    },
+    remoteAt(x, y, maxDistance = 22) {
+      let nearest = null;
+      let nearestDistance = maxDistance;
+      for (const rec of remotes.values()) {
+        if (rec.scene !== sceneId || rec.isBot) continue;
+        const distance = Math.hypot(rec.x - x, rec.y - y);
+        if (distance > nearestDistance) continue;
+        nearestDistance = distance;
+        nearest = { key: rec.key, userId: rec.userId, name: rec.name, x: rec.x, y: rec.y, distance };
+      }
+      return nearest;
     },
     localPosition() { return localPlayer ? { x: localPlayer.x, y: localPlayer.y } : null; },
     currentScene() { return sceneId; },

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -17,6 +17,8 @@ import {
 const readJson = (relativeUrl) => JSON.parse(readFileSync(new URL(relativeUrl, import.meta.url), 'utf8'));
 const typeChart = readJson('../../assets/cardgame/type-chart.json');
 const prototypeCatalog = readJson('../../assets/cardgame/prototype-catalog.json');
+const fullCatalog = readJson('../../assets/cardgame/catalog.json');
+const backendCatalog = readJson('../../../backend/VirtualOffice.Api/Data/cardgame-catalog.json');
 
 function makeCard(id, overrides = {}) {
   return {
@@ -191,4 +193,21 @@ test('catálogo-protótipo possui vinte Pokémon válidos e matriz cobre os 18 t
       definition,
     )));
   }
+});
+
+test('catálogo completo possui os 151 Pokémon, variantes e sprites locais', () => {
+  const base = fullCatalog.cards.filter((card) => !card.variant);
+  assert.equal(fullCatalog.baseCount, 151);
+  assert.equal(base.length, 151);
+  assert.deepEqual(base.map((card) => card.dex), Array.from({ length: 151 }, (_, index) => index + 1));
+  assert.equal(new Set(fullCatalog.cards.map((card) => card.id)).size, fullCatalog.cards.length);
+  assert.ok(fullCatalog.cards.some((card) => card.id === 'special-ash-pikachu'));
+  assert.ok(fullCatalog.cards.some((card) => card.id === 'special-mailman-dragonite'));
+
+  for (const card of fullCatalog.cards) {
+    assert.equal(card.powerRating, Object.values(card.edges).reduce((sum, value) => sum + value, 0));
+    assert.ok(card.types.every((type) => Object.hasOwn(typeChart, type)), `${card.name} tem tipo conhecido`);
+    assert.ok(existsSync(new URL(`../../${card.art}`, import.meta.url)), `sprite existe: ${card.art}`);
+  }
+  assert.deepEqual(backendCatalog, fullCatalog, 'backend e cliente usam exatamente o mesmo catálogo');
 });

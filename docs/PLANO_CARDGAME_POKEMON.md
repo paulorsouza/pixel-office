@@ -1,6 +1,6 @@
 # Plano — cardgame Pokémon do Pixel Office
 
-**Status:** em implementação — Fase 0
+**Status:** em implementação — primeira fatia PvP jogável
 **Codinome provisório:** Tooq Triad
 **Escopo inicial:** PvP, 151 Pokémon originais, coleção, decks e boosters de 5 cartas
 
@@ -12,10 +12,15 @@
 - [x] Bônus de tipo bilateral limitado a `+1`.
 - [x] Bônus shiny em uma borda.
 - [x] Snapshot privado da mão e snapshot público do adversário.
-- [x] Matriz moderna dos 18 tipos e catálogo-protótipo com 20 Pokémon.
+- [x] Matriz moderna dos 18 tipos e catálogo completo dos 151 Pokémon originais.
 - [x] Testes determinísticos da primeira fatia.
-- [ ] Backend autoritativo e persistência.
-- [ ] UI da partida, coleção e boosters.
+- [x] Variantes iniciais: Pikachu do Ash e Dragonite Carteiro.
+- [x] Backend autoritativo em memória para desafios e partidas PvP.
+- [x] Deck builder de 9 cartas e HUD completo da partida.
+- [x] Desafio ao clicar em outro jogador próximo, com aceite e recusa.
+- [x] Validação ponta a ponta com dois jogadores no navegador.
+- [ ] Persistência de coleção e partidas.
+- [ ] Boosters, animação de abertura, shiny e economia de raridade.
 
 ## 1. Visão do produto
 
