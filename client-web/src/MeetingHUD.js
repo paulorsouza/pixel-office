@@ -681,13 +681,21 @@ export function createMeetingHUD(callbacks = {}) {
 
   // ---------- toasts ----------
 
+  /**
+   * @param duration  0 = não expira. Serve para o aviso de áudio bloqueado: no
+   *   iOS o navegador só libera o som depois de um gesto, e se o toast sumisse
+   *   sozinho o usuário ficaria mudo sem nenhum caminho visível de volta.
+   * @returns {{dismiss: Function}}
+   */
   function toast(message, { tone = 'info', actionLabel, onAction, duration = 4500 } = {}) {
     ensure();
     const t = document.createElement('div');
     t.className = `mh-toast mh-toast-${tone}`;
+    if (!duration) t.dataset.sticky = '1';
     const span = document.createElement('span');
     span.textContent = message;
     t.append(span);
+    const dismiss = () => { t.classList.add('bye'); setTimeout(() => t.remove(), 250); };
     if (actionLabel && onAction) {
       const b = document.createElement('button');
       b.type = 'button';
@@ -696,8 +704,14 @@ export function createMeetingHUD(callbacks = {}) {
       t.append(b);
     }
     els.toasts.append(t);
-    while (els.toasts.childElementCount > 3) els.toasts.firstElementChild.remove();
-    setTimeout(() => { t.classList.add('bye'); setTimeout(() => t.remove(), 250); }, duration);
+    // Fila de 3, mas um toast fixo não pode ser expulso pelos que vierem depois.
+    while (els.toasts.childElementCount > 3) {
+      const velho = [...els.toasts.children].find((el) => !el.dataset.sticky);
+      if (!velho) break;
+      velho.remove();
+    }
+    if (duration) setTimeout(dismiss, duration);
+    return { dismiss };
   }
 
   // ---------- estilos ----------
@@ -925,12 +939,33 @@ html[data-mh-mode="focus"] #game{left:calc(100vw - 316px);top:calc(100vh - 290px
 @media(max-width:860px){#mh-bar-left{display:none}}
 @media(max-width:560px){
   #mh-bar{gap:8px;padding:7px 10px}
-  .mh-btn{width:40px;height:40px}
   .mh-chev{display:none}
   .mh-divider{display:none}
   #mh-root[data-mode="focus"] #mh-pipcover{width:36vw;height:23vw}
   html[data-mh-mode="focus"] #game{left:calc(64vw - 16px);top:calc(100vh - 23vw - 100px);width:36vw;height:23vw}
-}`;
+}
+
+/* ---- celular ----
+   A barra e os avisos sao FIXOS no rodape: sem safe-area eles caem debaixo da
+   barra de gestos do iPhone, e o botao que libera o audio fica intocavel. */
+@media(max-width:760px){
+  #mh-bar{bottom:calc(14px + env(safe-area-inset-bottom));max-width:calc(100vw - 16px)}
+  #mh-toasts{bottom:calc(86px + env(safe-area-inset-bottom));width:calc(100vw - 24px)}
+  .mh-toast{max-width:100%}
+  #mh-root[data-mode="focus"] #mh-panel,
+  #mh-root[data-mode="split"] #mh-panel{bottom:calc(88px + env(safe-area-inset-bottom))}
+}
+/* Alvo de toque. Gatilho duplo, como no resto do projeto: (pointer:coarse) pega
+   o aparelho real e [data-touch="on"] pega o override ?touch=1. O botao do toast
+   importa mais que os outros: no iOS ele e o gesto que destrava o audio. */
+@media(pointer:coarse){
+  .mh-btn{width:48px;height:48px}
+  .mh-toast{padding:13px 16px}
+  .mh-toast button{min-height:44px;padding:0 16px}
+}
+html[data-touch="on"] .mh-btn{width:48px;height:48px}
+html[data-touch="on"] .mh-toast{padding:13px 16px}
+html[data-touch="on"] .mh-toast button{min-height:44px;padding:0 16px}`;
     document.head.append(s);
   }
 

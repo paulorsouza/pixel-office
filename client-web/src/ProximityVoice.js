@@ -26,7 +26,7 @@ export function createProximityVoice(options = {}) {
   let startedAt = 0;
   let lastApply = 0;
   let micHintShown = false;
-  let audioBlockedShown = false;
+  let audioBlockedToast = null;   // handle do aviso fixo de audio bloqueado
 
   // canal de voz
   let locationRoom = null;   // sala em que o avatar está fisicamente: {id,name}|null (aberto)
@@ -195,6 +195,10 @@ export function createProximityVoice(options = {}) {
   async function disconnect() {
     const r = room; room = null; connectedKey = ''; connectedRoomId = ''; startedAt = 0;
     try { await r?.disconnect(); } catch { /* ignore */ }
+    // O aviso é fixo: sem isto ele sobreviveria à saída da sala, pedindo para
+    // liberar um áudio que não existe mais.
+    audioBlockedToast?.dismiss();
+    audioBlockedToast = null;
     cleanupMedia();
     refresh();
   }
@@ -205,15 +209,25 @@ export function createProximityVoice(options = {}) {
     document.querySelectorAll('audio[data-identity]').forEach((el) => el.remove());
   }
 
-  // navegadores bloqueiam autoplay de áudio sem gesto; o LiveKit avisa e a gente
-  // oferece um clique para liberar
+  // Navegadores bloqueiam autoplay de áudio sem gesto — no celular isso é a
+  // REGRA, não a exceção: o iOS entra bloqueado em toda sessão. Por isso o aviso
+  // é FIXO (não expira): se sumisse sozinho, a pessoa ficaria sem ouvir ninguém
+  // e sem nenhum caminho visível de volta. Some sozinho quando o áudio libera.
   function maybeOfferAudioStart(r) {
-    if (r.canPlaybackAudio || audioBlockedShown) return;
-    audioBlockedShown = true;
-    hud.toast('O navegador bloqueou o áudio da reunião', {
-      tone: 'error', duration: 15000,
+    if (r.canPlaybackAudio) {
+      audioBlockedToast?.dismiss();
+      audioBlockedToast = null;
+      return;
+    }
+    if (audioBlockedToast) return;
+    audioBlockedToast = hud.toast('Toque para ouvir os outros', {
+      tone: 'error', duration: 0,
       actionLabel: 'Ativar áudio',
-      onAction: () => { r.startAudio().catch(() => {}); audioBlockedShown = false; },
+      onAction: async () => {
+        audioBlockedToast = null;
+        try { await r.startAudio(); } catch { /* segue bloqueado; o evento reabre o aviso */ }
+        maybeOfferAudioStart(r);
+      },
     });
   }
 

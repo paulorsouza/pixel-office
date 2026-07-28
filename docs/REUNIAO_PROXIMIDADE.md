@@ -214,3 +214,33 @@ backend/.../Program.cs                POST /api/av/proximity-token  {sceneId, ro
   subscritos; dá para *unsubscribe* além do `FAR_PX` quando a cena tiver muita gente.
 - **Presença por grupos de cena no servidor** (hoje o broadcast é global e o cliente filtra);
   escala melhor mover o filtro para grupos SignalR por cena.
+
+---
+
+## No celular
+
+O produto abre por link, e link abre no telefone. O que muda na voz:
+
+**O microfone já entrava desligado** — em toda plataforma, não só no celular. Entrar numa sala
+te coloca ouvindo, e falar é uma ação explícita (botão do mic ou a ação do toast de boas-vindas).
+Isso continua valendo e é o padrão certo para o telefone.
+
+**O áudio dos outros começa BLOQUEADO no iOS.** O Safari não toca áudio sem um gesto, e isso é a
+regra em toda sessão, não uma exceção. O LiveKit avisa por `AudioPlaybackStatusChanged` e o
+`maybeOfferAudioStart` mostra **um aviso que não expira** com o botão *Ativar áudio* — é ele que
+chama `room.startAudio()` dentro do gesto. O aviso some sozinho quando o áudio libera, e some
+também ao sair da sala.
+
+> O aviso **precisa** ser fixo. Antes ele expirava em 15 s: quem não visse a tempo ficava sem
+> ouvir ninguém, sem nenhum caminho visível de volta — e sem entender o porquê.
+> Pela mesma razão ele é imune à fila de 3 toasts: avisos posteriores não podem expulsá-lo.
+
+**Alvo de toque.** A barra da reunião usa botões de 48 px e o botão do toast, 44 px. Esse botão
+é o mais importante da tela no iPhone: é o gesto que destrava o som. A barra e os avisos
+respeitam `env(safe-area-inset-bottom)`, senão caem debaixo da barra de gestos e ficam intocáveis.
+
+**Vídeo** não precisou de nada: o LiveKit vendorizado já marca `playsInline`, então a câmera do
+colega não sequestra a tela em fullscreen no iOS.
+
+**Limite herdado do túnel:** com LiveKit local a voz só funciona na LAN. Para quem entra de fora
+pelo link, é obrigatório LiveKit Cloud — ver [`DEPLOY_DOCKER.md`](DEPLOY_DOCKER.md).
