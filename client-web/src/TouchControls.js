@@ -59,6 +59,10 @@ export function createTouchControls(scene, options = {}) {
   const activePointers = () => scene.input.manager.pointers.filter((p) => p.isDown);
 
   const onPointerMove = () => {
+    // Painel aberto (cardgame, equipamentos, decoração) cobre a tela, mas o Phaser
+    // continua vendo o gesto pela janela: sem este guarda, dois dedos rolando o
+    // álbum de cartas davam zoom no mundo atrás do overlay.
+    if (options.isBlocked?.()) { pinchDistance = 0; return; }
     const [a, b] = activePointers();
     if (!a || !b) { pinchDistance = 0; return; }
     const distance = Math.hypot(b.x - a.x, b.y - a.y);

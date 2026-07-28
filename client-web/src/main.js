@@ -585,15 +585,19 @@ class MapScene extends Phaser.Scene {
     // Movimento por destino (clique no desktop, toque no celular). A grade sai dos
     // mesmos retângulos de `this.solids` que a física usa, então nunca diverge.
     this.navigation = createNavigationSystem(this, this.map);
+    // Um predicado só para "tem painel na frente": clique, pinça e botão de ação
+    // precisam concordar. Duplicar a lista deixaria um deles para trás quando
+    // entrasse um painel novo — foi o que quase aconteceu com o cardgame.
+    this.uiIsBlocking = () => (
+      this.transitioning
+      || this.chessOpen
+      || cardGame.isBlocking()
+      || equipmentMenu.isOpen()
+      || this.roomDecorationEditor?.isOpen()
+      || this.furnitureInteractions?.isOpen()
+    );
     this.clickToMove = createClickToMove(this, this.navigation, {
-      isBlocked: () => (
-        this.transitioning
-        || this.chessOpen
-        || cardGame.isBlocking()
-        || equipmentMenu.isOpen()
-        || this.roomDecorationEditor?.isOpen()
-        || this.furnitureInteractions?.isOpen()
-      ),
+      isBlocked: this.uiIsBlocking,
       // Tocar sentado levanta e caminha; sem isto o comando parecia ignorado.
       onBeforeMove: () => { if (this.seated) this.standUp(); },
       onTap: (pointer) => cardGame.handleWorldTap(pointer),
@@ -603,6 +607,7 @@ class MapScene extends Phaser.Scene {
     // Botão de ação e pinça. Os handlers são os MESMOS do teclado: confirmar no
     // celular e apertar E no desktop passam pelo mesmo caminho.
     this.touchControls = createTouchControls(this, {
+      isBlocked: this.uiIsBlocking,
       onAction: () => this.handleInteract(),
       onHeadset: () => this.handleHeadset(),
       onZoom: (factor) => this.applyCameraZoom(this.zoom * factor),
@@ -663,8 +668,7 @@ class MapScene extends Phaser.Scene {
       this.roomDecorationEditor.close();
       this.interactionPreviewPending = null;
     }
-    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen()
-      || this.furnitureInteractions.isOpen() || this.chessOpen || cardGame.isBlocking()) {
+    if (this.uiIsBlocking()) {
       showPortalPrompt(null);
       this.touchControls.update({ blocked: true });
       this.player.body.setVelocity(0, 0);
