@@ -15,18 +15,35 @@ export function createClickToMove(scene, navigation, options = {}) {
   let marker = null;
   let gesture = null;   // 'tap' | 'pinch'
 
+  /** Descarta o marcador atual junto com o tween dele. */
+  function dropMarker() {
+    if (!marker) return;
+    // Matar o tween ANTES de destruir o alvo. Destruir sozinho deixava o tween
+    // vivo animando um objeto morto, e no quadro seguinte o loop do Phaser
+    // quebrava — era o duplo clique derrubando o jogo.
+    scene.tweens.killTweensOf(marker);
+    marker.destroy();
+    marker = null;
+  }
+
   function showMarker(x, y, ok) {
-    marker?.destroy();
+    dropMarker();
     const color = ok ? 0xffe9c9 : 0xff6b6b;
-    marker = scene.add.circle(x, y, 3, color, 0.9)
+    const dot = scene.add.circle(x, y, 3, color, 0.9)
       .setStrokeStyle(1, color, 1)
       .setDepth(999999);
+    marker = dot;
     scene.tweens.add({
-      targets: marker,
+      targets: dot,
       radius: ok ? 9 : 6,
       alpha: 0,
       duration: ok ? 420 : 260,
-      onComplete: () => { marker?.destroy(); marker = null; },
+      // Fecha sobre ESTE marcador, não sobre a variável compartilhada: no clique
+      // rápido o onComplete do tween antigo destruía o marcador novo.
+      onComplete: () => {
+        dot.destroy();
+        if (marker === dot) marker = null;
+      },
     });
   }
 
@@ -66,11 +83,12 @@ export function createClickToMove(scene, navigation, options = {}) {
   scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
     scene.input.off('pointerdown', onPointerDown);
     scene.input.off('pointerup', onPointerUp);
-    marker?.destroy();
-    marker = null;
+    // Mesmo cuidado do duplo clique: trocar de cena com o marcador ainda
+    // animando deixaria um tween órfão sobre um objeto destruído.
+    dropMarker();
   });
 
   return {
-    clearMarker() { marker?.destroy(); marker = null; },
+    clearMarker: dropMarker,
   };
 }
