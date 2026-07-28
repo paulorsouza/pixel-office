@@ -567,8 +567,10 @@ api.MapGet("/game/personal-rooms", async (HttpRequest req, IDbContextFactory<App
     var current = rooms.Single(x => x.mine);
     return Results.Ok(new
     {
-        roomsPerWing = 12,
-        wingCount = Math.Max(1, rooms.Count == 0 ? 1 : rooms.Max(x => x.WingIndex) + 1),
+        roomsPerWing = GameInventorySeed.RoomsPerFloor,
+        wingCount = Math.Max(
+            GameInventorySeed.MinimumFloors,
+            rooms.Count == 0 ? 0 : rooms.Max(x => x.WingIndex) + 1),
         current,
         rooms,
     });

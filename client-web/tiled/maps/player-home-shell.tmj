@@ -1060,7 +1060,7 @@
       "source": "../tilesets/tileset-moveis.tsj"
     },
     {
-      "firstgid": 5187,
+      "firstgid": 6000,
       "source": "../tilesets/tileset-exterior.tsj"
     }
   ],

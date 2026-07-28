@@ -49,7 +49,7 @@ Cidade Tooq (hub cercado 220×150)
 - `tiled/maps/tooq-office.tmj` é o Coworking, com interior, mobília, quintal e portão de saída.
 - `tiled/maps/tooq-office-1.tmj` é a Dark Company, o escritório grande afastado do spawn.
 - `tiled/maps/tooq-campus.tmj` é o Tooq Office central e contém suas áreas comuns.
-- `tiled/maps/personal-wing.tmj` é o módulo público de 12 salas pessoais por ala.
+- `tiled/maps/personal-wing.tmj` é o andar público de 6 salas pessoais (o prédio começa com dois).
 - `tiled/maps/player-home-shell.tmj` é o interior vazio compartilhado pelas futuras casas compráveis.
 - `src/TiledRuntimeLoader.js` lê mapas, tilesets externos e templates diretamente no navegador.
 - Ao salvar no Tiled, o servidor valida o projeto e recarrega o jogo; nenhum runtime é gerado.

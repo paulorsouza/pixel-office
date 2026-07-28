@@ -1,6 +1,6 @@
 # Plano de execução — Campus Tooq v2
 
-**Atualizado:** 2026-07-27
+**Atualizado:** 2026-07-28
 
 A Dark Company (`tooq-office-1`) permanece como referência funcional e não é regenerada. O Tooq
 Office nasce em arquivos próprios e usa os mesmos contratos de mapa, presença, voz, inventário e
@@ -8,23 +8,75 @@ SignalR.
 
 ## 1. Planta do prédio principal
 
+Revisada em 2026-07-28: o prédio era grande demais para o time se encontrar. O térreo passou de
+`124×112` para **`52×34` tiles** (mapa `66×52`), com um cômodo de cada tipo em vez de fileiras
+repetidas.
+
+```text
+              ← 52 tiles →
+ ┌───────────┬─────────────┬──────────┬───────┐
+ │ COZINHA 14│  JOGOS 17   │ESTUDO 13 │1×1 11 │  11  (portas ao sul)
+ ├───────────┴─────────────┴──────────┴───────┤
+ │        SALA GRANDE — canal de voz próprio  │  11
+ │   ilha de estações · mesa comunitária ·    │
+ │   lounge · bebedouro · impressora          │
+ ├────────────┬───────────────────┬───────────┤
+ │ REUNIÃO 16 │ recepção + loja   │ escada +  │  12
+ │ (fone)   ▐ │ + entrada ao sul  │ elevador  │
+ └────────────┴───────────────────┴───────────┘
+```
+
 O mapa `tooq-campus` contém:
 
-- 5 salas de reunião;
-- 10 salas 1×1;
-- 1 sala de jogos, com duas mesas de xadrez em rede;
-- 1 cozinha;
-- 3 salas de estudos;
-- recepção, átrio e acesso às alas pessoais;
-- eixo central de circulação ligando a recepção a todas as fileiras;
-- núcleo reservado de elevador e escadas para a expansão vertical;
-- porta principal, quintal ajardinado e portão de retorno ao mundo aberto.
+- 1 sala de reunião (`meeting: true` ⇒ fone na parede norte), no canto sudoeste, **porta a leste**;
+- 1 sala 1×1, 1 sala de jogos com duas mesas de xadrez em rede, 1 cozinha, 1 sala de estudos;
+- a sala grande em "L", com recepção, loja e relógio de ponto junto da entrada;
+- núcleo de elevador e escadas agrupado a leste, para a expansão vertical;
+- vão de entrada ao sul, vãos laterais e quintal ajardinado com retorno ao mundo aberto.
 
-O desenho segue o padrão estrutural validado em `tooq-office-1`: salas da mesma faixa compartilham
-paredes, as salas das pontas usam o próprio perímetro do prédio, todas as entradas do campus ficam
-nas paredes frontais (sul) e todo o piso interno — inclusive alas pessoais — usa madeira contínua.
-As fileiras são divididas à esquerda e à direita do eixo `x=59..69`; essa passagem permanece livre
-do topo do prédio até a recepção, evitando que salas superiores se tornem ilhas.
+Continua valendo o padrão estrutural de `tooq-office-1`: salas da mesma faixa compartilham paredes,
+as das pontas usam o perímetro do prédio e as portas internas ficam na parede frontal — a exceção
+deliberada é a reunião, cuja porta a leste mantém a parede norte livre para o fone.
+
+**Piso por função, não madeira em tudo.** Cozinha em piso claro, jogos em sage, estudos/1×1/reunião
+em carpete, sala grande em madeira. Isso expôs um detalhe do room builder: a peça lateral de parede
+é uma tira fina com o resto do tile transparente, então pintar o retângulo inteiro da sala fazia o
+piso vazar por baixo da parede. `MapRenderer.roomFloorRect` recua o piso para dentro das paredes.
+
+**Voz na área aberta.** Uma `zone` com `voice: true` vale como sala para o `syncVoiceChannel`. As
+duas metades do "L" compartilham o `id` `open-space`, então são um canal só; os tapetes são zonas
+mudas. Sem isso o lugar mais movimentado do prédio seria justamente o único sem áudio.
+
+**Dois jeitos de sentar, um para cada tipo de móvel.**
+
+- **Cadeira de perfil** (`of_306`/`of_307`) usa a pose `sit`, a única lateral boa do pack, com
+  `seatX: ∓0,5` e `seatY: -1,125`. O **encosto delas fica à direita** — medido, não chutado: a parte
+  mais alta da arte está nas colunas 10–13 do conteúdo. Logo, sem espelhar a pessoa encara a
+  **esquerda**; para o outro lado é a mesma peça com `flipX`, e aí o conteúdo pula para a outra
+  metade do quadro de 32 px, então a coluna e o `seatX` acompanham. Inverter isso põe o encosto
+  contra a mesa — foi o primeiro erro.
+- **Sofá** (`of_200`/`of_205`) é visto de frente, e a folha `sit` não tem pose de frente que preste.
+  Vale o **truque da estação, invertido**: `idle` virado para a câmera + `seatCover` redesenhando a
+  frente do estofado na frente das pernas. `seatY: -1,35`, `seatCover: 7`. Um assento por sofá: o
+  claim é por móvel.
+
+Os quatro números saíram de `tools/seat-preview.mjs`, que compõe móvel + avatar com a matemática do
+runtime — sentar é o tipo de coisa que só se acerta olhando. Erros que ele pegou: `seatY: -0,875`
+(herdado das poltronas) deixava o avatar baixo demais na cadeira, e `seatCover: 11` cobria a perna
+inteira, então o sofá ficava com gente sem pernas. Como a prévia usa o corpo base, cabelo alto ou
+roupa comprida ainda podem pedir 1–2 px de ajuste.
+
+Poltrona vista de frente (`of_196`–`of_199`) segue sendo cenário — ela não tem nem perfil nem frente
+larga o bastante para o `seatCover`.
+
+**Porta na parede de duas linhas.** A porta deslizante foi desenhada para a parede norte; girada na
+tira fina de uma lateral, ela fica solta no chão. A Aurora usa porta ao norte, deslocada do centro
+para não disputar lugar com o fone, que a `MeetingHeadset` pendura no meio da parede.
+
+**`place()` fala em arte, não em quadro do Tiled.** `x` é a coluna do canto esquerdo e `y` a linha
+da base. O contrato do runtime é `item.x = objeto.x/16 − 0,5` e `item.y = objeto.y/16 − 1`; usar o
+quadro direto rende meia coluna e uma linha de erro — foi assim que apareceram armário sobre a
+parede e cadeira longe da mesa. `tools/layout-audit.mjs` verifica isso no mapa inteiro.
 
 O quintal ocupa a faixa sul da cena, com caminho em cruz, fonte, bancos, árvores, flores e limite
 vegetado. Colisões invisíveis fecham o perímetro sem contaminar a arte; existe uma abertura física
@@ -48,17 +100,42 @@ O gerador idempotente `client-web/tools/generate-tooq-campus.mjs` mantém `tooq-
 pelos testes. Ele nunca reescreve a planta da Dark Company (`tooq-office-1`) nem a do Coworking
 (`tooq-office`).
 
-## 2. Salas pessoais públicas
+## 2. Salas pessoais públicas — um andar por cena
 
-As salas não são instâncias privadas escondidas. Cada ala é uma cena pública com 12 cômodos físicos:
-seis acima e seis abaixo de um corredor compartilhado.
+As salas não são instâncias privadas escondidas. Cada **andar** é uma cena pública com 6 cômodos
+físicos: três acima e três abaixo de um corredor compartilhado. O prédio nasce com **dois andares**.
 
 ```text
-Campus principal
-      │
+Térreo (tooq-campus)
+      │  elevador (expresso) · escada (um andar)
       ▼
-Ala pessoal 1 (slots 0–11) ⇄ Ala pessoal 2 (slots 12–23) ⇄ ...
+1º andar = personal-wing@0 (slots 0–5)
+      ▲▼ escada
+2º andar = personal-wing@1 (slots 6–11)
 ```
+
+As alas deixaram de ser vizinhas laterais ("ala anterior/próxima") e viraram andares de verdade.
+Os spawns são nomeados pelo **lado de onde a pessoa chega** — `from-stairs-above`,
+`from-stairs-below`, `from-elevator` — e existem com o mesmo nome no térreo e no andar, então um
+destino só serve os dois casos.
+
+**Escadas** andam um andar por vez, por `floorDelta` no objeto do mapa. ⚠️ O `verticalAccess`
+montava o portal **sem repassar `floorDelta`**, e a resolução caía no ramo do `targetWing`, que é
+fixo: subir e descer levavam ao mesmo andar. A decisão virou função pura
+(`src/FloorNavigation.js#resolveSceneTarget`) com teste próprio, justamente porque o bug era mudo —
+nada quebrava, você só não saía do lugar. Cada sentido tem arte própria
+(`limezu_stairs_wood_down.png`, gerada a partir da de subida): sem isso as duas escadas ficam
+idênticas no mapa. No último andar, subir avisa por toast em vez de não fazer nada.
+
+**Elevador** serve o prédio inteiro: `E` abre o **seletor de andar** (`src/FloorPicker.js`), que
+lista Térreo + os andares existentes, marca onde você está e segue as regras de painel do projeto
+(folha de tela cheia no celular, alvo ≥ 44 px, entra no `uiIsBlocking()`). Cada andar tem o seu
+**poço** — a porta precisa de uma parede atrás, senão fica solta no salão.
+
+⚠️ Encolher o andar mexe em dados já gravados. `GameInventorySeed.RepackPersonalRoomsAsync` roda no
+boot, reacomoda quem estava num slot que não existe mais preservando a ordem de chegada e **reancora
+a mobília junto** (as colocações são coordenadas absolutas do mapa; sem o deslocamento, a mesa do
+dono apareceria dentro da parede — ou da sala de outra pessoa).
 
 No cadastro, o backend reserva de forma persistente:
 
@@ -70,8 +147,10 @@ Todos os usuários na mesma ala compartilham presença e circulação. As placas
 qualquer pessoa pode entrar e conversar. Somente o dono recebe o botão de decoração e a API também
 recusa colocação de mobília por terceiros.
 
-Quando uma ala completa 12 salas, o próximo usuário ocupa automaticamente o primeiro slot da ala
-seguinte. O módulo mantém dimensões e corredores regulares em qualquer escala.
+Quando um andar completa 6 salas, o próximo usuário ocupa automaticamente o primeiro slot do andar
+seguinte. O módulo mantém dimensões e corredores regulares em qualquer escala. `RoomsPerFloor` e
+`MinimumFloors` vivem em `GameInventorySeed`; `FloorSlotOrigin` espelha o `wingBoundaries` do
+gerador — se um mudar sem o outro, a mesa inicial nasce fora da sala.
 
 ## 3. Economia e carga inicial
 

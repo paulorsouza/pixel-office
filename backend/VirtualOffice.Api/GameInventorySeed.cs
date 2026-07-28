@@ -136,8 +136,66 @@ public static class GameInventorySeed
         }
         await db.SaveChangesAsync();
 
+        await RepackPersonalRoomsAsync(db);
         var users = await db.Users.Where(x => !x.IsBot).Select(x => x.Id).ToListAsync();
         foreach (var userId in users) await EnsureUserStockAsync(db, userId);
+    }
+
+    /// <summary>Salas por andar. O mapa `personal-wing` tem exatamente estes slots físicos.</summary>
+    public const int RoomsPerFloor = 6;
+
+    /// <summary>Andares de salas pessoais que sempre existem, mesmo com o prédio vazio.</summary>
+    public const int MinimumFloors = 2;
+
+    /// <summary>
+    /// Canto superior esquerdo da sala do slot, em tiles, na planta do andar.
+    /// Espelha `wingBoundaries` de `tools/generate-tooq-campus.mjs`: três salas de cada lado
+    /// do corredor, dividindo parede com a vizinha.
+    /// </summary>
+    public static (int X, int Y) FloorSlotOrigin(int slotIndex)
+    {
+        var column = slotIndex % 3;
+        var lowerRow = slotIndex >= 3;
+        return (2 + column * 15, lowerRow ? 28 : 2);
+    }
+
+    /// <summary>
+    /// Reacomoda salas que ficaram fora da planta quando o andar passou a ter seis slots.
+    /// Preserva a ordem de chegada, então ninguém troca de sala com ninguém.
+    /// </summary>
+    public static async Task RepackPersonalRoomsAsync(AppDb db)
+    {
+        var rooms = await db.PersonalRooms
+            .OrderBy(x => x.WingIndex).ThenBy(x => x.SlotIndex).ThenBy(x => x.Id)
+            .ToListAsync();
+        if (rooms.All(x => x.SlotIndex < RoomsPerFloor)) return;
+
+        for (var ordinal = 0; ordinal < rooms.Count; ordinal++)
+        {
+            var room = rooms[ordinal];
+            var wing = ordinal / RoomsPerFloor;
+            var slot = ordinal % RoomsPerFloor;
+            if (room.WingIndex == wing && room.SlotIndex == slot) continue;
+
+            var previousScene = $"{room.SceneTemplate}@{room.WingIndex}";
+            var (previousX, previousY) = FloorSlotOrigin(room.SlotIndex);
+            room.WingIndex = wing;
+            room.SlotIndex = slot;
+            var (nextX, nextY) = FloorSlotOrigin(slot);
+
+            // A mobília do dono é coordenada absoluta do mapa: sem reancorar, ela ficaria
+            // atravessada na parede da sala nova (ou dentro da sala de outra pessoa).
+            var placements = await db.FurniturePlacements
+                .Where(x => x.RoomId == room.RoomKey && x.SceneId == previousScene)
+                .ToListAsync();
+            foreach (var placement in placements)
+            {
+                placement.SceneId = $"{room.SceneTemplate}@{wing}";
+                placement.X += nextX - previousX;
+                placement.Y += nextY - previousY;
+            }
+        }
+        await db.SaveChangesAsync();
     }
 
     /// <summary>
@@ -149,18 +207,17 @@ public static class GameInventorySeed
         var room = await db.PersonalRooms.SingleOrDefaultAsync(x => x.UserId == userId);
         if (room is null)
         {
-            const int roomsPerWing = 12;
             var occupied = await db.PersonalRooms
                 .Select(x => new { x.WingIndex, x.SlotIndex })
                 .ToListAsync();
             var taken = occupied.Select(x => (x.WingIndex, x.SlotIndex)).ToHashSet();
             var ordinal = 0;
-            while (taken.Contains((ordinal / roomsPerWing, ordinal % roomsPerWing))) ordinal++;
+            while (taken.Contains((ordinal / RoomsPerFloor, ordinal % RoomsPerFloor))) ordinal++;
             room = new PersonalRoom
             {
                 UserId = userId,
-                WingIndex = ordinal / roomsPerWing,
-                SlotIndex = ordinal % roomsPerWing,
+                WingIndex = ordinal / RoomsPerFloor,
+                SlotIndex = ordinal % RoomsPerFloor,
             };
             db.PersonalRooms.Add(room);
             await db.SaveChangesAsync();
@@ -179,14 +236,10 @@ public static class GameInventorySeed
 
         // A sala nasce usável: mesa e kanban pertencem ao usuário e já estão colocados.
         var sceneId = $"{room.SceneTemplate}@{room.WingIndex}";
-        var column = room.SlotIndex % 6;
-        var lowerRow = room.SlotIndex >= 6;
-        // As salas compartilham paredes; a primeira começa no próprio perímetro da ala.
-        var roomX = 2 + column * 15;
-        var roomY = lowerRow ? 40 : 2;
+        var (roomX, roomY) = FloorSlotOrigin(room.SlotIndex);
         var placements = new Dictionary<string, (double X, double Y)>
         {
-            ["of_258"] = (roomX + 7, roomY + 10),
+            ["of_258"] = (roomX + 7, roomY + 9),
             ["of_171"] = (roomX + 7.5, roomY + 3.5),
         };
         foreach (var (catalogKey, point) in placements)

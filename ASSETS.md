@@ -515,6 +515,66 @@ decrescente ao longo da borda frontal da mesa. O LimeZu não tem nada gamer.
 Coloque em `Objetos · Móveis` com **Insert Tile** (`T`); a origem é o centro inferior, então o clique
 cai nos pés da cadeira. Não têm colisão — se precisar bloquear, desenhe em `Objetos · Colisões`.
 
+### 4.11b Peças compostas (`furniture/composites/*.png`)
+
+Geradas por `client-web/tools/generate-furniture-composites.mjs`, que também as registra no
+`tileset-moveis.tsj` (**no fim**, para não deslocar nenhum gid existente).
+
+| Asset | Tamanho | O que é |
+|---|---|---|
+| `table_meeting` | 96×48 (6×3 tiles) | mesa de reunião contínua |
+| `table_long` | 64×32 | mesa comprida (cozinha, mesa comunitária) |
+| `table_round` | 48×32 | mesa de apoio (1×1, cantinho de café) |
+| `chess_table` | 32×32 | mesa de xadrez com tabuleiro e peças |
+
+Fora do tileset, o mesmo gerador escreve **`architecture/limezu_stairs_wood_down.png`**: a escada de
+subida escurecida em direção ao topo, terminando num vão preto entre os corrimãos. Escada é
+carregada pela mecânica, não pelo tileset — e sem duas artes, subir e descer ficam indistinguíveis
+no mapa.
+
+**Por que compor.** No Modern Office a mesa vem em **segmentos de 1 tile** — borda de trás
+(`of_245`), miolo (`of_246`) e frente com pernas (`of_247`), repetidos a cada 5 ids em cinco cores.
+Eles **encaixam sem emenda se colocados em tiles adjacentes** (colocar de 2 em 2 tiles deixa um
+buraco de 16 px — foi o erro da primeira tentativa), mas cada segmento traz o próprio contorno
+escuro nas colunas 0 e 15: uma fileira deles lê como "mesas encostadas", não como uma mesa. O
+gerador costura as emendas (colunas 14/15/0 viram superfície) e apaga as pernas dos segmentos do
+meio, deixando pé só nas pontas.
+
+Paleta lida da própria arte, para não destoar: superfície `#d0be9c`, sombra `#caab8b`, contorno
+`#3a3a50`, frente `#9c786b`, painel/pernas `#a79796`.
+
+⚠️ **Faixa de gid.** `tileset-moveis` tinha 1104 peças e o `tileset-exterior` começava em 5187 =
+4083 + 1104 — encostado. Ao acrescentar peças, os gids novos caíam no tileset vizinho e resolviam
+para o asset errado **sem erro nenhum** (a peça só sumia). O exterior foi para 6000 nos mapas
+gerados. Ao crescer o tileset, confira a folga.
+
+### 4.11c Ferramentas de imagem (`tools/png.mjs` e amigos)
+
+`tools/png.mjs` é um codec PNG completo em ~200 linhas sobre o `zlib` do Node — decodifica RGBA8,
+RGB8, cinza+alfa e paleta; codifica RGBA8; e traz `blit`/`fillRect`/`setPixel` para composição.
+Sem dependências, como o resto do `client-web`. Sobre ele:
+
+- **`tools/asset-sheet.mjs <prefixo> [de] [até]`** — folha de contato de uma família do tileset, com
+  o número de cada peça. O `tileset-moveis` tem 1104 assets cujo id é só um número do pack; sem ver
+  a arte, escolher sofá ou geladeira é chute. Fatia curta sai com zoom maior.
+- **`tools/map-preview.mjs <cena> [x y w h]`** — o mapa inteiro em PNG (piso, paredes, portas,
+  móveis, props, elevador, escada e tabuleiro), com a **mesma matemática do `MapRenderer`**. É como
+  a planta é conferida: o Phaser não completa o boot no navegador embutido do assistente.
+- **`tools/layout-audit.mjs <cena>`** — o que o olho só pega dentro do jogo: móvel desenhado por
+  cima da parede, colisões empilhadas e assento sem mesa do lado para onde encara.
+- **`tools/seat-preview.mjs <asset> [pose] [direção] [seatY] [seatCover]`** — móvel + avatar
+  compostos com a matemática do runtime, para calibrar o encaixe de quem senta. Usa o corpo base
+  (`bodies/body_01.png`); cabelo e roupa mudam a silhueta em 1–2 px.
+
+As saídas vão para `tools/.asset-sheets/` (ignorado pelo Git).
+
+**Descobertas úteis do pack** (vistas nas folhas): sofás modernos `of_200`/`of_205` e poltronas
+laterais `of_204`/`of_206`; mesas de centro `of_190`/`of_193`; estantes `of_194`/`of_195`; divisória
+de vidro `of_207`–`of_209`; TV `of_116`; impressoras `of_147`–`of_152`. Cozinha: geladeiras
+`kt_158`–`kt_161`, pias `kt_141`–`kt_146`, fogão/bancada `kt_192`–`kt_194`, armários `kt_121`/
+`kt_122`. O tema `13_Conference_Hall` (`cf_*`) é **palco e cortina**, não sala de reunião — não
+procure mesa de reunião ali.
+
 ### 4.12 Vão de parede (`tiles/doorways/doorway_*.png`)
 
 Peça **montada**, não recortada de pack: as seis peças de `17 · Interiores · Vãos de parede` foram

@@ -16,8 +16,16 @@ import {
   createRoomDecorationStore,
   preloadRoomDecorationAssets,
   roomAtPoint,
+  voiceZoneAtPoint,
 } from './RoomDecorationSystem.js';
 import { preloadMechanics } from './mechanics/index.js';
+import { createFloorPicker } from './FloorPicker.js';
+import {
+  CAMPUS_SCENE,
+  PERSONAL_WING_SCENE,
+  personalWingIndex,
+  resolveSceneTarget,
+} from './FloorNavigation.js';
 import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
@@ -119,7 +127,6 @@ try {
   showBootstrapMapError(error);
   throw error;
 }
-const PERSONAL_WING_SCENE = 'personal-wing';
 const PLAYER_HOME_SCENE = 'player-home-shell';
 const personalDirectory = gameItems.personalRooms();
 
@@ -127,23 +134,24 @@ function sceneTemplateId(sceneRef) {
   return String(sceneRef || '').split('@', 1)[0];
 }
 
-function personalWingIndex(sceneRef) {
-  const [template, rawWing] = String(sceneRef || '').split('@');
-  if (template !== PERSONAL_WING_SCENE) return null;
-  const wing = Number(rawWing);
-  return Number.isInteger(wing) && wing >= 0 ? wing : 0;
-}
-
 function playerHomeId(sceneRef) {
   const [template, homeId] = String(sceneRef || '').split('@');
   return template === PLAYER_HOME_SCENE && /^house-\d{2}$/.test(homeId || '') ? homeId : null;
 }
 
+// O prédio nasce com dois andares de salas pessoais; o backend só acrescenta quando lota.
+const MIN_PERSONAL_FLOORS = 2;
+const personalFloorCount = () => Math.max(
+  MIN_PERSONAL_FLOORS,
+  personalDirectory?.wingCount || 0,
+);
+const floorPicker = createFloorPicker(personalFloorCount);
+
 function sceneExists(sceneRef) {
   const template = sceneTemplateId(sceneRef);
   if (!sceneMaps[template]) return false;
   const wing = personalWingIndex(sceneRef);
-  return wing == null || wing < (personalDirectory?.wingCount || 1);
+  return wing == null || wing < personalFloorCount();
 }
 
 function materializeScene(sceneRef) {
@@ -169,9 +177,12 @@ function materializeScene(sceneRef) {
     .filter((room) => room.wingIndex === wing)
     .map((room) => [room.slotIndex, room]));
   map.id = sceneRef;
-  map.name = `Ala pessoal ${wing + 1}`;
+  // O térreo é o campus, então o primeiro andar de salas é o 1º andar.
+  map.name = `${wing + 1}º andar`;
   map.subtitle = 'Salas públicas do time · entre, visite e converse';
   map.rooms = (map.rooms || []).map((room) => {
+    // Poço do elevador não é slot de ninguém: sem isto ele vira uma "Sala disponível".
+    if (room.slotIndex == null) return room;
     const assignment = assignments.get(room.slotIndex);
     if (!assignment) return {
       ...room,
@@ -193,7 +204,7 @@ function materializeScene(sceneRef) {
   map.portals = (map.portals || []).filter((portal) => {
     if (!portal.wingDelta) return true;
     const targetWing = wing + portal.wingDelta;
-    return targetWing >= 0 && targetWing < (personalDirectory?.wingCount || 1);
+    return targetWing >= 0 && targetWing < personalFloorCount();
   });
   return map;
 }
@@ -591,6 +602,7 @@ class MapScene extends Phaser.Scene {
     this.uiIsBlocking = () => (
       this.transitioning
       || this.chessOpen
+      || floorPicker.isOpen()
       || cardGame.isBlocking()
       || equipmentMenu.isOpen()
       || this.roomDecorationEditor?.isOpen()
@@ -940,22 +952,42 @@ class MapScene extends Phaser.Scene {
     return occupants;
   }
 
-  // cada sala fechada tem seu próprio call; fora delas vale a proximidade da cena
+  // cada sala fechada tem seu próprio call; a sala grande também, por ser uma zona de voz
+  // declarada no mapa. Corredor e quintal continuam sem canal.
   syncVoiceChannel() {
     const tile = this.map.tile || 16;
-    const room = roomAtPoint(this.map, this.player.body.center.x / tile, this.player.body.center.y / tile);
-    proximityVoice.updateLocation(room ? { id: room.id, name: room.name || room.id } : null);
+    const x = this.player.body.center.x / tile;
+    const y = this.player.body.center.y / tile;
+    const area = roomAtPoint(this.map, x, y) || voiceZoneAtPoint(this.map, x, y);
+    proximityVoice.updateLocation(area ? { id: area.id, name: area.name || area.id } : null);
+  }
+
+  // O elevador não tem destino fixo: pergunta o andar e só então troca de cena.
+  async chooseFloorAndGo(portal) {
+    if (this.transitioning || floorPicker.isOpen()) return;
+    const currentWing = personalWingIndex(this.currentSceneId);
+    const choice = await floorPicker.open(currentWing);
+    if (!choice) return;
+    this.changeScene({
+      ...portal,
+      chooseFloor: false,
+      floorDelta: 0,
+      targetScene: choice.floor == null ? CAMPUS_SCENE : PERSONAL_WING_SCENE,
+      targetWing: choice.floor ?? 0,
+      targetSpawn: 'from-elevator',
+    });
   }
 
   changeScene(portal) {
-    let targetScene = portal.targetScene;
-    const currentWing = personalWingIndex(this.currentSceneId);
-    if (portal.wingDelta && currentWing != null) {
-      targetScene = `${PERSONAL_WING_SCENE}@${currentWing + portal.wingDelta}`;
-    } else if (targetScene === PERSONAL_WING_SCENE) {
-      targetScene = `${PERSONAL_WING_SCENE}@${portal.targetWing || 0}`;
+    if (portal.chooseFloor) { this.chooseFloorAndGo(portal); return; }
+    const targetScene = resolveSceneTarget(portal, this.currentSceneId);
+    const floorDelta = Number(portal.floorDelta || 0);
+    if (this.transitioning || this.roomDecorationEditor?.isOpen()) return;
+    if (!sceneExists(targetScene)) {
+      // Escada do último andar: sem aviso, apertar `E` parece bug em vez de "não existe".
+      if (floorDelta > 0) proximityVoice.toast('O prédio termina aqui — não há andar acima');
+      return;
     }
-    if (this.transitioning || this.roomDecorationEditor?.isOpen() || !sceneExists(targetScene)) return;
     this.transitioning = true;
     showPortalPrompt(null);
     this.cameras.main.once('camerafadeoutcomplete', () => {

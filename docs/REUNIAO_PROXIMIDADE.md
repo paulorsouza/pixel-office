@@ -18,6 +18,11 @@ demanda, via LiveKit. Fora de sala (ou sem o fone) não há call.
   `POST /api/av/proximity-token` (`{sceneId, roomId}`; sem gate de zona, basta estar autenticado):
   - **dentro de uma sala declarada** → `proximity-{cena}--{sala}`: **call isolado**, todos no
     mesmo volume; quem está fora não ouve e não é ouvido;
+  - **dentro de uma zona com `voice: true`** → idem, com o `id` da zona no lugar do da sala. É o
+    que dá call à **sala grande** do Tooq Office, que é open space e não tem parede. Zonas com o
+    mesmo `id` (uma sala em "L") são **um canal só**; tapetes e zonas sem a flag não abrem nada.
+    `voiceZoneAtPoint` em `RoomDecorationSystem.js`, usado por `syncVoiceChannel` como fallback
+    da sala;
   - **com o fone da reunião** → o mesmo canal da sala do fone, mesmo andando longe dela;
   - **em qualquer outro lugar** (área verde, quintal, corredor) → **não há canal**: o HUD some
     e ninguém conecta.

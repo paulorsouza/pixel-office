@@ -1,78 +1,99 @@
 {
   "id": "personal-wing",
-  "name": "Ala pessoal",
-  "subtitle": "12 salas públicas por módulo",
+  "name": "Andar de salas pessoais",
+  "subtitle": "Seis salas públicas por andar",
   "kind": "interior",
   "tile": 16,
-  "w": 96,
-  "h": 64,
+  "w": 50,
+  "h": 46,
   "camera": {
     "zoom": 2.15,
-    "minZoom": 0.65,
+    "minZoom": 0.6,
     "bounds": {
       "x": 0,
       "y": 0,
-      "w": 96,
-      "h": 64
+      "w": 50,
+      "h": 46
     }
   },
   "visualMode": "procedural",
   "assets": [
     "interior_sliding_door",
     "of_172",
-    "of_196",
-    "of_197"
+    "of_190",
+    "of_306",
+    "of_98",
+    "of_100",
+    "of_173"
   ],
   "building": {
     "x": 2,
     "y": 2,
-    "w": 92,
-    "h": 56,
+    "w": 46,
+    "h": 42,
     "floor": "wood"
   },
   "spawns": {
     "default": {
-      "x": 8,
-      "y": 31
+      "x": 5,
+      "y": 24
+    },
+    "from-elevator": {
+      "x": 5,
+      "y": 24
+    },
+    "from-stairs-above": {
+      "x": 24,
+      "y": 24
+    },
+    "from-stairs-below": {
+      "x": 34,
+      "y": 24
     },
     "from-campus": {
-      "x": 17,
-      "y": 26
+      "x": 5,
+      "y": 24
     },
     "from-campus-elevator": {
-      "x": 17,
-      "y": 26
+      "x": 5,
+      "y": 24
     },
     "from-campus-stairs": {
-      "x": 29.5,
-      "y": 29
+      "x": 24,
+      "y": 24
     },
     "qa-wing-elevator": {
-      "x": 17,
+      "x": 5,
       "y": 23
     },
     "qa-wing-stairs": {
-      "x": 29.5,
-      "y": 26
+      "x": 24,
+      "y": 23
     },
-    "from-prev": {
-      "x": 88,
-      "y": 31
-    },
-    "from-next": {
-      "x": 8,
-      "y": 31
+    "qa-wing-room": {
+      "x": 9,
+      "y": 16
     }
   },
   "zones": [
     {
       "id": "shared-corridor",
-      "name": "Corredor compartilhado",
+      "name": "Corredor do andar",
       "x": 3,
-      "y": 20,
-      "w": 90,
-      "h": 20,
+      "y": 18,
+      "w": 44,
+      "h": 10,
       "floor": "wood"
+    },
+    {
+      "hideLabel": true,
+      "id": "rug-corridor",
+      "name": "Tapete do corredor",
+      "x": 16,
+      "y": 23,
+      "w": 16,
+      "h": 4,
+      "floor": "carpet"
     }
   ],
   "rooms": [
@@ -85,7 +106,7 @@
       "x": 2,
       "y": 2,
       "w": 16,
-      "h": 18,
+      "h": 16,
       "floor": "wood",
       "doors": [
         {
@@ -107,7 +128,7 @@
       "x": 17,
       "y": 2,
       "w": 16,
-      "h": 18,
+      "h": 16,
       "floor": "wood",
       "doors": [
         {
@@ -129,7 +150,7 @@
       "x": 32,
       "y": 2,
       "w": 16,
-      "h": 18,
+      "h": 16,
       "floor": "wood",
       "doors": [
         {
@@ -144,19 +165,19 @@
     },
     {
       "wallStyle": "white",
-      "southWall3d": true,
+      "southWall3d": false,
       "slotIndex": 3,
       "id": "slot-3",
       "name": "Sala disponível",
-      "x": 47,
-      "y": 2,
+      "x": 2,
+      "y": 28,
       "w": 16,
-      "h": 18,
+      "h": 16,
       "floor": "wood",
       "doors": [
         {
           "automatic": true,
-          "side": "S",
+          "side": "N",
           "at": 7,
           "len": 2,
           "texture": "interior_sliding_door",
@@ -166,19 +187,41 @@
     },
     {
       "wallStyle": "white",
-      "southWall3d": true,
+      "southWall3d": false,
       "slotIndex": 4,
       "id": "slot-4",
       "name": "Sala disponível",
-      "x": 62,
-      "y": 2,
+      "x": 17,
+      "y": 28,
       "w": 16,
-      "h": 18,
+      "h": 16,
       "floor": "wood",
       "doors": [
         {
           "automatic": true,
-          "side": "S",
+          "side": "N",
+          "at": 7,
+          "len": 2,
+          "texture": "interior_sliding_door",
+          "frame": 6
+        }
+      ]
+    },
+    {
+      "wallStyle": "white",
+      "southWall3d": false,
+      "slotIndex": 5,
+      "id": "slot-5",
+      "name": "Sala disponível",
+      "x": 32,
+      "y": 28,
+      "w": 16,
+      "h": 16,
+      "floor": "wood",
+      "doors": [
+        {
+          "automatic": true,
+          "side": "N",
           "at": 7,
           "len": 2,
           "texture": "interior_sliding_door",
@@ -189,264 +232,168 @@
     {
       "wallStyle": "white",
       "southWall3d": true,
-      "slotIndex": 5,
-      "id": "slot-5",
-      "name": "Sala disponível",
-      "x": 77,
-      "y": 2,
-      "w": 17,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "S",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
-    },
-    {
-      "wallStyle": "white",
-      "southWall3d": false,
-      "slotIndex": 6,
-      "id": "slot-6",
-      "name": "Sala disponível",
-      "x": 2,
-      "y": 40,
-      "w": 16,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "N",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
-    },
-    {
-      "wallStyle": "white",
-      "southWall3d": false,
-      "slotIndex": 7,
-      "id": "slot-7",
-      "name": "Sala disponível",
-      "x": 17,
-      "y": 40,
-      "w": 16,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "N",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
-    },
-    {
-      "wallStyle": "white",
-      "southWall3d": false,
-      "slotIndex": 8,
-      "id": "slot-8",
-      "name": "Sala disponível",
-      "x": 32,
-      "y": 40,
-      "w": 16,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "N",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
-    },
-    {
-      "wallStyle": "white",
-      "southWall3d": false,
-      "slotIndex": 9,
-      "id": "slot-9",
-      "name": "Sala disponível",
-      "x": 47,
-      "y": 40,
-      "w": 16,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "N",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
-    },
-    {
-      "wallStyle": "white",
-      "southWall3d": false,
-      "slotIndex": 10,
-      "id": "slot-10",
-      "name": "Sala disponível",
-      "x": 62,
-      "y": 40,
-      "w": 16,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "N",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
-    },
-    {
-      "wallStyle": "white",
-      "southWall3d": false,
-      "slotIndex": 11,
-      "id": "slot-11",
-      "name": "Sala disponível",
-      "x": 77,
-      "y": 40,
-      "w": 17,
-      "h": 18,
-      "floor": "wood",
-      "doors": [
-        {
-          "automatic": true,
-          "side": "N",
-          "at": 7,
-          "len": 2,
-          "texture": "interior_sliding_door",
-          "frame": 6
-        }
-      ]
+      "hideLabel": true,
+      "id": "elevator-shaft",
+      "name": "elevator-shaft",
+      "x": 3,
+      "y": 18,
+      "w": 5,
+      "h": 4,
+      "floor": "wood"
     }
   ],
   "furniture": [
     {
       "id": "of_172",
-      "x": 47,
-      "y": 27,
+      "x": 38.5,
+      "y": 19,
       "interactionType": "timeclock",
       "interactionKey": "wing:clock"
     },
     {
-      "id": "of_196",
-      "x": 42,
-      "y": 33,
-      "interactionType": "seat",
-      "seatX": -0.5,
-      "seatY": -0.875,
-      "seatDir": "right",
-      "seatPose": "sit",
+      "id": "of_190",
+      "x": 21.5,
+      "y": 25,
       "collision": {
         "x": -0.5,
-        "y": 0,
-        "w": 1,
+        "y": 0.1,
+        "w": 2,
         "h": 0.5
       }
     },
     {
-      "id": "of_197",
-      "x": 51,
-      "y": 33,
+      "id": "of_306",
+      "x": 19.5,
+      "y": 25,
+      "interactionType": "seat",
+      "seatX": 0.5,
+      "seatY": -1.125,
+      "seatDir": "right",
+      "seatPose": "sit",
+      "flipX": true,
+      "collision": {
+        "x": 0.5,
+        "y": 0.1,
+        "w": 1,
+        "h": 0.8
+      }
+    },
+    {
+      "id": "of_306",
+      "x": 24.5,
+      "y": 25,
       "interactionType": "seat",
       "seatX": -0.5,
-      "seatY": -0.875,
+      "seatY": -1.125,
       "seatDir": "left",
       "seatPose": "sit",
       "collision": {
         "x": -0.5,
-        "y": 0,
+        "y": 0.1,
         "w": 1,
-        "h": 0.5
+        "h": 0.8
       }
-    }
-  ],
-  "portals": [
-    {
-      "wingDelta": -1,
-      "id": "previous-wing",
-      "x": 1,
-      "y": 27,
-      "w": 2,
-      "h": 8,
-      "targetScene": "personal-wing",
-      "targetSpawn": "from-prev",
-      "label": "Ala anterior"
     },
     {
-      "wingDelta": 1,
-      "id": "next-wing",
-      "x": 93,
+      "id": "of_98",
+      "x": 10.5,
       "y": 27,
-      "w": 2,
-      "h": 8,
-      "targetScene": "personal-wing",
-      "targetSpawn": "from-next",
-      "label": "Próxima ala"
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 1,
+        "h": 0.45
+      }
+    },
+    {
+      "id": "of_100",
+      "x": 44.5,
+      "y": 27,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 1,
+        "h": 0.45
+      }
+    },
+    {
+      "id": "of_173",
+      "x": 41.5,
+      "y": 19,
+      "collision": {
+        "x": -0.5,
+        "y": 0.1,
+        "w": 1,
+        "h": 0.45
+      }
     }
   ],
   "entities": [
     {
       "id": "wing-elevator",
       "type": "verticalAccess",
-      "x": 14,
-      "y": 21,
+      "x": 2.5,
+      "y": 22,
       "layer": "mechanics",
       "name": "Ala · elevador",
       "w": 6,
       "h": 4,
       "properties": {
         "accessType": "elevator",
-        "visualX": 17,
-        "visualY": 21,
+        "visualX": 5.5,
+        "visualY": 22,
         "floorIndex": 1,
         "targetScene": "tooq-campus",
-        "targetSpawn": "from-personal-wing-elevator",
-        "label": "Descer de elevador para o térreo"
+        "targetSpawn": "from-elevator",
+        "label": "Chamar o elevador"
       }
     },
     {
-      "id": "wing-stairs",
+      "id": "wing-stairs-up",
       "type": "verticalAccess",
-      "x": 26,
-      "y": 24,
+      "x": 20.5,
+      "y": 21,
       "layer": "mechanics",
-      "name": "Ala · escadas",
+      "name": "Ala · escada de subida",
       "w": 7,
       "h": 4,
       "properties": {
         "accessType": "stairs",
-        "visualX": 29.5,
-        "visualY": 24,
-        "blockX": 28.5,
-        "blockY": 20,
+        "visualX": 24,
+        "visualY": 21,
+        "blockX": 23,
+        "blockY": 18,
         "blockW": 2,
-        "blockH": 4,
+        "blockH": 3,
         "floorIndex": 1,
-        "targetScene": "tooq-campus",
-        "targetSpawn": "from-personal-wing-stairs",
-        "label": "Descer pelas escadas para o térreo"
+        "floorDelta": 1,
+        "targetScene": "personal-wing",
+        "targetSpawn": "from-stairs-below",
+        "label": "Subir um andar"
+      }
+    },
+    {
+      "id": "wing-stairs-down",
+      "type": "verticalAccess",
+      "x": 30.5,
+      "y": 21,
+      "layer": "mechanics",
+      "name": "Ala · escada de descida",
+      "w": 7,
+      "h": 4,
+      "properties": {
+        "accessType": "stairs",
+        "visualX": 34,
+        "visualY": 21,
+        "blockX": 33,
+        "blockY": 18,
+        "blockW": 2,
+        "blockH": 3,
+        "floorIndex": 1,
+        "floorDelta": -1,
+        "targetScene": "personal-wing",
+        "targetSpawn": "from-stairs-above",
+        "label": "Descer um andar"
       }
     }
   ],

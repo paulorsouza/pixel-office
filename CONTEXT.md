@@ -251,12 +251,17 @@ Duas interações — **`seat`** e **`coffee`** — também valem para **móvel 
 Tiled, sem `GameItemInstance`), via a propriedade `interactionType` no objeto. `kanban`/`chest`/
 `workstation` continuam exigindo item de inventário (dependem do `placementId`). Sentar num móvel de
 cenário usa a posição do mapa como chave do claim, então o assento continua exclusivo em rede. O
-encaixe do avatar sentado é **dado do móvel** (`seatX`/`seatY`/`seatPose`/`seatDir`/`seatCover`):
-cadeira solta senta de perfil (`sit`, a única pose lateral boa do pack — `up`/`down` da folha `sit`
-leem como pessoa em pé, ver `ASSETS.md` §3.1); a **estação** (mesa+cadeira num sprite só) usa `idle`
-de costas para o monitor e `seatCover` redesenha a cadeira na frente do avatar para ele encaixar no
-assento em vez de ficar por cima dela. Regras completas em
-[`client-web/tiled/README.md`](client-web/tiled/README.md) §5.
+encaixe do avatar sentado é **dado do móvel** (`seatX`/`seatY`/`seatPose`/`seatDir`/`seatCover`) e
+tem três receitas, porque a folha `sit` só tem lateral boa (`up`/`down` leem como pessoa em pé, ver
+`ASSETS.md` §3.1):
+1. **cadeira de perfil** → `sit` lateral, sem truque;
+2. **estação** (mesa+cadeira num sprite só) → `idle` de costas para o monitor + `seatCover`
+   redesenhando a cadeira na frente do avatar, senão ele parece em pé sobre ela;
+3. **sofá** (visto de frente) → o mesmo truque invertido: `idle` para a câmera + `seatCover` com a
+   frente do estofado, que corta a perna onde ela sumiria de verdade.
+
+`client-web/tools/seat-preview.mjs` compõe móvel + avatar fora do Phaser para calibrar esses
+números. Regras completas em [`client-web/tiled/README.md`](client-web/tiled/README.md) §5.
 
 **Rede implementada nesta fatia:** `GameItemsSystem.js` usa o cliente SignalR oficial vendorizado em
 `client-web/lib/signalr.min.js`. `JoinGame(userId, sceneId, roomId)` assina os grupos do usuário e
@@ -283,19 +288,50 @@ alinhado à saída sul, e o portal de volta ao mundo fica no portão. Foi **gera
 sobre a casca — a planta completa e as regras de parede estão em
 [`client-web/tiled/README.md`](client-web/tiled/README.md) §7.1.
 
-**Tooq Office (`tooq-campus` + `personal-wing`):** evolução paralela, sem regenerar o mapa testado.
-O prédio principal possui 5 salas de reunião, 10 salas 1×1, jogos, cozinha e 3 salas de estudos.
-As salas usam faixas contíguas com paredes compartilhadas e portas frontais; um eixo central
-contínuo conecta todas as fileiras à recepção. Prédio, corredores, salas e alas pessoais usam o
-mesmo piso de madeira. Elevador animado e escada completa usam sprites LimeZu no saguão e são
-portais `E` reais entre o térreo e as alas pessoais, com os dois meios disponíveis também para o
-retorno. O elevador fica em um poço técnico fechado e a escada tem blocker próprio separado do
-sensor frontal. O térreo possui saída física para um quintal caminhável; o portão sul usa `E` para
-voltar ao mundo aberto.
-Salas pessoais ocupam slots físicos em alas públicas de 12 cômodos; todos veem e entram, enquanto
-somente o dono decora. Cadastro provisiona `wingIndex`/`slotIndex`, mesa, kanban e skate básico.
-Loja, preços e propriedade de equipamentos agora vêm do backend; há dois modelos de cada base de
-locomoção. Arquitetura, estado e próximas fatias: [`docs/PLANO_CAMPUS_V2.md`](docs/PLANO_CAMPUS_V2.md).
+**Tooq Office (`tooq-campus` + `personal-wing`) — prédio pequeno de propósito.** O térreo mede
+**52×34 tiles** (era 124×112: quase 8× de área a menos). A faixa norte tem **um** cômodo de cada
+tipo — cozinha, jogos, estudos e 1×1 — dividindo parede com a vizinha e com porta ao sul. O resto é
+a **sala grande**, um open space em "L" com ilha de estações, mesa comunitária, lounge de sofás e a
+recepção junto da entrada. A **sala de reunião** ocupa o canto sudoeste, com a porta virada a leste:
+quem entra pelo vão sul dá de cara com ela, e a parede norte fica livre para o fone da reunião
+(`meeting: true` já pendura um). O núcleo vertical — escada e poço de elevador — fica agrupado a
+leste. O prédio inteiro cabe em poucas telas, que era o problema: antes o time se perdia num galpão.
+
+A **sala grande tem canal de voz próprio**: uma `zone` com `voice: true` no mapa vale como sala para
+o `syncVoiceChannel`. As duas metades do "L" compartilham o `id`, então são um canal só; tapetes são
+zonas mudas, só piso. Corredor e quintal seguem sem canal.
+
+**Andares.** Cada andar de salas pessoais tem **6 salas** (três de cada lado do corredor) e o prédio
+nasce com **dois**. `personal-wing@N` é o andar N+1. **Elevador** abre um seletor de andar
+(`src/FloorPicker.js`) e tem **poço em todos os andares**; **escadas** andam um andar por vez via
+`floorDelta`, com arte distinta para subir e descer. Os spawns são nomeados pelo lado de onde a
+pessoa chega (`from-stairs-above`/`from-stairs-below`/`from-elevator`), então o mesmo destino serve
+térreo e andar. A resolução do destino é função pura em `src/FloorNavigation.js` e tem teste: o
+`verticalAccess` montava o portal sem repassar `floorDelta`, e subir e descer caíam no mesmo andar —
+bug mudo, nada quebrava. O backend fixa `RoomsPerFloor = 6` / `MinimumFloors = 2` e **reacomoda** salas que ficaram
+fora da planta (`RepackPersonalRoomsAsync`), reancorando junto a mobília já colocada — sem isso a
+mesa do dono ficaria atravessada na parede da sala nova.
+
+Salas pessoais continuam sendo slots físicos públicos: todos veem e entram, somente o dono decora.
+Cadastro provisiona `wingIndex`/`slotIndex`, mesa, kanban e skate básico. Loja, preços e propriedade
+de equipamentos vêm do backend. Arquitetura, planta e próximas fatias:
+[`docs/PLANO_CAMPUS_V2.md`](docs/PLANO_CAMPUS_V2.md).
+
+**Ferramentas de arte (novas).** `tools/png.mjs` é um codec PNG sem dependências (o `zlib` do Node),
+e sobre ele: `tools/asset-sheet.mjs` monta a folha de contato de uma família do tileset — sem ver a
+arte não dá para escolher entre `lr_37` e `kt_190`; `tools/generate-furniture-composites.mjs` monta
+as peças que o pack não tem (mesa de reunião contínua, mesas de apoio e a **mesa de xadrez**, que
+antes era um retângulo marrom desenhado em código); `tools/map-preview.mjs` renderiza o mapa
+inteiro em PNG com piso, paredes, móveis e mecânicas reais — **é assim que a planta é conferida**,
+já que o Phaser não completa o boot no navegador embutido; e `tools/layout-audit.mjs` aponta móvel
+sobre a parede, colisão empilhada e assento sem mesa ao lado.
+
+⚠️ **Sentar tem dois caminhos.** Cadeira de perfil (`of_306`/`of_307`) usa a pose `sit` — o encosto
+delas é à **direita**, então sem espelhar a pessoa encara a esquerda. Sofá é de frente e usa o truque
+da estação invertido: `idle` para a câmera + `seatCover` cobrindo as pernas com a frente do estofado
+(`tools/seat-preview.mjs` calibra os dois números). Poltrona de frente (`of_196`–`of_199`) segue
+cenário. Nada disso seria preciso se a folha `sit` tivesse `up`/`down` decentes — item 6 dos
+próximos passos.
 
 **Mundo aberto v2 (`world` + `player-home-shell`):** hub cercado de `220×150` tiles, com o Tooq
 Office central junto do spawn, Coworking e Dark Company afastados, malha de ruas, calçadas,
@@ -386,8 +422,9 @@ paredes, pisos, móveis, exteriores, porta animada):
 5. ✅ **A/V por sala** (LiveKit JS) — feito. `ProximityVoice.js`: call isolado por sala declarada
    ou pelo fone, mic/câmera/tela sob demanda. Posse do fone e estado de reunião passam pela presença.
 6. **Redesenhar os frames `up`/`down` da folha `sit`** nas 23 folhas modulares — hoje são o `idle`
-   com a perna encurtada, então sentar de frente/costas não presta (a estação contorna com `idle` de
-   costas). É o que destrava sentar encarando o monitor de verdade.
+   com a perna encurtada, então sentar de frente/costas não presta. Estação e sofá contornam com
+   `idle` + `seatCover`, e poltrona de frente segue sendo só cenário; é isso que o redesenho
+   destrava, além de sentar encarando o monitor de verdade.
 7. **Persistir casas compráveis**: o vilarejo e os 12 destinos dinâmicos existem; falta propriedade,
    compra e decoração independente do interior-base.
 8. **Completar a economia do Tooq Triad**: fonte recorrente de boosters, pity, histórico de

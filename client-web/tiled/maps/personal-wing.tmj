@@ -1,7 +1,7 @@
 {
   "compressionlevel": -1,
-  "height": 64,
-  "width": 96,
+  "height": 46,
+  "width": 50,
   "infinite": false,
   "layers": [
     {
@@ -44,13 +44,13 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 27,
+          "id": 17,
           "name": "Ala pessoal",
           "type": "building",
           "x": 32,
           "y": 32,
-          "width": 1472,
-          "height": 896,
+          "width": 736,
+          "height": 672,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -79,13 +79,13 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 28,
-          "name": "Corredor compartilhado",
+          "id": 18,
+          "name": "Corredor do andar",
           "type": "zone",
           "x": 48,
-          "y": 320,
-          "width": 1440,
-          "height": 320,
+          "y": 288,
+          "width": 704,
+          "height": 160,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -98,6 +98,34 @@
               "name": "floor",
               "type": "string",
               "value": "wood"
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "name": "Tapete do corredor",
+          "type": "zone",
+          "x": 256,
+          "y": 368,
+          "width": 256,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "rug-corridor"
+            },
+            {
+              "name": "floor",
+              "type": "string",
+              "value": "carpet"
+            },
+            {
+              "name": "extraJson",
+              "type": "string",
+              "value": "{\"hideLabel\":true}"
             }
           ]
         }
@@ -125,7 +153,7 @@
           "x": 32,
           "y": 32,
           "width": 256,
-          "height": 288,
+          "height": 256,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -153,7 +181,7 @@
           "x": 272,
           "y": 32,
           "width": 256,
-          "height": 288,
+          "height": 256,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -181,7 +209,7 @@
           "x": 512,
           "y": 32,
           "width": 256,
-          "height": 288,
+          "height": 256,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -206,10 +234,10 @@
           "id": 4,
           "name": "Sala disponível",
           "type": "room",
-          "x": 752,
-          "y": 32,
+          "x": 32,
+          "y": 448,
           "width": 256,
-          "height": 288,
+          "height": 256,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -226,7 +254,7 @@
             {
               "name": "extraJson",
               "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true,\"slotIndex\":3}"
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":3}"
             }
           ]
         },
@@ -234,10 +262,10 @@
           "id": 5,
           "name": "Sala disponível",
           "type": "room",
-          "x": 992,
-          "y": 32,
+          "x": 272,
+          "y": 448,
           "width": 256,
-          "height": 288,
+          "height": 256,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -254,7 +282,7 @@
             {
               "name": "extraJson",
               "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true,\"slotIndex\":4}"
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":4}"
             }
           ]
         },
@@ -262,10 +290,10 @@
           "id": 6,
           "name": "Sala disponível",
           "type": "room",
-          "x": 1232,
-          "y": 32,
-          "width": 272,
-          "height": 288,
+          "x": 512,
+          "y": 448,
+          "width": 256,
+          "height": 256,
           "rotation": 0,
           "visible": true,
           "properties": [
@@ -282,25 +310,25 @@
             {
               "name": "extraJson",
               "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true,\"slotIndex\":5}"
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":5}"
             }
           ]
         },
         {
           "id": 7,
-          "name": "Sala disponível",
+          "name": "",
           "type": "room",
-          "x": 32,
-          "y": 640,
-          "width": 256,
-          "height": 288,
+          "x": 48,
+          "y": 288,
+          "width": 80,
+          "height": 64,
           "rotation": 0,
           "visible": true,
           "properties": [
             {
               "name": "id",
               "type": "string",
-              "value": "slot-6"
+              "value": "elevator-shaft"
             },
             {
               "name": "floor",
@@ -310,147 +338,7 @@
             {
               "name": "extraJson",
               "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":6}"
-            }
-          ]
-        },
-        {
-          "id": 8,
-          "name": "Sala disponível",
-          "type": "room",
-          "x": 272,
-          "y": 640,
-          "width": 256,
-          "height": 288,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "slot-7"
-            },
-            {
-              "name": "floor",
-              "type": "string",
-              "value": "wood"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":7}"
-            }
-          ]
-        },
-        {
-          "id": 9,
-          "name": "Sala disponível",
-          "type": "room",
-          "x": 512,
-          "y": 640,
-          "width": 256,
-          "height": 288,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "slot-8"
-            },
-            {
-              "name": "floor",
-              "type": "string",
-              "value": "wood"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":8}"
-            }
-          ]
-        },
-        {
-          "id": 10,
-          "name": "Sala disponível",
-          "type": "room",
-          "x": 752,
-          "y": 640,
-          "width": 256,
-          "height": 288,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "slot-9"
-            },
-            {
-              "name": "floor",
-              "type": "string",
-              "value": "wood"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":9}"
-            }
-          ]
-        },
-        {
-          "id": 11,
-          "name": "Sala disponível",
-          "type": "room",
-          "x": 992,
-          "y": 640,
-          "width": 256,
-          "height": 288,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "slot-10"
-            },
-            {
-              "name": "floor",
-              "type": "string",
-              "value": "wood"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":10}"
-            }
-          ]
-        },
-        {
-          "id": 12,
-          "name": "Sala disponível",
-          "type": "room",
-          "x": 1232,
-          "y": 640,
-          "width": 272,
-          "height": 288,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "slot-11"
-            },
-            {
-              "name": "floor",
-              "type": "string",
-              "value": "wood"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wallStyle\":\"white\",\"southWall3d\":false,\"slotIndex\":11}"
+              "value": "{\"wallStyle\":\"white\",\"southWall3d\":true,\"hideLabel\":true}"
             }
           ]
         }
@@ -472,11 +360,11 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 29,
+          "id": 20,
           "name": "of_172",
           "type": "",
-          "x": 760,
-          "y": 448,
+          "x": 624,
+          "y": 320,
           "width": 32,
           "height": 48,
           "rotation": 0,
@@ -501,11 +389,11 @@
           "gid": 4254
         },
         {
-          "id": 30,
-          "name": "of_196",
+          "id": 21,
+          "name": "of_190",
           "type": "",
-          "x": 680,
-          "y": 544,
+          "x": 352,
+          "y": 416,
           "width": 32,
           "height": 48,
           "rotation": 0,
@@ -514,7 +402,7 @@
             {
               "name": "assetId",
               "type": "string",
-              "value": "of_196"
+              "value": "of_190"
             },
             {
               "name": "collisionX",
@@ -523,8 +411,47 @@
             },
             {
               "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
               "type": "int",
-              "value": 0
+              "value": 2
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.5
+            }
+          ],
+          "gid": 4272
+        },
+        {
+          "id": 22,
+          "name": "of_306",
+          "type": "",
+          "x": 320,
+          "y": 416,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_306"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": 0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
             },
             {
               "name": "collisionW",
@@ -534,7 +461,12 @@
             {
               "name": "collisionH",
               "type": "float",
-              "value": 0.5
+              "value": 0.8
+            },
+            {
+              "name": "flipX",
+              "type": "bool",
+              "value": true
             },
             {
               "name": "interactionType",
@@ -544,12 +476,12 @@
             {
               "name": "seatX",
               "type": "float",
-              "value": -0.5
+              "value": 0.5
             },
             {
               "name": "seatY",
               "type": "float",
-              "value": -0.875
+              "value": -1.125
             },
             {
               "name": "seatDir",
@@ -562,14 +494,14 @@
               "value": "sit"
             }
           ],
-          "gid": 4278
+          "gid": 4388
         },
         {
-          "id": 31,
-          "name": "of_197",
+          "id": 23,
+          "name": "of_306",
           "type": "",
-          "x": 824,
-          "y": 544,
+          "x": 400,
+          "y": 416,
           "width": 32,
           "height": 48,
           "rotation": 0,
@@ -578,7 +510,7 @@
             {
               "name": "assetId",
               "type": "string",
-              "value": "of_197"
+              "value": "of_306"
             },
             {
               "name": "collisionX",
@@ -587,8 +519,8 @@
             },
             {
               "name": "collisionY",
-              "type": "int",
-              "value": 0
+              "type": "float",
+              "value": 0.1
             },
             {
               "name": "collisionW",
@@ -598,7 +530,7 @@
             {
               "name": "collisionH",
               "type": "float",
-              "value": 0.5
+              "value": 0.8
             },
             {
               "name": "interactionType",
@@ -613,7 +545,7 @@
             {
               "name": "seatY",
               "type": "float",
-              "value": -0.875
+              "value": -1.125
             },
             {
               "name": "seatDir",
@@ -626,7 +558,124 @@
               "value": "sit"
             }
           ],
-          "gid": 4279
+          "gid": 4388
+        },
+        {
+          "id": 24,
+          "name": "of_98",
+          "type": "",
+          "x": 176,
+          "y": 448,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_98"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.45
+            }
+          ],
+          "gid": 4180
+        },
+        {
+          "id": 25,
+          "name": "of_100",
+          "type": "",
+          "x": 720,
+          "y": 448,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_100"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.45
+            }
+          ],
+          "gid": 4182
+        },
+        {
+          "id": 26,
+          "name": "of_173",
+          "type": "",
+          "x": 672,
+          "y": 320,
+          "width": 32,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "of_173"
+            },
+            {
+              "name": "collisionX",
+              "type": "float",
+              "value": -0.5
+            },
+            {
+              "name": "collisionY",
+              "type": "float",
+              "value": 0.1
+            },
+            {
+              "name": "collisionW",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "collisionH",
+              "type": "float",
+              "value": 0.45
+            }
+          ],
+          "gid": 4255
         }
       ],
       "properties": [
@@ -646,11 +695,11 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 13,
+          "id": 8,
           "name": "Porta · slot-0",
           "type": "door",
           "x": 144,
-          "y": 320,
+          "y": 288,
           "width": 32,
           "height": 0,
           "rotation": 0,
@@ -684,11 +733,11 @@
           ]
         },
         {
-          "id": 14,
+          "id": 9,
           "name": "Porta · slot-1",
           "type": "door",
           "x": 384,
-          "y": 320,
+          "y": 288,
           "width": 32,
           "height": 0,
           "rotation": 0,
@@ -722,11 +771,11 @@
           ]
         },
         {
-          "id": 15,
+          "id": 10,
           "name": "Porta · slot-2",
           "type": "door",
           "x": 624,
-          "y": 320,
+          "y": 288,
           "width": 32,
           "height": 0,
           "rotation": 0,
@@ -760,11 +809,11 @@
           ]
         },
         {
-          "id": 16,
+          "id": 11,
           "name": "Porta · slot-3",
           "type": "door",
-          "x": 864,
-          "y": 320,
+          "x": 144,
+          "y": 448,
           "width": 32,
           "height": 0,
           "rotation": 0,
@@ -778,7 +827,7 @@
             {
               "name": "side",
               "type": "string",
-              "value": "S"
+              "value": "N"
             },
             {
               "name": "texture",
@@ -798,11 +847,11 @@
           ]
         },
         {
-          "id": 17,
+          "id": 12,
           "name": "Porta · slot-4",
           "type": "door",
-          "x": 1104,
-          "y": 320,
+          "x": 384,
+          "y": 448,
           "width": 32,
           "height": 0,
           "rotation": 0,
@@ -816,7 +865,7 @@
             {
               "name": "side",
               "type": "string",
-              "value": "S"
+              "value": "N"
             },
             {
               "name": "texture",
@@ -836,11 +885,11 @@
           ]
         },
         {
-          "id": 18,
+          "id": 13,
           "name": "Porta · slot-5",
           "type": "door",
-          "x": 1344,
-          "y": 320,
+          "x": 624,
+          "y": 448,
           "width": 32,
           "height": 0,
           "rotation": 0,
@@ -850,234 +899,6 @@
               "name": "parent",
               "type": "string",
               "value": "slot-5"
-            },
-            {
-              "name": "side",
-              "type": "string",
-              "value": "S"
-            },
-            {
-              "name": "texture",
-              "type": "string",
-              "value": "interior_sliding_door"
-            },
-            {
-              "name": "frame",
-              "type": "int",
-              "value": 6
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"automatic\":true}"
-            }
-          ]
-        },
-        {
-          "id": 19,
-          "name": "Porta · slot-6",
-          "type": "door",
-          "x": 144,
-          "y": 640,
-          "width": 32,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "parent",
-              "type": "string",
-              "value": "slot-6"
-            },
-            {
-              "name": "side",
-              "type": "string",
-              "value": "N"
-            },
-            {
-              "name": "texture",
-              "type": "string",
-              "value": "interior_sliding_door"
-            },
-            {
-              "name": "frame",
-              "type": "int",
-              "value": 6
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"automatic\":true}"
-            }
-          ]
-        },
-        {
-          "id": 20,
-          "name": "Porta · slot-7",
-          "type": "door",
-          "x": 384,
-          "y": 640,
-          "width": 32,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "parent",
-              "type": "string",
-              "value": "slot-7"
-            },
-            {
-              "name": "side",
-              "type": "string",
-              "value": "N"
-            },
-            {
-              "name": "texture",
-              "type": "string",
-              "value": "interior_sliding_door"
-            },
-            {
-              "name": "frame",
-              "type": "int",
-              "value": 6
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"automatic\":true}"
-            }
-          ]
-        },
-        {
-          "id": 21,
-          "name": "Porta · slot-8",
-          "type": "door",
-          "x": 624,
-          "y": 640,
-          "width": 32,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "parent",
-              "type": "string",
-              "value": "slot-8"
-            },
-            {
-              "name": "side",
-              "type": "string",
-              "value": "N"
-            },
-            {
-              "name": "texture",
-              "type": "string",
-              "value": "interior_sliding_door"
-            },
-            {
-              "name": "frame",
-              "type": "int",
-              "value": 6
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"automatic\":true}"
-            }
-          ]
-        },
-        {
-          "id": 22,
-          "name": "Porta · slot-9",
-          "type": "door",
-          "x": 864,
-          "y": 640,
-          "width": 32,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "parent",
-              "type": "string",
-              "value": "slot-9"
-            },
-            {
-              "name": "side",
-              "type": "string",
-              "value": "N"
-            },
-            {
-              "name": "texture",
-              "type": "string",
-              "value": "interior_sliding_door"
-            },
-            {
-              "name": "frame",
-              "type": "int",
-              "value": 6
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"automatic\":true}"
-            }
-          ]
-        },
-        {
-          "id": 23,
-          "name": "Porta · slot-10",
-          "type": "door",
-          "x": 1104,
-          "y": 640,
-          "width": 32,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "parent",
-              "type": "string",
-              "value": "slot-10"
-            },
-            {
-              "name": "side",
-              "type": "string",
-              "value": "N"
-            },
-            {
-              "name": "texture",
-              "type": "string",
-              "value": "interior_sliding_door"
-            },
-            {
-              "name": "frame",
-              "type": "int",
-              "value": 6
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"automatic\":true}"
-            }
-          ]
-        },
-        {
-          "id": 24,
-          "name": "Porta · slot-11",
-          "type": "door",
-          "x": 1344,
-          "y": 640,
-          "width": 32,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "parent",
-              "type": "string",
-              "value": "slot-11"
             },
             {
               "name": "side",
@@ -1119,11 +940,11 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 32,
+          "id": 27,
           "name": "default",
           "type": "spawn",
-          "x": 136,
-          "y": 496,
+          "x": 88,
+          "y": 384,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1137,11 +958,65 @@
           ]
         },
         {
-          "id": 33,
+          "id": 28,
+          "name": "from-elevator",
+          "type": "spawn",
+          "x": 88,
+          "y": 384,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-elevator"
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "name": "from-stairs-above",
+          "type": "spawn",
+          "x": 392,
+          "y": 384,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-stairs-above"
+            }
+          ]
+        },
+        {
+          "id": 30,
+          "name": "from-stairs-below",
+          "type": "spawn",
+          "x": 552,
+          "y": 384,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-stairs-below"
+            }
+          ]
+        },
+        {
+          "id": 31,
           "name": "from-campus",
           "type": "spawn",
-          "x": 280,
-          "y": 416,
+          "x": 88,
+          "y": 384,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1155,11 +1030,11 @@
           ]
         },
         {
-          "id": 34,
+          "id": 32,
           "name": "from-campus-elevator",
           "type": "spawn",
-          "x": 280,
-          "y": 416,
+          "x": 88,
+          "y": 384,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1173,11 +1048,11 @@
           ]
         },
         {
-          "id": 35,
+          "id": 33,
           "name": "from-campus-stairs",
           "type": "spawn",
-          "x": 480,
-          "y": 464,
+          "x": 392,
+          "y": 384,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1191,10 +1066,10 @@
           ]
         },
         {
-          "id": 36,
+          "id": 34,
           "name": "qa-wing-elevator",
           "type": "spawn",
-          "x": 280,
+          "x": 88,
           "y": 368,
           "width": 0,
           "height": 0,
@@ -1209,11 +1084,11 @@
           ]
         },
         {
-          "id": 37,
+          "id": 35,
           "name": "qa-wing-stairs",
           "type": "spawn",
-          "x": 480,
-          "y": 416,
+          "x": 392,
+          "y": 368,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1227,11 +1102,11 @@
           ]
         },
         {
-          "id": 38,
-          "name": "from-prev",
+          "id": 36,
+          "name": "qa-wing-room",
           "type": "spawn",
-          "x": 1416,
-          "y": 496,
+          "x": 152,
+          "y": 256,
           "width": 0,
           "height": 0,
           "rotation": 0,
@@ -1240,101 +1115,7 @@
             {
               "name": "id",
               "type": "string",
-              "value": "from-prev"
-            }
-          ]
-        },
-        {
-          "id": 39,
-          "name": "from-next",
-          "type": "spawn",
-          "x": 136,
-          "y": 496,
-          "width": 0,
-          "height": 0,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "from-next"
-            }
-          ]
-        },
-        {
-          "id": 40,
-          "name": "previous-wing",
-          "type": "portal",
-          "x": 16,
-          "y": 432,
-          "width": 32,
-          "height": 128,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "previous-wing"
-            },
-            {
-              "name": "targetScene",
-              "type": "string",
-              "value": "personal-wing"
-            },
-            {
-              "name": "targetSpawn",
-              "type": "string",
-              "value": "from-prev"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Ala anterior"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wingDelta\":-1}"
-            }
-          ]
-        },
-        {
-          "id": 41,
-          "name": "next-wing",
-          "type": "portal",
-          "x": 1488,
-          "y": 432,
-          "width": 32,
-          "height": 128,
-          "rotation": 0,
-          "visible": true,
-          "properties": [
-            {
-              "name": "id",
-              "type": "string",
-              "value": "next-wing"
-            },
-            {
-              "name": "targetScene",
-              "type": "string",
-              "value": "personal-wing"
-            },
-            {
-              "name": "targetSpawn",
-              "type": "string",
-              "value": "from-next"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Próxima ala"
-            },
-            {
-              "name": "extraJson",
-              "type": "string",
-              "value": "{\"wingDelta\":1}"
+              "value": "qa-wing-room"
             }
           ]
         }
@@ -1356,13 +1137,13 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 42,
+          "id": 37,
           "name": "Limite da câmera",
           "type": "camera",
           "x": 0,
           "y": 0,
-          "width": 1536,
-          "height": 1024,
+          "width": 800,
+          "height": 736,
           "rotation": 0,
           "visible": true,
           "properties": []
@@ -1385,11 +1166,11 @@
       "opacity": 1,
       "objects": [
         {
-          "id": 25,
+          "id": 14,
           "name": "Ala · elevador",
           "type": "verticalAccess",
-          "x": 224,
-          "y": 336,
+          "x": 40,
+          "y": 352,
           "width": 96,
           "height": 64,
           "rotation": 0,
@@ -1407,13 +1188,13 @@
             },
             {
               "name": "visualX",
-              "type": "int",
-              "value": 17
+              "type": "float",
+              "value": 5.5
             },
             {
               "name": "visualY",
               "type": "int",
-              "value": 21
+              "value": 22
             },
             {
               "name": "floorIndex",
@@ -1428,21 +1209,21 @@
             {
               "name": "targetSpawn",
               "type": "string",
-              "value": "from-personal-wing-elevator"
+              "value": "from-elevator"
             },
             {
               "name": "label",
               "type": "string",
-              "value": "Descer de elevador para o térreo"
+              "value": "Chamar o elevador"
             }
           ]
         },
         {
-          "id": 26,
-          "name": "Ala · escadas",
+          "id": 15,
+          "name": "Ala · escada de subida",
           "type": "verticalAccess",
-          "x": 416,
-          "y": 384,
+          "x": 328,
+          "y": 336,
           "width": 112,
           "height": 64,
           "rotation": 0,
@@ -1451,7 +1232,7 @@
             {
               "name": "id",
               "type": "string",
-              "value": "wing-stairs"
+              "value": "wing-stairs-up"
             },
             {
               "name": "accessType",
@@ -1460,23 +1241,23 @@
             },
             {
               "name": "visualX",
-              "type": "float",
-              "value": 29.5
-            },
-            {
-              "name": "visualY",
               "type": "int",
               "value": 24
             },
             {
+              "name": "visualY",
+              "type": "int",
+              "value": 21
+            },
+            {
               "name": "blockX",
-              "type": "float",
-              "value": 28.5
+              "type": "int",
+              "value": 23
             },
             {
               "name": "blockY",
               "type": "int",
-              "value": 20
+              "value": 18
             },
             {
               "name": "blockW",
@@ -1486,7 +1267,7 @@
             {
               "name": "blockH",
               "type": "int",
-              "value": 4
+              "value": 3
             },
             {
               "name": "floorIndex",
@@ -1494,19 +1275,102 @@
               "value": 1
             },
             {
+              "name": "floorDelta",
+              "type": "int",
+              "value": 1
+            },
+            {
               "name": "targetScene",
               "type": "string",
-              "value": "tooq-campus"
+              "value": "personal-wing"
             },
             {
               "name": "targetSpawn",
               "type": "string",
-              "value": "from-personal-wing-stairs"
+              "value": "from-stairs-below"
             },
             {
               "name": "label",
               "type": "string",
-              "value": "Descer pelas escadas para o térreo"
+              "value": "Subir um andar"
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "name": "Ala · escada de descida",
+          "type": "verticalAccess",
+          "x": 488,
+          "y": 336,
+          "width": 112,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "wing-stairs-down"
+            },
+            {
+              "name": "accessType",
+              "type": "string",
+              "value": "stairs"
+            },
+            {
+              "name": "visualX",
+              "type": "int",
+              "value": 34
+            },
+            {
+              "name": "visualY",
+              "type": "int",
+              "value": 21
+            },
+            {
+              "name": "blockX",
+              "type": "int",
+              "value": 33
+            },
+            {
+              "name": "blockY",
+              "type": "int",
+              "value": 18
+            },
+            {
+              "name": "blockW",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "blockH",
+              "type": "int",
+              "value": 3
+            },
+            {
+              "name": "floorIndex",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "floorDelta",
+              "type": "int",
+              "value": -1
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "personal-wing"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "from-stairs-above"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Descer um andar"
             }
           ]
         }
@@ -1521,7 +1385,7 @@
     }
   ],
   "nextlayerid": 101,
-  "nextobjectid": 44,
+  "nextobjectid": 39,
   "orientation": "orthogonal",
   "renderorder": "right-down",
   "tiledversion": "1.11.2",
@@ -1541,7 +1405,7 @@
       "source": "../tilesets/tileset-moveis.tsj"
     },
     {
-      "firstgid": 5187,
+      "firstgid": 6000,
       "source": "../tilesets/tileset-exterior.tsj"
     }
   ],
@@ -1561,12 +1425,12 @@
     {
       "name": "name",
       "type": "string",
-      "value": "Ala pessoal"
+      "value": "Andar de salas pessoais"
     },
     {
       "name": "subtitle",
       "type": "string",
-      "value": "12 salas públicas por módulo"
+      "value": "Seis salas públicas por andar"
     },
     {
       "name": "kind",
@@ -1591,7 +1455,7 @@
     {
       "name": "cameraMinZoom",
       "type": "float",
-      "value": 0.65
+      "value": 0.6
     },
     {
       "name": "assetsJson",

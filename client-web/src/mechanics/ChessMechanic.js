@@ -4,6 +4,7 @@
 import { registerMechanic } from './MechanicsRegistry.js';
 import { initialState, legalMoves, applyMove, replay, status, idx, rc } from '../chess/engine.js';
 
+const TABLE_TEXTURE = 'chess_table';
 const GLYPH = {
   K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙',
   k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟',
@@ -54,17 +55,22 @@ function buildOverlay() {
 }
 
 registerMechanic('chess', {
+  preload({ scene }) {
+    if (!scene.textures.exists(TABLE_TEXTURE)) {
+      scene.load.image(TABLE_TEXTURE, 'assets/furniture/composites/chess_table.png');
+    }
+  },
   create({ scene, map, entity, context }) {
     const tile = map.tile || 16;
     const cx = (Number(entity.x) + Number(entity.w) / 2) * tile;
     const cy = (Number(entity.y) + Number(entity.h) / 2) * tile;
     const boardId = entity.properties?.boardId || entity.boardId || entity.id || 'chess';
 
-    // mesa (placeholder visual) + colisão
-    const table = scene.add.rectangle(cx, cy, Number(entity.w) * tile, Number(entity.h) * tile, 0x5b3a24)
-      .setStrokeStyle(2, 0x2c1a10).setDepth(cy);
-    const label = scene.add.text(cx, cy, '♟', { fontSize: '18px', color: '#f5f5f5' })
-      .setOrigin(0.5).setDepth(cy + 1);
+    // mesa + colisão. Origem no centro-inferior e profundidade por Y, como a mobília:
+    // assim o avatar passa por trás e é encoberto ao passar pela frente.
+    const bottom = (Number(entity.y) + Number(entity.h)) * tile;
+    const table = scene.add.image(cx, bottom, TABLE_TEXTURE)
+      .setOrigin(0.5, 1).setDepth(bottom);
     const solid = scene.add.zone(
       (Number(entity.x)) * tile, (Number(entity.y)) * tile, Number(entity.w) * tile, Number(entity.h) * tile,
     ).setOrigin(0, 0);
@@ -194,12 +200,13 @@ registerMechanic('chess', {
         const p = scene.player;
         if (!p) return;
         const isNear = Math.hypot(p.x - cx, p.y - cy) <= tile * 2.2;
-        if (isNear !== near) { near = isNear; label.setScale(near ? 1.25 : 1); }
+        // Realce discreto por proximidade: a mesa não pode "crescer" no chão.
+        if (isNear !== near) { near = isNear; table.setTint(near ? 0xfff0c0 : 0xffffff); }
       },
       destroy() {
         window.removeEventListener('keydown', onKey);
         closeBoard();
-        table.destroy(); label.destroy();
+        table.destroy();
         if (solid.active) solid.destroy();
       },
     };

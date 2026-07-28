@@ -65,6 +65,21 @@ function addSolidRect(scene, solids, rect, tile) {
   return zone;
 }
 
+// O piso da sala para dentro das paredes. As peças laterais do room builder são uma tira
+// fina com o resto do tile transparente: pintando o retângulo inteiro, um piso diferente do
+// prédio vaza por baixo da parede e aparece como uma faixa colorida do lado de fora.
+function roomFloorRect(rect) {
+  const north = rect.h > 3 ? 2 : 1;
+  const south = rect.southWall3d ? 2 : 1;
+  return {
+    ...rect,
+    x: rect.x + 1,
+    y: rect.y + north,
+    w: Math.max(0, rect.w - 2),
+    h: Math.max(0, rect.h - north - south),
+  };
+}
+
 function fillFloor(scene, rect, tile, depth) {
   return scene.add.tileSprite(
     rect.x * tile,
@@ -465,7 +480,7 @@ function renderInterior(scene, map, solids) {
     addLabel(scene, zone, tile, true);
   }
   for (const room of (map.rooms || [])) {
-    if (renderBaseVisuals) fillFloor(scene, room, tile, -90);
+    if (renderBaseVisuals) fillFloor(scene, roomFloorRect(room), tile, -90);
   }
 
   if (map.building) {

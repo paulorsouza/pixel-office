@@ -40,6 +40,19 @@ export function roomAtPoint(map, x, y) {
   return (map.rooms || []).find((room) => furnitureBelongsToRoom({ x, y }, room)) || null;
 }
 
+/**
+ * Zona de voz que contém o ponto. Área aberta não tem parede, então o canal vem de uma
+ * zona marcada com `voice` no mapa — é o que dá call próprio à sala grande. Metades com o
+ * mesmo `id` (uma sala em "L") continuam sendo um canal só.
+ */
+export function voiceZoneAtPoint(map, x, y) {
+  return (map.zones || []).find((zone) => (
+    zone.voice
+      && x >= zone.x && x <= zone.x + zone.w
+      && y >= zone.y && y <= zone.y + zone.h
+  )) || null;
+}
+
 export function roomFurniture(map, room) {
   return (map.furniture || []).filter((item) => furnitureBelongsToRoom(item, room));
 }

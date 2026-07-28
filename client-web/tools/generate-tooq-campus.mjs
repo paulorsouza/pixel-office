@@ -23,7 +23,9 @@ const tileByAsset = new Map((moveis.tiles || []).map((entry) => {
   return [properties.assetId, entry];
 }));
 const exterior = JSON.parse(fs.readFileSync(path.join(root, 'tiled/tilesets/tileset-exterior.tsj'), 'utf8'));
-const exteriorFirstGid = 5187;
+// Folga entre as faixas: o tileset de móveis cresce quando entram peças compostas, e um
+// gid encostado no vizinho passa a resolver para o tileset errado sem erro nenhum.
+const exteriorFirstGid = 6000;
 const exteriorTileByAsset = new Map((exterior.tiles || []).map((entry) => {
   const properties = Object.fromEntries((entry.properties || []).map((property) => [property.name, property.value]));
   return [properties.assetId, entry];
@@ -116,14 +118,6 @@ const prop = (assetId, x, y, properties = {}) => {
     gid: exteriorFirstGid + entry.id,
   };
 };
-const armchairSeat = (seatDir) => ({
-  interactionType: 'seat',
-  // Valores já calibrados no tooq-office-1 para as poltronas 16×32.
-  seatX: -0.5,
-  seatY: -0.875,
-  seatDir,
-  seatPose: 'sit',
-});
 const workstationSeat = (interactionKey) => ({
   interactionType: 'seat',
   interactionKey,
@@ -171,7 +165,7 @@ function mapDocument(id, name, subtitle, width, height, layers, cameraMinZoom = 
       { firstgid: 1, source: '../tilesets/tileset-construcao.tsj' },
       { firstgid: 4033, source: '../tilesets/tileset-superficies.tsj' },
       { firstgid: moveisFirstGid, source: '../tilesets/tileset-moveis.tsj' },
-      { firstgid: 5187, source: '../tilesets/tileset-exterior.tsj' },
+      { firstgid: exteriorFirstGid, source: '../tilesets/tileset-exterior.tsj' },
     ],
     type: 'map',
     version: '1.10',
@@ -190,254 +184,368 @@ function mapDocument(id, name, subtitle, width, height, layers, cameraMinZoom = 
   };
 }
 
-// Prédio principal: quantidades do briefing são intencionais e verificadas no teste.
+// Prédio principal. A planta é pequena de propósito: um andar cabe na tela e o time se
+// esbarra. Faixa norte com os quatro cômodos fechados, sala grande em "L" no miolo e a
+// sala de reunião logo na entrada — quem chega vê a porta dela antes de qualquer coisa.
 objectId = 1;
-const campusOffsetX = 12;
-const campusOffsetY = 30;
-const campusMapWidth = 152;
-const campusMapHeight = 162;
-const campusDefinitions = [];
-const meetingSegments = [
-  [2, 21], [21, 40], [40, 58],
-  [70, 98], [98, 125],
-];
-for (let index = 0; index < meetingSegments.length; index++) {
-  const [left, right] = meetingSegments[index];
-  campusDefinitions.push({
-    id: `meeting-${index + 1}`,
-    name: ['Sala Aurora', 'Sala Vega', 'Sala Órion', 'Sala Íris', 'Sala Atlas'][index],
-    x: left,
-    y: 2,
-    w: right - left + 1,
-    h: 18,
-    floor: 'wood',
-    wallStyle: 'stone', doorSide: 'S', meeting: true, category: 'meeting',
-  });
-}
-const oneOnOneSegments = [
-  [2, 13], [13, 24], [24, 35], [35, 46], [46, 58],
-  [70, 81], [81, 92], [92, 103], [103, 114], [114, 125],
-];
-for (let index = 0; index < oneOnOneSegments.length; index++) {
-  const [left, right] = oneOnOneSegments[index];
-  campusDefinitions.push({
-    id: `one-on-one-${index + 1}`, name: `Sala 1×1 ${index + 1}`,
-    x: left,
-    y: 26,
-    w: right - left + 1,
-    h: 11,
-    floor: 'wood',
-    doorSide: 'S',
-    category: 'one-on-one',
-  });
-}
-campusDefinitions.push(
-  { id: 'games', name: 'Sala de jogos', x: 2, y: 44, w: 57, h: 22, floor: 'wood', doorSide: 'S', category: 'games' },
-  { id: 'kitchen', name: 'Cozinha', x: 70, y: 44, w: 29, h: 22, floor: 'wood', doorSide: 'S', category: 'kitchen' },
-  { id: 'study-1', name: 'Sala de estudos 1', x: 98, y: 44, w: 28, h: 22, floor: 'wood', doorSide: 'S', category: 'study' },
-  { id: 'study-2', name: 'Sala de estudos 2', x: 2, y: 73, w: 57, h: 18, floor: 'wood', doorSide: 'S', category: 'study' },
-  { id: 'study-3', name: 'Sala de estudos 3', x: 70, y: 73, w: 56, h: 18, floor: 'wood', doorSide: 'S', category: 'study' },
+const campusMapWidth = 66;
+const campusMapHeight = 52;
+const campusBuilding = { x: 7, y: 10, w: 52, h: 34 };
+const bx = campusBuilding.x;
+const by = campusBuilding.y;
+
+/**
+ * Coloca uma peça pela sua arte: `x` é a coluna do canto esquerdo e `y` a **linha da base**
+ * (a última linha que a arte ocupa). `furniture()` fala em quadro do Tiled, que é ancorado
+ * no centro-inferior — só coincide com a arte por acaso, e nas peças de quadro justo ou
+ * mais largas que 2 tiles o erro vira móvel dentro da parede.
+ *
+ * Contrato do runtime, medido: `item.x = objeto.x/16 − 0,5`, `item.y = objeto.y/16 − 1`,
+ * e o renderer desenha em `(item.x·16 + 8, item.y·16 + 16)` com origem no centro-inferior.
+ * Logo a arte ocupa `[display.x − quadro/2, display.x + quadro/2] × [display.y − altura, display.y]`.
+ */
+const place = (assetId, x, y, properties = {}) => {
+  const entry = tileByAsset.get(assetId);
+  if (!entry) throw new Error(`Asset ${assetId} ausente do tileset-moveis`);
+  return furniture(assetId, x + entry.imagewidth / tile / 2 - 0.5, y, properties);
+};
+/** Footprint da base em tiles de conteúdo, resolvido a partir da largura do quadro. */
+const base = (assetId, width = null, { inset = 0, depth = 0.8, top = 0.1 } = {}) => {
+  const frame = tileByAsset.get(assetId).imagewidth / tile;
+  const solidWidth = width ?? frame;
+  return {
+    collisionX: inset + 0.5 - frame / 2,
+    collisionY: top,
+    collisionW: solidWidth,
+    collisionH: depth,
+  };
+};
+
+const campusDefinitions = [
   {
-    id: 'elevator-shaft',
-    name: '',
-    x: 40,
-    y: 104,
-    w: 5,
-    h: 4,
-    floor: 'wood',
-    wallStyle: 'white',
-    category: 'elevator-shaft',
+    id: 'kitchen', name: 'Cozinha', x: 0, y: 0, w: 14, h: 11,
+    floor: 'cream', doorSide: 'S', category: 'kitchen',
+  },
+  {
+    id: 'games', name: 'Sala de jogos', x: 13, y: 0, w: 17, h: 11,
+    floor: 'sage', doorSide: 'S', category: 'games',
+  },
+  {
+    id: 'study', name: 'Sala de estudos', x: 29, y: 0, w: 13, h: 11,
+    floor: 'carpet', doorSide: 'S', category: 'study',
+  },
+  {
+    id: 'one-on-one', name: 'Sala 1×1', x: 41, y: 0, w: 11, h: 11,
+    floor: 'carpet', doorSide: 'S', category: 'one-on-one',
+  },
+  {
+    // Porta na parede norte, não na lateral: a porta deslizante foi desenhada para a
+    // parede de duas linhas: girada na tira fina da lateral, ela fica solta no chão.
+    // Fora do centro para não disputar o lugar com o fone da reunião, que a
+    // `MeetingHeadset` pendura no meio da parede norte.
+    id: 'meeting', name: 'Sala Aurora', x: 0, y: 22, w: 16, h: 12,
+    floor: 'carpet', wallStyle: 'stone', doorSide: 'N', doorAt: 3, meeting: true,
+    category: 'meeting', extra: { southWall3d: true },
+  },
+  {
+    id: 'elevator-shaft', name: '', x: 44, y: 22, w: 5, h: 4,
+    floor: 'wood', wallStyle: 'white', category: 'elevator-shaft',
     extra: { hideLabel: true },
   },
-);
+];
 for (const room of campusDefinitions) {
-  room.x += campusOffsetX;
-  room.y += campusOffsetY;
+  room.x += bx;
+  room.y += by;
 }
 let currentRooms = campusDefinitions;
+const room = (id) => campusDefinitions.find((entry) => entry.id === id);
 const campusRoomObjects = campusDefinitions.map(roomObject);
 const campusDoors = campusDefinitions
-  .filter((room) => room.category !== 'elevator-shaft')
-  .map((room) => {
-    const side = room.doorSide;
-    const at = side === 'E' || side === 'W' ? 4 : Math.floor(room.w / 2) - 1;
-    return door(room.id, side, at);
+  .filter((entry) => entry.category !== 'elevator-shaft')
+  .map((entry) => door(
+    entry.id,
+    entry.doorSide,
+    entry.doorAt ?? (entry.doorSide === 'E' || entry.doorSide === 'W' ? 5 : Math.floor(entry.w / 2) - 1),
+  ));
+
+const kitchen = room('kitchen');
+const games = room('games');
+const study = room('study');
+const oneOnOne = room('one-on-one');
+const meeting = room('meeting');
+const shaft = room('elevator-shaft');
+
+/**
+ * Cadeira em que dá para sentar. **Só cadeira de perfil serve**: a folha `sit` do pack tem
+ * uma pose lateral boa e as de frente/costas leem como pessoa em pé (ver `ASSETS.md` §3.1),
+ * então poltrona vista de frente (`of_196`–`of_199`) e sofá viram decoração.
+ * `of_306`/`of_307` têm o **encosto à direita** (medido: a parte mais alta da arte fica nas
+ * colunas 10–13 do conteúdo), então sem espelhar quem senta encara a **esquerda**; para o
+ * outro lado, a mesma peça espelhada. Espelhar move o conteúdo dentro do quadro de 32 px,
+ * então a coluna e o `seatX` acompanham.
+ */
+const chair = (x, y, facing, dark = false, extra = {}) => {
+  const assetId = dark ? 'of_307' : 'of_306';
+  const mirrored = facing === 'right';
+  return place(assetId, mirrored ? x - 1 : x, y, {
+    ...(mirrored ? { flipX: true } : {}),
+    ...base(assetId, 1, { inset: mirrored ? 1 : 0 }),
+    interactionType: 'seat',
+    seatX: mirrored ? 0.5 : -0.5,
+    // Conferido em `tools/seat-preview.mjs`: com −0,875 (o valor herdado das poltronas) o
+    // avatar fica baixo demais e sobra encosto acima da cabeça.
+    seatY: -1.125,
+    seatDir: facing,
+    seatPose: 'sit',
+    ...extra,
   });
-const campusFurniture = [];
-for (const room of campusDefinitions.filter((entry) => entry.category === 'meeting')) {
-  campusFurniture.push(
-    furniture('of_171', room.x + 10, room.y + 3.5, { interactionType: 'kanban', interactionKey: `${room.id}:kanban` }),
-    furniture('of_172', room.x + 13, room.y + 3.5, { interactionType: 'timeclock', interactionKey: `${room.id}:clock` }),
-    furniture('station_white_dual', room.x + 10, room.y + 11, workstationSeat(`${room.id}:station`)),
-    furniture('of_196', room.x + 6, room.y + 12, armchairSeat('right')),
-    furniture('of_197', room.x + 15, room.y + 12, armchairSeat('left')),
-  );
-}
-for (const room of campusDefinitions.filter((entry) => entry.category === 'one-on-one')) {
-  campusFurniture.push(
-    furniture('of_196', room.x + 3, room.y + 6, armchairSeat('right')),
-    furniture('of_197', room.x + 8, room.y + 6, armchairSeat('left')),
-  );
-}
-for (const room of campusDefinitions.filter((entry) => entry.category === 'study')) {
-  const center = Math.floor(room.w / 2);
-  const stationAX = room.x + Math.floor(room.w * 0.34);
-  const stationBX = room.x + Math.floor(room.w * 0.66);
-  campusFurniture.push(
-    furniture('of_170', room.x + center, room.y + 3.5, { interactionType: 'whiteboard', interactionKey: `${room.id}:whiteboard` }),
-    furniture('station_white_pc', stationAX, room.y + 12, workstationSeat(`${room.id}:station-a`)),
-    furniture('station_dark_dual', stationBX, room.y + 12, workstationSeat(`${room.id}:station-b`)),
-  );
-}
-const kitchen = campusDefinitions.find((entry) => entry.id === 'kitchen');
-campusFurniture.push(
-  furniture('of_320', kitchen.x + 10, kitchen.y + 8, { interactionType: 'coffee', interactionKey: 'kitchen:coffee-a' }),
-  furniture('of_321', kitchen.x + 16, kitchen.y + 8, { interactionType: 'coffee', interactionKey: 'kitchen:coffee-b' }),
-  furniture('of_196', kitchen.x + 12, kitchen.y + 15, armchairSeat('right')),
-  furniture('of_197', kitchen.x + 26, kitchen.y + 15, armchairSeat('left')),
-);
-campusFurniture.push(
-  furniture('of_323', 29 + campusOffsetX, 104 + campusOffsetY, { solid: true }),
-  furniture('of_172', 34 + campusOffsetX, 99.5 + campusOffsetY, { interactionType: 'timeclock', interactionKey: 'reception:clock' }),
-  furniture('of_175', 94 + campusOffsetX, 104 + campusOffsetY, { interactionType: 'store', interactionKey: 'reception:store', solid: true }),
-);
+};
+
+/**
+ * Sofá em que dá para sentar. O sofá é visto de frente e a folha `sit` não tem pose de
+ * frente que preste, então vale o mesmo truque da estação, invertido: o avatar usa o `idle`
+ * virado para a câmera e o `seatCover` redesenha a frente do sofá na frente dele — as
+ * pernas param na frente do estofado em vez de ficarem em pé sobre o móvel.
+ * Números conferidos em `tools/seat-preview.mjs`. Um assento por sofá: o claim é por móvel.
+ */
+const sofaSeat = () => ({
+  interactionType: 'seat',
+  seatX: 0,
+  seatY: -1.35,
+  seatDir: 'down',
+  seatPose: 'idle',
+  // 11 cobria a perna inteira e o avatar ficava sem pernas; 7 corta no pé, na altura da
+  // frente do sofá, que é onde a perna de quem está sentado some mesmo.
+  seatCover: 7,
+});
+
+const campusFurniture = [
+  // Cozinha: bancada corrida encostada na parede norte e mesa no meio.
+  place('kt_159', kitchen.x + 1, kitchen.y + 3, base('kt_159')),
+  place('kt_192', kitchen.x + 3, kitchen.y + 3, base('kt_192')),
+  place('kt_143', kitchen.x + 5, kitchen.y + 3, base('kt_143')),
+  place('kt_129', kitchen.x + 7, kitchen.y + 3, base('kt_129')),
+  place('of_320', kitchen.x + 9, kitchen.y + 3, {
+    ...base('of_320', 1.65), interactionType: 'coffee', interactionKey: 'kitchen:coffee-a',
+  }),
+  place('of_321', kitchen.x + 11, kitchen.y + 3, {
+    ...base('of_321', 1.65), interactionType: 'coffee', interactionKey: 'kitchen:coffee-b',
+  }),
+  place('table_long', kitchen.x + 4, kitchen.y + 7, base('table_long')),
+  chair(kitchen.x + 3, kitchen.y + 7, 'right'),
+  chair(kitchen.x + 8, kitchen.y + 7, 'left'),
+  place('of_100', kitchen.x + 11, kitchen.y + 8, base('of_100', 1, { depth: 0.45 })),
+
+  // Sala de jogos: dois tabuleiros (a mesa vem da mecânica) com cadeira de cada lado.
+  chair(games.x + 3, games.y + 5, 'right'),
+  chair(games.x + 6, games.y + 5, 'left'),
+  chair(games.x + 10, games.y + 5, 'right', true),
+  chair(games.x + 13, games.y + 5, 'left', true),
+  place('of_116', games.x + 7, games.y + 2, base('of_116', 2, { depth: 0.5 })),
+  place('of_205', games.x + 6, games.y + 8, { ...base('of_205', 2), ...sofaSeat() }),
+  place('lr_13', games.x + 14, games.y + 8, base('lr_13', 1, { depth: 0.45 })),
+  place('of_99', games.x + 1, games.y + 8, base('of_99', 1, { depth: 0.45 })),
+
+  // Estudos: armários na parede, quadro branco e duas estações reais de trabalho.
+  place('of_194', study.x + 1, study.y + 3, base('of_194', 2, { depth: 0.5 })),
+  place('of_195', study.x + 3, study.y + 3, base('of_195', 2, { depth: 0.5 })),
+  place('of_170', study.x + 6, study.y + 2, {
+    interactionType: 'whiteboard', interactionKey: 'study:whiteboard',
+  }),
+  place('station_white_pc', study.x + 2, study.y + 8, workstationSeat('study:station-a')),
+  place('station_dark_dual', study.x + 7, study.y + 8, workstationSeat('study:station-b')),
+  place('of_98', study.x + 10, study.y + 8, base('of_98', 1, { depth: 0.45 })),
+
+  // 1×1: duas cadeiras frente a frente com uma mesa de apoio no meio.
+  place('table_round', oneOnOne.x + 4, oneOnOne.y + 6, base('table_round')),
+  chair(oneOnOne.x + 3, oneOnOne.y + 6, 'right'),
+  chair(oneOnOne.x + 7, oneOnOne.y + 6, 'left'),
+  place('of_163', oneOnOne.x + 4, oneOnOne.y + 2),
+  place('of_98', oneOnOne.x + 8, oneOnOne.y + 8, base('of_98', 1, { depth: 0.45 })),
+
+  // Reunião: mesa de seis lugares, três cadeiras de cada lado, quadro de planejamento e
+  // painel de métricas na parede do fundo.
+  place('table_meeting', meeting.x + 4, meeting.y + 7, base('table_meeting')),
+  chair(meeting.x + 3, meeting.y + 6, 'right'),
+  chair(meeting.x + 3, meeting.y + 8, 'right'),
+  chair(meeting.x + 10, meeting.y + 6, 'left'),
+  chair(meeting.x + 10, meeting.y + 8, 'left'),
+  place('of_171', meeting.x + 4, meeting.y + 2, {
+    interactionType: 'kanban', interactionKey: 'meeting:kanban',
+  }),
+  place('of_172', meeting.x + 8, meeting.y + 2, {
+    interactionType: 'timeclock', interactionKey: 'meeting:clock',
+  }),
+  place('of_100', meeting.x + 13, meeting.y + 9, base('of_100', 1, { depth: 0.45 })),
+
+  // Sala grande — ilha de estações a oeste, com a faixa central livre para circular até as
+  // portas do norte.
+  ...[0, 1].flatMap((row) => [0, 1, 2].map((column) => place(
+    ['station_white_dual', 'station_white_pc', 'station_dark_dual'][column],
+    bx + 2 + column * 3,
+    by + 15 + row * 5,
+    workstationSeat(`open-space:station-${row}-${column}`),
+  ))),
+  place('of_207', bx + 12, by + 15, base('of_207', 1, { depth: 0.4 })),
+  place('of_207', bx + 12, by + 20, base('of_207', 1, { depth: 0.4 })),
+
+  // Cantinho de café da sala grande, encostado na ilha.
+  place('table_round', bx + 18, by + 17, base('table_round')),
+  chair(bx + 17, by + 17, 'right', true),
+  chair(bx + 21, by + 17, 'left', true),
+
+  // Mesa comunitária no eixo central, entre a entrada e as portas dos cômodos.
+  place('table_long', bx + 24, by + 19, base('table_long')),
+  chair(bx + 23, by + 19, 'right'),
+  chair(bx + 28, by + 19, 'left'),
+
+  // Sala grande — lounge a leste. Os sofás são cenário: o pack não tem pose de sentar de
+  // frente que preste, então quem quiser sentar usa as cadeiras da mesa de centro.
+  place('of_116', bx + 41, by + 12, base('of_116', 2, { depth: 0.5 })),
+  place('of_200', bx + 39, by + 15, { ...base('of_200', 2), ...sofaSeat() }),
+  place('of_205', bx + 43, by + 15, { ...base('of_205', 2), ...sofaSeat() }),
+  place('of_190', bx + 41, by + 18, base('of_190', 2, { depth: 0.5 })),
+  chair(bx + 40, by + 18, 'right'),
+  chair(bx + 44, by + 18, 'left'),
+  place('of_98', bx + 37, by + 20, base('of_98', 1, { depth: 0.45 })),
+  place('of_100', bx + 48, by + 20, base('of_100', 1, { depth: 0.45 })),
+  place('of_173', bx + 23, by + 12, base('of_173', 1, { depth: 0.45 })),
+  place('of_147', bx + 25, by + 12, base('of_147', 2, { depth: 0.5 })),
+
+  // Recepção, junto da entrada: balcão, loja e relógio de ponto.
+  place('of_323', bx + 24, by + 29, { ...base('of_323', 1.6), solid: true }),
+  place('of_175', bx + 20, by + 29, {
+    ...base('of_175', 1.5), interactionType: 'store', interactionKey: 'reception:store', solid: true,
+  }),
+  // Painéis só ficam bem na parede norte (é a única face que a câmera vê): o relógio da
+  // recepção mora na parede sul da faixa de cômodos, de frente para quem entra.
+  place('of_172', bx + 27, by + 11, {
+    interactionType: 'timeclock', interactionKey: 'reception:clock',
+  }),
+  place('of_98', bx + 18, by + 31, base('of_98', 1, { depth: 0.45 })),
+  place('of_100', bx + 33, by + 31, base('of_100', 1, { depth: 0.45 })),
+
+  // Espera do núcleo vertical: quem desce do andar cai numa sala, não num corredor vazio.
+  place('table_round', bx + 38, by + 31, base('table_round')),
+  chair(bx + 37, by + 31, 'right', true),
+  chair(bx + 42, by + 31, 'left', true),
+  place('of_99', bx + 34, by + 31, base('of_99', 1, { depth: 0.45 })),
+  place('of_100', bx + 46, by + 31, base('of_100', 1, { depth: 0.45 })),
+];
+
 const campusMechanics = [
-  object('Xadrez A', 'chess', 12 + campusOffsetX, 51 + campusOffsetY, 3, 3, { id: 'games-chess-a', boardId: 'campus-games-a' }),
-  object('Xadrez B', 'chess', 30 + campusOffsetX, 51 + campusOffsetY, 3, 3, { id: 'games-chess-b', boardId: 'campus-games-b' }),
-  object('Núcleo · elevador', 'verticalAccess', 39.5 + campusOffsetX, 107 + campusOffsetY, 6, 4, {
+  object('Xadrez A', 'chess', games.x + 4, games.y + 4, 2, 2, {
+    id: 'games-chess-a', boardId: 'campus-games-a',
+  }),
+  object('Xadrez B', 'chess', games.x + 11, games.y + 4, 2, 2, {
+    id: 'games-chess-b', boardId: 'campus-games-b',
+  }),
+  object('Núcleo · elevador', 'verticalAccess', shaft.x - 0.5, shaft.y + 4, 6, 4, {
     id: 'campus-elevator',
     accessType: 'elevator',
-    visualX: 42.5 + campusOffsetX,
-    visualY: 107 + campusOffsetY,
+    visualX: shaft.x + 2.5,
+    visualY: shaft.y + 4,
     floorIndex: 0,
     targetScene: 'personal-wing',
-    targetSpawn: 'from-campus-elevator',
+    targetSpawn: 'from-elevator',
     targetWing: 0,
-    label: 'Subir de elevador para as salas pessoais',
+    label: 'Chamar o elevador',
   }),
-  object('Núcleo · escadas', 'verticalAccess', 72 + campusOffsetX, 95 + campusOffsetY, 7, 4, {
+  object('Núcleo · escadas', 'verticalAccess', bx + 37, by + 26, 5, 4, {
     id: 'campus-stairs',
     accessType: 'stairs',
-    visualX: 75.5 + campusOffsetX,
-    visualY: 95 + campusOffsetY,
-    blockX: 74.5 + campusOffsetX,
-    blockY: 91 + campusOffsetY,
+    visualX: bx + 39.5,
+    visualY: by + 26,
+    blockX: bx + 38.5,
+    blockY: by + 22,
     blockW: 2,
     blockH: 4,
     floorIndex: 0,
     targetScene: 'personal-wing',
-    targetSpawn: 'from-campus-stairs',
+    targetSpawn: 'from-stairs-below',
     targetWing: 0,
     label: 'Subir pelas escadas para as salas pessoais',
   }),
 ];
-const campusBuilding = {
-  x: 2 + campusOffsetX,
-  y: 2 + campusOffsetY,
-  w: 124,
-  h: 112,
-};
+
 const openExit = (parent, rect, side, at, len = 3) => (
   doorForRect(parent, rect, side, at, len, '', { openExit: true })
 );
-const meetingRooms = campusDefinitions.filter((room) => room.category === 'meeting');
-const gamesRoom = campusDefinitions.find((room) => room.id === 'games');
-const studyOne = campusDefinitions.find((room) => room.id === 'study-1');
-const rearExitPairs = [meetingRooms[0], meetingRooms.at(-1)].flatMap((room) => {
-  const at = Math.floor(room.w / 2) - 1;
-  return [
-    openExit(room.id, room, 'N', at),
-    openExit('building', campusBuilding, 'N', room.x - campusBuilding.x + at),
-  ];
-});
 const campusOpenExits = [
-  openExit('building', campusBuilding, 'S', 60, 4),
-  openExit('building', campusBuilding, 'W', 98, 4),
-  openExit('building', campusBuilding, 'E', 98, 4),
-  openExit(gamesRoom.id, gamesRoom, 'W', 9, 4),
-  openExit('building', campusBuilding, 'W', gamesRoom.y - campusBuilding.y + 9, 4),
-  openExit(studyOne.id, studyOne, 'E', 9, 4),
-  openExit('building', campusBuilding, 'E', studyOne.y - campusBuilding.y + 9, 4),
-  ...rearExitPairs,
+  openExit('building', campusBuilding, 'S', 28, 4),
+  openExit('building', campusBuilding, 'W', 12, 4),
+  openExit('building', campusBuilding, 'E', 12, 4),
 ];
+
+// Zonas: a sala grande é um "L" — as duas metades compartilham o id, então valem como um
+// canal de voz só. Os tapetes são zonas mudas, apenas piso.
+const campusZones = [
+  object('Sala grande', 'zone', bx + 1, by + 11, 50, 11, {
+    id: 'open-space', floor: 'wood', extraJson: { voice: true },
+  }),
+  object('Sala grande', 'zone', bx + 16, by + 22, 35, 10, {
+    id: 'open-space', floor: 'wood', extraJson: { voice: true, hideLabel: true },
+  }),
+  object('Tapete das estações', 'zone', bx + 1, by + 12, 13, 9, {
+    id: 'rug-stations', floor: 'sage', extraJson: { hideLabel: true },
+  }),
+  object('Tapete do lounge', 'zone', bx + 36, by + 11, 14, 10, {
+    id: 'rug-lounge', floor: 'carpet', extraJson: { hideLabel: true },
+  }),
+  object('Tapete da recepção', 'zone', bx + 19, by + 25, 14, 7, {
+    id: 'rug-reception', floor: 'cream', extraJson: { hideLabel: true },
+  }),
+];
+
 const campusYardProps = [
-  // Fundos: área principal do jardim.
-  prop('fountain', 76, 15, {
-    collisionX: -0.8, collisionY: -0.8, collisionW: 1.6, collisionH: 0.8,
-  }),
-  prop('bench', 61, 20, {
-    collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5,
-  }),
-  prop('bench', 91, 20, {
-    flipX: true, collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5,
-  }),
-  prop('tree1', 38, 11, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 114, 11, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 49, 24, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree1', 103, 24, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('bush1', 54, 13),
-  prop('bush2', 98, 13),
-  prop('flower1', 58, 17),
-  prop('flower2', 94, 17),
-  // Laterais: árvores e pequenos canteiros sem fechar os caminhos de saída.
-  prop('tree1', 7, 43, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 145, 48, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 6, 67, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree1', 146, 73, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree1', 6, 105, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 146, 101, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 5, 86, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree1', 147, 86, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('bush1', 8, 55),
-  prop('bush2', 144, 59),
-  prop('flower2', 8, 92),
-  prop('flower1', 144, 91),
-  prop('bench', 8, 116, {
-    collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5,
-  }),
-  prop('bench', 144, 116, {
-    flipX: true, collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5,
-  }),
-  // Frente menor, ainda agradável.
-  prop('tree1', 29, 154, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('tree2', 123, 154, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
-  prop('bush1', 48, 153),
-  prop('bush2', 104, 153),
-  prop('flower1', 57, 151),
-  prop('flower2', 95, 151),
+  prop('fountain', 33, 5, { collisionX: -0.8, collisionY: -0.8, collisionW: 1.6, collisionH: 0.8 }),
+  prop('bench', 26, 8, { collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5 }),
+  prop('bench', 40, 8, { flipX: true, collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5 }),
+  prop('tree1', 16, 6, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('tree2', 50, 6, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('bush1', 22, 3),
+  prop('bush2', 44, 3),
+  prop('flower1', 29, 8),
+  prop('flower2', 37, 8),
+  prop('tree2', 4, 20, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('tree1', 62, 20, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('tree1', 4, 38, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('tree2', 62, 38, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('bush2', 2, 29),
+  prop('bush1', 64, 29),
+  prop('bench', 12, 47, { collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5 }),
+  prop('bench', 54, 47, { flipX: true, collisionX: -1.4, collisionY: -0.5, collisionW: 2.8, collisionH: 0.5 }),
+  prop('tree1', 18, 50, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('tree2', 48, 50, { collisionX: -1.4, collisionY: -1.2, collisionW: 2.8, collisionH: 1.2 }),
+  prop('flower1', 26, 49),
+  prop('flower2', 40, 49),
 ];
-// Vegetação esparsa no contorno: o jogador ainda alcança o portal em qualquer
-// ponto da borda, sem uma cerca ou fileira de arbustos bloqueando a saída.
+// Vegetação esparsa no contorno: dá borda ao terreno sem fechar o caminho até o portal.
 const campusBoundaryProps = [];
-for (let x = 6; x <= 146; x += 14) campusBoundaryProps.push(prop(x % 28 ? 'bush1' : 'bush2', x, 3));
-for (let y = 16; y <= 150; y += 17) {
-  campusBoundaryProps.push(prop(y % 34 ? 'bush2' : 'bush1', 3, y));
-  campusBoundaryProps.push(prop(y % 34 ? 'bush1' : 'bush2', 149, y));
+for (let x = 6; x <= 60; x += 12) campusBoundaryProps.push(prop(x % 24 ? 'bush1' : 'bush2', x, 1));
+for (let y = 14; y <= 46; y += 11) {
+  campusBoundaryProps.push(prop(y % 22 ? 'bush2' : 'bush1', 1, y));
+  campusBoundaryProps.push(prop(y % 22 ? 'bush1' : 'bush2', 64, y));
 }
+
 const campusLayers = [
   layer(1, 'Objetos · Prédio', 'structures', [
     object('Quintal do campus', 'yard', 0, 0, campusMapWidth, campusMapHeight, { ground: 'grass' }),
     object('Prédio principal', 'building', campusBuilding.x, campusBuilding.y, campusBuilding.w, campusBuilding.h, { floor: 'wood' }),
   ]),
-  layer(2, 'Objetos · Zonas abertas', 'zones', [
-    object('Recepção e convivência', 'zone', 3 + campusOffsetX, 91 + campusOffsetY, 122, 22, { id: 'reception', floor: 'wood' }),
-  ]),
+  layer(2, 'Objetos · Zonas abertas', 'zones', campusZones),
   layer(3, 'Objetos · Salas', 'rooms', campusRoomObjects),
   layer(4, 'Objetos · Móveis', 'furniture', campusFurniture),
   layer(5, 'Objetos · Portas', 'doors', [...campusDoors, ...campusOpenExits]),
   layer(6, 'Objetos · Jardim', 'landscape', [
-    object('Passeio dos fundos', 'path', 12, 26, 128, 6, { floor: 'cream' }),
-    object('Praça dos fundos', 'path', 66, 11, 20, 9, { floor: 'cream' }),
-    object('Caminho traseiro esquerdo', 'path', 21, 0, 6, 32, { floor: 'cream' }),
-    object('Caminho traseiro direito', 'path', 125, 0, 6, 32, { floor: 'cream' }),
-    object('Passeio lateral oeste', 'path', 8, 30, 6, 119, { floor: 'cream' }),
-    object('Passeio lateral leste', 'path', 138, 30, 6, 119, { floor: 'cream' }),
-    object('Terraço frontal', 'path', 12, 144, 128, 5, { floor: 'cream' }),
-    object('Caminho frontal', 'path', 73, 144, 6, 18, { floor: 'cream' }),
-    object('Saída oeste jogos', 'path', 0, gamesRoom.y + 8, 14, 6, { floor: 'cream' }),
-    object('Saída leste estudos', 'path', 138, studyOne.y + 8, 14, 6, { floor: 'cream' }),
-    object('Saída oeste recepção', 'path', 0, campusBuilding.y + 96, 14, 8, { floor: 'cream' }),
-    object('Saída leste recepção', 'path', 138, campusBuilding.y + 96, 14, 8, { floor: 'cream' }),
+    object('Passeio dos fundos', 'path', 5, 6, 56, 4, { floor: 'cream' }),
+    object('Praça dos fundos', 'path', 27, 2, 12, 5, { floor: 'cream' }),
+    object('Passeio lateral oeste', 'path', 3, 9, 4, 36, { floor: 'cream' }),
+    object('Passeio lateral leste', 'path', 59, 9, 4, 36, { floor: 'cream' }),
+    object('Terraço frontal', 'path', 5, 44, 56, 4, { floor: 'cream' }),
+    object('Caminho frontal', 'path', 35, 44, 4, 8, { floor: 'cream' }),
+    object('Saída oeste', 'path', 0, by + 22, 7, 4, { floor: 'cream' }),
+    object('Saída leste', 'path', 59, by + 22, 7, 4, { floor: 'cream' }),
     ...campusYardProps,
     ...campusBoundaryProps,
   ]),
@@ -448,29 +556,31 @@ const campusLayers = [
     object('Limite sul', 'collision', 0, campusMapHeight - 1, campusMapWidth, 1),
   ]),
   layer(8, 'Objetos · Navegação', 'navigation', [
-    spawn('default', 64 + campusOffsetX, 109 + campusOffsetY),
-    spawn('entrance', 64 + campusOffsetX, 151),
-    spawn('from-personal-wing', 42.5 + campusOffsetX, 112 + campusOffsetY),
-    spawn('from-personal-wing-elevator', 42.5 + campusOffsetX, 112 + campusOffsetY),
-    spawn('from-personal-wing-stairs', 75.5 + campusOffsetX, 100 + campusOffsetY),
-    spawn('from-yard', 64 + campusOffsetX, 148),
-    spawn('yard-center', 76, 15),
-    spawn('circulation-top', 64 + campusOffsetX, 22 + campusOffsetY),
-    spawn('circulation-middle', 64 + campusOffsetX, 69 + campusOffsetY),
-    spawn('qa-elevator', 42.5 + campusOffsetX, 109 + campusOffsetY),
-    spawn('qa-stairs', 75.5 + campusOffsetX, 97 + campusOffsetY),
-    spawn('qa-meeting', 12 + campusOffsetX, 15 + campusOffsetY),
-    spawn('qa-kitchen', 84 + campusOffsetX, 60 + campusOffsetY),
-    spawn('qa-yard-fountain', 76, 18),
-    spawn('qa-yard-west', 9, 87),
-    spawn('qa-yard-east', 143, 87),
-    spawn('qa-yard-front', 76, 153),
-    spawn('qa-rear-exit', 23, 35),
-    spawn('qa-edge-south', 76, 160),
-    // Pontos estáveis também servem aos testes visuais e a futuros atalhos internos.
-    spawn('one-on-one-left', 8 + campusOffsetX, 33 + campusOffsetY),
-    spawn('one-on-one-right', 119 + campusOffsetX, 33 + campusOffsetY),
-    spawn('one-on-one-left-door', 8 + campusOffsetX, 39 + campusOffsetY),
+    spawn('default', bx + 28, by + 30),
+    spawn('entrance', bx + 28, 47),
+    // Chegada dos andares: o nome diz de onde a pessoa vem, então o mesmo destino vale
+    // para o térreo e para qualquer andar.
+    spawn('from-elevator', shaft.x + 2, shaft.y + 6),
+    spawn('from-stairs-above', bx + 39, by + 28),
+    spawn('from-personal-wing', shaft.x + 2, shaft.y + 6),
+    spawn('from-personal-wing-elevator', shaft.x + 2, shaft.y + 6),
+    spawn('from-personal-wing-stairs', bx + 39, by + 28),
+    spawn('from-yard', bx + 28, 45),
+    spawn('yard-center', 33, 6),
+    spawn('circulation-open', bx + 26, by + 16),
+    spawn('qa-elevator', shaft.x + 2, shaft.y + 5),
+    spawn('qa-stairs', bx + 36, by + 27),
+    spawn('qa-meeting', meeting.x + 8, meeting.y + 8),
+    spawn('qa-kitchen', kitchen.x + 7, kitchen.y + 7),
+    spawn('qa-games', games.x + 8, games.y + 7),
+    spawn('qa-study', study.x + 6, study.y + 7),
+    spawn('qa-one-on-one', oneOnOne.x + 5, oneOnOne.y + 7),
+    spawn('qa-lounge', bx + 42, by + 16),
+    spawn('qa-yard-fountain', 33, 8),
+    spawn('qa-yard-west', 4, 27),
+    spawn('qa-yard-east', 61, 27),
+    spawn('qa-yard-front', 36, 46),
+    spawn('qa-edge-south', 33, 50),
     portal('yard-exit-north', 0, 0, campusMapWidth, 2, 'world', 'from-campus', 'Voltar ao mundo aberto'),
     portal('yard-exit-south', 0, campusMapHeight - 2, campusMapWidth, 2, 'world', 'from-campus', 'Voltar ao mundo aberto'),
     portal('yard-exit-west', 0, 2, 2, campusMapHeight - 4, 'world', 'from-campus', 'Voltar ao mundo aberto'),
@@ -484,103 +594,142 @@ const campusLayers = [
 const campusMap = mapDocument(
   'tooq-campus',
   'Tooq Office',
-  'Reuniões, 1×1, jogos, cozinha, estudos e acesso às alas pessoais',
+  'Sala grande, reunião, jogos, 1×1, cozinha, estudos e acesso aos andares',
   campusMapWidth,
   campusMapHeight,
   campusLayers,
-  0.38,
+  0.6,
 );
 
-// Uma ala é sempre um módulo regular com 12 cômodos; o runtime injeta donos e roomKeys.
+// Cada andar de salas pessoais é um módulo regular de seis cômodos — três de cada lado do
+// corredor — e o runtime injeta donos e roomKeys. O prédio começa com dois andares desses.
 objectId = 1;
 const wingDefinitions = [];
-const wingBoundaries = [2, 17, 32, 47, 62, 77, 93];
-for (let slotIndex = 0; slotIndex < 12; slotIndex++) {
-  const column = slotIndex % 6;
-  const lower = slotIndex >= 6;
+const wingBoundaries = [2, 17, 32, 47];
+const wingLowerY = 28;
+for (let slotIndex = 0; slotIndex < 6; slotIndex++) {
+  const column = slotIndex % 3;
+  const lower = slotIndex >= 3;
   wingDefinitions.push({
     id: `slot-${slotIndex}`,
     name: 'Sala disponível',
     x: wingBoundaries[column],
-    y: lower ? 40 : 2,
+    y: lower ? wingLowerY : 2,
     w: wingBoundaries[column + 1] - wingBoundaries[column] + 1,
-    h: 18,
+    h: 16,
     floor: 'wood',
     doorSide: lower ? 'N' : 'S',
     slotIndex,
   });
 }
 currentRooms = wingDefinitions;
-const wingRoomObjects = wingDefinitions.map(roomObject);
-const wingDoors = wingDefinitions.map((room) => door(
-  room.id,
-  room.doorSide,
-  Math.floor(room.w / 2) - 1,
+// Poço técnico do elevador, igual ao do térreo: sem ele a porta do elevador fica colada
+// numa parede que não existe, e o prédio não se sustenta de um andar para o outro.
+const wingShaft = {
+  id: 'elevator-shaft', name: '', x: 3, y: 18, w: 5, h: 4,
+  floor: 'wood', wallStyle: 'white', extra: { hideLabel: true },
+};
+const wingWidth = 50;
+const wingHeight = 46;
+const wingWalk = { x: 2, y: 2, w: 46, h: 42 };
+const wingRoomObjects = [...wingDefinitions, wingShaft].map(roomObject);
+const wingDoors = wingDefinitions.map((entry) => door(
+  entry.id,
+  entry.doorSide,
+  Math.floor(entry.w / 2) - 1,
 ));
+// Elevador é expresso para o térreo; as escadas sobem e descem um andar. Os spawns são
+// nomeados pelo lado de onde a pessoa chega, então o mesmo destino serve térreo e andar.
 const wingMechanics = [
-  object('Ala · elevador', 'verticalAccess', 14, 21, 6, 4, {
+  object('Ala · elevador', 'verticalAccess', wingShaft.x - 0.5, wingShaft.y + 4, 6, 4, {
     id: 'wing-elevator',
     accessType: 'elevator',
-    visualX: 17,
-    visualY: 21,
+    visualX: wingShaft.x + 2.5,
+    visualY: wingShaft.y + 4,
     floorIndex: 1,
     targetScene: 'tooq-campus',
-    targetSpawn: 'from-personal-wing-elevator',
-    label: 'Descer de elevador para o térreo',
+    targetSpawn: 'from-elevator',
+    label: 'Chamar o elevador',
   }),
-  object('Ala · escadas', 'verticalAccess', 26, 24, 7, 4, {
-    id: 'wing-stairs',
+  object('Ala · escada de subida', 'verticalAccess', 20.5, 21, 7, 4, {
+    id: 'wing-stairs-up',
     accessType: 'stairs',
-    visualX: 29.5,
-    visualY: 24,
-    blockX: 28.5,
-    blockY: 20,
+    visualX: 24,
+    visualY: 21,
+    blockX: 23,
+    blockY: 18,
     blockW: 2,
-    blockH: 4,
+    blockH: 3,
     floorIndex: 1,
-    targetScene: 'tooq-campus',
-    targetSpawn: 'from-personal-wing-stairs',
-    label: 'Descer pelas escadas para o térreo',
+    floorDelta: 1,
+    targetScene: 'personal-wing',
+    targetSpawn: 'from-stairs-below',
+    label: 'Subir um andar',
+  }),
+  object('Ala · escada de descida', 'verticalAccess', 30.5, 21, 7, 4, {
+    id: 'wing-stairs-down',
+    accessType: 'stairs',
+    visualX: 34,
+    visualY: 21,
+    blockX: 33,
+    blockY: 18,
+    blockW: 2,
+    blockH: 3,
+    floorIndex: 1,
+    floorDelta: -1,
+    targetScene: 'personal-wing',
+    targetSpawn: 'from-stairs-above',
+    label: 'Descer um andar',
   }),
 ];
 const wingLayers = [
   layer(1, 'Objetos · Prédio', 'structures', [
-    object('Ala pessoal', 'building', 2, 2, 92, 56, { floor: 'wood' }),
+    object('Ala pessoal', 'building', wingWalk.x, wingWalk.y, wingWalk.w, wingWalk.h, { floor: 'wood' }),
   ]),
   layer(2, 'Objetos · Zonas abertas', 'zones', [
-    object('Corredor compartilhado', 'zone', 3, 20, 90, 20, { id: 'shared-corridor', floor: 'wood' }),
+    // Sem `voice`: o corredor é passagem. Quem quer conversar entra numa sala.
+    object('Corredor do andar', 'zone', 3, 18, 44, 10, { id: 'shared-corridor', floor: 'wood' }),
+    object('Tapete do corredor', 'zone', 16, 23, 16, 4, {
+      id: 'rug-corridor', floor: 'carpet', extraJson: { hideLabel: true },
+    }),
   ]),
   layer(3, 'Objetos · Salas', 'rooms', wingRoomObjects),
   layer(4, 'Objetos · Móveis', 'furniture', [
-    furniture('of_172', 47, 27, { interactionType: 'timeclock', interactionKey: 'wing:clock' }),
-    furniture('of_196', 42, 33, armchairSeat('right')),
-    furniture('of_197', 51, 33, armchairSeat('left')),
+    place('of_172', 38, 19, { interactionType: 'timeclock', interactionKey: 'wing:clock' }),
+    place('of_190', 21, 25, base('of_190', 2, { depth: 0.5 })),
+    chair(20, 25, 'right'),
+    chair(24, 25, 'left'),
+    place('of_98', 10, 27, base('of_98', 1, { depth: 0.45 })),
+    place('of_100', 44, 27, base('of_100', 1, { depth: 0.45 })),
+    place('of_173', 41, 19, base('of_173', 1, { depth: 0.45 })),
   ]),
   layer(5, 'Objetos · Portas', 'doors', wingDoors),
   layer(6, 'Objetos · Navegação', 'navigation', [
-    spawn('default', 8, 31),
-    spawn('from-campus', 17, 26),
-    spawn('from-campus-elevator', 17, 26),
-    spawn('from-campus-stairs', 29.5, 29),
-    spawn('qa-wing-elevator', 17, 23),
-    spawn('qa-wing-stairs', 29.5, 26),
-    spawn('from-prev', 88, 31),
-    spawn('from-next', 8, 31),
-    portal('previous-wing', 1, 27, 2, 8, 'personal-wing', 'from-prev', 'Ala anterior', { wingDelta: -1 }),
-    portal('next-wing', 93, 27, 2, 8, 'personal-wing', 'from-next', 'Próxima ala', { wingDelta: 1 }),
+    spawn('default', wingShaft.x + 2, wingShaft.y + 6),
+    spawn('from-elevator', wingShaft.x + 2, wingShaft.y + 6),
+    spawn('from-stairs-above', 24, 24),
+    spawn('from-stairs-below', 34, 24),
+    // Aliases da nomenclatura anterior: links e testes antigos continuam válidos.
+    spawn('from-campus', wingShaft.x + 2, wingShaft.y + 6),
+    spawn('from-campus-elevator', wingShaft.x + 2, wingShaft.y + 6),
+    spawn('from-campus-stairs', 24, 24),
+    spawn('qa-wing-elevator', wingShaft.x + 2, wingShaft.y + 5),
+    spawn('qa-wing-stairs', 24, 23),
+    spawn('qa-wing-room', 9, 16),
   ]),
   layer(7, 'Objetos · Câmera', 'camera', [
-    object('Limite da câmera', 'camera', 0, 0, 96, 64),
+    object('Limite da câmera', 'camera', 0, 0, wingWidth, wingHeight),
   ]),
   layer(8, 'Objetos · Mecânicas', 'mechanics', wingMechanics),
 ];
 const wingMap = mapDocument(
   'personal-wing',
-  'Ala pessoal',
-  '12 salas públicas por módulo',
-  96,
-  64,
+  'Andar de salas pessoais',
+  'Seis salas públicas por andar',
+  wingWidth,
+  wingHeight,
   wingLayers,
+  0.6,
 );
 
 fs.writeFileSync(path.join(root, 'tiled/maps/tooq-campus.tmj'), `${JSON.stringify(campusMap, null, 2)}\n`);
@@ -851,18 +1000,33 @@ homeShellMap.layers.unshift({
 homeShellMap.nextlayerid = 1001;
 fs.writeFileSync(path.join(root, 'tiled/maps/player-home-shell.tmj'), `${JSON.stringify(homeShellMap, null, 2)}\n`);
 
+// Equivalentes `of_*` para os assets que o conversor legado não tem no tileset dele.
+const LEGACY_SNAPSHOT_ASSET = {
+  station_white_dual: 'of_225',
+  station_white_pc: 'of_225',
+  station_dark_dual: 'of_227',
+  table_meeting: 'of_258',
+  table_long: 'of_258',
+  table_round: 'of_294',
+  kt_159: 'of_176',
+  kt_192: 'of_323',
+  kt_143: 'of_320',
+  kt_129: 'of_321',
+  lr_13: 'of_98',
+};
+
 const fileFetchJson = async (url) => JSON.parse(fs.readFileSync(fileURLToPath(url), 'utf8'));
 for (const id of ['world', 'tooq-campus', 'personal-wing', 'player-home-shell']) {
   const tmjPath = path.join(root, `tiled/maps/${id}.tmj`);
   const runtime = await loadTiledMap(pathToFileURL(tmjPath).href, { fetchJson: fileFetchJson });
   delete runtime.tiledSource;
   delete runtime.tiledTextures;
-  // O snapshot é só compatibilidade do conversor legado, que não conhece as estações compostas.
-  // O runtime real continua lendo os assets station_* diretamente do TMJ.
+  // O snapshot é só compatibilidade do conversor legado, cujo tileset conhece apenas os
+  // `of_*`. O runtime real lê estações, cozinha e mesas compostas direto do TMJ.
   if (id === 'tooq-campus') {
     for (const item of runtime.furniture || []) {
-      if (item.id === 'station_white_dual' || item.id === 'station_white_pc') item.id = 'of_225';
-      if (item.id === 'station_dark_dual') item.id = 'of_227';
+      const legacy = LEGACY_SNAPSHOT_ASSET[item.id];
+      if (legacy) item.id = legacy;
     }
     runtime.assets = [
       'interior_sliding_door',

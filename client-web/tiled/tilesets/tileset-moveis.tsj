@@ -9,7 +9,7 @@
   "name": "03 · Móveis",
   "objectalignment": "bottom",
   "spacing": 0,
-  "tilecount": 1104,
+  "tilecount": 1108,
   "tiledversion": "1.12.2",
   "tileheight": 64,
   "tiles": [
@@ -26508,6 +26508,102 @@
         }
       ],
       "type": "furniture"
+    },
+    {
+      "id": 1104,
+      "image": "../../assets/furniture/composites/table_meeting.png",
+      "imagewidth": 96,
+      "imageheight": 48,
+      "type": "furniture",
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "table_meeting"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "composite"
+        }
+      ]
+    },
+    {
+      "id": 1105,
+      "image": "../../assets/furniture/composites/table_round.png",
+      "imagewidth": 48,
+      "imageheight": 32,
+      "type": "furniture",
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "table_round"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "composite"
+        }
+      ]
+    },
+    {
+      "id": 1106,
+      "image": "../../assets/furniture/composites/table_long.png",
+      "imagewidth": 64,
+      "imageheight": 32,
+      "type": "furniture",
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "table_long"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "composite"
+        }
+      ]
+    },
+    {
+      "id": 1107,
+      "image": "../../assets/furniture/composites/chess_table.png",
+      "imagewidth": 32,
+      "imageheight": 32,
+      "type": "furniture",
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "chess_table"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "furniture"
+        },
+        {
+          "name": "family",
+          "type": "string",
+          "value": "composite"
+        }
+      ]
     }
   ],
   "tilewidth": 32,

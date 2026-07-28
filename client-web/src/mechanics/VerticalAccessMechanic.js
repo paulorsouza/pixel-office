@@ -3,6 +3,9 @@ import { registerMechanic } from './MechanicsRegistry.js';
 const ELEVATOR_TEXTURE = 'limezu_elevator_door';
 const ELEVATOR_ANIMATION = 'limezu_elevator_door_open';
 const STAIRS_TEXTURE = 'limezu_stairs_wood';
+// Mesma escada, com os degraus mergulhando num vão escuro: sem duas artes, subir e descer
+// ficam indistinguíveis no mapa.
+const STAIRS_DOWN_TEXTURE = 'limezu_stairs_wood_down';
 
 const value = (entity, key, fallback) => (
   Object.hasOwn(entity, key) ? entity[key] : (entity.properties?.[key] ?? fallback)
@@ -31,7 +34,9 @@ function elevatorDisplay(scene, entity, tile) {
 function stairsDisplay(scene, entity, tile) {
   const x = Number(value(entity, 'visualX', Number(entity.x) + Number(entity.w) / 2)) * tile;
   const y = Number(value(entity, 'visualY', Number(entity.y))) * tile;
-  return scene.add.image(x, y, STAIRS_TEXTURE)
+  const goingDown = Number(value(entity, 'floorDelta', 0)) < 0
+    || value(entity, 'stairsDirection') === 'down';
+  return scene.add.image(x, y, goingDown ? STAIRS_DOWN_TEXTURE : STAIRS_TEXTURE)
     .setOrigin(0.5, 1)
     .setDepth(y);
 }
@@ -65,6 +70,9 @@ registerMechanic('verticalAccess', {
     }
     if (!scene.textures.exists(STAIRS_TEXTURE)) {
       scene.load.image(STAIRS_TEXTURE, 'assets/architecture/limezu_stairs_wood.png');
+    }
+    if (!scene.textures.exists(STAIRS_DOWN_TEXTURE)) {
+      scene.load.image(STAIRS_DOWN_TEXTURE, 'assets/architecture/limezu_stairs_wood_down.png');
     }
   },
   validate(entity) {
@@ -101,6 +109,11 @@ registerMechanic('verticalAccess', {
         targetScene: value(entity, 'targetScene'),
         targetSpawn: value(entity, 'targetSpawn'),
         targetWing: Number(value(entity, 'targetWing', 0)),
+        // Sem repassar `floorDelta`, a escada de subir e a de descer caem no mesmo andar:
+        // `changeScene` volta para o ramo de `targetWing`, que é fixo.
+        floorDelta: Number(value(entity, 'floorDelta', 0)),
+        // O elevador serve o prédio inteiro: em vez de um destino fixo, abre o seletor.
+        chooseFloor: accessType === 'elevator' && value(entity, 'chooseFloor', true) !== false,
         label: value(entity, 'label', accessType === 'elevator' ? 'Usar elevador' : 'Usar escadas'),
       },
       update() {

@@ -20,7 +20,7 @@ tiled/maps/*.tmj + tilesets/*.tsj + templates/*.tj
 4. Abra um dos mapas:
    - `maps/world.tmj` — cidade cercada, estradas, três empresas e vilarejo;
    - `maps/tooq-campus.tmj` — Tooq Office;
-   - `maps/personal-wing.tmj` — módulo público de 12 salas pessoais;
+   - `maps/personal-wing.tmj` — andar público de 6 salas pessoais;
    - `maps/tooq-office.tmj` — Coworking e quintal privado;
    - `maps/tooq-office-1.tmj` — Dark Company, `225×153`; a planta está na §7.1;
    - `maps/player-home-shell.tmj` — interior vazio compartilhado pelas casas futuras.
