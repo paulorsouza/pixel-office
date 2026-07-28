@@ -291,6 +291,11 @@ Requisitos:
 
 ## 6. Integração com o mundo
 
+**Estado implementado:** o desafio nasce do clique em qualquer avatar humano próximo, sem exigir
+uma mesa específica. A Central do Jogador substitui o quiosque: fica atrás de `Q Meu menu` e reúne
+cardgame, Horas, Objetivos, Quadro e Backlog. Mesas e quiosques abaixo continuam como expansão
+ambiental opcional, não como dependência do fluxo jogável.
+
 Adicionar de forma manual e aditiva no Tiled, sem regenerar o mapa:
 
 - entidade `cardTable` na sala de jogos do `tooq-campus`;
@@ -301,82 +306,74 @@ Adicionar de forma manual e aditiva no Tiled, sem regenerar o mapa:
 - o painel pausa apenas o movimento local e não derruba presença, chat ou LiveKit;
 - fechar o painel libera a mesa quando não existe partida ativa.
 
-Módulos sugeridos no cliente:
+Módulos implementados:
 
 ```text
 client-web/src/cardgame/CardGamePanel.js
-client-web/src/cardgame/CardRenderer.js
-client-web/src/cardgame/CollectionPanel.js
-client-web/src/cardgame/BoosterOpening.js
-client-web/src/cardgame/CardGameApi.js
-client-web/src/mechanics/CardTableMechanic.js
-client-web/src/mechanics/BoosterKioskMechanic.js
+client-web/src/cardgame/engine.js
+client-web/src/cardgame/engine.test.mjs
+client-web/src/GameItemsSystem.js
+client-web/src/PresenceSystem.js
 client-web/assets/cardgame/catalog.json
-client-web/assets/cardgame/type-chart.json
-client-web/assets/cardgame/art/
+client-web/assets/cardgame/pokemon/
 ```
 
-O catálogo visual pode ser servido como JSON estático, mas coleção, deck, preços, chances e partida
-sempre vêm do backend autenticado.
+O catálogo visual é JSON estático e local. Coleção, boosters e deck vêm do backend autenticado;
+desafios e partidas passam pelo `OfficeHub`.
 
 ## 7. Backend e persistência
 
-Não copiar o protótipo atual de xadrez que mantém a partida em memória e confia parcialmente no
-cliente. O cardgame precisa sobreviver a reinício, reconectar e validar cada jogada.
+### 7.1 Estado implementado
 
-Entidades sugeridas:
+Coleção, boosters e baralho já sobrevivem ao reinício no Postgres. O servidor também valida
+propriedade do deck e todas as jogadas. A partida em andamento ainda é mantida em memória; torná-la
+recuperável após restart/reconexão continua sendo trabalho futuro.
+
+Entidades atuais:
 
 | Entidade | Responsabilidade |
 |---|---|
-| `CardDefinition` | espécie/variante, tipos, bordas, raridade, rating e arte |
-| `CardInstance` | dono, definição, shiny, borda bônus, origem e data |
-| `CardDeck` | deck ativo do usuário |
-| `CardDeckSlot` | posição e instância escolhida |
-| `BoosterDefinition` | preço, slots, pesos, pity e período ativo |
-| `BoosterOpening` | compra idempotente e resultado imutável |
-| `BoosterOpeningCard` | as cinco instâncias e ordem de revelação |
-| `CardMatch` | jogadores, status, turno, tabuleiro, versão e resultado |
-| `CardMatchPlayer` | snapshot do baralho de 9, ordem do monte e mão atual |
-| `CardMatchMove` | sequência auditável de jogadas |
-| `CardPlayerStats` | vitórias/derrotas e progresso de temporada futuro |
+| `CardGameProfile` | saldo de boosters e baralho ativo em JSON |
+| `CardGameCollectionItem` | carta, shiny, quantidade, dono e primeira aquisição |
+| `CardGameMatch` | estado autoritativo efêmero da partida |
+| `CardGameChallenge` | convite efêmero entre conexões próximas |
 
-Regras de integridade:
+Regras de integridade implementadas:
 
-- índices únicos impedem usar a mesma instância em dois slots;
 - apenas o dono monta o próprio deck;
-- uma carta presa numa partida ativa não pode ser consumida ou transferida;
-- abertura de booster usa transação e idempotência;
+- índice único impede duplicar a mesma combinação usuário/carta/shiny;
+- abertura de booster usa transação e RNG criptograficamente seguro;
 - `CardMatch.Version` protege contra duas jogadas simultâneas;
 - datas em UTC e schema somente por migrations EF;
-- catálogo é reconciliado por seed versionado, sem apagar instâncias existentes.
+- catálogo local é validado pelo backend e contém os 151 Pokémon-base.
 
-Rotas REST sugeridas:
+Rotas REST atuais:
 
 ```text
-GET  /api/cardgame/catalog
-GET  /api/cardgame/collection
-GET  /api/cardgame/deck
+GET  /api/cardgame/profile
+POST /api/cardgame/boosters/open
 PUT  /api/cardgame/deck
-GET  /api/cardgame/boosters
-POST /api/cardgame/boosters/{key}/open
-GET  /api/cardgame/openings/{id}
-POST /api/cardgame/challenges
-POST /api/cardgame/challenges/{id}/accept
-POST /api/cardgame/challenges/{id}/decline
-GET  /api/cardgame/matches/{id}
-POST /api/cardgame/matches/{id}/moves
-POST /api/cardgame/matches/{id}/resign
-POST /api/cardgame/matches/{id}/rematch
 ```
 
-SignalR usa grupos `cardmatch:{matchId}` e envia snapshots pequenos:
+Métodos atuais no `OfficeHub`:
 
-- `CardChallengeReceived`;
-- `CardMatchStarted`;
-- `CardMatchState`;
-- `CardMoveApplied`;
-- `CardMatchFinished`;
-- `CardOpponentConnectionChanged`.
+```text
+ChallengeCardGame
+AcceptCardGameChallenge
+DeclineCardGameChallenge
+CardGameMove
+ResignCardGame
+```
+
+Eventos principais: `CardChallengeReceived`, `CardChallengeDeclined`, `CardMatchStarted`,
+`CardMatchState` e `CardGameError`.
+
+### 7.2 Persistência-alvo
+
+Para completar a v1 econômica e permitir recuperação de partidas, ainda entram histórico
+imutável de abertura, definição de boosters/loja, snapshots de partida, jogadas auditáveis e
+estatísticas do jogador. O desenho detalhado dessas entidades permanece em
+[`CARDGAME.md`](CARDGAME.md) como lista de pendências atuais.
 
 O snapshot público contém tabuleiro, turno, placar e apenas a quantidade de cartas na mão e no
 monte adversário. A mão completa e a carta recém-comprada são enviadas separadamente somente para
@@ -410,7 +407,7 @@ ficam locais no projeto e não dependem de hotlink ou API pública durante a exe
 
 ## 9. Fases de implementação
 
-### Fase 0 — especificação jogável
+### Fase 0 — especificação jogável — concluída
 
 - fechar regra de tipo, pontuação e limites de deck;
 - criar 20 cartas representativas para balancear;
@@ -418,15 +415,15 @@ ficam locais no projeto e não dependem de hotlink ou API pública durante a exe
 - testes do motor de regras;
 - gate: dez partidas manuais sem dúvida sobre por que uma captura ocorreu.
 
-### Fase 1 — fundação de dados
+### Fase 1 — fundação de dados — concluída na primeira fatia
 
 - migrations, entidades, seed e endpoints de catálogo/coleção/deck;
 - importar os 151 Pokémon e matriz de tipos;
 - gerar stats iniciais por regras reproduzíveis e fazer curadoria manual;
-- conceder deck inicial;
+- conceder três boosters e começar com álbum/baralho vazios;
 - gate: conta nova monta e salva um deck válido após reiniciar backend e navegador.
 
-### Fase 2 — PvP autoritativo
+### Fase 2 — PvP autoritativo — parcial
 
 - desafio, aceite, criação, jogada, desistência, resultado e revanche;
 - SignalR por partida, controle de versão e reconexão;
@@ -435,21 +432,21 @@ ficam locais no projeto e não dependem de hotlink ou API pública durante a exe
 - travar as 9 instâncias de cada jogador durante a partida;
 - gate: dois navegadores terminam uma partida e recuperam o mesmo estado após refresh.
 
-### Fase 3 — UI de coleção e partida
+### Fase 3 — UI de coleção e partida — concluída na primeira fatia
 
 - sistema visual de cartas, deck builder e tabuleiro responsivo;
 - animações de colocação, tipo e captura;
 - estados de loading, erro, oponente desconectado e fim;
 - gate: desktop e celular, mouse e toque, sem texto ilegível ou ação ambígua.
 
-### Fase 4 — boosters
+### Fase 4 — boosters — parcial
 
 - definições, compra transacional, odds, pity e histórico;
 - abertura completa com cinco cartas, skip e reduced motion;
 - shiny e variantes especiais;
 - gate: reload em cada etapa nunca perde nem duplica resultado.
 
-### Fase 5 — integração no Pixel Office
+### Fase 5 — integração no Pixel Office — concluída pelo desafio por proximidade
 
 - mesas e quiosque no Tiled;
 - mecânicas registradas e ação contextual;

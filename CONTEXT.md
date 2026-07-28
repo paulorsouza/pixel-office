@@ -1,6 +1,6 @@
 # CONTEXT — Office Quest (escritório virtual da Tooq)
 
-**Atualizado:** 2026-07-27
+**Atualizado:** 2026-07-28
 
 Visão geral pragmática do projeto: o que é, o que existe, como as peças se conectam e para onde vai.
 Detalhes vivem em docs específicos (linkados no fim) — aqui é o mapa mental.
@@ -33,7 +33,8 @@ Unity (ver §4).
 | **UI de trabalho compartilhada** | `backend/.../wwwroot/shared` | ✅ Kanban/horas/objetivos existem **uma vez só** e rodam no app web e dentro do jogo. Ver [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md). |
 | **LiveKit** | `livekit/` (local) ou **LiveKit Cloud** | ✅ SFU. Local (LAN) ou Cloud (entre redes). URL vem do backend (`LiveKit:Url`). |
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
-| **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez. |
+| **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez e cardgame social. |
+| **Tooq Triad** | `client-web/src/cardgame`, `backend/.../CardGame*.cs` | ✅ 151 Pokémon, álbum e deck persistentes, 3 boosters iniciais e PvP por proximidade. Partidas ainda ficam em memória. Ver [`docs/CARDGAME.md`](docs/CARDGAME.md). |
 | **Deploy** | `docker-compose.yml`, `run-beta.ps1` | ✅ Produção (Docker+Postgres+Caddy) e beta local via túnel. Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md), [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md). |
 | Cliente Unity (antigo) | `office-unity/` | ⏸️ Abandonado (ver §4). Mantido só como arquivo. |
 
@@ -60,6 +61,7 @@ client-web/src/FurnitureInteractionSystem.js  kanban, baú, cadeira, estação e
 client-web/src/NavigationSystem.js    grade de caminhabilidade + A* + suavização de rota
 client-web/src/ClickToMove.js         clique/toque vira destino (só anda; não interage)
 client-web/src/TouchControls.js       botão de ação contextual + pinça de zoom
+client-web/src/cardgame/CardGamePanel.js  central do jogador, álbum, boosters, deck e partida
 client-web/src/mechanics/             registro e handlers extensíveis de gameplay
 client-web/src/DevMapSync.js          feedback e recarga do Tiled ao vivo
 client-web/src/TiledRuntimeLoader.js  TMJ/TSJ/templates → contrato do renderer no navegador
@@ -205,6 +207,15 @@ semanais recalculam o progresso a partir dos lançamentos (nunca incrementam), e
 corrigir um lançamento acerta a meta sozinho. Apagar lançamento **estorna** o que ele
 pagou. `Game:WelcomeGrantCoins` credita o bônus do beta (10 000 moedas) uma vez por
 usuário, inclusive nos já existentes. Detalhes: [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md).
+
+**Tooq Triad — coleção persistente e PvP próximo (primeira fatia feita).** `Q Meu menu` abre a
+Central do Jogador com Álbum, Boosters, Baralho e as mesmas telas compartilhadas de Horas,
+Objetivos, Quadro e Backlog. Todo perfil novo do cardgame nasce com álbum vazio e três boosters de
+cinco cartas. Coleção, shiny, saldo de boosters e deck de nove cartas ficam no Postgres; o backend
+recusa decks com cartas que o jogador não possui. Clicar em outro avatar humano próximo abre o
+desafio, e o `OfficeHub` controla mãos privadas, compra automática, turnos, captura e resultado.
+O catálogo e os 151 sprites são locais. Partidas ainda são efêmeras e não sobrevivem ao restart.
+Detalhes e roteiro de teste: [`docs/CARDGAME.md`](docs/CARDGAME.md).
 
 **Movimento por destino (clique e toque):** clicar ou tocar no chão manda o avatar até lá,
 em vez de joystick virtual — um input só serve mouse e celular, e o desktop ganha função em vez
@@ -379,6 +390,8 @@ paredes, pisos, móveis, exteriores, porta animada):
    costas). É o que destrava sentar encarando o monitor de verdade.
 7. **Persistir casas compráveis**: o vilarejo e os 12 destinos dinâmicos existem; falta propriedade,
    compra e decoração independente do interior-base.
+8. **Completar a economia do Tooq Triad**: fonte recorrente de boosters, pity, histórico de
+   aberturas, bônus shiny na partida e persistência/reconexão de partidas.
 
 ---
 
@@ -400,6 +413,8 @@ paredes, pisos, móveis, exteriores, porta animada):
 - [`client-web/tiled/README.md`](client-web/tiled/README.md) — operação do editor visual Tiled.
 - [`client-web/TUTORIAL.md`](client-web/TUTORIAL.md) — padrões de Phaser + debug no navegador.
 - [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md) — quadro, lançamento de horas, objetivos, economia e a UI compartilhada.
+- [`docs/CARDGAME.md`](docs/CARDGAME.md) — estado implementado do Tooq Triad, arquitetura, chances e testes.
+- [`docs/PLANO_CARDGAME_POKEMON.md`](docs/PLANO_CARDGAME_POKEMON.md) — regras e roadmap completo do cardgame.
 - [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md) — Postgres local, migrations EF, datas em UTC.
 - [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md) — auth Google + JWT, permissões, passo a passo do OAuth.
 - [`docs/REUNIAO_PROXIMIDADE.md`](docs/REUNIAO_PROXIMIDADE.md) — presença em rede + A/V por proximidade.

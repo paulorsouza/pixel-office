@@ -28,6 +28,9 @@ Baralho, Horas, Objetivos, Quadro e Backlog. Cada jogador começa com o álbum v
 de cinco cartas; depois de montar e salvar um baralho de 9 cartas, aproxime-se de outro jogador,
 clique no avatar dele e escolha `Desafiar`.
 
+Arquitetura, chances, persistência e roteiro completo de teste:
+[`../docs/CARDGAME.md`](../docs/CARDGAME.md).
+
 **Edição manual do mundo:** [`GUIA-MUNDO-ABERTO.md`](GUIA-MUNDO-ABERTO.md) ensina a ampliar o mapa
 no Tiled, criar ruas, posicionar fachadas, configurar colisões e conectar novos interiores.
 
