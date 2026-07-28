@@ -109,7 +109,7 @@ const server = http.createServer((req, res) => {
       return;
     }
     const extension = path.extname(filePath).toLowerCase();
-    const sourceFile = ['.json', '.js', '.tmj', '.tsj', '.tj'].includes(extension);
+    const sourceFile = ['.json', '.js', '.css', '.tmj', '.tsj', '.tj'].includes(extension);
     res.writeHead(200, {
       'Content-Type': mime[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
       'Cache-Control': sourceFile ? 'no-cache' : 'public, max-age=60',

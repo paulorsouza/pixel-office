@@ -71,14 +71,15 @@ Essa identidade é apenas de protótipo e vira o header `X-User-Id`. Não é aut
 - `WASD` ou setas: andar;
 - `E`: usar o móvel próximo ou entrar/sair por um portal;
 - `Tab`: abrir equipamentos e customização;
-- `Q Meu menu`: abrir Central do Jogador, álbum, boosters, baralho, horas e objetivos;
 - `Shift`: usar o veículo equipado;
 - `1`–`4`: equipar veículo rapidamente;
 - `0`: guardar veículo;
 - scroll: zoom;
 - `Esc`: fechar menus e interações.
 
-Dentro de uma sala declarada em `rooms[]`, aparece `Decorar <sala>`.
+O resto é o **dock**, no canto inferior esquerdo: Trabalho, Personagem, Itens, Loja, Cartas,
+Decorar (só dentro de uma sala sua, declarada em `rooms[]`) e Como jogar — esta última lista as
+teclas e, no celular, os gestos. Em tela pequena o dock vira o botão `☰`.
 
 ## 4. Testar o Tooq Triad
 
@@ -89,7 +90,7 @@ http://localhost:8123/?userId=1&scene=tooq-campus
 http://localhost:8123/?userId=2&scene=tooq-campus
 ```
 
-Cada jogador começa com três boosters, álbum vazio e baralho vazio. Abra `Q Meu menu`, revele os
+Cada jogador começa com três boosters, álbum vazio e baralho vazio. Abra `Cartas` no dock, revele os
 três pacotes, monte nove cartas e salve. Aproxime os avatares, clique no outro jogador e escolha
 `Desafiar`. O fluxo completo está em [`CARDGAME.md`](CARDGAME.md).
 

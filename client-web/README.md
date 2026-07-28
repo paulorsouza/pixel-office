@@ -20,10 +20,16 @@ node server.js          # http://localhost:8123
 Phaser 3.80.1 está vendorizado e o servidor estático usa apenas Node.
 
 **Controles:** `WASD`/setas para andar · `E` para interagir ou entrar/sair · `Tab` para equipamentos · segure
-`Shift` para usar o equipamento selecionado · `scroll` para zoom. Dentro de uma sala decorável,
-use o botão `Decorar sala` para abrir o editor de móveis.
+`Shift` para usar o equipamento selecionado · `scroll` para zoom. A lista completa fica na folha
+**Como jogar**, no dock — não há mais tira fixa de teclas no rodapé.
 
-**Central do jogador:** use `Q Meu menu`, no canto superior direito, para abrir Álbum, Boosters,
+**Dock:** a barra de ícones no canto inferior esquerdo é a porta de entrada dos menus — Trabalho,
+Personagem, Itens, Loja, Cartas, Decorar (só onde a sala é sua) e Como jogar. Em tela até 760px ela
+vira um botão `☰` que abre a mesma lista como folha de tela cheia. O chassi está em
+`src/hud/` e todo painel novo se registra nele (`HudShell.register`), senão clique e pinça vazam
+para o mundo atrás.
+
+**Central do jogador:** `Cartas`, no dock, abre Álbum, Boosters,
 Baralho, Horas, Objetivos, Quadro e Backlog. Cada jogador começa com o álbum vazio e três boosters
 de cinco cartas; depois de montar e salvar um baralho de 9 cartas, aproxime-se de outro jogador,
 clique no avatar dele e escolha `Desafiar`.

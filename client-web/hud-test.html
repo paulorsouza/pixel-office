@@ -3,30 +3,52 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Harness do MeetingHUD (sem Phaser)</title>
+<title>Harness da HUD (sem Phaser)</title>
+<!-- O CSS é o DE VERDADE: um harness com estilo próprio testaria outra coisa. -->
+<link rel="stylesheet" href="src/hud/hud.css">
 <style>
-  *{box-sizing:border-box}
-  [hidden]{display:none!important}
-  html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#20222c}
-  button{font:inherit}
-  #game{position:fixed;inset:0;width:100vw;height:100vh;display:grid;place-items:center;
+  /* Só o que substitui o Phaser: o canvas do jogo vira um retângulo. */
+  #game{display:grid;place-items:center;
     background:radial-gradient(circle at 30% 30%,#3a4a3a,#232a33 60%);color:#9fb59f;
     font:600 18px Inter,system-ui,sans-serif}
-  #portal-prompt{position:fixed;left:50%;bottom:48px;transform:translateX(-50%);color:#fff;
-    background:#171923ee;padding:9px 14px;border-radius:12px;font:12px Inter,system-ui}
-  #scene-card{position:fixed;left:16px;top:16px;color:#fff;background:#171923dc;
-    padding:10px 13px;border-radius:12px;font:14px Inter,system-ui}
-  #controls{position:fixed;left:16px;bottom:13px;color:#e8eaff;font-size:12px;background:#171923d9;
-    padding:7px 11px;border-radius:9px;font-family:Inter,system-ui}
 </style>
 </head>
 <body>
 <div id="game">(área do jogo — placeholder)</div>
-<div id="scene-card"><strong id="scene-name">Escritório Tooq</strong></div>
-<div id="controls">WASD andar · Tab equipamentos</div>
-<div id="portal-prompt">E — entrar</div>
+<div id="scene-card" class="hud"><strong id="scene-name">Escritório Tooq</strong><span id="scene-subtitle">harness</span></div>
+<div id="portal-prompt" class="hud on"><kbd>E</kbd><span>entrar</span></div>
 <script type="module">
 import { createMeetingHUD } from './src/MeetingHUD.js';
+import { createHudShell } from './src/hud/HudShell.js';
+import { createDock } from './src/hud/Dock.js';
+import { createHelpSheet } from './src/hud/HelpSheet.js';
+
+// ---- chassi da HUD: dock, folhas e o registro de quem bloqueia o mundo ----
+const shell = createHudShell();
+const help = createHelpSheet(shell);
+// Painel falso para exercitar o registro: `shell.isBlocking()` tem de virar true.
+const fakePanel = { open: false };
+shell.register({ id: 'fake-panel', isOpen: () => fakePanel.open });
+const opened = [];
+const item = (id, icon, label, hint, extra = {}) => ({
+  id, icon, label, hint, onSelect: () => opened.push(id), ...extra,
+});
+let decorateRoom = null;
+const dock = createDock(shell, [
+  item('work', '⌂', 'Trabalho', 'Quadro, backlog, horas e objetivos'),
+  item('character', '🙂', 'Personagem', 'Aparência do avatar'),
+  item('items', '🎒', 'Itens', 'Equipamentos e veículos'),
+  item('store', '🛒', 'Loja', 'Móveis e meios de locomoção'),
+  item('cards', '🃏', 'Cartas', 'Álbum, boosters e baralho'),
+  item('decorate', '✦', 'Decorar', 'Mover os móveis desta sala', { visible: () => Boolean(decorateRoom) }),
+  { id: 'help', icon: '?', label: 'Como jogar', hint: 'Teclas e gestos', onSelect: () => help.toggle() },
+]);
+window.hudShell = shell;
+window.hudDock = dock;
+window.hudHelp = help;
+window.hudOpened = opened;
+window.hudFakePanel = fakePanel;
+window.setDecorateRoom = (value) => { decorateRoom = value; dock.refresh(); };
 
 const state = { mic: false, cam: false, scr: false };
 const hud = createMeetingHUD({

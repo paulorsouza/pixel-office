@@ -727,8 +727,8 @@ export function createMeetingHUD(callbacks = {}) {
 /* ---- integração com o HUD do jogo ---- */
 html[data-mh] #portal-prompt{bottom:104px}
 /* sem transition no #game: o canvas do Phaser esticaria pixelado durante a animação */
-html[data-mh-mode] #scene-card,html[data-mh-mode] #controls{display:none}
-html[data-mh-mode="focus"] #room-decoration-entry{display:none}
+/* O dock some por conta própria (regra em hud.css); aqui vai o resto da HUD. */
+html[data-mh-mode] #scene-card{display:none}
 html[data-mh-mode="split"] #game{left:calc(100vw - min(38vw,620px) - 12px);top:12px;
   width:min(38vw,620px);height:calc(100vh - 100px);
   border-radius:16px;overflow:hidden;border:1px solid var(--mh-line);box-shadow:0 18px 50px #0008}

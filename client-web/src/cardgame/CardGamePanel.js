@@ -34,10 +34,6 @@ function injectStyles() {
       color:#fff;background:#2c355f;cursor:pointer;font:700 12px Inter,system-ui,sans-serif;box-shadow:inset 0 -2px #0004}
     .cg-btn:hover:not(:disabled){filter:brightness(1.16)}.cg-btn:disabled{cursor:not-allowed;opacity:.45}
     .cg-btn.primary{background:#6857ee}.cg-btn.danger{background:#8f3854}
-    #player-hub-button{position:fixed;right:16px;top:16px;z-index:35;display:flex;align-items:center;gap:8px;
-      border:1px solid #ffffff2b;border-radius:13px;padding:10px 14px;color:#fff;background:#15192be8;
-      box-shadow:0 9px 25px #0005;cursor:pointer;font:800 12px Inter,system-ui,sans-serif}
-    #player-hub-button b{display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#6d5df0}
     #cardgame-player-menu{position:fixed;z-index:130;min-width:220px;padding:10px;border:1px solid #ffffff2d;
       border-radius:14px;color:#fff;background:#151a2ef5;box-shadow:0 18px 55px #000a;font-family:Inter,system-ui,sans-serif;
       backdrop-filter:blur(12px)}.cg-player-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}
@@ -152,7 +148,6 @@ function injectStyles() {
       .cg-hub-head{padding-top:calc(16px + env(safe-area-inset-top))}
       .cg-hub-content{padding-bottom:calc(17px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
       .cg-hub-side{padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
-      #player-hub-button{right:calc(12px + env(safe-area-inset-right));top:calc(12px + env(safe-area-inset-top))}
       #cardgame-invite{top:calc(12px + env(safe-area-inset-top))}
       /* O menu do jogador nasce na posição do toque e vazava pela borda. */
       #cardgame-player-menu{left:50%!important;right:auto;transform:translateX(-50%);
@@ -193,7 +188,6 @@ function injectStyles() {
       .cg-btn{min-height:44px;padding:10px 16px}
       .cg-nav button{min-height:44px}
       .cg-shortcut,.cg-stat{min-height:44px}
-      #player-hub-button{min-height:44px}
       .cg-deck-slot button{min-width:44px;min-height:44px}
       .cg-cell{min-height:44px}
     }
@@ -201,7 +195,6 @@ function injectStyles() {
     html[data-touch="on"] .cg-nav button,
     html[data-touch="on"] .cg-shortcut,
     html[data-touch="on"] .cg-stat,
-    html[data-touch="on"] #player-hub-button,
     html[data-touch="on"] .cg-cell{min-height:44px}
     html[data-touch="on"] .cg-deck-slot button{min-width:44px;min-height:44px}
   `;
@@ -211,8 +204,9 @@ function injectStyles() {
 function createRoots() {
   injectStyles();
   const wrapper = document.createElement('div');
+  // A entrada do hub é o dock da HUD (`src/hud/Dock.js`); aqui só existem as
+  // camadas do próprio cardgame.
   wrapper.innerHTML = `
-    <button id="player-hub-button" type="button"><b>Q</b><span>Meu menu</span></button>
     <div id="cardgame-player-menu" class="cg-hidden"></div>
     <div id="cardgame-invite" class="cg-hidden"></div>
     <div id="player-hub-overlay" class="cg-overlay cg-hidden"></div>
@@ -493,7 +487,6 @@ export function createCardGamePanel({ presence, catalog, gameItems, onToast = ()
   }
   function closeMatch() { matchState = null; selectedCardId = null; pendingMove = false; matchOverlay.classList.add('cg-hidden'); }
 
-  document.getElementById('player-hub-button').onclick = () => openHub('home');
   presence.events.addEventListener('CardChallengeReceived', (event) => showInvite(event.detail));
   presence.events.addEventListener('CardChallengeDeclined', (event) => onToast(`${event.detail.targetName} recusou o desafio`));
   presence.events.addEventListener('CardChallengeCancelled', () => invite.classList.add('cg-hidden'));
@@ -517,6 +510,8 @@ export function createCardGamePanel({ presence, catalog, gameItems, onToast = ()
     isBlocking: () => !hubOverlay.classList.contains('cg-hidden') || !matchOverlay.classList.contains('cg-hidden'),
     openDeck: () => openHub('deck'),
     openMenu: () => openHub('home'),
+    /** `home | album | boosters | deck | hours | goals | board | backlog` */
+    open: (tab) => openHub(tab),
     getDeck: () => [...deck],
     closePlayerMenu,
   };

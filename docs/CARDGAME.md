@@ -6,7 +6,7 @@ descreve o que está implementado e como operar/testar.
 
 ## 1. Fluxo jogável
 
-1. O jogador abre `Q Meu menu`.
+1. O jogador abre `Cartas`, no dock da HUD.
 2. Uma conta sem perfil de cardgame recebe **3 boosters** e começa com o **álbum vazio**.
 3. Cada booster revela **5 cartas** e grava o resultado no Postgres antes de responder ao cliente.
 4. Com pelo menos 9 cartas diferentes, o jogador monta e salva um baralho de **9 cartas**.
@@ -19,8 +19,8 @@ Não existe oponente controlado pela máquina. Bots da presença não podem ser 
 
 ## 2. Central do jogador
 
-O cardgame não mantém um painel fixo grande sobre o mundo. A HUD mostra apenas `Q Meu menu`, que
-abre uma central responsiva com:
+O cardgame não mantém um painel fixo grande sobre o mundo, nem botão próprio: a entrada é o item
+`Cartas` do dock (`client-web/src/hud/Dock.js`), que abre uma central responsiva com:
 
 - **Visão geral** — quantidade de cartas únicas, shiny e estado do baralho;
 - **Álbum** — as 151 posições da Pokédex, filtros e silhuetas das cartas ainda não obtidas;
@@ -118,7 +118,7 @@ http://localhost:8123/?userId=2&scene=tooq-campus
 
 Em cada janela:
 
-1. abra `Q Meu menu`;
+1. abra `Cartas` no dock;
 2. confira `3 boosters`, álbum `0/151` e baralho `0/9`;
 3. abra os três boosters;
 4. monte e salve um baralho de nove cartas;

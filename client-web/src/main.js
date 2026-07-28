@@ -26,6 +26,9 @@ import {
   personalWingIndex,
   resolveSceneTarget,
 } from './FloorNavigation.js';
+import { createHudShell } from './hud/HudShell.js';
+import { createDock } from './hud/Dock.js';
+import { createHelpSheet } from './hud/HelpSheet.js';
 import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
@@ -208,7 +211,11 @@ function materializeScene(sceneRef) {
   });
   return map;
 }
+// Espelhos no módulo do que a cena cria: a HUD é global e as cenas vão e voltam,
+// então o dock e o registro de painéis apontam para cá, não para a cena.
 let roomDecorationEditor = null;
+let furnitureInteractions = null;
+let decorateRoom = null;   // sala decorável sob o avatar, ou null
 const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
@@ -242,6 +249,84 @@ const equipmentPreviewDirection = Object.hasOwn(DIR, requestedEquipmentDirection
   ? requestedEquipmentDirection
   : null;
 createDevMapSync(() => window.__scene?.currentSceneId);
+
+// ---------------------------------------------------------------- HUD
+// O dock é a única porta de entrada dos menus: antes cada um trazia o próprio
+// botão fixo ("Meu menu" no topo direito, "Decorar sala" logo abaixo) e a tira
+// de teclas ocupava o rodapé para dizer sempre a mesma coisa.
+//
+// A voz NÃO entra aqui de propósito: a barra da reunião já é permanente e é o
+// único lugar que conhece o estado do call — um segundo controle divergiria.
+const hud = createHudShell();
+const helpSheet = createHelpSheet(hud);
+// Abrir um painel fecha a folha aberta: os dois ocupariam a mesma tela, e sair do
+// painel devolveria a pessoa a uma folha que ela já tinha esquecido.
+const openPanel = (action) => { hud.closeSheets(); action(); };
+const openEquipment = (tab) => openPanel(() => {
+  characterCustomizer.setTab(tab);
+  equipmentMenu.setOpen(true);
+});
+const dock = createDock(hud, [
+  {
+    id: 'work',
+    icon: '⌂',
+    label: 'Trabalho',
+    hint: 'Quadro, backlog, horas e objetivos',
+    onSelect: () => openPanel(() => furnitureInteractions?.openFromMenu('board')),
+  },
+  {
+    id: 'character',
+    icon: '🙂',
+    label: 'Personagem',
+    hint: 'Aparência do avatar',
+    onSelect: () => openEquipment('character'),
+  },
+  {
+    id: 'items',
+    icon: '🎒',
+    label: 'Itens',
+    hint: 'Equipamentos e veículos',
+    onSelect: () => openEquipment('equipment'),
+  },
+  {
+    id: 'store',
+    icon: '🛒',
+    label: 'Loja',
+    hint: 'Móveis e meios de locomoção',
+    onSelect: () => openPanel(() => furnitureInteractions?.openFromMenu('store')),
+  },
+  {
+    id: 'cards',
+    icon: '🃏',
+    label: 'Cartas',
+    hint: 'Álbum, boosters e baralho do Tooq Triad',
+    onSelect: () => openPanel(() => cardGame.open('album')),
+  },
+  {
+    // Só existe onde dá para decorar — desabilitado seria pior: a pessoa clica
+    // e nada acontece, sem saber que o problema é o lugar onde ela está.
+    id: 'decorate',
+    icon: '✦',
+    label: 'Decorar',
+    hint: 'Mover os móveis desta sala',
+    visible: () => Boolean(decorateRoom),
+    onSelect: () => openPanel(() => roomDecorationEditor?.open()),
+  },
+  {
+    id: 'help',
+    icon: '?',
+    label: 'Como jogar',
+    hint: 'Teclas e gestos',
+    onSelect: () => helpSheet.toggle(),
+  },
+]);
+
+// Quem bloqueia o mundo se registra; `uiIsBlocking()` só pergunta.
+hud.register({ id: 'cardgame', isOpen: () => cardGame.isBlocking() });
+hud.register({ id: 'equipment', isOpen: () => equipmentMenu.isOpen() });
+hud.register({ id: 'floor-picker', isOpen: () => floorPicker.isOpen() });
+hud.register({ id: 'decoration', isOpen: () => Boolean(roomDecorationEditor?.isOpen()) });
+hud.register({ id: 'furniture', isOpen: () => Boolean(furnitureInteractions?.isOpen()) });
 
 function loadImageOnce(scene, key, path) {
   if (!scene.textures.exists(key)) scene.load.image(key, path);
@@ -580,6 +665,10 @@ class MapScene extends Phaser.Scene {
         },
       },
     );
+    furnitureInteractions = this.furnitureInteractions;
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (furnitureInteractions === this.furnitureInteractions) furnitureInteractions = null;
+    });
 
     // Recompensas e objetivos chegam pelo hub e valem mesmo com o painel fechado.
     gameItems.events.addEventListener('RewardGranted', (event) => {
@@ -597,16 +686,13 @@ class MapScene extends Phaser.Scene {
     // mesmos retângulos de `this.solids` que a física usa, então nunca diverge.
     this.navigation = createNavigationSystem(this, this.map);
     // Um predicado só para "tem painel na frente": clique, pinça e botão de ação
-    // precisam concordar. Duplicar a lista deixaria um deles para trás quando
-    // entrasse um painel novo — foi o que quase aconteceu com o cardgame.
+    // precisam concordar. A lista não mora mais aqui — cada painel se registra no
+    // chassi da HUD, senão o próximo painel novo fica de fora como quase ficou o
+    // cardgame. O que sobra é o que não é painel: transição e xadrez da cena.
     this.uiIsBlocking = () => (
       this.transitioning
       || this.chessOpen
-      || floorPicker.isOpen()
-      || cardGame.isBlocking()
-      || equipmentMenu.isOpen()
-      || this.roomDecorationEditor?.isOpen()
-      || this.furnitureInteractions?.isOpen()
+      || hud.isBlocking()
     );
     this.clickToMove = createClickToMove(this, this.navigation, {
       isBlocked: this.uiIsBlocking,
@@ -668,10 +754,13 @@ class MapScene extends Phaser.Scene {
 
   update(time, delta) {
     this.mechanicsRuntime.update(time, delta);
-    this.roomDecorationEditor.updateAvailability(
+    // A entrada de decoração é um item do dock: some quando a sala sob o avatar
+    // não é decorável. `refresh` só redesenha quando a lista visível muda.
+    decorateRoom = this.roomDecorationEditor.updateAvailability(
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.furnitureInteractions.isOpen(),
     );
+    dock.refresh();
     this.activeFurniturePrompt = this.furnitureInteractions.update(
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),

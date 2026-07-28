@@ -310,6 +310,19 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     celebrate(completions) {
       if (open) workPanel.celebrate(completions);
     },
+    /**
+     * Abre um painel a partir do menu, sem móvel por perto. Só vale para o que
+     * não depende de uma instância no mapa: as abas de trabalho e a loja. Baú e
+     * estação continuam exigindo o móvel — é ele que diz de QUAL baú se trata.
+     * @param target `board | backlog | hours | goals | store`
+     */
+    openFromMenu(target) {
+      if (open) return false;
+      setOpen(true);
+      if (target === 'store') renderStore();
+      else renderWork(target);
+      return true;
+    },
     openForType(type) {
       const record = interactive().find((candidate) => candidate.item.interactionType === type);
       if (!record) return false;

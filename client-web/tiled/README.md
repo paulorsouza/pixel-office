@@ -142,7 +142,7 @@ diretamente as camadas `Pincel · Chão e ruas`, `Pincel · Paredes` e `Pincel �
 
 Esta seção trata da **mobília fixa do level design**. Objetos colocados aqui entram no mapa para
 todos, não possuem `GameItemInstance` e não podem ser movidos pelo editor do jogador. Para mobília
-comprada/encontrada e persistida, use o modo `Decorar sala` no jogo.
+comprada/encontrada e persistida, use `✦ Decorar` (dock do jogo).
 
 ### Mover
 

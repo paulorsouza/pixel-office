@@ -208,7 +208,7 @@ corrigir um lançamento acerta a meta sozinho. Apagar lançamento **estorna** o 
 pagou. `Game:WelcomeGrantCoins` credita o bônus do beta (10 000 moedas) uma vez por
 usuário, inclusive nos já existentes. Detalhes: [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md).
 
-**Tooq Triad — coleção persistente e PvP próximo (primeira fatia feita).** `Q Meu menu` abre a
+**Tooq Triad — coleção persistente e PvP próximo (primeira fatia feita).** `Cartas`, no dock, abre a
 Central do Jogador com Álbum, Boosters, Baralho e as mesmas telas compartilhadas de Horas,
 Objetivos, Quadro e Backlog. Todo perfil novo do cardgame nasce com álbum vazio e três boosters de
 cinco cartas. Coleção, shiny, saldo de boosters e deck de nove cartas ficam no Postgres; o backend
@@ -238,6 +238,25 @@ força, para testar no desktop) — uma media query seria uma segunda fonte de v
 **O clique só anda.** Sentar, entrar num portal ou abrir um móvel continua exigindo confirmação
 (`E` ou o botão de ação) — ninguém senta sem querer ao tocar na tela. Qualquer tecla de movimento
 cancela o destino, então o caminho do teclado no desktop segue idêntico ao que era.
+
+**HUD com chassi e uma porta só (`client-web/src/hud/`).** Cada feature trazia o próprio botão fixo
+("Meu menu" no topo direito, "Decorar sala" logo abaixo) e o rodapé era uma tira de teclas dizendo
+sempre a mesma coisa — que o celular escondia por CSS, porque não serve para toque. Agora existe um
+**dock** de ícones (Trabalho, Personagem, Itens, Loja, Cartas, Decorar, Como jogar) que em tela até
+760px vira um botão `☰` abrindo a mesma lista como **folha de tela cheia**; as teclas viraram a
+folha *Como jogar*, que mostra gestos em quem está no toque. A voz ficou de fora de propósito: a
+barra da reunião já é permanente e é a única que conhece o estado do call.
+Três regras que valem para todo painel novo:
+1. **Quem bloqueia o mundo se registra** (`HudShell.register`). `uiIsBlocking()` não é mais uma
+   lista escrita à mão em `main.js` — era ela que deixava clique e pinça vazarem quando entrava
+   um painel novo.
+2. **Botão de HUD para o toque no `pointerup`, com `stopPropagation`** — o Phaser escuta na janela,
+   e com `preventDefault` no `pointerdown` o `click` nem chega (lição do `TouchControls`).
+3. **Uma área rolável por folha**, com `overscroll-behavior: contain`: o `body` é `overflow:hidden`,
+   então folha sem container próprio simplesmente não rola.
+O CSS da HUD saiu do `<style>` do `index.html` para `src/hud/hud.css`, e o
+[harness](client-web/hud-test.html) monta dock e folhas **sem Phaser** — é onde isso se testa (a
+aba oculta do preview congela o `requestAnimationFrame` e o jogo nem sai do carregamento).
 
 **Interações de mobília:** definições declaram um `InteractionType`, resolvido por um registro
 extensível no cliente. `of_171` abre o kanban e escolhe a atividade ativa; `of_176` funciona como

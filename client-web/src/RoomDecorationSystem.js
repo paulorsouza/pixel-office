@@ -220,7 +220,6 @@ function snapped(value, step) {
 }
 
 export function createRoomDecorationEditor(scene, map, catalog, store, equipmentMenu, gameItems = null) {
-  const entry = document.querySelector('#room-decoration-entry');
   const panel = document.querySelector('#room-decoration-panel');
   const close = document.querySelector('#room-decoration-close');
   const roomName = document.querySelector('#room-decoration-room');
@@ -433,7 +432,6 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     history = [];
     future = [];
     panel.hidden = false;
-    entry.hidden = true;
     roomName.textContent = room.name || room.id;
     setStatus(gameItems?.isOnline() ? 'Alterações são salvas no servidor' : 'Servidor indisponível', gameItems?.isOnline() ? 'normal' : 'error');
     search.value = '';
@@ -606,7 +604,6 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     }
   };
 
-  const openAvailableRoom = () => openEditor();
   const chooseSelectTool = () => setBrush(null);
   const resetRoom = async () => {
     const records = [...recordsInRoom()];
@@ -628,7 +625,6 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     }
   };
 
-  entry.onclick = openAvailableRoom;
   close.onclick = closeEditor;
   selectTool.onclick = chooseSelectTool;
   undoButton.onclick = undo;
@@ -714,8 +710,6 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
 
   const destroy = () => {
     closeEditor();
-    entry.hidden = true;
-    entry.onclick = null;
     close.onclick = null;
     selectTool.onclick = null;
     undoButton.onclick = null;
@@ -742,11 +736,12 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     getActiveRoom: () => activeRoom,
     open: openEditor,
     close: closeEditor,
+    /**
+     * Onde o avatar está, dá para decorar? Devolve a sala (ou null) — quem
+     * mostra a entrada é o dock da HUD, que some sozinho quando isto é null.
+     */
     updateAvailability(player, blocked = false) {
-      if (open) {
-        entry.hidden = true;
-        return activeRoom;
-      }
+      if (open) return activeRoom;
       const tile = map.tile || 16;
       const room = roomAtPoint(map, player.body.center.x / tile, player.body.center.y / tile);
       availableRoom = room
@@ -757,9 +752,7 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
       if (gameItems && availableRoom && availableRoom.id !== subscribedRoomId && availableRoom.id !== loadingRoomId) {
         loadServerRoom(availableRoom.id);
       }
-      entry.hidden = blocked || !availableRoom;
-      if (availableRoom) entry.textContent = `✦ Decorar ${availableRoom.name || availableRoom.id}`;
-      return availableRoom;
+      return blocked ? null : availableRoom;
     },
     destroy,
   };

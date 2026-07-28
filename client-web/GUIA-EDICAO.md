@@ -183,7 +183,7 @@ de destino. O servidor valida essas ligações antes de recarregar.
 
 ## 8. Decoração feita pelo jogador
 
-O editor dentro do jogo é separado do level design. Entre em uma sala e clique em `Decorar sala`
+O editor dentro do jogo é separado do level design. Entre em uma sala e use `✦ Decorar`, no dock
 para adicionar, mover, espelhar e recolher apenas móveis que pertencem ao usuário. Cada cartão mostra
 o estoque retornado pelo backend; colocar consome uma instância e recolher devolve a mesma unidade.
 Posição, sala e espelhamento persistem no SQLite e são sincronizados por SignalR.

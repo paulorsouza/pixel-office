@@ -292,7 +292,7 @@ Requisitos:
 ## 6. Integração com o mundo
 
 **Estado implementado:** o desafio nasce do clique em qualquer avatar humano próximo, sem exigir
-uma mesa específica. A Central do Jogador substitui o quiosque: fica atrás de `Q Meu menu` e reúne
+uma mesa específica. A Central do Jogador substitui o quiosque: fica atrás de `Cartas`, no dock, e reúne
 cardgame, Horas, Objetivos, Quadro e Backlog. Mesas e quiosques abaixo continuam como expansão
 ambiental opcional, não como dependência do fluxo jogável.
 
