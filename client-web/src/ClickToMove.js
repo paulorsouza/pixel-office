@@ -51,6 +51,7 @@ export function createClickToMove(scene, navigation, options = {}) {
     if (pointer.button !== 0) return;
     if (scene.time.now - downAt > TAP_MAX_MS) return;
     if (Math.hypot(pointer.x - downX, pointer.y - downY) > TAP_SLOP_PX) return;
+    if (options.onTap?.(pointer)) return;
 
     // Sentado, o toque levanta e já caminha — senão o comando parecia ignorado.
     options.onBeforeMove?.();

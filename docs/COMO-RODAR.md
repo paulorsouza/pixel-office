@@ -71,6 +71,7 @@ Essa identidade é apenas de protótipo e vira o header `X-User-Id`. Não é aut
 - `WASD` ou setas: andar;
 - `E`: usar o móvel próximo ou entrar/sair por um portal;
 - `Tab`: abrir equipamentos e customização;
+- `Q Meu menu`: abrir Central do Jogador, álbum, boosters, baralho, horas e objetivos;
 - `Shift`: usar o veículo equipado;
 - `1`–`4`: equipar veículo rapidamente;
 - `0`: guardar veículo;
@@ -79,7 +80,20 @@ Essa identidade é apenas de protótipo e vira o header `X-User-Id`. Não é aut
 
 Dentro de uma sala declarada em `rooms[]`, aparece `Decorar <sala>`.
 
-## 4. Testar inventário e decoração
+## 4. Testar o Tooq Triad
+
+Abra duas janelas, usando jogadores diferentes:
+
+```text
+http://localhost:8123/?userId=1&scene=tooq-campus
+http://localhost:8123/?userId=2&scene=tooq-campus
+```
+
+Cada jogador começa com três boosters, álbum vazio e baralho vazio. Abra `Q Meu menu`, revele os
+três pacotes, monte nove cartas e salve. Aproxime os avatares, clique no outro jogador e escolha
+`Desafiar`. O fluxo completo está em [`CARDGAME.md`](CARDGAME.md).
+
+## 5. Testar inventário e decoração
 
 1. Entre no `Coworking` ou no `Tooq Office` pelo portal do mundo.
 2. Caminhe para `Escritório A` ou `Escritório B`.
@@ -93,7 +107,7 @@ Dentro de uma sala declarada em `rooms[]`, aparece `Decorar <sala>`.
 O editor não altera o `.tmj`. Pisos, paredes, portas, ruas e portais continuam sendo level design no
 Tiled. Móveis do Tiled são cenário-base; móveis colocados pelo jogador são instâncias persistidas.
 
-## 5. Testar móveis interativos
+## 6. Testar móveis interativos
 
 As interações exigem que o jogador possua e posicione a peça.
 
@@ -119,7 +133,7 @@ As interações exigem que o jogador possua e posicione a peça.
 3. Use `E` novamente ou mova o avatar para levantar e encerrar a sessão vinculada ao assento.
 4. Confira o lançamento em `http://localhost:5210`, na área de horas.
 
-## 6. Testar sincronização SignalR
+## 7. Testar sincronização SignalR
 
 1. Abra duas janelas com o mesmo usuário e a mesma sala:
 
@@ -136,7 +150,7 @@ Os eventos atuais incluem `FurniturePlaced`, `FurnitureMoved`, `FurnitureRemoved
 `InventoryChanged`, `ChestChanged` e `WorkSessionChanged`. Presença, aparência e claims de cena
 também são sincronizados pelo hub.
 
-## 7. URLs úteis de desenvolvimento
+## 8. URLs úteis de desenvolvimento
 
 ```text
 # Abrir uma cena
@@ -162,7 +176,7 @@ http://localhost:8123/?decorateRoom=office-a&interactionPreview=workstation#tooq
 http://localhost:8123/?scene=tooq-office&equipmentPreview=motorcycle&equipmentDirection=up
 ```
 
-## 8. LiveKit opcional
+## 9. LiveKit opcional
 
 O cliente Phaser usa LiveKit para mic, câmera e compartilhamento de tela nas salas:
 
@@ -172,7 +186,7 @@ O cliente Phaser usa LiveKit para mic, câmera e compartilhamento de tela nas sa
 
 Espere a porta HTTP `7880`. Sem LiveKit, mapa, inventário, decoração e horas funcionam normalmente.
 
-## 9. Verificação antes de entregar
+## 10. Verificação antes de entregar
 
 ```powershell
 node --test client-web/tools/*.test.mjs
@@ -184,7 +198,7 @@ Além dos testes, abra o cliente, leia o console e confira visualmente o fluxo a
 o avatar por automação, desative `scene.input.keyboard.enabled` somente durante o teste e religue ao
 terminar.
 
-## 10. Problemas comuns
+## 11. Problemas comuns
 
 | Sintoma | Causa/solução |
 |---|---|

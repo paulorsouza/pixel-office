@@ -202,6 +202,17 @@ export function createGameItemsClient(options = {}) {
       const me = await request('/api/me');
       return me?.activeTask?.id ?? null;
     },
+    async cardGameProfile() {
+      return request('/api/cardgame/profile');
+    },
+    async openCardGameBooster() {
+      return request('/api/cardgame/boosters/open', { method: 'POST', body: '{}' });
+    },
+    async saveCardGameDeck(cardIds) {
+      return request('/api/cardgame/deck', {
+        method: 'PUT', body: JSON.stringify({ cardIds }),
+      });
+    },
     async startWork(target, workItemId, activityKey = null) {
       const path = Number.isInteger(Number(target))
         ? `/api/game/workstations/${target}/start`

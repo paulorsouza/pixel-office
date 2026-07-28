@@ -26,6 +26,7 @@ import { createNavigationSystem } from './NavigationSystem.js';
 import { createClickToMove } from './ClickToMove.js';
 import { createTouchControls } from './TouchControls.js';
 import { createPresence } from './PresenceSystem.js';
+import { createCardGamePanel } from './cardgame/CardGamePanel.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
 import { ensureSession } from './LoginScreen.js';
@@ -60,6 +61,7 @@ const animatedAssets = await fetchJson('assets/animations/catalog.json');
 const equipmentCatalog = await fetchJson('assets/equipment/catalog.json');
 const characterCatalog = await fetchJson('assets/character/catalog.json');
 const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
+const cardGameCatalog = await fetchJson('assets/cardgame/catalog.json');
 const gameItems = createGameItemsClient();
 await gameItems.initialize();
 const presence = createPresence({
@@ -100,6 +102,12 @@ const proximityVoice = createProximityVoice({
   ),
 });
 await proximityVoice.initialize();
+const cardGame = createCardGamePanel({
+  presence,
+  catalog: cardGameCatalog,
+  gameItems,
+  onToast: (message) => proximityVoice.toast(message),
+});
 // Conta assumida por outra janela: solta o microfone junto com a presença, senão
 // esta aba continuaria falando na call de um avatar que já saiu do mundo.
 presence.events.addEventListener('session-ended', () => { proximityVoice.shutdown(); });
@@ -581,12 +589,14 @@ class MapScene extends Phaser.Scene {
       isBlocked: () => (
         this.transitioning
         || this.chessOpen
+        || cardGame.isBlocking()
         || equipmentMenu.isOpen()
         || this.roomDecorationEditor?.isOpen()
         || this.furnitureInteractions?.isOpen()
       ),
       // Tocar sentado levanta e caminha; sem isto o comando parecia ignorado.
       onBeforeMove: () => { if (this.seated) this.standUp(); },
+      onTap: (pointer) => cardGame.handleWorldTap(pointer),
       onUnreachable: () => proximityVoice.toast('Não dá para chegar aí'),
     });
 
@@ -605,6 +615,7 @@ class MapScene extends Phaser.Scene {
     window.__gameItems = gameItems;
     window.__furnitureInteractions = this.furnitureInteractions;
     window.__presence = presence;
+    window.__cardGame = cardGame;
 
     // presença em rede: avatares remotos nesta cena + voz por proximidade
     presence.attach(this, this.currentSceneId, this.player);
@@ -652,7 +663,8 @@ class MapScene extends Phaser.Scene {
       this.roomDecorationEditor.close();
       this.interactionPreviewPending = null;
     }
-    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen() || this.furnitureInteractions.isOpen() || this.chessOpen) {
+    if (this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen()
+      || this.furnitureInteractions.isOpen() || this.chessOpen || cardGame.isBlocking()) {
       showPortalPrompt(null);
       this.touchControls.update({ blocked: true });
       this.player.body.setVelocity(0, 0);

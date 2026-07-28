@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "status": "prototype",
+  "cards": [
+    { "id": "bulbasaur", "dex": 1, "name": "Bulbasaur", "types": ["grass", "poison"], "edges": { "top": 4, "right": 3, "bottom": 5, "left": 4 }, "rarity": "Common" },
+    { "id": "ivysaur", "dex": 2, "name": "Ivysaur", "types": ["grass", "poison"], "edges": { "top": 5, "right": 5, "bottom": 6, "left": 4 }, "rarity": "Uncommon" },
+    { "id": "venusaur", "dex": 3, "name": "Venusaur", "types": ["grass", "poison"], "edges": { "top": 8, "right": 6, "bottom": 8, "left": 7 }, "rarity": "Epic" },
+    { "id": "charmander", "dex": 4, "name": "Charmander", "types": ["fire"], "edges": { "top": 5, "right": 5, "bottom": 3, "left": 4 }, "rarity": "Common" },
+    { "id": "charmeleon", "dex": 5, "name": "Charmeleon", "types": ["fire"], "edges": { "top": 6, "right": 6, "bottom": 4, "left": 5 }, "rarity": "Uncommon" },
+    { "id": "charizard", "dex": 6, "name": "Charizard", "types": ["fire", "flying"], "edges": { "top": 9, "right": 8, "bottom": 6, "left": 7 }, "rarity": "Epic" },
+    { "id": "squirtle", "dex": 7, "name": "Squirtle", "types": ["water"], "edges": { "top": 4, "right": 5, "bottom": 5, "left": 3 }, "rarity": "Common" },
+    { "id": "wartortle", "dex": 8, "name": "Wartortle", "types": ["water"], "edges": { "top": 5, "right": 5, "bottom": 7, "left": 5 }, "rarity": "Uncommon" },
+    { "id": "blastoise", "dex": 9, "name": "Blastoise", "types": ["water"], "edges": { "top": 7, "right": 8, "bottom": 9, "left": 6 }, "rarity": "Epic" },
+    { "id": "pikachu", "dex": 25, "name": "Pikachu", "types": ["electric"], "edges": { "top": 5, "right": 7, "bottom": 4, "left": 7 }, "rarity": "Rare" },
+    { "id": "raichu", "dex": 26, "name": "Raichu", "types": ["electric"], "edges": { "top": 7, "right": 8, "bottom": 6, "left": 7 }, "rarity": "Epic" },
+    { "id": "sandshrew", "dex": 27, "name": "Sandshrew", "types": ["ground"], "edges": { "top": 6, "right": 3, "bottom": 6, "left": 4 }, "rarity": "Common" },
+    { "id": "clefairy", "dex": 35, "name": "Clefairy", "types": ["fairy"], "edges": { "top": 5, "right": 4, "bottom": 6, "left": 6 }, "rarity": "Uncommon" },
+    { "id": "jigglypuff", "dex": 39, "name": "Jigglypuff", "types": ["normal", "fairy"], "edges": { "top": 4, "right": 6, "bottom": 4, "left": 6 }, "rarity": "Uncommon" },
+    { "id": "magnemite", "dex": 81, "name": "Magnemite", "types": ["electric", "steel"], "edges": { "top": 6, "right": 6, "bottom": 3, "left": 5 }, "rarity": "Uncommon" },
+    { "id": "gastly", "dex": 92, "name": "Gastly", "types": ["ghost", "poison"], "edges": { "top": 7, "right": 3, "bottom": 4, "left": 6 }, "rarity": "Uncommon" },
+    { "id": "onix", "dex": 95, "name": "Onix", "types": ["rock", "ground"], "edges": { "top": 8, "right": 4, "bottom": 8, "left": 4 }, "rarity": "Rare" },
+    { "id": "dragonite", "dex": 149, "name": "Dragonite", "types": ["dragon", "flying"], "edges": { "top": 9, "right": 8, "bottom": 9, "left": 7 }, "rarity": "Legendary" },
+    { "id": "mewtwo", "dex": 150, "name": "Mewtwo", "types": ["psychic"], "edges": { "top": 10, "right": 9, "bottom": 8, "left": 9 }, "rarity": "Legendary" },
+    { "id": "mew", "dex": 151, "name": "Mew", "types": ["psychic"], "edges": { "top": 8, "right": 8, "bottom": 8, "left": 8 }, "rarity": "Special" }
+  ]
+}

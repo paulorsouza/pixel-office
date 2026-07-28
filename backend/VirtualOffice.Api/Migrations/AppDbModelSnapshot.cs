@@ -112,6 +112,67 @@ namespace VirtualOffice.Api.Migrations
                     b.ToTable("AppRefreshTokens");
                 });
 
+            modelBuilder.Entity("VirtualOffice.Api.CardGameCollectionItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CardId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("FirstAcquiredUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsShiny")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CardId", "IsShiny")
+                        .IsUnique();
+
+                    b.ToTable("CardGameCollection");
+                });
+
+            modelBuilder.Entity("VirtualOffice.Api.CardGameProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BoosterCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeckJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CardGameProfiles");
+                });
+
             modelBuilder.Entity("VirtualOffice.Api.ChecklistItem", b =>
                 {
                     b.Property<int>("Id")
