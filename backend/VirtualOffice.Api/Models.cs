@@ -331,3 +331,27 @@ public class PersonalRoom
     public string SceneTemplate { get; set; } = "personal-wing";
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 }
+
+/// <summary>Progressão persistente do cardgame. Criada no primeiro acesso com três boosters.</summary>
+public class CardGameProfile
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int BoosterCount { get; set; } = 3;
+    public string DeckJson { get; set; } = "[]";
+    public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Entrada do álbum. A versão shiny é uma descoberta separada, mas usa a mesma
+/// definição-base da carta para manter o catálogo pequeno e orientado a dados.
+/// </summary>
+public class CardGameCollectionItem
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string CardId { get; set; } = "";
+    public bool IsShiny { get; set; }
+    public int Quantity { get; set; } = 1;
+    public DateTime FirstAcquiredUtc { get; set; } = DateTime.UtcNow;
+}

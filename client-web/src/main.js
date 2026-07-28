@@ -105,6 +105,7 @@ await proximityVoice.initialize();
 const cardGame = createCardGamePanel({
   presence,
   catalog: cardGameCatalog,
+  gameItems,
   onToast: (message) => proximityVoice.toast(message),
 });
 // Conta assumida por outra janela: solta o microfone junto com a presença, senão

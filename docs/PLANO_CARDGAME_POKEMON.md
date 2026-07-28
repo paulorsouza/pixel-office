@@ -19,8 +19,11 @@
 - [x] Deck builder de 9 cartas e HUD completo da partida.
 - [x] Desafio ao clicar em outro jogador próximo, com aceite e recusa.
 - [x] Validação ponta a ponta com dois jogadores no navegador.
-- [ ] Persistência de coleção e partidas.
-- [ ] Boosters, animação de abertura, shiny e economia de raridade.
+- [x] Álbum e baralho persistentes por jogador no Postgres.
+- [x] Três boosters iniciais, com cinco cartas por abertura e chance de shiny.
+- [x] Central do jogador com Álbum, Boosters, Baralho, Horas, Objetivos, Quadro e Backlog.
+- [ ] Persistência e reconexão de partidas em andamento.
+- [ ] Formas recorrentes de ganhar boosters e bônus shiny aplicado durante a partida.
 
 ## 1. Visão do produto
 

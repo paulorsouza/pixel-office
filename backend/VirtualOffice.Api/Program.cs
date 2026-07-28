@@ -93,6 +93,7 @@ if (!AuthOptions.DevBypass) api.RequireAuthorization();
 // Kanban, horas e objetivos vivem em WorkEndpoints — é a API que o app web e o
 // cliente do jogo compartilham.
 api.MapWorkEndpoints();
+api.MapCardGameEndpoints();
 
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
 static int? UserId(HttpRequest req) => Identity.UserId(req);

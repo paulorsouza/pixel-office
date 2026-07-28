@@ -23,9 +23,10 @@ Phaser 3.80.1 está vendorizado e o servidor estático usa apenas Node.
 `Shift` para usar o equipamento selecionado · `scroll` para zoom. Dentro de uma sala decorável,
 use o botão `Decorar sala` para abrir o editor de móveis.
 
-**Cardgame:** use `🃏 Cartas`, no canto superior direito, para montar e salvar seu baralho de
-9 cartas. Perto de outro jogador, clique no avatar dele e escolha `Desafiar`; o adversário poderá
-aceitar ou recusar pelo convite exibido na tela.
+**Central do jogador:** use `Q Meu menu`, no canto superior direito, para abrir Álbum, Boosters,
+Baralho, Horas, Objetivos, Quadro e Backlog. Cada jogador começa com o álbum vazio e três boosters
+de cinco cartas; depois de montar e salvar um baralho de 9 cartas, aproxime-se de outro jogador,
+clique no avatar dele e escolha `Desafiar`.
 
 **Edição manual do mundo:** [`GUIA-MUNDO-ABERTO.md`](GUIA-MUNDO-ABERTO.md) ensina a ampliar o mapa
 no Tiled, criar ruas, posicionar fachadas, configurar colisões e conectar novos interiores.

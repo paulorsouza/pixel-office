@@ -27,6 +27,8 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<ActivityType> ActivityTypes => Set<ActivityType>();
     public DbSet<Objective> Objectives => Set<Objective>();
     public DbSet<ObjectiveProgress> ObjectiveProgress => Set<ObjectiveProgress>();
+    public DbSet<CardGameProfile> CardGameProfiles => Set<CardGameProfile>();
+    public DbSet<CardGameCollectionItem> CardGameCollection => Set<CardGameCollectionItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,9 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         // Uma linha por usuário/objetivo/período: é o que torna a concessão idempotente.
         modelBuilder.Entity<ObjectiveProgress>()
             .HasIndex(x => new { x.UserId, x.ObjectiveId, x.PeriodStart }).IsUnique();
+        modelBuilder.Entity<CardGameProfile>().HasIndex(x => x.UserId).IsUnique();
+        modelBuilder.Entity<CardGameCollectionItem>()
+            .HasIndex(x => new { x.UserId, x.CardId, x.IsShiny }).IsUnique();
         modelBuilder.Entity<TimeEntry>().HasIndex(x => new { x.UserId, x.StartUtc });
         modelBuilder.Entity<XpEvent>().HasIndex(x => new { x.UserId, x.CreatedUtc });
         modelBuilder.Entity<GameItemDefinition>().HasIndex(x => x.CatalogKey).IsUnique();

@@ -153,6 +153,14 @@ public partial class OfficeHub
             await CardGameErrorAsync(error);
             return;
         }
+        await using (var db = await dbFactory.CreateDbContextAsync())
+        {
+            if (!await CardGameEndpoints.OwnsDeckAsync(db, challenger.UserId, deck))
+            {
+                await CardGameErrorAsync("Monte um baralho usando apenas cartas do seu álbum.");
+                return;
+            }
+        }
 
         foreach (var existing in CardChallenges.Values.Where(challenge =>
                      challenge.ChallengerConnection == challenger.Key || challenge.TargetConnection == target.Key))
@@ -209,6 +217,14 @@ public partial class OfficeHub
         {
             await CardGameErrorAsync(error);
             return;
+        }
+        await using (var db = await dbFactory.CreateDbContextAsync())
+        {
+            if (!await CardGameEndpoints.OwnsDeckAsync(db, target.UserId, targetDeck))
+            {
+                await CardGameErrorAsync("Monte um baralho usando apenas cartas do seu álbum.");
+                return;
+            }
         }
 
         var match = CreateCardGameMatch(pending, targetDeck);
