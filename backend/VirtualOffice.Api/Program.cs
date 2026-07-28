@@ -80,7 +80,17 @@ app.UseDefaultFiles();
 // CORS antes dos estáticos: o cliente do jogo (porta 8123 em dev) carrega
 // wwwroot/shared/* desta origem. Em beta/produção tudo fica atrás do mesmo proxy.
 app.UseCors();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // wwwroot/shared é CÓDIGO (a UI de kanban/horas que o jogo importa), não
+        // asset versionado. Sem revalidar, quem já abriu o jogo continua com a
+        // tela antiga depois de um deploy — e em dev a mudança de CSS não aparece.
+        if (ctx.Context.Request.Path.StartsWithSegments("/shared"))
+            ctx.Context.Response.Headers.CacheControl = "no-cache";
+    },
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHub<OfficeHub>("/hub/office");

@@ -43,10 +43,16 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 ## Regras de trabalho
 
 1. **Verifique olhando, no navegador**, antes de dar algo como pronto.
-2. **O interior mobiliado é o produto** — fachada/telhado/jardim (em `assets/world/`) são enfeite.
-3. **Mapa como dado (JSON), não hardcode** — edição pelo dono depende disso.
-4. **Rede cedo**, não no fim. Dois avatares andando juntos é o marco.
-5. Ao testar movimento sozinho, `scene.input.keyboard.enabled = false` — senão você confunde o
+2. **Mobile não é "depois".** Toda feature nova precisa funcionar no celular: painel vira folha
+   de tela cheia em tela pequena, `env(safe-area-inset-*)` em tudo que é `position: fixed`,
+   alvo de toque ≥ 44px e nada de `min-height` grande (o celular deitado tem ~390px de altura).
+   **Layout** se adapta por largura; **afordância de toque** por `@media (pointer: coarse)` —
+   nunca gateie controle de toque por largura. Painel novo entra no `uiIsBlocking()` de
+   `main.js`, senão clique, pinça e botão de ação vazam para o mundo atrás.
+3. **O interior mobiliado é o produto** — fachada/telhado/jardim (em `assets/world/`) são enfeite.
+4. **Mapa como dado (JSON), não hardcode** — edição pelo dono depende disso.
+5. **Rede cedo**, não no fim. Dois avatares andando juntos é o marco.
+6. Ao testar movimento sozinho, `scene.input.keyboard.enabled = false` — senão você confunde o
    usuário jogando com bug (já aconteceu). **Religue** ao terminar.
 
 ## Rodar

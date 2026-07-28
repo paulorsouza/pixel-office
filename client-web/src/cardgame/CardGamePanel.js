@@ -104,7 +104,7 @@ function injectStyles() {
       border-radius:14px;background:#0c1122aa}.cg-deck-slot{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:6px;
       border:1px solid #ffffff18;border-radius:9px;background:#202947}.cg-deck-slot img{width:38px;height:38px;image-rendering:pixelated}
     .cg-deck-slot strong{flex:1;font-size:10px}.cg-deck-slot button{border:0;color:#ffb4c7;background:transparent;cursor:pointer}
-    .cg-booster-stage{display:grid;place-items:center;min-height:500px;text-align:center}.cg-pack{position:relative;width:220px;height:320px;
+    .cg-booster-stage{display:grid;place-items:center;min-height:min(500px,calc(100dvh - 200px));text-align:center}.cg-pack{position:relative;width:220px;height:320px;
       border:3px solid #d6b65e;border-radius:18px;color:#fff;background:radial-gradient(circle at 50% 38%,#8a7aff,#372a82 42%,#121735 75%);
       box-shadow:0 24px 70px #000a,inset 0 0 30px #fff2;cursor:pointer;animation:cg-float 2.2s ease-in-out infinite}
     .cg-pack:before,.cg-pack:after{position:absolute;left:10px;right:10px;height:13px;content:"";background:repeating-linear-gradient(90deg,#e5c76b 0 8px,#7458ce 8px 16px)}
@@ -115,7 +115,9 @@ function injectStyles() {
     .cg-reveal .cg-card:nth-child(5){animation-delay:.72s}@keyframes cg-float{50%{transform:translateY(-9px) rotate(1deg)}}
     @keyframes cg-reveal{from{opacity:0;transform:translateY(80px) rotateY(90deg)}to{opacity:1;transform:none}}
     @keyframes cg-shine{from{transform:translateX(-140%)}to{transform:translateX(140%)}}
-    .cg-work-host{min-height:620px}.cg-match-window{width:min(1180px,100%);height:min(760px,calc(100dvh - 24px));overflow:auto}
+    /* min-height relativo: 620px fixo estourava a tela do celular deitado (~390px de altura). */
+    .cg-work-host{min-height:min(620px,calc(100dvh - 200px))}
+    .cg-match-window{width:min(1180px,100%);height:min(760px,calc(100dvh - 24px));overflow:auto}
     .cg-match{display:grid;grid-template-rows:auto 1fr;height:100%}.cg-match-top{display:flex;align-items:center;gap:10px;padding:10px 15px;
       border-bottom:1px solid #ffffff18}.cg-score{display:flex;gap:7px;font-weight:900}.cg-score b{padding:5px 9px;border-radius:8px;background:#ffffff12}
     .cg-score .p1{color:var(--cg-p1)}.cg-score .p2{color:var(--cg-p2)}.cg-turn{flex:1;text-align:center;color:#f8d977;
@@ -137,6 +139,71 @@ function injectStyles() {
       .cg-stats{grid-template-columns:1fr}.cg-deck-body{grid-template-columns:1fr}.cg-reveal{grid-template-columns:repeat(3,1fr)}
       .cg-arena{grid-template-columns:1fr}.cg-board{width:min(46vh,100%)}.cg-hand{grid-template-columns:repeat(3,1fr)}
       .cg-card-grid{grid-template-columns:repeat(3,minmax(92px,1fr))}}
+
+    /* ---------------------------------------------------------------- celular
+       O jogo abre por link, e link se abre no telefone. Regra do projeto: painel
+       vira FOLHA DE TELA CHEIA em tela pequena, não caixa centralizada. */
+    @media(max-width:760px){
+      /* Sem moldura nem respiro: em 390px de largura, 12px de padding + 20px de
+         borda arredondada comem a área útil do álbum. */
+      .cg-overlay{padding:0}
+      .cg-window,.cg-match-window{width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0}
+      /* Notch e barra de gestos do iPhone. */
+      .cg-hub-head{padding-top:calc(16px + env(safe-area-inset-top))}
+      .cg-hub-content{padding-bottom:calc(17px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+      .cg-hub-side{padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+      #player-hub-button{right:calc(12px + env(safe-area-inset-right));top:calc(12px + env(safe-area-inset-top))}
+      #cardgame-invite{top:calc(12px + env(safe-area-inset-top))}
+      /* O menu do jogador nasce na posição do toque e vazava pela borda. */
+      #cardgame-player-menu{left:50%!important;right:auto;transform:translateX(-50%);
+        width:min(320px,calc(100vw - 24px));bottom:calc(16px + env(safe-area-inset-bottom));top:auto!important}
+      .cg-hub-head h2{font-size:15px}.cg-hub-head p{display:none}
+      .cg-hero-card{min-height:0;padding:15px}.cg-hero-card h3{font-size:17px}
+    }
+
+    /* Celular em pé, tela estreita: o que ainda estourava em 360-390px. */
+    @media(max-width:480px){
+      .cg-shortcuts{grid-template-columns:1fr}
+      .cg-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .cg-reveal{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .cg-hand{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .cg-filters{flex-wrap:wrap}.cg-filters input{flex:1 0 100%}
+      .cg-player-actions{grid-template-columns:1fr}
+      .cg-pack{width:min(190px,64vw);height:min(276px,46dvh)}.cg-pack b{margin-top:22%}
+      .cg-section-head{flex-wrap:wrap}
+    }
+
+    /* Celular deitado: sobra ~390px de ALTURA. O tabuleiro manda no espaço. */
+    @media(max-height:520px) and (orientation:landscape){
+      /* Deitado o notch fica na LATERAL: a folha precisa respeitar left/right. */
+      .cg-overlay{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right))
+        max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+      .cg-hub-head{padding:9px 14px}.cg-hub-content{padding:11px}
+      .cg-booster-stage,.cg-work-host{min-height:0}
+      .cg-arena{grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:8px}
+      .cg-board{width:min(72dvh,100%)}
+      .cg-opponent{margin-bottom:9px}
+    }
+
+    /* Afordância de toque — por TIPO DE PONTEIRO, não por largura: notebook com
+       janela estreita continua com botão de mouse. */
+    /* Gatilho duplo: (pointer:coarse) para o aparelho real, [data-touch="on"]
+       para o override ?touch=1 -- sem ele nao da para testar isto no desktop. */
+    @media(pointer:coarse){
+      .cg-btn{min-height:44px;padding:10px 16px}
+      .cg-nav button{min-height:44px}
+      .cg-shortcut,.cg-stat{min-height:44px}
+      #player-hub-button{min-height:44px}
+      .cg-deck-slot button{min-width:44px;min-height:44px}
+      .cg-cell{min-height:44px}
+    }
+    html[data-touch="on"] .cg-btn{min-height:44px;padding:10px 16px}
+    html[data-touch="on"] .cg-nav button,
+    html[data-touch="on"] .cg-shortcut,
+    html[data-touch="on"] .cg-stat,
+    html[data-touch="on"] #player-hub-button,
+    html[data-touch="on"] .cg-cell{min-height:44px}
+    html[data-touch="on"] .cg-deck-slot button{min-width:44px;min-height:44px}
   `;
   document.head.append(style);
 }

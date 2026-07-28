@@ -326,6 +326,48 @@
     .inventory-item{min-height:110px}.equipment-menu-footer span{font-size:8px}
     .menu-view-tab{min-width:0;flex:1}.character-options{grid-template-columns:repeat(3,minmax(76px,1fr))}
   }
+
+  /* ==================== celular ====================
+     Regra do projeto (AGENTS.md §2): painel vira FOLHA DE TELA CHEIA em tela
+     pequena, com safe-area. Layout por largura; toque por (pointer:coarse). */
+  @media(max-width:760px){
+    /* Folha inteira: em 390px, moldura + borda arredondada + centralização
+       desperdiçam a área que o conteúdo precisa. */
+    #equipment-menu,
+    #furniture-interaction-panel,
+    #furniture-interaction-panel.work{
+      left:0;top:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;
+      transform:none;border-radius:0;border-width:0 0 0 0}
+    #furniture-interaction-panel,#furniture-interaction-panel.work{display:flex;flex-direction:column}
+    .interaction-header,.equipment-menu-header{padding-top:calc(13px + env(safe-area-inset-top))}
+    #furniture-interaction-content,#furniture-interaction-panel.work #furniture-interaction-content{
+      flex:1;min-height:0;max-height:none;padding-bottom:calc(14px + env(safe-area-inset-bottom));
+      -webkit-overflow-scrolling:touch}
+    #equipment-menu{overflow:auto;padding-bottom:env(safe-area-inset-bottom)}
+
+    /* Editor de decoração: gaveta de baixo em vez de coluna lateral. */
+    #room-decoration-panel{left:0;right:0;top:auto;bottom:0;width:100vw;max-width:100vw;
+      max-height:72dvh;border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+    #room-decoration-entry{bottom:calc(86px + env(safe-area-inset-bottom))}
+
+    /* HUD: o card de cena não pode brigar com o botão do cardgame (topo direito). */
+    #scene-card{left:calc(12px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));
+      max-width:min(60vw,240px)}
+    #portal-prompt{bottom:calc(96px + env(safe-area-inset-bottom))}
+  }
+
+  /* Alvo de toque. Gatilho duplo: (pointer:coarse) pega o aparelho real e
+     [data-touch="on"] pega o override ?touch=1, que é como isto se testa aqui. */
+  @media(pointer:coarse){
+    #room-decoration-panel button,#equipment-menu button,#furniture-interaction-close{min-height:44px}
+    .menu-view-tab{min-height:44px}
+    #controls{display:none}   /* dica de teclado não serve no toque */
+  }
+  html[data-touch="on"] #room-decoration-panel button,
+  html[data-touch="on"] #equipment-menu button,
+  html[data-touch="on"] #furniture-interaction-close,
+  html[data-touch="on"] .menu-view-tab{min-height:44px}
+  html[data-touch="on"] #controls{display:none}
 </style>
 </head>
 <body>

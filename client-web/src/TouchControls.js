@@ -29,6 +29,9 @@ export function createTouchControls(scene, options = {}) {
   if (!root) return { update() {}, destroy() {} };
 
   const enabled = isTouchDevice();
+  // Publica a decisão para o CSS. `pointer: coarse` sozinho não dá para testar no
+  // desktop, e era o que impedia validar alvo de toque sem um aparelho na mão.
+  document.documentElement.dataset.touch = enabled ? 'on' : 'off';
   root.hidden = !enabled;
   if (!enabled) return { update() {}, destroy() {} };
 
