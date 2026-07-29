@@ -1,0 +1,19 @@
+{
+  "object": {
+    "height": 64,
+    "name": "Nova mesa Arrange Dice",
+    "opacity": 1,
+    "properties": [
+      { "name": "id", "type": "string", "value": "arrange-dice-new" },
+      { "name": "tableId", "type": "string", "value": "arrange-dice-new" },
+      { "name": "gameId", "type": "string", "value": "arrange-dice" },
+      { "name": "label", "type": "string", "value": "Jogar Arrange Dice" },
+      { "name": "interactionRadius", "type": "float", "value": 3.5 }
+    ],
+    "rotation": 0,
+    "type": "arrangeDiceTable",
+    "visible": true,
+    "width": 96
+  },
+  "type": "template"
+}

@@ -24,6 +24,10 @@
     {
       "id": "player-home-shell",
       "file": "tiled/maps/player-home-shell.tmj"
+    },
+    {
+      "id": "casino-nerd",
+      "file": "tiled/maps/casino-nerd.tmj"
     }
   ]
 }

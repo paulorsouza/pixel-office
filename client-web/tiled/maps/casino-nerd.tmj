@@ -1,0 +1,365 @@
+{
+  "compressionlevel": -1,
+  "height": 40,
+  "width": 52,
+  "infinite": false,
+  "layers": [
+    {
+      "id": 1,
+      "name": "Objetos · Prédio e zonas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 1,
+          "name": "Casino Nerd",
+          "type": "building",
+          "x": 32,
+          "y": 32,
+          "width": 768,
+          "height": 576,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "floor", "type": "string", "value": "gray" },
+            { "name": "extraJson", "type": "string", "value": "{\"wallStyle\":\"stone\",\"southWall3d\":true}" }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Salão Grandia III",
+          "type": "zone",
+          "x": 128,
+          "y": 80,
+          "width": 576,
+          "height": 272,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "grandia-hall" },
+            { "name": "floor", "type": "string", "value": "terra" }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "Lounge",
+          "type": "zone",
+          "x": 80,
+          "y": 384,
+          "width": 192,
+          "height": 144,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "lounge" },
+            { "name": "floor", "type": "string", "value": "wood" }
+          ]
+        }
+      ],
+      "properties": [
+        { "name": "oqRole", "type": "string", "value": "structures" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Objetos · Portas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 4,
+          "name": "Porta · saída",
+          "type": "door",
+          "x": 384,
+          "y": 608,
+          "width": 64,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "parent", "type": "string", "value": "building" },
+            { "name": "side", "type": "string", "value": "S" },
+            { "name": "texture", "type": "string", "value": "interior_sliding_door" },
+            { "name": "frame", "type": "int", "value": 6 },
+            { "name": "extraJson", "type": "string", "value": "{\"automatic\":true,\"openExit\":true}" }
+          ]
+        }
+      ],
+      "properties": [
+        { "name": "oqRole", "type": "string", "value": "doors" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Objetos · Navegação",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 5,
+          "name": "default",
+          "type": "spawn",
+          "x": 416,
+          "y": 544,
+          "point": true,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "default" }
+          ]
+        },
+        {
+          "id": 6,
+          "name": "entrance",
+          "type": "spawn",
+          "x": 416,
+          "y": 544,
+          "point": true,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "entrance" }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "tables",
+          "type": "spawn",
+          "x": 416,
+          "y": 192,
+          "point": true,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "tables" }
+          ]
+        },
+        {
+          "id": 16,
+          "name": "slots",
+          "type": "spawn",
+          "x": 176,
+          "y": 536,
+          "point": true,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "slots" }
+          ]
+        },
+        {
+          "id": 17,
+          "name": "blackjack",
+          "type": "spawn",
+          "x": 512,
+          "y": 528,
+          "point": true,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "blackjack" }
+          ]
+        },
+        {
+          "id": 7,
+          "name": "casino-exit",
+          "type": "portal",
+          "x": 384,
+          "y": 560,
+          "width": 64,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "casino-exit" },
+            { "name": "targetScene", "type": "string", "value": "world" },
+            { "name": "targetSpawn", "type": "string", "value": "from-casino-nerd" },
+            { "name": "label", "type": "string", "value": "Sair do Casino Nerd" }
+          ]
+        }
+      ],
+      "properties": [
+        { "name": "oqRole", "type": "string", "value": "navigation" }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Objetos · Mecânicas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 8,
+          "name": "Arrange Dice · 01",
+          "type": "arrangeDiceTable",
+          "x": 224,
+          "y": 120,
+          "width": 96,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "arrange-dice-01" },
+            { "name": "tableId", "type": "string", "value": "arrange-dice-01" },
+            { "name": "gameId", "type": "string", "value": "arrange-dice" },
+            { "name": "label", "type": "string", "value": "Jogar Arrange Dice" },
+            { "name": "interactionRadius", "type": "float", "value": 3.5 }
+          ]
+        },
+        {
+          "id": 9,
+          "name": "Arrange Dice · 02",
+          "type": "arrangeDiceTable",
+          "x": 368,
+          "y": 120,
+          "width": 96,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "arrange-dice-02" },
+            { "name": "tableId", "type": "string", "value": "arrange-dice-02" },
+            { "name": "gameId", "type": "string", "value": "arrange-dice" },
+            { "name": "label", "type": "string", "value": "Jogar Arrange Dice" },
+            { "name": "interactionRadius", "type": "float", "value": 3.5 }
+          ]
+        },
+        {
+          "id": 10,
+          "name": "Arrange Dice · 03",
+          "type": "arrangeDiceTable",
+          "x": 512,
+          "y": 120,
+          "width": 96,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "arrange-dice-03" },
+            { "name": "tableId", "type": "string", "value": "arrange-dice-03" },
+            { "name": "gameId", "type": "string", "value": "arrange-dice" },
+            { "name": "label", "type": "string", "value": "Jogar Arrange Dice" },
+            { "name": "interactionRadius", "type": "float", "value": 3.5 }
+          ]
+        },
+        {
+          "id": 13,
+          "name": "Nerd Slots · 01",
+          "type": "nerdSlotMachine",
+          "x": 144,
+          "y": 416,
+          "width": 64,
+          "height": 96,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "nerd-slots-01" },
+            { "name": "tableId", "type": "string", "value": "nerd-slots-01" },
+            { "name": "gameId", "type": "string", "value": "nerd-slots" },
+            { "name": "label", "type": "string", "value": "Jogar Nerd Slots" },
+            { "name": "interactionRadius", "type": "float", "value": 3.5 }
+          ]
+        },
+        {
+          "id": 14,
+          "name": "Nerd Slots · 02",
+          "type": "nerdSlotMachine",
+          "x": 256,
+          "y": 416,
+          "width": 64,
+          "height": 96,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "nerd-slots-02" },
+            { "name": "tableId", "type": "string", "value": "nerd-slots-02" },
+            { "name": "gameId", "type": "string", "value": "nerd-slots" },
+            { "name": "label", "type": "string", "value": "Jogar Nerd Slots" },
+            { "name": "interactionRadius", "type": "float", "value": 3.5 }
+          ]
+        },
+        {
+          "id": 15,
+          "name": "Blackjack · 01",
+          "type": "blackjackTable",
+          "x": 456,
+          "y": 416,
+          "width": 112,
+          "height": 64,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "blackjack-01" },
+            { "name": "tableId", "type": "string", "value": "blackjack-01" },
+            { "name": "gameId", "type": "string", "value": "blackjack" },
+            { "name": "label", "type": "string", "value": "Jogar Blackjack" },
+            { "name": "interactionRadius", "type": "float", "value": 4.5 }
+          ]
+        }
+      ],
+      "properties": [
+        { "name": "oqRole", "type": "string", "value": "mechanics" }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Objetos · Câmera",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "visible": true,
+      "opacity": 1,
+      "objects": [
+        {
+          "id": 11,
+          "name": "Limite da câmera",
+          "type": "camera",
+          "x": 0,
+          "y": 0,
+          "width": 832,
+          "height": 640,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        }
+      ],
+      "properties": [
+        { "name": "oqRole", "type": "string", "value": "camera" }
+      ]
+    }
+  ],
+  "nextlayerid": 6,
+  "nextobjectid": 18,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tiledversion": "1.12.2",
+  "tileheight": 16,
+  "tilewidth": 16,
+  "tilesets": [
+    { "firstgid": 1, "source": "../tilesets/tileset-construcao.tsj" },
+    { "firstgid": 4033, "source": "../tilesets/tileset-superficies.tsj" },
+    { "firstgid": 4083, "source": "../tilesets/tileset-moveis.tsj" },
+    { "firstgid": 6000, "source": "../tilesets/tileset-exterior.tsj" }
+  ],
+  "type": "map",
+  "version": "1.10",
+  "properties": [
+    { "name": "oqSchema", "type": "string", "value": "office-quest@1" },
+    { "name": "id", "type": "string", "value": "casino-nerd" },
+    { "name": "name", "type": "string", "value": "Casino Nerd" },
+    { "name": "subtitle", "type": "string", "value": "Jogos, aventura e moedas virtuais" },
+    { "name": "kind", "type": "string", "value": "interior" },
+    { "name": "visualMode", "type": "string", "value": "procedural" },
+    { "name": "background", "type": "color", "value": "#090b18" },
+    { "name": "cameraZoom", "type": "float", "value": 2.15 },
+    { "name": "cameraMinZoom", "type": "float", "value": 0.75 },
+    { "name": "assetsJson", "type": "string", "value": "[\"interior_sliding_door\"]" }
+  ]
+}

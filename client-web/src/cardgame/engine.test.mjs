@@ -203,6 +203,12 @@ test('catálogo completo possui os 151 Pokémon, variantes e sprites locais', ()
   assert.equal(new Set(fullCatalog.cards.map((card) => card.id)).size, fullCatalog.cards.length);
   assert.ok(fullCatalog.cards.some((card) => card.id === 'special-ash-pikachu'));
   assert.ok(fullCatalog.cards.some((card) => card.id === 'special-mailman-dragonite'));
+  assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'special-casino-pikachu').edges,
+    { top: 8, right: 8, bottom: 8, left: 8 });
+  assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'special-casino-mewtwo').edges,
+    { top: 10, right: 10, bottom: 10, left: 10 });
+  assert.ok(fullCatalog.cards.some((card) => card.id === 'special-slot-porygon'));
+  assert.ok(fullCatalog.cards.some((card) => card.id === 'special-blackjack-meowth'));
 
   for (const card of fullCatalog.cards) {
     assert.equal(card.powerRating, Object.values(card.edges).reduce((sum, value) => sum + value, 0));

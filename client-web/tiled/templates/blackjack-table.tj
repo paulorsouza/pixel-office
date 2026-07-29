@@ -1,0 +1,19 @@
+{
+  "object": {
+    "height": 64,
+    "name": "Nova mesa Blackjack",
+    "opacity": 1,
+    "properties": [
+      { "name": "id", "type": "string", "value": "blackjack-new" },
+      { "name": "tableId", "type": "string", "value": "blackjack-new" },
+      { "name": "gameId", "type": "string", "value": "blackjack" },
+      { "name": "label", "type": "string", "value": "Jogar Blackjack" },
+      { "name": "interactionRadius", "type": "float", "value": 4.5 }
+    ],
+    "rotation": 0,
+    "type": "blackjackTable",
+    "visible": true,
+    "width": 112
+  },
+  "type": "template"
+}

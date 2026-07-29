@@ -101,6 +101,25 @@ export function createMechanicsRuntime(scene, map, context = {}, registry = mech
     instances,
     diagnostics,
     portals: instances.map((instance) => instance.portal).filter(Boolean),
+    interactions: instances.map((instance) => instance.interaction).filter(Boolean),
+    activeInteraction(player) {
+      if (!player) return null;
+      return this.interactions
+        .map((interaction) => ({
+          interaction,
+          distance: Math.hypot(player.x - interaction.x, player.y - interaction.y),
+        }))
+        .filter((candidate) => candidate.distance <= candidate.interaction.radius)
+        .sort((a, b) => (
+          (b.interaction.priority || 0) - (a.interaction.priority || 0)
+          || a.distance - b.distance
+        ))[0]?.interaction || null;
+    },
+    async interact(player) {
+      const active = this.activeInteraction(player);
+      if (!active) return false;
+      return (await active.interact?.()) !== false;
+    },
     update(time, delta) {
       for (const instance of instances) instance.update?.(time, delta);
     },

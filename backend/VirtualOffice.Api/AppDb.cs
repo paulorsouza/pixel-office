@@ -29,6 +29,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<ObjectiveProgress> ObjectiveProgress => Set<ObjectiveProgress>();
     public DbSet<CardGameProfile> CardGameProfiles => Set<CardGameProfile>();
     public DbSet<CardGameCollectionItem> CardGameCollection => Set<CardGameCollectionItem>();
+    public DbSet<CasinoRound> CasinoRounds => Set<CasinoRound>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,10 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<CardGameProfile>().HasIndex(x => x.UserId).IsUnique();
         modelBuilder.Entity<CardGameCollectionItem>()
             .HasIndex(x => new { x.UserId, x.CardId, x.IsShiny }).IsUnique();
+        modelBuilder.Entity<CasinoRound>()
+            .HasIndex(x => new { x.UserId, x.IdempotencyKey }).IsUnique();
+        modelBuilder.Entity<CasinoRound>()
+            .HasIndex(x => new { x.UserId, x.CreatedUtc });
         modelBuilder.Entity<TimeEntry>().HasIndex(x => new { x.UserId, x.StartUtc });
         modelBuilder.Entity<XpEvent>().HasIndex(x => new { x.UserId, x.CreatedUtc });
         modelBuilder.Entity<GameItemDefinition>().HasIndex(x => x.CatalogKey).IsUnique();

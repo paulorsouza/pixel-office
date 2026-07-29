@@ -213,6 +213,39 @@ export function createGameItemsClient(options = {}) {
         method: 'PUT', body: JSON.stringify({ cardIds }),
       });
     },
+    async casinoGame(gameId) {
+      return request(`/api/casino/games/${encodeURIComponent(gameId)}`);
+    },
+    async playCasinoRound(gameId, bet, data = {}, idempotencyKey = crypto.randomUUID()) {
+      return request(`/api/casino/games/${encodeURIComponent(gameId)}/rounds`, {
+        method: 'POST',
+        body: JSON.stringify({ bet, idempotencyKey, ...data }),
+      });
+    },
+    async playArrangeDice(gameId, bet, cards, idempotencyKey = crypto.randomUUID()) {
+      return this.playCasinoRound(gameId, bet, { cards }, idempotencyKey);
+    },
+    async playNerdSlots(gameId, bet, idempotencyKey = crypto.randomUUID()) {
+      return this.playCasinoRound(gameId, bet, {}, idempotencyKey);
+    },
+    async startBlackjack(gameId, bet, idempotencyKey = crypto.randomUUID()) {
+      return this.playCasinoRound(gameId, bet, {}, idempotencyKey);
+    },
+    async actCasinoRound(gameId, roundId, action, data = {}, idempotencyKey = crypto.randomUUID()) {
+      return request(`/api/casino/games/${encodeURIComponent(gameId)}/rounds/${roundId}/actions`, {
+        method: 'POST',
+        body: JSON.stringify({ action, idempotencyKey, ...data }),
+      });
+    },
+    async actArrangeDice(gameId, roundId, action, card = null, idempotencyKey = crypto.randomUUID()) {
+      return this.actCasinoRound(gameId, roundId, action, card == null ? {} : { card }, idempotencyKey);
+    },
+    async actBlackjack(gameId, roundId, action, idempotencyKey = crypto.randomUUID()) {
+      return this.actCasinoRound(gameId, roundId, action, {}, idempotencyKey);
+    },
+    async casinoHistory() {
+      return request('/api/casino/history');
+    },
     async startWork(target, workItemId, activityKey = null) {
       const path = Number.isInteger(Number(target))
         ? `/api/game/workstations/${target}/start`

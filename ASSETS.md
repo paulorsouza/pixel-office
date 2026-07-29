@@ -220,6 +220,11 @@ Organizados em subpastas. O cliente multi-cena usa `chars/`, `tiles/`, `floors/`
 | **`floors/`** `floor_wood/carpet/cream/sage/water.png` | Pisos lisos (Modern Interiors) — ver §3.2 |
 | **`furniture/office/`** `of_1..of_339.png` | Os 339 móveis do Office Revamped (§4.1) |
 | **`world/`** `office_tooq.png` ⭐ | **Fachada da sede TOOQ** (304×288) |
+| **`world/`** `casino_nerd.png` | Fachada neon do Casino Nerd (304×288), derivada da geometria do prédio genérico. |
+| **`casino/grandia3/arrange-dice-table.png`** | Mesa original do Arrange Dice, 96×64 e fundo transparente. |
+| **`casino/grandia3/cards/card-3..11.webp`** | Nove pinturas originais JRPG (192×192) usadas nas cartas do Arrange Dice. |
+| **`casino/generic/nerd-slot-machine.png`** | Gabinete pixel art do Nerd Slots, 96×144 com alpha. |
+| **`casino/generic/blackjack-table.png`** | Mesa semicircular pixel art do Blackjack, 160×96 com alpha. |
 | **`animations/`** `coffee-steam.png` | Café com vapor, 6 frames de 16×16; metadados em `catalog.json` |
 | `world/sign_tooq.png` | Placa TOOQ avulsa (112×16) |
 | `world/office_generic.png`, `world/office_lime.png` | Prédios originais do pack (referência) |
@@ -360,12 +365,27 @@ velocidade, raridade e preço.
 | `office_tooq.png` | 304×288 px | 19×18 tiles |
 | `office_generic.png` | 304×288 px | 19×18 tiles |
 | `office_lime.png` | 192×304 px | 12×19 tiles |
+| `casino_nerd.png` | 304×288 px | 19×18 tiles |
 | `house_country.png` | 288×256 px | 18×16 tiles |
 | `house_japanese.png` | 240×240 px | 15×15 tiles |
 
 Esses sprites usam origem esquerda/inferior (`originX=0`, `originY=1`). A colisão externa cobre
 toda a caixa acima da base; não use somente uma faixa nos pés nem abra um corredor físico na porta.
 O sensor do portal fica sobre a borda inferior externa e é acionado pelo pé do avatar.
+
+O `casino_nerd.png` mantém o footprint e a máscara alfa do `office_generic.png`, mas recebeu fachada
+original ciano/magenta criada com ImageGen. A mesa do Arrange Dice também é arte original, sem
+personagens, logos ou sprites oficiais; `arrange-dice-table-source.png` preserva a fonte grande
+para futuras revisões, enquanto o runtime carrega somente `arrange-dice-table.png`. As nove cartas
+seguem a mesma regra: `arrange-dice-card-art-source.png` preserva a folha 3×3 gerada e
+`cards/card-3.webp` até `card-11.webp` são os recortes otimizados carregados pela interface. Os
+motivos são originais — aventura aérea, cristais, ruínas, espíritos e dragões — sem reutilizar arte
+ou personagens oficiais de Grandia III.
+
+`casino/generic/` contém os dois móveis dos jogos genéricos. Os arquivos `*-source.png` preservam
+as gerações grandes em chroma key; o runtime carrega apenas `nerd-slot-machine.png` e
+`blackjack-table.png`, recortados, reduzidos e com transparência. Ambos são desenhos originais:
+o gabinete usa foguete, D20, código, café e bug; a mesa não contém marca ou texto de terceiros.
 
 ---
 

@@ -1,0 +1,19 @@
+{
+  "object": {
+    "height": 96,
+    "name": "Nova máquina Nerd Slots",
+    "opacity": 1,
+    "properties": [
+      { "name": "id", "type": "string", "value": "nerd-slots-new" },
+      { "name": "tableId", "type": "string", "value": "nerd-slots-new" },
+      { "name": "gameId", "type": "string", "value": "nerd-slots" },
+      { "name": "label", "type": "string", "value": "Jogar Nerd Slots" },
+      { "name": "interactionRadius", "type": "float", "value": 3.5 }
+    ],
+    "rotation": 0,
+    "type": "nerdSlotMachine",
+    "visible": true,
+    "width": 64
+  },
+  "type": "template"
+}

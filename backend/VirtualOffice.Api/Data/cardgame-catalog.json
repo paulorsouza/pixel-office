@@ -2673,6 +2673,50 @@
       "rarity": "Special",
       "art": "assets/cardgame/pokemon/149.png",
       "variant": "mailman"
+    },
+    {
+      "id": "special-casino-pikachu",
+      "dex": 25,
+      "name": "Pikachu Jogador",
+      "types": ["electric"],
+      "edges": {"top": 8, "right": 8, "bottom": 8, "left": 8},
+      "powerRating": 32,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/025.png",
+      "variant": "casino-player"
+    },
+    {
+      "id": "special-casino-mewtwo",
+      "dex": 150,
+      "name": "Mewtwo Rei do Cassino",
+      "types": ["psychic"],
+      "edges": {"top": 10, "right": 10, "bottom": 10, "left": 10},
+      "powerRating": 40,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/150.png",
+      "variant": "casino-king"
+    },
+    {
+      "id": "special-slot-porygon",
+      "dex": 137,
+      "name": "Porygon Jackpot",
+      "types": ["normal"],
+      "edges": {"top": 8, "right": 8, "bottom": 8, "left": 8},
+      "powerRating": 32,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/137.png",
+      "variant": "jackpot"
+    },
+    {
+      "id": "special-blackjack-meowth",
+      "dex": 52,
+      "name": "Meowth Dealer",
+      "types": ["normal"],
+      "edges": {"top": 8, "right": 8, "bottom": 8, "left": 8},
+      "powerRating": 32,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/052.png",
+      "variant": "dealer"
     }
   ]
 }

@@ -520,7 +520,7 @@ test('loadout abre com Tab e não mantém HUD fixo de veículo', () => {
   assert.match(equipmentSource, /event\.code === 'Tab'/);
   assert.doesNotMatch(equipmentSource, /KeyQ|equipment-toggle|equipment-current/);
   assert.doesNotMatch(clientIndexSource, /id="equipment-toggle"|id="equipment-current"/);
-  assert.match(clientIndexSource, /<b>Tab<\/b> equipamentos/);
+  assert.match(clientIndexSource, /<kbd>Tab<\/kbd> abrir\/fechar/);
 });
 
 test('Shift ativa somente o equipamento selecionado e aplica sua velocidade', () => {
@@ -735,14 +735,17 @@ test('runtime direto aceita um tileset externo novo sem cadastro no conversor', 
 });
 
 for (const scene of manifest.scenes) {
-  test(`round-trip preserva ${scene.id}`, () => {
-    const catalogs = generateTilesets(false);
-    const runtimeFile = scene.runtimeFile || `${scene.id}.json`;
-    const original = readJson(resolve(CLIENT_ROOT, 'maps', runtimeFile));
-    const tiled = runtimeToTiled(original, catalogs, runtimeFile);
-    const restored = tiledToRuntime(tiled, catalogs);
-    assert.deepEqual(restored, original);
-  });
+  const runtimeFile = scene.runtimeFile || `${scene.id}.json`;
+  const runtimePath = resolve(CLIENT_ROOT, 'maps', runtimeFile);
+  if (existsSync(runtimePath)) {
+    test(`round-trip preserva ${scene.id}`, () => {
+      const catalogs = generateTilesets(false);
+      const original = readJson(runtimePath);
+      const tiled = runtimeToTiled(original, catalogs, runtimeFile);
+      const restored = tiledToRuntime(tiled, catalogs);
+      assert.deepEqual(restored, original);
+    });
+  }
 
   test(`runtime direto carrega ${scene.id}`, async () => {
     const direct = await loadTiledMap(pathToFileURL(resolve(CLIENT_ROOT, scene.file)).href, {
@@ -751,9 +754,9 @@ for (const scene of manifest.scenes) {
     assert.equal(direct.id, scene.id);
     assert.ok(direct.kind);
     assert.ok(direct.spawns.default);
-    assert.ok(direct.visualLayers.length > 0);
+    assert.ok((direct.visualLayers?.length ?? 0) > 0 || direct.visualMode === 'procedural');
     assert.match(direct.tiledSource, new RegExp(`${scene.id}\\.tmj$`));
-    assert.ok(direct.tiledTextures.length > 0);
+    assert.ok(direct.tiledTextures.length > 0 || direct.visualMode === 'procedural');
     if (direct.kind === 'world') {
       assert.ok(direct.camera?.bounds);
       assert.ok(direct.camera.bounds.w >= direct.w);

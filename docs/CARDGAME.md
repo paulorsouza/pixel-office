@@ -34,8 +34,9 @@ Não duplique as telas de trabalho dentro do cardgame. `CardGamePanel.js` apenas
 
 ## 3. Catálogo e chances
 
-O catálogo versionado contém os 151 Pokémon originais e as variantes iniciais Pikachu do Ash e
-Dragonite Carteiro. O script `client-web/tools/generate-cardgame-catalog.mjs` gera os valores e
+O catálogo versionado contém os 151 Pokémon originais, Pikachu do Ash, Dragonite Carteiro e quatro
+prêmios do Casino Nerd: Pikachu Jogador, Mewtwo Rei do Cassino, Porygon Jackpot e Meowth Dealer.
+O script `client-web/tools/generate-cardgame-catalog.mjs` gera os valores e
 baixa os sprites para uso local; nenhuma API Pokémon é consultada em runtime.
 
 Cada booster usa RNG criptograficamente seguro no backend. A quinta posição garante raridade
@@ -138,7 +139,8 @@ dotnet build backend/VirtualOffice.Api/VirtualOffice.Api.csproj --no-restore
 
 - persistir e recuperar partida em andamento;
 - aplicar e exibir o bônus shiny no card usado na partida;
-- criar fontes recorrentes de boosters, loja, custo e histórico de abertura;
+- ampliar as fontes recorrentes de boosters além dos prêmios de slot e blackjack, com loja,
+  custo e histórico de abertura;
 - adicionar pity e mostrar probabilidades finais na interface;
 - animações específicas para captura e vantagem de tipo;
 - telemetria e balanceamento em larga escala.

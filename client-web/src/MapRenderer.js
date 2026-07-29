@@ -609,13 +609,13 @@ export function resetSceneRenderState(scene) {
   scene.automaticDoors = [];
 }
 
-export function renderScene(scene, map, solids) {
+export function renderScene(scene, map, solids, mechanicContext = {}) {
   resetSceneRenderState(scene);
   if (map.kind === 'world') renderWorld(scene, map, solids);
   else renderInterior(scene, map, solids);
   renderVisualLayers(scene, map, solids);
 
-  const mechanics = createMechanicsRuntime(scene, map, { solids });
+  const mechanics = createMechanicsRuntime(scene, map, { solids, ...mechanicContext });
 
   return {
     spawns: map.spawns || { default: map.spawn || { x: 10, y: 10 } },

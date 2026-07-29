@@ -9,7 +9,7 @@
   "name": "04 · Exterior e props",
   "objectalignment": "bottom",
   "spacing": 0,
-  "tilecount": 64,
+  "tilecount": 65,
   "tiledversion": "1.12.2",
   "tileheight": 304,
   "tiles": [
@@ -1365,6 +1365,25 @@
           "name": "family",
           "type": "string",
           "value": "wood_metal"
+        }
+      ],
+      "type": "prop"
+    },
+    {
+      "id": 64,
+      "image": "../../assets/world/casino_nerd.png",
+      "imageheight": 288,
+      "imagewidth": 304,
+      "properties": [
+        {
+          "name": "assetId",
+          "type": "string",
+          "value": "casino_nerd"
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "value": "prop"
         }
       ],
       "type": "prop"

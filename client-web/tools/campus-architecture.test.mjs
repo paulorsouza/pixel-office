@@ -399,7 +399,7 @@ test('mundo aberto tem cidade cercada, estradas e Tooq Office perto do spawn', (
   );
   assert.equal(collisions.filter((item) => item.name.startsWith('Cerca ')).length, 4);
   const façadeCollisions = collisions.filter((item) => item.name.startsWith('Fachada ·'));
-  assert.equal(façadeCollisions.length, 15);
+  assert.equal(façadeCollisions.length, 16);
   assert.ok(
     façadeCollisions.every((item) => item.width >= 12 * 16 && item.height >= 15 * 16),
     'cada prédio e casa precisa bloquear toda a área ocupada pela fachada',
@@ -411,6 +411,33 @@ test('mundo aberto tem cidade cercada, estradas e Tooq Office perto do spawn', (
   const tooq = navigation.find((item) => properties(item).id === 'tooq-office-door');
   const distance = Math.hypot(defaultSpawn.x - tooq.x, defaultSpawn.y - tooq.y) / 16;
   assert.ok(distance < 25, 'Tooq Office deve permanecer perto do spawn principal');
+});
+
+test('Casino Nerd oferece Arrange Dice, Nerd Slots e Blackjack orientados a dados', () => {
+  const casino = read('../tiled/maps/casino-nerd.tmj');
+  const allMechanics = objectsIn(casino, 'mechanics');
+  const mechanics = allMechanics
+    .filter((item) => item.type === 'arrangeDiceTable');
+  const slots = allMechanics.filter((item) => item.type === 'nerdSlotMachine');
+  const blackjack = allMechanics.filter((item) => item.type === 'blackjackTable');
+  const navigation = objectsIn(casino, 'navigation');
+
+  assert.equal(mechanics.length, 3);
+  assert.equal(new Set(mechanics.map((item) => properties(item).tableId)).size, 3);
+  assert.ok(mechanics.every((item) => properties(item).gameId === 'arrange-dice'));
+  assert.ok(mechanics.every((item) => item.width === 96 && item.height === 64));
+  assert.equal(slots.length, 2);
+  assert.ok(slots.every((item) => properties(item).gameId === 'nerd-slots'));
+  assert.ok(slots.every((item) => item.width === 64 && item.height === 96));
+  assert.equal(blackjack.length, 1);
+  assert.equal(properties(blackjack[0]).gameId, 'blackjack');
+  assert.equal(blackjack[0].width, 112);
+  assert.equal(blackjack[0].height, 64);
+  assert.ok(navigation.some((item) => properties(item).id === 'tables'));
+  assert.ok(navigation.some((item) => properties(item).id === 'slots'));
+  assert.ok(navigation.some((item) => properties(item).id === 'blackjack'));
+  assert.ok(fs.existsSync(new URL('../assets/casino/generic/nerd-slot-machine.png', import.meta.url)));
+  assert.ok(fs.existsSync(new URL('../assets/casino/generic/blackjack-table.png', import.meta.url)));
 });
 
 test('vilarejo possui doze destinos únicos para o interior vazio compartilhado', () => {

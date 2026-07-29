@@ -108,6 +108,9 @@ function buildCatalog(pokemon) {
 
   const pikachu = cards.find((card) => card.dex === 25);
   const dragonite = cards.find((card) => card.dex === 149);
+  const mewtwo = cards.find((card) => card.dex === 150);
+  const porygon = cards.find((card) => card.dex === 137);
+  const meowth = cards.find((card) => card.dex === 52);
   cards.push(
     {
       ...pikachu,
@@ -125,6 +128,42 @@ function buildCatalog(pokemon) {
       variant: 'mailman',
       edges: { top: 9, right: 8, bottom: 10, left: 8 },
       powerRating: 35,
+      rarity: 'Special',
+    },
+    {
+      ...pikachu,
+      id: 'special-casino-pikachu',
+      name: 'Pikachu Jogador',
+      variant: 'casino-player',
+      edges: { top: 8, right: 8, bottom: 8, left: 8 },
+      powerRating: 32,
+      rarity: 'Special',
+    },
+    {
+      ...mewtwo,
+      id: 'special-casino-mewtwo',
+      name: 'Mewtwo Rei do Cassino',
+      variant: 'casino-king',
+      edges: { top: 10, right: 10, bottom: 10, left: 10 },
+      powerRating: 40,
+      rarity: 'Special',
+    },
+    {
+      ...porygon,
+      id: 'special-slot-porygon',
+      name: 'Porygon Jackpot',
+      variant: 'jackpot',
+      edges: { top: 8, right: 8, bottom: 8, left: 8 },
+      powerRating: 32,
+      rarity: 'Special',
+    },
+    {
+      ...meowth,
+      id: 'special-blackjack-meowth',
+      name: 'Meowth Dealer',
+      variant: 'dealer',
+      edges: { top: 8, right: 8, bottom: 8, left: 8 },
+      powerRating: 32,
       rarity: 'Special',
     },
   );

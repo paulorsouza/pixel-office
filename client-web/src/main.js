@@ -38,6 +38,9 @@ import { createClickToMove } from './ClickToMove.js';
 import { createTouchControls } from './TouchControls.js';
 import { createPresence } from './PresenceSystem.js';
 import { createCardGamePanel } from './cardgame/CardGamePanel.js';
+import { createArrangeDicePanel } from './casino/ArrangeDicePanel.js';
+import { createNerdSlotsPanel } from './casino/NerdSlotsPanel.js';
+import { createBlackjackPanel } from './casino/BlackjackPanel.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
 import { ensureSession } from './LoginScreen.js';
@@ -259,6 +262,21 @@ createDevMapSync(() => window.__scene?.currentSceneId);
 // único lugar que conhece o estado do call — um segundo controle divergiria.
 const hud = createHudShell();
 const helpSheet = createHelpSheet(hud);
+const arrangeDicePanel = createArrangeDicePanel({
+  gameItems,
+  hud,
+  onToast: (message) => proximityVoice.toast(message),
+});
+const nerdSlotsPanel = createNerdSlotsPanel({
+  gameItems,
+  hud,
+  onToast: (message) => proximityVoice.toast(message),
+});
+const blackjackPanel = createBlackjackPanel({
+  gameItems,
+  hud,
+  onToast: (message) => proximityVoice.toast(message),
+});
 // Abrir um painel fecha a folha aberta: os dois ocupariam a mesma tela, e sair do
 // painel devolveria a pessoa a uma folha que ela já tinha esquecido.
 const openPanel = (action) => { hud.closeSheets(); action(); };
@@ -485,7 +503,13 @@ class MapScene extends Phaser.Scene {
         repeat: animated.repeat,
       });
     }
-    const { spawns, portals, mechanics } = renderScene(this, this.map, this.solids);
+    const { spawns, portals, mechanics } = renderScene(this, this.map, this.solids, {
+      arrangeDicePanel,
+      nerdSlotsPanel,
+      blackjackPanel,
+      presence,
+      onToast: (message) => proximityVoice.toast(message),
+    });
     this.portals = portals;
     this.mechanicsRuntime = mechanics;
 
@@ -549,6 +573,7 @@ class MapScene extends Phaser.Scene {
     this.handleInteract = async () => {
       if (this.seated) { this.standUp(); return; }   // E sentado = levantar
       if (this.furnitureInteractions && await this.furnitureInteractions.interact()) return;
+      if (this.mechanicsRuntime && await this.mechanicsRuntime.interact(this.player)) return;
       if (
         this.activePortal
         && !this.transitioning
@@ -765,6 +790,7 @@ class MapScene extends Phaser.Scene {
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),
     );
+    this.activeMechanicPrompt = this.mechanicsRuntime.activeInteraction(this.player);
     if (this.interactionPreviewPending && this.furnitureInteractions.openForType(this.interactionPreviewPending)) {
       this.roomDecorationEditor.close();
       this.interactionPreviewPending = null;
@@ -886,12 +912,14 @@ class MapScene extends Phaser.Scene {
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),
     );
-    const prompt = this.activeFurniturePrompt || this.activeHeadsetPrompt || this.activePortal;
+    const prompt = this.activeFurniturePrompt || this.activeMechanicPrompt
+      || this.activeHeadsetPrompt || this.activePortal;
     showPortalPrompt(prompt);
     // Mesma prioridade da HUD; o 'kind' diz se o botao dispara E ou F.
     this.touchControls.update({
       prompt,
-      kind: (!this.activeFurniturePrompt && this.activeHeadsetPrompt) ? 'headset' : 'action',
+      kind: (!this.activeFurniturePrompt && !this.activeMechanicPrompt && this.activeHeadsetPrompt)
+        ? 'headset' : 'action',
     });
     presence.updateLocal(this.player.x, this.player.y, direction);
     presence.interpolate(delta);

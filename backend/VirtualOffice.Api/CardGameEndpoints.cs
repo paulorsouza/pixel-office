@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace VirtualOffice.Api;
 
 public sealed record CardGameDeckRequest(string[] CardIds);
+public sealed record CardGameReward(string CardId, string Name);
 
 public static class CardGameEndpoints
 {
@@ -120,6 +121,36 @@ public static class CardGameEndpoints
             .Distinct()
             .CountAsync();
         return owned == ids.Length;
+    }
+
+    public static async Task<CardGameReward[]> GrantCasinoRewardsAsync(
+        AppDb db,
+        int userId,
+        int boosters,
+        params string[] cardIds)
+    {
+        var profile = await EnsureProfileAsync(db, userId);
+        profile.BoosterCount = checked(profile.BoosterCount + Math.Max(0, boosters));
+        var rewards = new List<CardGameReward>();
+        foreach (var cardId in cardIds.Distinct(StringComparer.Ordinal))
+        {
+            if (!CardGameCatalog.All.TryGetValue(cardId, out var card))
+                throw new InvalidOperationException($"Carta de prêmio desconhecida: {cardId}");
+            var item = await db.CardGameCollection.SingleOrDefaultAsync(entry =>
+                entry.UserId == userId && entry.CardId == cardId && !entry.IsShiny);
+            if (item is null)
+            {
+                db.CardGameCollection.Add(new CardGameCollectionItem
+                {
+                    UserId = userId,
+                    CardId = cardId,
+                    IsShiny = false,
+                });
+            }
+            else item.Quantity++;
+            rewards.Add(new CardGameReward(card.Id, card.Name));
+        }
+        return rewards.ToArray();
     }
 
     private static async Task<CardGameProfile> EnsureProfileAsync(AppDb db, int userId)

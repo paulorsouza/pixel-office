@@ -104,6 +104,7 @@ if (!AuthOptions.DevBypass) api.RequireAuthorization();
 // cliente do jogo compartilham.
 api.MapWorkEndpoints();
 api.MapCardGameEndpoints();
+api.MapCasinoEndpoints();
 
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
 static int? UserId(HttpRequest req) => Identity.UserId(req);

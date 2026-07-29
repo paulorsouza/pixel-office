@@ -35,6 +35,7 @@ Unity (ver §4).
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
 | **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez e cardgame social. |
 | **Tooq Triad** | `client-web/src/cardgame`, `backend/.../CardGame*.cs` | ✅ 151 Pokémon, álbum e deck persistentes, 3 boosters iniciais e PvP por proximidade. Partidas ainda ficam em memória. Ver [`docs/CARDGAME.md`](docs/CARDGAME.md). |
+| **Casino Nerd** | `client-web/src/casino`, `backend/.../CasinoEndpoints.cs` | ✅ Prédio no hub e cena própria com Arrange Dice, Nerd Slots e Blackjack. Todos usam resultados autoritativos, idempotência, moedas persistentes, claim de mesa e histórico auditável; boosters e cartas Pokémon especiais ligam o cassino ao Tooq Triad. Ver [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md). |
 | **Deploy** | `docker-compose.yml`, `run-beta.ps1` | ✅ Produção (Docker+Postgres+Caddy) e beta local via túnel. Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md), [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md). |
 | Cliente Unity (antigo) | `office-unity/` | ⏸️ Abandonado (ver §4). Mantido só como arquivo. |
 
@@ -157,6 +158,7 @@ Cidade Tooq (hub cercado 220×150)
         ├── Tooq Office ── elevador/escadas ── alas pessoais públicas
         ├── Coworking
         ├── Dark Company
+        ├── Casino Nerd ── Grandia III · Arrange Dice
         └── Vila dos Jogadores ── 12 casas ── interior-base dinâmico
 ```
 
@@ -446,8 +448,11 @@ paredes, pisos, móveis, exteriores, porta animada):
    destrava, além de sentar encarando o monitor de verdade.
 7. **Persistir casas compráveis**: o vilarejo e os 12 destinos dinâmicos existem; falta propriedade,
    compra e decoração independente do interior-base.
-8. **Completar a economia do Tooq Triad**: fonte recorrente de boosters, pity, histórico de
-   aberturas, bônus shiny na partida e persistência/reconexão de partidas.
+8. **Completar a economia do Tooq Triad**: o cassino já oferece boosters recorrentes e quatro
+   cartas especiais; faltam loja, pity, histórico de aberturas, bônus shiny na partida e
+   persistência/reconexão de partidas.
+9. **Expandir o Casino Nerd**: mobiliar recepção/lounge, acrescentar áudio e criar bônus temáticos
+   sem alterar os motores matemáticos autoritativos de Arrange Dice, Nerd Slots e Blackjack.
 
 ---
 
@@ -470,6 +475,7 @@ paredes, pisos, móveis, exteriores, porta animada):
 - [`client-web/TUTORIAL.md`](client-web/TUTORIAL.md) — padrões de Phaser + debug no navegador.
 - [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md) — quadro, lançamento de horas, objetivos, economia e a UI compartilhada.
 - [`docs/CARDGAME.md`](docs/CARDGAME.md) — estado implementado do Tooq Triad, arquitetura, chances e testes.
+- [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md) — prédio, cena, Arrange Dice, economia e testes.
 - [`docs/PLANO_CARDGAME_POKEMON.md`](docs/PLANO_CARDGAME_POKEMON.md) — regras e roadmap completo do cardgame.
 - [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md) — Postgres local, migrations EF, datas em UTC.
 - [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md) — auth Google + JWT, permissões, passo a passo do OAuth.

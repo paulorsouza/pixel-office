@@ -37,6 +37,26 @@ public class User
     public UserRole AppRole { get; set; } = UserRole.Member;
 }
 
+/// <summary>
+/// Registro imutável de uma rodada do cassino. A configuração escolhida,
+/// o resultado e os saldos ficam
+/// persistidos para auditoria e para tornar retries idempotentes.
+/// </summary>
+public class CasinoRound
+{
+    public long Id { get; set; }
+    public int UserId { get; set; }
+    public string GameId { get; set; } = "";
+    public string RulesVersion { get; set; } = "";
+    public string IdempotencyKey { get; set; } = "";
+    public int Bet { get; set; }
+    public string OutcomeJson { get; set; } = "[]";
+    public int Payout { get; set; }
+    public int BalanceBefore { get; set; }
+    public int BalanceAfter { get; set; }
+    public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+}
+
 // Token offline do Google por usuário — usado depois para Calendar/Meet.
 // RefreshToken guardado cifrado (nunca em texto puro).
 public class GoogleCredential
