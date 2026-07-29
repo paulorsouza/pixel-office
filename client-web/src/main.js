@@ -28,6 +28,8 @@ import {
 } from './FloorNavigation.js';
 import { createHudShell } from './hud/HudShell.js';
 import { createDock } from './hud/Dock.js';
+import { createTimeDock } from './hud/TimeDock.js';
+import { auth } from './auth.js';
 import { renderHelp } from './hud/HelpSheet.js';
 import { createMainMenu } from './hud/MainMenu.js';
 import { createGearSections } from './hud/GearSections.js';
@@ -359,6 +361,19 @@ window.addEventListener('keydown', (event) => {
     mainMenu.close();
   }
 });
+
+// Card fixo de horas (canto superior esquerdo). Lê as MESMAS rotas do painel de
+// Horas e recarrega por evento do hub; tocar nele abre a seção certa do menu.
+const timeDock = createTimeDock({
+  apiBase: gameItems.apiBase,
+  token: () => auth.token(),
+  userId: gameItems.userId,
+  events: gameItems.events,
+  onOpenHours: () => mainMenu.open('hours'),
+  onOpenGoals: () => mainMenu.open('goals'),
+  onToast: (message) => proximityVoice.toast(message),
+});
+window.__timeDock = timeDock;
 
 hud.register({ id: 'cardgame', isOpen: () => cardGame.isBlocking() });
 hud.register({ id: 'floor-picker', isOpen: () => floorPicker.isOpen() });
