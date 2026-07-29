@@ -370,7 +370,6 @@ const timeDock = createTimeDock({
   userId: gameItems.userId,
   events: gameItems.events,
   onOpenHours: () => mainMenu.open('hours'),
-  onOpenGoals: () => mainMenu.open('goals'),
   onToast: (message) => proximityVoice.toast(message),
 });
 window.__timeDock = timeDock;

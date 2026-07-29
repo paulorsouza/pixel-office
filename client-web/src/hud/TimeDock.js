@@ -1,15 +1,13 @@
 // Card fixo de horas, no canto superior esquerdo.
 //
-// O problema que ele resolve: até aqui, só dava para saber se havia contador
-// rodando abrindo o menu → Horas. A estação de trabalho começava a contar e o
-// único aviso era um toast que passava. O card fica SEMPRE visível e responde a:
-//   - tem contador rodando? qual atividade, e há quanto tempo (relógio ao vivo);
-//   - quanto de trabalho já foi lançado hoje contra a meta;
-//   - qual missão está mais perto de fechar.
+// Deliberadamente minimalista: resumo da atividade atual, contador ao vivo e um
+// play/pause. Meta do dia, missões e gold por presença NÃO moram aqui — eles
+// vivem no menu (seções Horas e Objetivos). O card responde a uma pergunta só,
+// de relance: "estou contando tempo, em quê, e há quanto?".
 //
 // Fonte de verdade é o servidor (as MESMAS rotas do painel de Horas). Sem
-// polling: recarrega por evento do hub. O relógio é só formatação local a partir
-// do `startUtc` — não conta nada por conta própria.
+// polling: recarrega por evento do hub. O relógio é só formatação local do
+// `startUtc` — não conta nada por conta própria.
 
 // O card fala com as MESMAS rotas do painel de Horas, mas não pode importar o
 // módulo compartilhado: ele é servido pelo backend (outra origem em dev) e um
@@ -60,11 +58,6 @@ function weekBounds() {
   return { from: from.toISOString(), to: to.toISOString() };
 }
 
-const dayKey = (date) => {
-  const d = date instanceof Date ? date : new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-
 const pad = (n) => String(n).padStart(2, '0');
 
 /**
@@ -72,9 +65,8 @@ const pad = (n) => String(n).padStart(2, '0');
  * @param options.token     função que devolve o JWT (ou null em dev)
  * @param options.userId    identidade de fallback (dev)
  * @param options.events    EventTarget do hub (gameItems.events)
- * @param options.onOpenHours    abrir a seção Horas do menu
- * @param options.onOpenGoals    abrir a seção Objetivos do menu
- * @param options.onToast        toast da HUD
+ * @param options.onOpenHours  abrir a seção Horas do menu (toque no resumo)
+ * @param options.onToast      toast da HUD
  */
 export function createTimeDock(options) {
   const client = createWorkClient({
@@ -87,80 +79,43 @@ export function createTimeDock(options) {
   root.hidden = true;
   root.innerHTML = `
     <button class="td-main" type="button" aria-label="Abrir controle de horas">
-      <div class="td-today">
-        <span class="td-today-line"><b class="td-today-val">—</b><small class="td-goal"></small></span>
-        <span class="td-bar"><i></i></span>
-      </div>
-      <div class="td-run">
-        <span class="td-run-dot"></span>
-        <span class="td-run-label">Carregando…</span>
+      <span class="td-run-dot"></span>
+      <span class="td-run-body">
+        <b class="td-run-label">Carregando…</b>
         <span class="td-clock"></span>
-      </div>
-      <div class="td-presence" hidden>
-        <span class="td-presence-ico">☕</span>
-        <span class="td-presence-text"></span>
-      </div>
-    </button>
-    <div class="td-actions">
-      <button class="td-start" type="button" hidden>▶ Focar</button>
-      <button class="td-stop" type="button" hidden>■ Parar</button>
-    </div>
-    <button class="td-mission" type="button" hidden>
-      <span class="td-mission-ico"></span>
-      <span class="td-mission-body">
-        <b class="td-mission-name"></b>
-        <span class="td-mission-bar"><i></i></span>
       </span>
-    </button>`;
+    </button>
+    <button class="td-toggle" type="button" aria-label="Iniciar contador">▶</button>`;
   document.body.append(root);
 
   const els = {
-    todayVal: root.querySelector('.td-today-val'),
-    goal: root.querySelector('.td-goal'),
-    bar: root.querySelector('.td-bar > i'),
+    main: root.querySelector('.td-main'),
     runDot: root.querySelector('.td-run-dot'),
     runLabel: root.querySelector('.td-run-label'),
     clock: root.querySelector('.td-clock'),
-    presence: root.querySelector('.td-presence'),
-    presenceText: root.querySelector('.td-presence-text'),
-    start: root.querySelector('.td-start'),
-    stop: root.querySelector('.td-stop'),
-    mission: root.querySelector('.td-mission'),
-    missionIco: root.querySelector('.td-mission-ico'),
-    missionName: root.querySelector('.td-mission-name'),
-    missionBar: root.querySelector('.td-mission-bar > i'),
+    toggle: root.querySelector('.td-toggle'),
   };
 
   let running = null;      // { startUtc, label } ou null
   let ticker = 0;
-  let busy = false;        // trava os botões durante start/stop
+  let busy = false;        // trava o botão durante start/stop
 
-  // Cliques nos botões não podem "vazar" para o td-main (que abre o painel).
-  const stop = (event) => event.stopPropagation();
-  for (const b of [els.start, els.stop]) b.addEventListener('pointerdown', stop);
-
-  els.start.onclick = async (event) => {
+  // O toque no botão não pode "vazar" para o td-main (que abre o painel).
+  els.toggle.addEventListener('pointerdown', (event) => event.stopPropagation());
+  els.toggle.onclick = async (event) => {
     event.stopPropagation();
     if (busy) return;
     busy = true;
     try {
-      // Sem categoria: o backend conta como foco e vincula a atividade ativa se
-      // houver. É o "começar a focar agora" — bater o ponto sem abrir menu.
-      await client.post('/api/timer/start', {});
-      await refresh();
-    } catch (error) {
-      options.onToast?.(error.message);
-    } finally { busy = false; }
-  };
-
-  els.stop.onclick = async (event) => {
-    event.stopPropagation();
-    if (busy) return;
-    busy = true;
-    try {
-      const result = await client.post('/api/timer/stop');
-      if (result?.minutes) {
-        options.onToast?.(`${hm(result.minutes)} registrados · +${result.xp ?? 0} XP · +${result.gold ?? 0} 🪙`);
+      if (running) {
+        const result = await client.post('/api/timer/stop');
+        if (result?.minutes) {
+          options.onToast?.(`${hm(result.minutes)} registrados · +${result.xp ?? 0} XP · +${result.gold ?? 0} 🪙`);
+        }
+      } else {
+        // Sem categoria: o backend conta como foco e vincula a atividade ativa
+        // se houver. É o "começar a focar agora", sem abrir menu.
+        await client.post('/api/timer/start', {});
       }
       await refresh();
     } catch (error) {
@@ -168,8 +123,7 @@ export function createTimeDock(options) {
     } finally { busy = false; }
   };
 
-  els.mission.onclick = () => options.onOpenGoals?.();
-  root.querySelector('.td-main').onclick = () => options.onOpenHours?.();
+  els.main.onclick = () => options.onOpenHours?.();
 
   function drawClock() {
     if (!running) return;
@@ -188,8 +142,8 @@ export function createTimeDock(options) {
       : null;
     root.dataset.running = running ? '1' : '';
     els.runDot.dataset.on = running ? '1' : '';
-    els.start.hidden = Boolean(running);
-    els.stop.hidden = !running;
+    els.toggle.textContent = running ? '⏸' : '▶';
+    els.toggle.setAttribute('aria-label', running ? 'Parar contador' : 'Iniciar contador');
     clearInterval(ticker);
     if (running) {
       els.runLabel.textContent = running.label;
@@ -197,62 +151,15 @@ export function createTimeDock(options) {
       ticker = setInterval(drawClock, 1000);
     } else {
       els.runLabel.textContent = 'Sem contador';
-      els.clock.textContent = '';
+      els.clock.textContent = 'toque ▶ para focar';
     }
-  }
-
-  function drawToday(sheet, goalMinutes) {
-    const today = sheet?.dayTotals?.[dayKey(new Date())] ?? 0;
-    const target = goalMinutes || 360;
-    els.todayVal.textContent = hm(today);
-    els.goal.textContent = `/ ${hm(target)}`;
-    els.bar.style.width = `${Math.min(100, Math.round((today / target) * 100))}%`;
-    els.bar.dataset.full = today >= target ? '1' : '';
-  }
-
-  function drawMission(objectives) {
-    const list = objectives?.objectives ?? [];
-    // A mais perto de fechar entre as não concluídas; diária ganha da semanal.
-    const candidates = list
-      .filter((o) => !o.done && o.target > 0)
-      .map((o) => ({ o, ratio: Math.min(1, o.value / o.target), daily: o.scope === 'Daily' }))
-      .sort((a, b) => (b.daily - a.daily) || (b.ratio - a.ratio));
-    const pick = candidates[0]?.o;
-    els.mission.hidden = !pick;
-    if (!pick) return;
-    els.missionIco.textContent = pick.icon;
-    els.missionName.textContent = pick.name;
-    els.missionBar.style.width = `${Math.round((candidates[0].ratio) * 100)}%`;
-    const goalTarget = objectives.objectives.find((o) => o.key === 'daily-journey')?.target;
-    return goalTarget;
-  }
-
-  function drawPresence(presence) {
-    // Gold só por estar online — o trickle que não depende de atividade. Some se
-    // ainda não rendeu nada; avisa quando bate o teto do dia.
-    if (!presence || presence.goldToday <= 0) { els.presence.hidden = true; return; }
-    els.presence.hidden = false;
-    const capped = presence.goldToday >= presence.goldCap;
-    els.presenceText.textContent = capped
-      ? `+${presence.goldToday} 🪙 online · no máximo hoje`
-      : `+${presence.goldToday} 🪙 · ${hm(presence.minutesOnline)} online`;
   }
 
   async function refresh() {
     try {
       const bounds = weekBounds();
-      const [sheet, objectives, presence] = await Promise.all([
-        client.get(`/api/timesheet?from=${bounds.from}&to=${bounds.to}`),
-        client.get('/api/objectives').catch(() => null),
-        client.get('/api/me/presence').catch(() => null),
-      ]);
-      const goalMinutes = objectives
-        ? objectives.objectives.find((o) => o.key === 'daily-journey')?.target
-        : 360;
+      const sheet = await client.get(`/api/timesheet?from=${bounds.from}&to=${bounds.to}`);
       drawTimer(sheet);
-      drawToday(sheet, goalMinutes);
-      if (objectives) drawMission(objectives);
-      drawPresence(presence);
       root.hidden = false;
     } catch {
       // Offline (dev sem backend): o card some em vez de mostrar erro cru.
@@ -260,9 +167,9 @@ export function createTimeDock(options) {
     }
   }
 
-  // Recarrega quando o backend avisa que algo mudou — nunca por polling.
+  // Recarrega quando o backend avisa que o contador mudou — nunca por polling.
   const onChange = () => refresh();
-  for (const name of ['TimeChanged', 'WorkSessionChanged', 'RewardGranted', 'ObjectiveCompleted']) {
+  for (const name of ['TimeChanged', 'WorkSessionChanged']) {
     options.events?.addEventListener(name, onChange);
   }
 
@@ -272,7 +179,7 @@ export function createTimeDock(options) {
     refresh,
     destroy() {
       clearInterval(ticker);
-      for (const name of ['TimeChanged', 'WorkSessionChanged', 'RewardGranted', 'ObjectiveCompleted']) {
+      for (const name of ['TimeChanged', 'WorkSessionChanged']) {
         options.events?.removeEventListener(name, onChange);
       }
       root.remove();
