@@ -96,6 +96,10 @@ export function createTimeDock(options) {
         <span class="td-run-label">Carregando…</span>
         <span class="td-clock"></span>
       </div>
+      <div class="td-presence" hidden>
+        <span class="td-presence-ico">☕</span>
+        <span class="td-presence-text"></span>
+      </div>
     </button>
     <div class="td-actions">
       <button class="td-start" type="button" hidden>▶ Focar</button>
@@ -117,6 +121,8 @@ export function createTimeDock(options) {
     runDot: root.querySelector('.td-run-dot'),
     runLabel: root.querySelector('.td-run-label'),
     clock: root.querySelector('.td-clock'),
+    presence: root.querySelector('.td-presence'),
+    presenceText: root.querySelector('.td-presence-text'),
     start: root.querySelector('.td-start'),
     stop: root.querySelector('.td-stop'),
     mission: root.querySelector('.td-mission'),
@@ -221,12 +227,24 @@ export function createTimeDock(options) {
     return goalTarget;
   }
 
+  function drawPresence(presence) {
+    // Gold só por estar online — o trickle que não depende de atividade. Some se
+    // ainda não rendeu nada; avisa quando bate o teto do dia.
+    if (!presence || presence.goldToday <= 0) { els.presence.hidden = true; return; }
+    els.presence.hidden = false;
+    const capped = presence.goldToday >= presence.goldCap;
+    els.presenceText.textContent = capped
+      ? `+${presence.goldToday} 🪙 online · no máximo hoje`
+      : `+${presence.goldToday} 🪙 · ${hm(presence.minutesOnline)} online`;
+  }
+
   async function refresh() {
     try {
       const bounds = weekBounds();
-      const [sheet, objectives] = await Promise.all([
+      const [sheet, objectives, presence] = await Promise.all([
         client.get(`/api/timesheet?from=${bounds.from}&to=${bounds.to}`),
         client.get('/api/objectives').catch(() => null),
+        client.get('/api/me/presence').catch(() => null),
       ]);
       const goalMinutes = objectives
         ? objectives.objectives.find((o) => o.key === 'daily-journey')?.target
@@ -234,6 +252,7 @@ export function createTimeDock(options) {
       drawTimer(sheet);
       drawToday(sheet, goalMinutes);
       if (objectives) drawMission(objectives);
+      drawPresence(presence);
       root.hidden = false;
     } catch {
       // Offline (dev sem backend): o card some em vez de mostrar erro cru.

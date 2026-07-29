@@ -41,6 +41,8 @@ button{font:inherit}
 .td-run-label{flex:1;min-width:0;overflow:hidden;color:#dfe3f4;font-weight:600;
   text-overflow:ellipsis;white-space:nowrap}
 .td-clock{color:#fff;font:650 12px ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.td-presence{display:flex;align-items:center;gap:6px;color:#f0d38a;font-size:11px}
+.td-presence-ico{font-size:12px}
 .td-actions{display:flex;padding:0 13px 11px}
 .td-actions button{flex:1;min-height:34px;border:1px solid #ffffff22;border-radius:9px;
   color:#fff;cursor:pointer;font:700 12px Inter,system-ui,sans-serif}
