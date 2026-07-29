@@ -1,5 +1,4 @@
-import { createWorkPanel } from './WorkPanel.js';
-import { auth } from './auth.js';
+import { itemThumbHtml } from './hud/ItemThumb.js';
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
@@ -55,11 +54,6 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   const setOpen = (value) => {
     open = value;
     panel.hidden = !value;
-    // O painel de trabalho tem timers e listeners próprios; fechar precisa desmontar.
-    if (!value) {
-      workPanel.close();
-      panel.classList.remove('work');
-    }
     if (value) {
       equipmentMenu.setOpen(false);
       scene.player.body.setVelocity(0, 0);
@@ -75,37 +69,10 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     content.innerHTML = `<p class="interaction-message${error ? ' error' : ''}">${escapeHtml(message)}</p>`;
   };
 
-  // Quadro, backlog, horas e objetivos são a MESMA UI do app web, servida pelo
-  // backend (wwwroot/shared). O painel do jogo só a hospeda e escurece o tema.
-  const workPanel = createWorkPanel({
-    apiBase: gameItems.apiBase,
-    token: () => auth.token(),
-    userId: gameItems.userId,
-    activeTaskId: () => activeTaskId,
-    onActiveTaskChange: (item) => {
-      activeTaskId = item?.id ?? null;
-      options.onActiveTaskChange?.(item);
-    },
-    onTimerChange: () => options.onTimerChange?.(),
-    onReward: (reward) => options.onReward?.(reward),
-  });
-
-  async function renderWork(tab) {
-    // Limpa o handler herdado dos painéis em HTML puro (baú, loja, estação).
-    content.onclick = null;
-    // O quadro precisa de uma janela bem maior que o baú; a classe troca o tamanho.
-    panel.classList.add('work');
-    status('Carregando…');
-    // A ★ da atividade ativa vem do backend; o jogo pode ainda não ter perguntado.
-    if (activeTaskId === null) {
-      activeTaskId = await gameItems.activeTaskId().catch(() => null);
-    }
-    try {
-      await workPanel.open(content, { title, subtitle }, tab);
-    } catch (error) {
-      status(`Não deu para abrir o painel: ${error.message}`, true);
-    }
-  }
+  // Quadro e relógio de ponto não desenham nada aqui: abrem a seção do MENU,
+  // que já hospeda a UI compartilhada do backend. Este módulo tinha uma segunda
+  // instância daquele painel — dois conjuntos de timers e listeners para a
+  // mesma tela, e duas chances de divergir.
 
   async function renderChest(record) {
     title.textContent = 'Baú de itens';
@@ -114,13 +81,16 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     try {
       const [stored] = await Promise.all([gameItems.chest(record.item.placementId), gameItems.refreshInventory()]);
       const available = gameItems.inventory().filter((item) => item.location === 'inventory');
-      const list = (items, action, empty) => items.length ? items.map((item) => `
-        <button type="button" data-chest-action="${action}" data-item-id="${item.id}">
-          <img src="${escapeHtml(item.definition.iconPath)}" alt=""><span><strong>${escapeHtml(item.definition.name)}</strong><small>${escapeHtml(item.instanceKey.slice(0, 8))}</small></span>
-        </button>`).join('') : `<em>${empty}</em>`;
-      content.innerHTML = `<div class="interaction-chest">
-        <section><h3>Inventário</h3>${list(available, 'deposit', 'Nada disponível')}</section>
-        <section><h3>Guardado</h3>${list(stored, 'withdraw', 'Baú vazio')}</section>
+      const list = (items, action, empty) => (items.length ? items.map((item) => `
+        <button class="hud-item-row" type="button" data-chest-action="${action}" data-item-id="${item.id}">
+          ${itemThumbHtml(item.definition)}
+          <span class="hud-item-copy"><b>${escapeHtml(item.definition.name)}</b>
+            <small>${escapeHtml(item.definition.category || item.definition.itemType)}</small></span>
+          <span class="hud-item-action">${action === 'deposit' ? 'Guardar' : 'Pegar'}</span>
+        </button>`).join('') : `<p class="hud-empty">${empty}</p>`);
+      content.innerHTML = `<div class="hud-two-columns">
+        <section class="hud-column"><header>Inventário</header><div class="hud-item-list">${list(available, 'deposit', 'Nada disponível')}</div></section>
+        <section class="hud-column"><header>Guardado no baú</header><div class="hud-item-list">${list(stored, 'withdraw', 'Baú vazio')}</div></section>
       </div>`;
       content.onclick = async (event) => {
         const button = event.target.closest('[data-chest-action]');
@@ -153,14 +123,20 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         item.status !== 'Done' && (!item.assigneeId || item.assigneeId === gameItems.userId)
       ));
       // O contador da estação também aceita pair e code review, não só desenvolvimento.
-      content.innerHTML = `<div class="interaction-workstation">
-        <div class="workstation-timer"><span>⏱</span><strong>Pronto para focar</strong><button type="button" data-stop-work>Encerrar contador</button></div>
-        <div class="workstation-kinds">${activities.map((activity, index) => `
-          <button type="button" data-kind="${escapeHtml(activity.key)}" class="${index === 0 ? 'selected' : ''}">${activity.icon} ${escapeHtml(activity.name)}</button>
+      content.innerHTML = `<div class="hud-stack">
+        <div class="hud-banner"><span class="hud-banner-icon">⏱</span>
+          <b>Pronto para focar</b>
+          <button class="cg-btn" type="button" data-stop-work>Encerrar contador</button></div>
+        <div class="hud-chips">${activities.map((activity, index) => `
+          <button class="hud-chip${index === 0 ? ' on' : ''}" type="button" data-kind="${escapeHtml(activity.key)}">${activity.icon} ${escapeHtml(activity.name)}</button>
         `).join('')}</div>
-        <div class="workstation-tasks">${mine.map((item) => `
-          <button type="button" data-start-work="${item.id}"><small>${escapeHtml(item.code)} · ${escapeHtml(item.status)}</small><strong>${escapeHtml(item.title)}</strong></button>
-        `).join('') || '<em>Nenhuma atividade disponível</em>'}</div>
+        <div class="hud-item-list two">${mine.map((item) => `
+          <button class="hud-item-row" type="button" data-start-work="${item.id}">
+            <span class="hud-item-copy"><b>${escapeHtml(item.title)}</b>
+              <small>${escapeHtml(item.code)} · ${escapeHtml(item.status)}</small></span>
+            <span class="hud-item-action">Focar</span>
+          </button>
+        `).join('') || '<p class="hud-empty">Nenhuma atividade disponível</p>'}</div>
       </div>`;
       let activityKey = activities[0]?.key ?? 'task';
       content.onclick = async (event) => {
@@ -230,16 +206,20 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     subtitle.textContent = storeCopy;
     status('Carregando catálogo…');
     try {
-      const catalog = await gameItems.storeCatalog();
+      const catalog = await gameItems.storeCatalog(kind);
       const purchasable = (catalog.definitions || []).filter((item) => item.isPurchasable);
-      content.innerHTML = `<div class="interaction-workstation">
-        <div class="workstation-timer"><span>🪙</span><strong>${catalog.coins} moedas</strong></div>
-        <div class="workstation-tasks">${purchasable.map((item) => `
-          <button type="button" data-buy-item="${escapeHtml(item.catalogKey)}">
-            <small>${escapeHtml(item.itemType)} · ${escapeHtml(item.rarity)}</small>
-            <strong>${escapeHtml(item.name)} · ${item.price} 🪙</strong>
+      content.innerHTML = `<div class="hud-stack">
+        <div class="hud-banner"><span class="hud-banner-icon">🪙</span>
+          <b>${catalog.coins} moedas</b><small>saldo da carteira</small></div>
+        <div class="hud-item-list three">${purchasable.map((item) => `
+          <button class="hud-item-row" type="button" data-buy-item="${escapeHtml(item.catalogKey)}"
+            ${catalog.coins < item.price ? 'disabled' : ''} data-rarity="${escapeHtml(item.rarity)}">
+            ${itemThumbHtml(item)}
+            <span class="hud-item-copy"><b>${escapeHtml(item.name)}</b>
+              <small>${escapeHtml(item.rarity)}</small></span>
+            <span class="hud-item-action">${item.price} 🪙</span>
           </button>
-        `).join('')}</div>
+        `).join('') || '<p class="hud-empty">Este balcão está sem estoque</p>'}</div>
       </div>`;
       content.onclick = async (event) => {
         const button = event.target.closest('[data-buy-item]');
@@ -263,10 +243,10 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
   }
 
   const handlers = {
-    kanban: () => renderWork('board'),
+    kanban: () => { options.openMenu?.('board'); return false; },
     chest: (record) => renderChest(record),
     workstation: (record) => renderWorkstation(record),
-    timeclock: () => renderWork('hours'),
+    timeclock: () => { options.openMenu?.('hours'); return false; },
     whiteboard: (record) => renderWhiteboard(record),
     store: (record) => renderStore(record),
     async seat(record) {
@@ -324,24 +304,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     /** A estação/mesa mudou a atividade ativa: o quadro precisa mover a ★. */
     setActiveTask(id) {
       activeTaskId = id ?? null;
-      workPanel.refresh();
-    },
-    /** Objetivo concluído chegou pelo SignalR — mostra o toast se o painel estiver aberto. */
-    celebrate(completions) {
-      if (open) workPanel.celebrate(completions);
-    },
-    /**
-     * Abre um painel a partir do menu, sem móvel por perto. Só vale para o que
-     * não depende de uma instância no mapa: as abas de trabalho e a loja. Baú e
-     * estação continuam exigindo o móvel — é ele que diz de QUAL baú se trata.
-     * @param target `board | backlog | hours | goals | store`
-     */
-    openFromMenu(target) {
-      if (open) return false;
-      setOpen(true);
-      if (target === 'store') renderStore();
-      else renderWork(target);
-      return true;
+      options.onActiveTaskChange?.({ id });
     },
     openForType(type) {
       const record = interactive().find((candidate) => candidate.item.interactionType === type);

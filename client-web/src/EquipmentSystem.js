@@ -170,19 +170,23 @@ export function createEquipmentMenu(catalog, options = {}) {
     options.onChange?.(vehicle, { ...loadout });
   };
 
+  // Quem mostra a tela agora é o menu do jogo (`hud/MainMenu.js`): esta janela
+  // deixou de existir como painel próprio e virou a área "Itens" de lá. O que
+  // sobrou aqui é o ESTADO do loadout — `open` só diz se a área está à vista,
+  // para as teclas de veículo (1-4, 0) não agirem com o menu fechado.
   const setOpen = (nextOpen) => {
     if (nextOpen && options.isBlocked?.()) return false;
     open = Boolean(nextOpen);
-    root.hidden = !open;
+    // As views são movidas para dentro do menu, então a busca é no documento —
+    // procurar dentro de `root` não acha mais nada.
     if (open) {
-      root.querySelector(
+      document.querySelector(
         '#character-panel-view:not([hidden]) .character-option.selected, '
         + '#character-panel-view:not([hidden]) .character-option, '
         + '#equipment-panel-view:not([hidden]) .inventory-item.equipped, '
         + '#equipment-panel-view:not([hidden]) .inventory-item',
       )?.focus();
     }
-    else if (root.contains(document.activeElement)) document.activeElement.blur();
     return open;
   };
 
@@ -223,21 +227,12 @@ export function createEquipmentMenu(catalog, options = {}) {
     unequip(slot.dataset.slotId);
   });
 
+  // Tab e Esc são do menu do jogo, não deste módulo: com dois donos, uma tecla
+  // abria a janela e fechava a outra ao mesmo tempo. Aqui ficam só os atalhos
+  // que dependem de a área "Itens" estar à vista.
   window.addEventListener('keydown', (event) => {
     const editing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
-    if (editing || event.repeat) return;
-    if (event.code === 'Tab') {
-      event.preventDefault();
-      if (options.isBlocked?.()) return;
-      setOpen(!open);
-      return;
-    }
-    if (event.code === 'Escape' && open) {
-      event.preventDefault();
-      setOpen(false);
-      return;
-    }
-    if (!open) return;
+    if (editing || event.repeat || !open) return;
     const index = Number.parseInt(event.key, 10) - 1;
     if (index >= 0 && index < vehicles.length) {
       event.preventDefault();

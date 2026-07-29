@@ -4,7 +4,6 @@
 // era escondida por CSS (não serve para toque). Aqui o conteúdo se adapta: quem
 // está no toque vê gestos, quem está no teclado vê teclas.
 
-import { createSheet } from './Sheet.js';
 import { isTouchDevice } from '../TouchControls.js';
 
 const KEYBOARD = [
@@ -44,40 +43,33 @@ const TOUCH = [
   ]],
 ];
 
-export function createHelpSheet(shell) {
-  const sheet = createSheet(shell, {
-    id: 'hud-help-sheet',
-    title: 'Como jogar',
-    subtitle: '',
-    onOpen: (body) => {
-      const touch = isTouchDevice();
-      sheet.setHeader(
-        'Como jogar',
-        touch ? 'Gestos e botões deste aparelho' : 'Teclas e atalhos',
-      );
-      const root = document.createElement('div');
-      root.className = 'hud-keys';
-      for (const [title, rows] of (touch ? TOUCH : KEYBOARD)) {
-        const section = document.createElement('section');
-        const heading = document.createElement('h3');
-        heading.textContent = title;
-        const definitions = document.createElement('dl');
-        for (const [keys, description] of rows) {
-          const term = document.createElement('dt');
-          for (const key of keys) {
-            const kbd = document.createElement('kbd');
-            kbd.textContent = key;
-            term.append(kbd);
-          }
-          const detail = document.createElement('dd');
-          detail.textContent = description;
-          definitions.append(term, detail);
-        }
-        section.append(heading, definitions);
-        root.append(section);
+/** Desenha as teclas/gestos dentro de qualquer container (hoje, o menu). */
+export function renderHelp(body, setHeader = () => {}) {
+  const touch = isTouchDevice();
+  setHeader(
+    'Como jogar',
+    touch ? 'Gestos e botões deste aparelho' : 'Teclas e atalhos',
+  );
+  const root = document.createElement('div');
+  root.className = 'hud-keys';
+  for (const [title, rows] of (touch ? TOUCH : KEYBOARD)) {
+    const section = document.createElement('section');
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    const definitions = document.createElement('dl');
+    for (const [keys, description] of rows) {
+      const term = document.createElement('dt');
+      for (const key of keys) {
+        const kbd = document.createElement('kbd');
+        kbd.textContent = key;
+        term.append(kbd);
       }
-      body.replaceChildren(root);
-    },
-  });
-  return sheet;
+      const detail = document.createElement('dd');
+      detail.textContent = description;
+      definitions.append(term, detail);
+    }
+    section.append(heading, definitions);
+    root.append(section);
+  }
+  body.replaceChildren(root);
 }

@@ -28,7 +28,10 @@ import {
 } from './FloorNavigation.js';
 import { createHudShell } from './hud/HudShell.js';
 import { createDock } from './hud/Dock.js';
-import { createHelpSheet } from './hud/HelpSheet.js';
+import { renderHelp } from './hud/HelpSheet.js';
+import { createMainMenu } from './hud/MainMenu.js';
+import { createGearSections } from './hud/GearSections.js';
+import { createWorkSections } from './hud/WorkSections.js';
 import { createKeyboardGuard } from './hud/KeyboardGuard.js';
 import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
@@ -38,7 +41,7 @@ import { createNavigationSystem } from './NavigationSystem.js';
 import { createClickToMove } from './ClickToMove.js';
 import { createTouchControls } from './TouchControls.js';
 import { createPresence } from './PresenceSystem.js';
-import { createCardGamePanel } from './cardgame/CardGamePanel.js';
+import { createCardGamePanel, CARD_SECTIONS } from './cardgame/CardGamePanel.js';
 import { createArrangeDicePanel } from './casino/ArrangeDicePanel.js';
 import { createNerdSlotsPanel } from './casino/NerdSlotsPanel.js';
 import { createBlackjackPanel } from './casino/BlackjackPanel.js';
@@ -117,11 +120,18 @@ const proximityVoice = createProximityVoice({
   ),
 });
 await proximityVoice.initialize();
+// O menu nasce mais abaixo (depende do chassi da HUD), mas o cardgame precisa
+// falar com ele: mandar para o Baralho quando faltam cartas, sair da frente
+// quando a partida começa. A referência é preenchida na seção da HUD.
+let mainMenu = null;
 const cardGame = createCardGamePanel({
   presence,
   catalog: cardGameCatalog,
   gameItems,
   onToast: (message) => proximityVoice.toast(message),
+  openMenu: (section) => mainMenu?.open(section),
+  closeMenu: () => mainMenu?.close(),
+  isMenuOpen: () => Boolean(mainMenu?.isOpen()),
 });
 // Conta assumida por outra janela: solta o microfone junto com a presença, senão
 // esta aba continuaria falando na call de um avatar que já saiu do mundo.
@@ -268,7 +278,6 @@ const keyboardGuard = createKeyboardGuard({
   getKeyboard: () => window.__scene?.input?.keyboard ?? null,
   isBlocked: () => Boolean(window.__scene?.uiIsBlocking?.()),
 });
-const helpSheet = createHelpSheet(hud);
 const arrangeDicePanel = createArrangeDicePanel({
   gameItems,
   hud,
@@ -284,71 +293,74 @@ const blackjackPanel = createBlackjackPanel({
   hud,
   onToast: (message) => proximityVoice.toast(message),
 });
-// Abrir um painel fecha a folha aberta: os dois ocupariam a mesma tela, e sair do
-// painel devolveria a pessoa a uma folha que ela já tinha esquecido.
-const openPanel = (action) => { hud.closeSheets(); action(); };
-const openEquipment = (tab) => openPanel(() => {
-  characterCustomizer.setTab(tab);
-  equipmentMenu.setOpen(true);
+// ---------------------------------------------------------------- o menu
+// Uma janela só, com a identidade do cardgame. Cada área registra a SUA seção:
+// este arquivo não sabe desenhar álbum, quadro nem inventário.
+mainMenu = createMainMenu(hud);
+createGearSections({ menu: mainMenu, equipmentMenu, characterCustomizer });
+const workSections = createWorkSections({
+  menu: mainMenu,
+  gameItems,
+  onToast: (message) => proximityVoice.toast(message),
 });
+for (const section of CARD_SECTIONS) {
+  mainMenu.register({
+    ...section,
+    group: 'cards',
+    render: (host, api) => cardGame.renderSection(section.id, host, api),
+  });
+}
+// Decorar é AÇÃO, não tela: entra na lista só onde faz sentido, fecha o menu e
+// devolve a pessoa ao mundo com o editor aberto.
+mainMenu.register({
+  id: 'decorate',
+  group: 'world',
+  icon: '✦',
+  label: 'Decorar a sala',
+  visible: () => Boolean(decorateRoom),
+  render: (_host, api) => { api.close(); roomDecorationEditor?.open(); },
+});
+mainMenu.register({
+  id: 'help',
+  group: 'world',
+  icon: '?',
+  label: 'Como jogar',
+  render: (host, api) => renderHelp(host, api.setHeader),
+});
+
+// O dock virou UM botão: "menus no canto" foi exatamente a reclamação. O que
+// existe é uma porta; tudo o que dá para abrir está atrás dela.
 const dock = createDock(hud, [
   {
-    id: 'work',
-    icon: '⌂',
-    label: 'Trabalho',
-    hint: 'Quadro, backlog, horas e objetivos',
-    onSelect: () => openPanel(() => furnitureInteractions?.openFromMenu('board')),
-  },
-  {
-    id: 'character',
-    icon: '🙂',
-    label: 'Personagem',
-    hint: 'Aparência do avatar',
-    onSelect: () => openEquipment('character'),
-  },
-  {
-    id: 'items',
-    icon: '🎒',
-    label: 'Itens',
-    hint: 'Equipamentos e veículos',
-    onSelect: () => openEquipment('equipment'),
-  },
-  {
-    id: 'store',
-    icon: '🛒',
-    label: 'Loja',
-    hint: 'Móveis e meios de locomoção',
-    onSelect: () => openPanel(() => furnitureInteractions?.openFromMenu('store')),
-  },
-  {
-    id: 'cards',
-    icon: '🃏',
-    label: 'Cartas',
-    hint: 'Álbum, boosters e baralho do Tooq Triad',
-    onSelect: () => openPanel(() => cardGame.open('album')),
-  },
-  {
-    // Só existe onde dá para decorar — desabilitado seria pior: a pessoa clica
-    // e nada acontece, sem saber que o problema é o lugar onde ela está.
-    id: 'decorate',
-    icon: '✦',
-    label: 'Decorar',
-    hint: 'Mover os móveis desta sala',
-    visible: () => Boolean(decorateRoom),
-    onSelect: () => openPanel(() => roomDecorationEditor?.open()),
-  },
-  {
-    id: 'help',
-    icon: '?',
-    label: 'Como jogar',
-    hint: 'Teclas e gestos',
-    onSelect: () => helpSheet.toggle(),
+    id: 'menu',
+    icon: '☰',
+    label: 'Menu',
+    hint: 'Personagem, itens, trabalho e cartas',
+    onSelect: () => mainMenu.toggle('character'),
   },
 ]);
 
 // Quem bloqueia o mundo se registra; `uiIsBlocking()` só pergunta.
+// Tab abre e fecha o menu; Esc fecha. Era o `EquipmentSystem` quem tomava conta
+// do Tab, de volta quando ele ainda tinha janela própria — com dois donos, a
+// tecla abria uma tela e fechava outra no mesmo toque.
+window.addEventListener('keydown', (event) => {
+  const editing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)
+    || document.activeElement?.isContentEditable;
+  if (editing || event.repeat) return;
+  if (event.code === 'Tab') {
+    event.preventDefault();
+    // Painel de móvel, editor de decoração e mesa de jogo estão na frente: o
+    // menu não passa por cima deles.
+    if (!mainMenu.isOpen() && window.__scene?.uiIsBlocking?.()) return;
+    mainMenu.toggle('character');
+  } else if (event.code === 'Escape' && mainMenu.isOpen()) {
+    event.preventDefault();
+    mainMenu.close();
+  }
+});
+
 hud.register({ id: 'cardgame', isOpen: () => cardGame.isBlocking() });
-hud.register({ id: 'equipment', isOpen: () => equipmentMenu.isOpen() });
 hud.register({ id: 'floor-picker', isOpen: () => floorPicker.isOpen() });
 hud.register({ id: 'decoration', isOpen: () => Boolean(roomDecorationEditor?.isOpen()) });
 hud.register({ id: 'furniture', isOpen: () => Boolean(furnitureInteractions?.isOpen()) });
@@ -688,6 +700,9 @@ class MapScene extends Phaser.Scene {
         onWorkStopped: () => { this.activeWorkSession = null; },
         onWorkStatus: (message) => proximityVoice.toast(message),
         onBlockingChange: () => keyboardGuard.refresh(),
+        // Quadro e relógio de ponto do cenário abrem a seção do menu: a UI de
+        // trabalho existe uma vez só, e agora mora lá.
+        openMenu: (section) => mainMenu.open(section),
         activeTaskId: this.activeTaskId,
         onActiveTaskChange: (item) => { this.activeTaskId = item?.id ?? null; },
         onTimerChange: () => { this.activeWorkSession = null; },
@@ -711,6 +726,7 @@ class MapScene extends Phaser.Scene {
     gameItems.events.addEventListener('ObjectiveCompleted', (event) => {
       const completions = event.detail ?? [];
       this.furnitureInteractions.celebrate(completions);
+      workSections.celebrate(completions);
       for (const c of completions) proximityVoice.toast(`${c.icon} Objetivo: ${c.name} · +${c.gold} 🪙`);
     });
     this.interactionPreviewPending = interactionPreview;
@@ -800,7 +816,7 @@ class MapScene extends Phaser.Scene {
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.furnitureInteractions.isOpen(),
     );
-    dock.refresh();
+    mainMenu.refresh();
     this.activeFurniturePrompt = this.furnitureInteractions.update(
       this.player,
       this.transitioning || equipmentMenu.isOpen() || this.roomDecorationEditor.isOpen(),

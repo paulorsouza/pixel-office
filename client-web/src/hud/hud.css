@@ -67,12 +67,12 @@ button{font:inherit}
   transform:translate(-50%,-50%);display:flex;flex-direction:column;overflow:hidden;padding:0;border:4px solid #2b1b20;
   outline:2px solid #d39a68;color:#fff0da;background:#24171c;
   box-shadow:0 0 0 5px #0f0a0c99,0 24px 80px #000c;font-family:"Courier New",ui-monospace,monospace}
+.equipment-menu-header,.menu-view-tabs,.equipment-menu-footer{flex:0 0 auto}
+#equipment-panel-view,#character-panel-view{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}
 #equipment-menu::before{content:"";position:absolute;inset:6px;z-index:-1;pointer-events:none;
   border:1px solid #825348;background:linear-gradient(90deg,#ffffff05 50%,transparent 50%) 0 0/8px 8px}
 .equipment-menu-header{display:flex;align-items:center;justify-content:space-between;gap:14px;
   min-height:70px;padding:12px 14px;border-bottom:3px solid #2b1b20;
-.equipment-menu-header,.menu-view-tabs,.equipment-menu-footer{flex:0 0 auto}
-#equipment-panel-view,#character-panel-view{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}
   background:linear-gradient(#68423d,#4d3031 55%,#40272b);box-shadow:inset 0 -2px #9b6552}
 .equipment-menu-title{display:flex;align-items:center;gap:12px}
 .equipment-title-emblem{position:relative;width:42px;height:38px;flex:0 0 42px;border:3px solid #2a1b20;
@@ -278,36 +278,73 @@ button{font:inherit}
   .loadout-board{height:350px}
   #character-panel-view{grid-template-columns:1fr}
 }
-#furniture-interaction-panel{position:fixed;inset:50% auto auto 50%;z-index:55;width:min(920px,calc(100vw - 32px));max-height:min(680px,calc(100vh - 32px));
-  transform:translate(-50%,-50%);overflow:hidden;border:4px solid #26191d;border-radius:10px;color:#ffe9c9;background:#37252b;
-  box-shadow:0 18px 70px #120d10cc;font-family:'Press Start 2P',monospace}
-.interaction-header{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:3px solid #281a1f;background:#4d3137}
-.interaction-header h2{margin:0;color:#f3c478;font-size:14px}.interaction-header p{margin:6px 0 0;color:#cba68c;font-size:8px}
-#furniture-interaction-close{width:34px;height:34px;border:3px solid #26191d;color:#ffe9c9;background:#744a49;font:inherit}
-#furniture-interaction-content{max-height:570px;overflow:auto;padding:12px}
-/* Modo "trabalho": kanban/horas/objetivos usam a UI compartilhada do backend e
-   precisam de uma janela grande. A moldura continua pixel; o conteúdo é o mesmo
-   do app web, em tema escuro. */
-#furniture-interaction-panel.work{width:min(1280px,calc(100vw - 24px));max-height:min(880px,calc(100vh - 24px));
-  display:flex;flex-direction:column}
-#furniture-interaction-panel.work #furniture-interaction-content{flex:1;min-height:0;max-height:none;padding:14px;
-  background:#1b1216}
-.interaction-message{padding:24px;text-align:center;color:#d8b89d;font-size:9px}.interaction-message.error{color:#ff9e91}
-.interaction-kanban{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:7px;min-width:720px}
-.interaction-kanban section,.interaction-chest section{padding:7px;border:2px solid #2a1b20;background:#2c1e23}
-.interaction-kanban h3,.interaction-chest h3{margin:0 0 8px;color:#e7b76d;font-size:8px}
-.interaction-kanban button,.workstation-tasks button,.interaction-chest button{display:flex;width:100%;gap:6px;flex-direction:column;margin:5px 0;padding:8px;border:2px solid #352126;color:#ead4bd;background:#5b3c40;text-align:left;font:inherit}
-.interaction-kanban button:hover:not(:disabled),.interaction-kanban button.selected,.workstation-tasks button:hover,.interaction-chest button:hover{border-color:#efbc68;background:#704a46}
-.interaction-kanban small,.workstation-tasks small,.interaction-chest small{color:#e8b86f;font-size:7px}.interaction-kanban strong,.workstation-tasks strong,.interaction-chest strong{font-size:8px;line-height:1.45}
-.interaction-kanban em,.interaction-chest em{color:#8f7166;font-size:7px;font-style:normal}
-.interaction-chest{display:grid;grid-template-columns:1fr 1fr;gap:10px}.interaction-chest button{display:grid;grid-template-columns:44px 1fr;align-items:center}
-.interaction-chest img{max-width:40px;max-height:40px;image-rendering:pixelated}.interaction-chest button span{display:flex;min-width:0;flex-direction:column;gap:5px}
-.workstation-timer{display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:12px;border:2px solid #2a1b20;background:#2c1e23}.workstation-timer span{font-size:24px}.workstation-timer strong{font-size:9px;flex:1}
-.workstation-timer button{padding:8px;border:2px solid #2b1c20;color:#ffe4c3;background:#774443;font:inherit;font-size:7px}.workstation-tasks{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.workstation-kinds{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.workstation-kinds button{padding:7px 9px;border:2px solid #352126;color:#cba68c;background:#2c1e23;font:inherit;font-size:7px}
-.workstation-kinds button.selected{border-color:#efbc68;color:#ffe9c9;background:#5b3c40}
-@media(max-width:650px){.interaction-chest,.workstation-tasks{grid-template-columns:1fr}}
+/* Painel de móvel (baú, estação, loja) — mesma identidade do menu.
+   Era a última tela em moldura pixel marrom; agora usa a janela `.cg-*`, e o
+   conteúdo é montado com os componentes de lista/thumb compartilhados. */
+#furniture-interaction-panel{position:fixed;inset:50% auto auto 50%;z-index:55;
+  width:min(920px,calc(100vw - 32px));max-height:min(680px,calc(100dvh - 32px));
+  transform:translate(-50%,-50%);display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  border:2px solid #ffffff24;border-radius:20px;color:var(--cg-ink);
+  background:linear-gradient(145deg,#20294d,#11162b 65%);box-shadow:0 28px 100px #000d;
+  font-family:Inter,system-ui,sans-serif}
+.interaction-header{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;
+  gap:12px;padding:16px 20px;border-bottom:1px solid #ffffff16}
+.interaction-header h2{margin:0;font-size:18px}
+.interaction-header p{margin:4px 0 0;color:var(--cg-muted);font-size:10.5px}
+#furniture-interaction-close{display:grid;width:34px;height:34px;place-items:center;
+  border:1px solid #ffffff25;border-radius:9px;color:#fff;background:#2c355f;cursor:pointer;font-size:18px}
+#furniture-interaction-close:hover{filter:brightness(1.16)}
+#furniture-interaction-content{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;padding:17px}
+.interaction-message{padding:24px;color:var(--cg-muted);font-size:12px;text-align:center}
+.interaction-message.error{color:#ff9e91}
+.interaction-primary{display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;
+  color:#fff;background:var(--cg-accent);font-size:12px;font-weight:700;text-decoration:none}
+
+/* ---- componentes de lista de itens (baú, loja, estação) ---- */
+.hud-stack{display:flex;flex-direction:column;gap:13px}
+.hud-two-columns{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.hud-column{display:flex;min-width:0;flex-direction:column;gap:9px}
+.hud-column>header{color:var(--cg-muted);font-size:10.5px;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase}
+.hud-item-list{display:grid;gap:8px}
+.hud-item-list.two{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.hud-item-list.three{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.hud-item-row{display:flex;align-items:center;gap:11px;min-width:0;padding:9px 11px;
+  border:1px solid #ffffff18;border-radius:13px;color:var(--cg-ink);background:#171f3b;
+  cursor:pointer;text-align:left;font:inherit}
+.hud-item-row:hover:not(:disabled){border-color:#7868ff66;background:#1f2950;transform:translateY(-1px)}
+.hud-item-row:disabled{opacity:.45;cursor:not-allowed}
+.hud-item-row[data-rarity="uncommon"]{border-left:3px solid #57bc83}
+.hud-item-row[data-rarity="rare"]{border-left:3px solid #4ca8ed}
+.hud-item-row[data-rarity="epic"]{border-left:3px solid #b96af1}
+.hud-item-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:2px}
+.hud-item-copy b{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.hud-item-copy small{color:var(--cg-muted);font-size:9.5px}
+.hud-item-action{flex:0 0 auto;padding:5px 9px;border-radius:8px;color:#dfe5f6;
+  background:#ffffff12;font-size:10px;font-weight:700;white-space:nowrap}
+.hud-empty{margin:0;padding:16px;border:1px dashed #ffffff22;border-radius:12px;
+  color:var(--cg-muted);font-size:11px;text-align:center}
+.hud-banner{display:flex;align-items:center;gap:12px;padding:13px 15px;
+  border:1px solid #ffffff16;border-radius:15px;background:#151c36}
+.hud-banner-icon{font-size:22px}
+.hud-banner b{flex:1;font-size:14px}
+.hud-banner small{color:var(--cg-muted);font-size:10px}
+.hud-chips{display:flex;flex-wrap:wrap;gap:7px}
+.hud-chip{padding:7px 11px;border:1px solid #ffffff1c;border-radius:99px;color:var(--cg-muted);
+  background:#151c36;cursor:pointer;font:inherit;font-size:11px}
+.hud-chip.on{border-color:#7868ff88;color:#fff;background:#2b2f63}
+
+/* ---- miniatura de item (ItemThumb.js) ----
+   Caixa fixa com a arte encaixada: `object-fit:contain` respeita a proporção,
+   e `pixelated` mantém o pixel art nítido em vez de borrado. */
+.hud-thumb{display:grid;flex:0 0 auto;place-items:center;width:46px;height:46px;
+  border:1px solid #ffffff18;border-radius:11px;
+  background:radial-gradient(circle,#dbeaff18,#0b1022 72%);font-size:20px}
+.hud-thumb img{max-width:82%;max-height:82%;object-fit:contain;image-rendering:pixelated;
+  filter:drop-shadow(0 3px 3px #0008)}
+.hud-thumb-sm{width:34px;height:34px;font-size:15px}
+.hud-thumb-lg{width:62px;height:62px;font-size:26px}
+@media(max-width:650px){.hud-two-columns{grid-template-columns:1fr}}
 @media(max-width:440px){
   #scene-card{max-width:calc(100vw - 32px)}
   .equipment-menu-header{padding:9px}.equipment-title-emblem{display:none}.equipment-menu-header h2{font-size:15px}
@@ -325,17 +362,16 @@ button{font:inherit}
 @media(max-width:760px){
   /* Folha inteira: em 390px, moldura + borda arredondada + centralização
      desperdiçam a área que o conteúdo precisa. */
-  #equipment-menu,
-  #furniture-interaction-panel,
-  #furniture-interaction-panel.work{
+  #furniture-interaction-panel{
     left:0;top:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;
-    transform:none;border-radius:0;border-width:0 0 0 0}
-  #furniture-interaction-panel,#furniture-interaction-panel.work{display:flex;flex-direction:column}
+    transform:none;border-radius:0;border-width:0}
   .interaction-header,.equipment-menu-header{padding-top:calc(13px + env(safe-area-inset-top))}
-  #furniture-interaction-content,#furniture-interaction-panel.work #furniture-interaction-content{
-    flex:1;min-height:0;max-height:none;padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  #furniture-interaction-content{padding-bottom:calc(14px + env(safe-area-inset-bottom));
     -webkit-overflow-scrolling:touch}
-  #equipment-menu{overflow:auto;padding-bottom:env(safe-area-inset-bottom)}
+  /* A rolagem é da ÁREA DA ABA, nunca da folha inteira: com as duas, o toque
+     rolava a moldura e a lista ficava parada no meio do caminho. */
+  #equipment-panel-view,#character-panel-view{-webkit-overflow-scrolling:touch}
+  .equipment-menu-footer{padding-bottom:calc(9px + env(safe-area-inset-bottom))}
 
   /* Editor de decoração: gaveta de baixo em vez de coluna lateral. */
   #room-decoration-panel{left:0;right:0;top:auto;bottom:0;width:100vw;max-width:100vw;
@@ -440,3 +476,166 @@ html[data-mh-mode] #hud-dock{display:none}
 html[data-touch="on"] .hud-dock-btn{width:48px;height:48px}
 html[data-touch="on"] .hud-sheet-close,
 html[data-touch="on"] .hud-menu-item{min-height:44px}
+
+/* ================================================= identidade do menu (cg-*)
+   Veio do painel do cardgame: era a única tela do jogo com uma identidade
+   fechada, e virou a do MENU inteiro. Fica aqui, e não injetada por um módulo,
+   porque agora é chassi compartilhado — quem estiliza carta continua no
+   `cardgame/CardGamePanel.js`. */
+:root{--cg-bg:#0d1225;--cg-panel:#19203d;--cg-ink:#f8f4e8;--cg-muted:#9da9ca;
+      --cg-accent:#7868ff;--cg-gold:#f4c960;--cg-p1:#56b7ff;--cg-p2:#ff5f8f}
+.cg-hidden{display:none!important}
+.cg-btn{border:1px solid #ffffff25;border-radius:9px;padding:8px 12px;
+      color:#fff;background:#2c355f;cursor:pointer;font:700 12px Inter,system-ui,sans-serif;box-shadow:inset 0 -2px #0004}
+.cg-btn:hover:not(:disabled){filter:brightness(1.16)}
+.cg-btn:disabled{cursor:not-allowed;opacity:.45}
+.cg-btn.primary{background:#6857ee}
+.cg-btn.danger{background:#8f3854}
+.cg-overlay{position:fixed;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:12px;
+      background:#080b17dc;backdrop-filter:blur(7px);font-family:Inter,system-ui,sans-serif}
+.cg-window{position:relative;width:min(1180px,100%);height:min(800px,calc(100dvh - 24px));overflow:hidden;
+      border:2px solid #ffffff24;border-radius:20px;color:var(--cg-ink);
+      background:linear-gradient(145deg,#20294d,#11162b 65%);box-shadow:0 28px 100px #000d}
+/* `min-height:0` nos três níveis: item de grid e item de flex nascem com
+   `min-height:auto` e se recusam a encolher abaixo do conteúdo. Sem isto a
+   coluna de conteúdo crescia além da janela e a rolagem simplesmente não
+   acontecia — a lista terminava fora da tela, sem barra. */
+.cg-hub{display:grid;grid-template-columns:210px 1fr;height:100%;min-height:0}
+.cg-hub-side{display:flex;min-height:0;overflow-y:auto;overscroll-behavior:contain;flex-direction:column;
+      padding:16px 11px;border-right:1px solid #ffffff17;background:#0b1021cc}
+.cg-brand{padding:4px 9px 18px}
+.cg-brand strong{display:block;color:#fff;font-size:17px}
+.cg-brand small{color:#8895bb;font-size:9px;letter-spacing:.11em}
+.cg-nav{display:grid;gap:5px}
+.cg-nav button{display:flex;align-items:center;gap:10px;border:0;border-radius:10px;
+      padding:10px;color:#aeb8d7;background:transparent;cursor:pointer;text-align:left;font:700 11px Inter,sans-serif}
+.cg-nav button:hover,.cg-nav button.on{color:#fff;background:#6c5df033}
+.cg-nav i{width:20px;color:#b8adff;font-style:normal;font-size:16px}
+.cg-hub-side .cg-close{margin-top:auto}
+.cg-hub-main{display:flex;min-width:0;min-height:0;flex-direction:column}
+.cg-hub-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #ffffff16}
+.cg-hub-head h2{margin:0;font-size:18px}
+.cg-hub-head p{flex:1;margin:0;color:#9da9ca;font-size:10px}
+.cg-hub-content{min-height:0;flex:1;overflow:auto;padding:17px}
+.cg-hero{display:grid;grid-template-columns:1.5fr 1fr;
+      gap:14px;margin-bottom:15px}
+.cg-hero-card{min-height:145px;padding:20px;border:1px solid #ffffff18;border-radius:17px;
+      background:radial-gradient(circle at 85% 20%,#8c6cff55,transparent 35%),linear-gradient(135deg,#252e59,#171d38)}
+.cg-hero-card h3{margin:0 0 7px;font-size:21px}
+.cg-hero-card p{max-width:520px;margin:0;color:#aeb8d7;font-size:11px;line-height:1.6}
+.cg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cg-stat{padding:14px;border:1px solid #ffffff16;
+      border-radius:14px;background:#151c36}
+.cg-stat b{display:block;color:#fff;font-size:21px}
+.cg-stat span{color:#8f9cbd;font-size:9px}
+.cg-shortcuts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.cg-shortcut{padding:14px;
+      border:1px solid #ffffff16;border-radius:13px;color:#fff;background:#171f3b;cursor:pointer;text-align:left}
+.cg-shortcut b{display:block;margin-bottom:4px;font-size:12px}
+.cg-shortcut small{color:#929fbe;font-size:9px}
+.cg-section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cg-section-head h3{margin:0;font-size:15px}
+.cg-section-head span{color:#98a5c5;font-size:10px}
+.cg-section-head .spacer{flex:1}
+.cg-filters{display:flex;gap:7px;margin-bottom:10px}
+.cg-filters input,.cg-filters select{min-width:0;
+      border:1px solid #ffffff20;border-radius:8px;padding:8px;color:#fff;background:#11172c}
+.cg-filters input{flex:1}
+.cg-extra-spoon{position:absolute;z-index:2;width:4px;height:24px;border:1px solid #344056;border-radius:2px;
+      background:linear-gradient(90deg,#778397,#f5fbff 48%,#8793a8);box-shadow:0 0 5px #8be8ff;
+      transform:rotate(var(--spoon-angle));transform-origin:50% 75%}
+.cg-extra-spoon:before{position:absolute;
+      left:50%;top:-7px;width:10px;height:12px;border:1px solid #344056;border-radius:50%;content:"";
+      background:radial-gradient(ellipse at 42% 35%,#fff,#a8b5c8 58%,#596579);transform:translateX(-50%)}
+.cg-extra-spoon.spoon-1{left:8%;top:23%;--spoon-angle:-38deg}
+.cg-extra-spoon.spoon-2{right:8%;top:23%;
+      --spoon-angle:38deg}
+.cg-extra-spoon.spoon-3{left:calc(50% - 2px);top:5%;--spoon-angle:0deg}
+/* min-height relativo: 620px fixo estourava a tela do celular deitado (~390px de altura). */
+    .cg-work-host{min-height:min(620px,calc(100dvh - 200px))}
+@media(max-width:760px){
+.cg-hub{grid-template-columns:64px 1fr}
+.cg-brand strong,.cg-brand small,.cg-nav span{display:none}
+.cg-nav button{justify-content:center}
+.cg-hero{grid-template-columns:1fr}
+.cg-shortcuts{grid-template-columns:1fr 1fr}
+.cg-stats{grid-template-columns:1fr}
+}
+/* ---------------------------------------------------------------- celular
+       O jogo abre por link, e link se abre no telefone. Regra do projeto: painel
+       vira FOLHA DE TELA CHEIA em tela pequena, não caixa centralizada. */
+    @media(max-width:760px){
+      /* Sem moldura nem respiro: em 390px de largura, 12px de padding + 20px de
+         borda arredondada comem a área útil do álbum. */
+      .cg-overlay{padding:0}
+      .cg-window,.cg-match-window{width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0}
+      /* Notch e barra de gestos do iPhone. */
+      .cg-hub-head{padding-top:calc(16px + env(safe-area-inset-top))}
+      .cg-hub-content{padding-bottom:calc(17px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+      .cg-hub-side{padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+      #cardgame-invite{top:calc(12px + env(safe-area-inset-top))}
+      /* O menu do jogador nasce na posição do toque e vazava pela borda. */
+      #cardgame-player-menu{left:50%!important;right:auto;transform:translateX(-50%);
+        width:min(320px,calc(100vw - 24px));bottom:calc(16px + env(safe-area-inset-bottom));top:auto!important}
+      .cg-hub-head h2{font-size:15px}.cg-hub-head p{display:none}
+      .cg-hero-card{min-height:0;padding:15px}.cg-hero-card h3{font-size:17px}
+    }
+/* Celular em pé, tela estreita: o que ainda estourava em 360-390px. */
+    @media(max-width:480px){
+      .cg-shortcuts{grid-template-columns:1fr}
+      .cg-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .cg-reveal{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .cg-hand{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .cg-filters{flex-wrap:wrap}.cg-filters input{flex:1 0 100%}
+      .cg-player-actions{grid-template-columns:1fr}
+      .cg-pack{width:min(190px,64vw);height:min(276px,46dvh)}.cg-pack b{margin-top:22%}
+      .cg-section-head{flex-wrap:wrap}
+    }
+/* Celular deitado: sobra ~390px de ALTURA. O tabuleiro manda no espaço. */
+    @media(max-height:520px) and (orientation:landscape){
+      /* Deitado o notch fica na LATERAL: a folha precisa respeitar left/right. */
+      .cg-overlay{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right))
+        max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+      .cg-hub-head{padding:9px 14px}.cg-hub-content{padding:11px}
+      .cg-booster-stage,.cg-work-host{min-height:0}
+      .cg-arena{grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:8px}
+      .cg-board{width:min(72dvh,100%)}
+      .cg-opponent{margin-bottom:9px}
+    }
+/* Afordância de toque — por TIPO DE PONTEIRO, não por largura: notebook com
+       janela estreita continua com botão de mouse. */
+    /* Gatilho duplo: (pointer:coarse) para o aparelho real, [data-touch="on"]
+       para o override ?touch=1 -- sem ele nao da para testar isto no desktop. */
+    @media(pointer:coarse){
+      .cg-btn{min-height:44px;padding:10px 16px}
+      .cg-nav button{min-height:44px}
+      .cg-shortcut,.cg-stat{min-height:44px}
+      .cg-deck-slot button{min-width:44px;min-height:44px}
+      .cg-cell{min-height:44px}
+    }
+html[data-touch="on"] .cg-btn{min-height:44px;padding:10px 16px}
+
+/* ---- views emprestadas ao menu (Personagem e Itens) ----
+   Elas nasceram como painel próprio, com rolagem interna. Dentro do menu quem
+   rola é UMA área só (`.cg-hub-content`); deixar as duas rolando fazia a de
+   dentro ficar sem altura e a lista terminava fora do alcance. */
+.cg-hub-content > #equipment-panel-view,
+.cg-hub-content > #character-panel-view{flex:none;min-height:0;overflow:visible;
+  padding:0;background:transparent}
+.cg-hub-content #character-controls,
+.cg-hub-content #equipment-list{overflow:visible;max-height:none}
+/* A moldura marrom era da janela antiga; aqui o quadro é a janela do menu. */
+.cg-hub-content .equipment-panel{border:1px solid #ffffff16;border-radius:14px;
+  background:#151c36;box-shadow:none}
+.cg-hub-content .equipment-panel-title{border-bottom:1px solid #ffffff16;color:#dfe5f6;
+  background:#1b2340;font-family:Inter,system-ui,sans-serif;letter-spacing:.06em}
+.cg-hub-content .equipment-panel-title small{color:#93a0c0}
+.cg-hub-content .character-preview-toolbar,
+.cg-hub-content .character-actions{border-top:1px solid #ffffff16;background:#151c36}
+.cg-hub-content .character-category{border:1px solid #ffffff16;background:#141a30}
+.cg-hub-content .character-category>header{border-bottom:1px solid #ffffff16;color:#dfe5f6;background:#1b2340}
+.cg-hub-content .character-option{border:2px solid #26304f;background:#1a2039;box-shadow:none}
+.cg-hub-content .character-option.selected{background:#2b2f63;box-shadow:inset 0 0 0 2px var(--cg-accent)}
+.cg-hub-content .inventory-item{border:2px solid #26304f;background:#1a2039;box-shadow:none;border-radius:10px}
+.cg-hub-content .inventory-item.equipped{background:#2b2f63;box-shadow:inset 0 0 0 2px var(--cg-accent)}
+.cg-hub-content .loadout-board{border-radius:12px}
