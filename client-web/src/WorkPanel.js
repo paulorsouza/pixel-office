@@ -86,9 +86,13 @@ export function createWorkPanel(options) {
   return {
     /**
      * Monta o painel dentro de `content`.
-     * @param header  { title, subtitle } — elementos de texto do cabeçalho da janela
+     * @param header   { title, subtitle } — elementos de texto do cabeçalho da janela
+     * @param options.tabs  false quando quem hospeda JÁ navega entre as abas.
+     *   No menu do jogo, Quadro/Backlog/Horas/Objetivos são seções da barra
+     *   lateral: repetir a mesma fileira de abas aqui dentro dava dois
+     *   controles para a mesma coisa, e eles saíam de sincronia.
      */
-    async open(content, header, tab = "board") {
+    async open(content, header, tab = "board", { tabs = true } = {}) {
       currentTab = tab;
       modules = await loadModules(apiBase);
       client ??= modules.core.createWorkClient({ base: apiBase, token, userId });
@@ -104,7 +108,10 @@ export function createWorkPanel(options) {
       const host = document.createElement("div");
       host.style.flex = "1";
       host.style.minHeight = "0";
-      root.replaceChildren(tabBar((next) => this.open(content, header, next)), host);
+      root.replaceChildren(
+        ...(tabs ? [tabBar((next) => this.open(content, header, next))] : []),
+        host,
+      );
       resetFeedback();
 
       const ctx = {

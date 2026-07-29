@@ -42,7 +42,8 @@ export function createWorkSections({ menu, gameItems, onToast = () => {} }) {
         área.className = 'cg-work-host';
         host.replaceChildren(área);
         try {
-          await panel.open(área, null, section.id);
+          // Sem a fileira de abas do painel: quem navega aqui é a barra lateral.
+          await panel.open(área, null, section.id, { tabs: false });
         } catch (error) {
           área.textContent = `Não foi possível carregar: ${error.message}`;
         }

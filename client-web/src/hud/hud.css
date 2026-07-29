@@ -507,6 +507,11 @@ html[data-touch="on"] .hud-menu-item{min-height:44px}
 .cg-brand strong{display:block;color:#fff;font-size:17px}
 .cg-brand small{color:#8895bb;font-size:9px;letter-spacing:.11em}
 .cg-nav{display:grid;gap:5px}
+/* Rótulo de grupo: precisa LER como cabeçalho, não como item. Sem regra
+   própria ele saía do mesmo tamanho dos botões e convidava ao clique. */
+.cg-nav-group{margin:10px 0 1px;padding:0 10px;color:#7f8bb0;font-size:9px;
+  font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.cg-nav-group:first-child{margin-top:0}
 .cg-nav button{display:flex;align-items:center;gap:10px;border:0;border-radius:10px;
       padding:10px;color:#aeb8d7;background:transparent;cursor:pointer;text-align:left;font:700 11px Inter,sans-serif}
 .cg-nav button:hover,.cg-nav button.on{color:#fff;background:#6c5df033}
@@ -555,8 +560,13 @@ html[data-touch="on"] .hud-menu-item{min-height:44px}
     .cg-work-host{min-height:min(620px,calc(100dvh - 200px))}
 @media(max-width:760px){
 .cg-hub{grid-template-columns:64px 1fr}
-.cg-brand strong,.cg-brand small,.cg-nav span{display:none}
+/* Coluna de 64px: some tudo que é texto, INCLUSIVE o rótulo de grupo. Ele
+   ficava visível quando os nomes das seções sumiam — e aí a única coisa
+   legível na barra era exatamente o que não clica ("Jogador", "Trabalho"),
+   o que faz o menu parecer travado. */
+.cg-brand strong,.cg-brand small,.cg-nav span,.cg-nav-group{display:none}
 .cg-nav button{justify-content:center}
+.cg-close{padding:10px 6px;font-size:10px;line-height:1.2}
 .cg-hero{grid-template-columns:1fr}
 .cg-shortcuts{grid-template-columns:1fr 1fr}
 .cg-stats{grid-template-columns:1fr}

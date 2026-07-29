@@ -78,7 +78,12 @@ export function createMainMenu(shell) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = section.id === current ? 'on' : '';
-        button.innerHTML = '<i></i><span></span>';
+        // Nome acessível no próprio botão: em tela estreita o `<span>` some e
+        // sobra só o ícone — sem isto o botão fica anônimo para leitor de tela
+        // e sem dica nenhuma no hover.
+        button.title = section.label;
+        button.setAttribute('aria-label', section.label);
+        button.innerHTML = '<i aria-hidden="true"></i><span></span>';
         button.querySelector('i').textContent = section.icon;
         button.querySelector('span').textContent = section.label;
         button.onclick = () => menu.open(section.id);
