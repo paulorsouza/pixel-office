@@ -765,6 +765,7 @@ class MapScene extends Phaser.Scene {
     // precisa reaplicar o estado no plugin novo.
     keyboardGuard.reset();
     window.__equipment = equipmentMenu;
+    window.__mainMenu = mainMenu;
     window.__character = characterCustomizer;
     window.__decoration = this.roomDecorationEditor;
     window.__gameItems = gameItems;

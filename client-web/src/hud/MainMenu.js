@@ -64,9 +64,31 @@ export function createMainMenu(shell) {
 
   const visibleSections = () => [...sections.values()].filter((s) => s.visible?.() !== false);
 
+  // Assinatura do que está desenhado: quais seções, em que ordem, e qual está
+  // marcada. Enquanto isso não muda, os NÓS NÃO SÃO TROCADOS.
+  //
+  // Isto não é micro-otimização, é o que faz o clique funcionar. O `refresh()`
+  // é chamado a cada quadro pelo loop do Phaser (para a seção contextual
+  // "Decorar" aparecer na hora). Reconstruindo a barra 60 vezes por segundo, o
+  // botão que recebe o `mousedown` já não existe no `mouseup` — e o navegador
+  // só dispara `click` quando os dois caem no MESMO elemento. Resultado: clicar
+  // não trocava de seção, e nada aparecia no console porque erro não havia.
+  let navSignature = '';
+
   function renderNav() {
-    els.nav.replaceChildren();
     const lista = visibleSections();
+    const assinatura = `${current}|${lista.map((s) => s.id).join(',')}`;
+    if (assinatura === navSignature) return;
+    const soMudouAtiva = navSignature.split('|')[1] === assinatura.split('|')[1];
+    navSignature = assinatura;
+    // Trocar de seção mexe só na classe: os botões continuam sendo os mesmos.
+    if (soMudouAtiva && els.nav.children.length) {
+      for (const button of els.nav.querySelectorAll('button')) {
+        button.classList.toggle('on', button.dataset.section === current);
+      }
+      return;
+    }
+    els.nav.replaceChildren();
     for (const [groupId, groupLabel] of GROUPS) {
       const doGrupo = lista.filter((s) => s.group === groupId);
       if (!doGrupo.length) continue;
@@ -82,6 +104,7 @@ export function createMainMenu(shell) {
         // sobra só o ícone — sem isto o botão fica anônimo para leitor de tela
         // e sem dica nenhuma no hover.
         button.title = section.label;
+        button.dataset.section = section.id;
         button.setAttribute('aria-label', section.label);
         button.innerHTML = '<i aria-hidden="true"></i><span></span>';
         button.querySelector('i').textContent = section.icon;
