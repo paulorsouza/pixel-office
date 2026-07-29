@@ -2690,11 +2690,33 @@
       "dex": 150,
       "name": "Mewtwo Rei do Cassino",
       "types": ["psychic"],
-      "edges": {"top": 10, "right": 10, "bottom": 10, "left": 10},
-      "powerRating": 40,
+      "edges": {"top": 11, "right": 11, "bottom": 11, "left": 11},
+      "powerRating": 44,
       "rarity": "Special",
       "art": "assets/cardgame/pokemon/150.png",
       "variant": "casino-king"
+    },
+    {
+      "id": "special-slot-gengar",
+      "dex": 94,
+      "name": "Gengar Glitch",
+      "types": ["ghost", "poison"],
+      "edges": {"top": 8, "right": 9, "bottom": 8, "left": 9},
+      "powerRating": 34,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/094.png",
+      "variant": "slot-glitch"
+    },
+    {
+      "id": "special-slot-charizard",
+      "dex": 6,
+      "name": "Charizard Arcade",
+      "types": ["fire", "flying"],
+      "edges": {"top": 9, "right": 9, "bottom": 9, "left": 9},
+      "powerRating": 36,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/006.png",
+      "variant": "slot-arcade"
     },
     {
       "id": "special-slot-porygon",
@@ -2717,6 +2739,30 @@
       "rarity": "Special",
       "art": "assets/cardgame/pokemon/052.png",
       "variant": "dealer"
+    },
+    {
+      "id": "special-casino-quadra",
+      "dex": 65,
+      "name": "Alakazam Quadra",
+      "types": ["psychic"],
+      "edges": {"top": 7, "right": 7, "bottom": 7, "left": 7},
+      "powerRating": 28,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/065.png",
+      "variant": "casino-four-spoons",
+      "spoonCount": 4
+    },
+    {
+      "id": "special-casino-quina",
+      "dex": 65,
+      "name": "Alakazam Quina",
+      "types": ["psychic"],
+      "edges": {"top": 9, "right": 9, "bottom": 9, "left": 9},
+      "powerRating": 36,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/065.png",
+      "variant": "casino-five-spoons",
+      "spoonCount": 5
     }
   ]
 }

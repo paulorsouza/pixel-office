@@ -35,7 +35,7 @@ Unity (ver §4).
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
 | **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez e cardgame social. |
 | **Tooq Triad** | `client-web/src/cardgame`, `backend/.../CardGame*.cs` | ✅ 151 Pokémon, álbum e deck persistentes, 3 boosters iniciais e PvP por proximidade. Partidas ainda ficam em memória. Ver [`docs/CARDGAME.md`](docs/CARDGAME.md). |
-| **Casino Nerd** | `client-web/src/casino`, `backend/.../CasinoEndpoints.cs` | ✅ Prédio no hub e cena própria com Arrange Dice, Nerd Slots e Blackjack. Todos usam resultados autoritativos, idempotência, moedas persistentes, claim de mesa e histórico auditável; boosters e cartas Pokémon especiais ligam o cassino ao Tooq Triad. Ver [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md). |
+| **Casino Nerd** | `client-web/src/casino`, `backend/.../CasinoEndpoints.cs` | ✅ Prédio no hub e cena própria com Arrange Dice, Nerd Slots e Blackjack. O slot único mistura trincas nerd de moedas com sequências Pokémon exclusivas de boosters/cartas. Todos usam resultados autoritativos, idempotência, moedas persistentes, claim de mesa e histórico auditável; boosters e cartas Pokémon especiais ligam o cassino ao Tooq Triad. Ver [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md). |
 | **Deploy** | `docker-compose.yml`, `run-beta.ps1` | ✅ Produção (Docker+Postgres+Caddy) e beta local via túnel. Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md), [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md). |
 | Cliente Unity (antigo) | `office-unity/` | ⏸️ Abandonado (ver §4). Mantido só como arquivo. |
 

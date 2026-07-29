@@ -23,9 +23,15 @@ public sealed class ArrangeDiceState
     public bool WildcardPending { get; set; }
     public string Status { get; set; } = "rolling";
     public ArrangeDiceRun? WinningRun { get; set; }
+    public int SequenceRepeatCard { get; set; }
+    public int SequenceRepeatCount { get; set; }
+    public int RepeatMultiplier { get; set; } = 1;
+    public int BestRepeatedSum { get; set; }
+    public int BestRepeatedCount { get; set; }
     public int Multiplier { get; set; }
     public int Payout { get; set; }
     public int BoostersAwarded { get; set; }
+    public int? BoosterBalance { get; set; }
     public List<CardGameReward> CardsAwarded { get; set; } = [];
 }
 public sealed record BlackjackCard(string Rank, string Suit);
@@ -40,6 +46,7 @@ public sealed class BlackjackState
     public bool Natural { get; set; }
     public int Payout { get; set; }
     public int BoostersAwarded { get; set; }
+    public int? BoosterBalance { get; set; }
     public List<CardGameReward> CardsAwarded { get; set; } = [];
 }
 
@@ -47,14 +54,20 @@ public static class CasinoEndpoints
 {
     private const string ArrangeDiceId = "arrange-dice";
     private const string NerdSlotsId = "nerd-slots";
+    // Mantido somente para desserializar rodadas históricas da máquina removida.
+    private const string PokemonSlotsId = "pokemon-slots";
     private const string BlackjackId = "blackjack";
-    private const string ArrangeDiceRules = "2026-07-29.1";
-    private const string NerdSlotsRules = "2026-07-29.2";
-    private const string BlackjackRules = "2026-07-29.2";
+    private const string ArrangeDiceRules = "2026-07-29.3";
+    private const string NerdSlotsRules = "2026-07-29.5";
+    private const string BlackjackRules = "2026-07-29.3";
     private const string PikachuPlayerId = "special-casino-pikachu";
     private const string MewtwoKingId = "special-casino-mewtwo";
+    private const string GengarJackpotId = "special-slot-gengar";
+    private const string CharizardJackpotId = "special-slot-charizard";
     private const string PorygonJackpotId = "special-slot-porygon";
     private const string MeowthDealerId = "special-blackjack-meowth";
+    private const string QuadraId = "special-casino-quadra";
+    private const string QuinaId = "special-casino-quina";
     private static readonly int[] ArrangeDiceBets = [10, 25, 50];
     private static readonly int[] SlotBets = [5, 10, 25];
     private static readonly int[] BlackjackBets = [10, 20, 50];
@@ -243,14 +256,19 @@ public static class CasinoEndpoints
         if (state.RollsRemaining == 0 && !state.WildcardPending)
         {
             ArrangeDiceMath.Finish(state, round.Bet);
-            var rewardCards = state.WinningRun?.Length switch
+            var rewardCards = new List<string>();
+            var sequenceCard = state.WinningRun?.Length switch
             {
-                7 => new[] { MewtwoKingId },
-                6 => new[] { PikachuPlayerId },
-                _ => [],
+                7 => MewtwoKingId,
+                6 => PikachuPlayerId,
+                _ => null,
             };
-            state.CardsAwarded = (await CardGameEndpoints.GrantCasinoRewardsAsync(
-                db, userId, 0, rewardCards)).ToList();
+            if (sequenceCard is not null) rewardCards.Add(sequenceCard);
+            if (state.BestRepeatedCount >= 5) rewardCards.Add(QuinaId);
+            else if (state.BestRepeatedCount >= 4) rewardCards.Add(QuadraId);
+            var grant = await CardGameEndpoints.GrantCasinoRewardsAsync(db, userId, 0, rewardCards.ToArray());
+            state.BoosterBalance = grant.BoosterBalance;
+            state.CardsAwarded = grant.Cards.ToList();
             var user = await db.Users.SingleAsync(x => x.Id == userId);
             user.Coins = checked(user.Coins + state.Payout);
             round.Payout = state.Payout;
@@ -341,18 +359,26 @@ public static class CasinoEndpoints
         };
     }
 
-    private static async Task<CasinoRound> CreateSlotRoundAsync(AppDb db, User user, CasinoRoundRequest body)
+    private static async Task<CasinoRound> CreateSlotRoundAsync(
+        AppDb db,
+        User user,
+        CasinoRoundRequest body)
     {
-        var symbols = Enumerable.Range(0, 3).Select(_ => NerdSlotsMath.Spin()).ToArray();
+        var symbols = Enumerable.Range(0, 3)
+            .Select(_ => NerdSlotsMath.Spin())
+            .ToArray();
         var multiplier = NerdSlotsMath.Multiplier(symbols);
         var payout = checked(body.Bet * multiplier);
-        var triple = symbols.Distinct().Count() == 1;
-        var boosters = triple ? 1 : 0;
-        var special = triple && symbols[0] is "d20" or "rocket"
-            ? new[] { PorygonJackpotId }
-            : [];
-        var cardsAwarded = await CardGameEndpoints.GrantCasinoRewardsAsync(
-            db, user.Id, boosters, special);
+        var special = NerdSlotsMath.SpecialReward(symbols);
+        var cardIds = special?.Card switch
+        {
+            "gengar" => new[] { GengarJackpotId },
+            "charizard" => new[] { CharizardJackpotId },
+            "porygon" => new[] { PorygonJackpotId },
+            _ => [],
+        };
+        var grant = await CardGameEndpoints.GrantCasinoRewardsAsync(
+            db, user.Id, special?.Boosters ?? 0, cardIds);
         var before = user.Coins;
         user.Coins = checked(user.Coins - body.Bet + payout);
         return new CasinoRound
@@ -366,8 +392,9 @@ public static class CasinoEndpoints
             {
                 symbols,
                 multiplier,
-                boostersAwarded = boosters,
-                cardsAwarded,
+                boostersAwarded = grant.Boosters,
+                boosterBalance = grant.BoosterBalance,
+                cardsAwarded = grant.Cards,
             }),
             Payout = payout,
             BalanceBefore = before,
@@ -405,8 +432,10 @@ public static class CasinoEndpoints
             && BlackjackMath.Score(state.PlayerCards).Total == 21;
         var cards = state.Outcome == "player-blackjack" ? new[] { MeowthDealerId } : [];
         state.BoostersAwarded = wonWithTwentyOne ? 1 : 0;
-        state.CardsAwarded = (await CardGameEndpoints.GrantCasinoRewardsAsync(
-            db, userId, state.BoostersAwarded, cards)).ToList();
+        var grant = await CardGameEndpoints.GrantCasinoRewardsAsync(
+            db, userId, state.BoostersAwarded, cards);
+        state.BoosterBalance = grant.BoosterBalance;
+        state.CardsAwarded = grant.Cards.ToList();
     }
 
     private static bool IsGame(string gameId) =>
@@ -438,14 +467,24 @@ public static class CasinoEndpoints
             coins,
             payouts = new[]
             {
-                new { run = 3, multiplier = 2, card = (string?)null },
-                new { run = 4, multiplier = 6, card = (string?)null },
-                new { run = 5, multiplier = 20, card = (string?)null },
-                new { run = 6, multiplier = 40, card = (string?)PikachuPlayerId },
-                new { run = 7, multiplier = 100, card = (string?)MewtwoKingId },
+                new { run = 3, multiplier = 4, card = (string?)null },
+                new { run = 4, multiplier = 12, card = (string?)null },
+                new { run = 5, multiplier = 40, card = (string?)null },
+                new { run = 6, multiplier = 80, card = (string?)PikachuPlayerId },
+                new { run = 7, multiplier = 200, card = (string?)MewtwoKingId },
             },
             deuce = "Repete o lançamento e concede uma rodada extra.",
             boxcars = "Remove uma rodada futura e permite levantar qualquer carta.",
+            repeatedSequence = new[]
+            {
+                new { repeats = 2, multiplier = 3 },
+                new { repeats = 3, multiplier = 20 },
+            },
+            repeatedRewards = new[]
+            {
+                new { repeats = 4, card = QuadraId },
+                new { repeats = 5, card = QuinaId },
+            },
             activeRound,
         },
         NerdSlotsId => new
@@ -457,9 +496,8 @@ public static class CasinoEndpoints
             coins,
             symbols = NerdSlotsMath.Symbols,
             triplePayouts = NerdSlotsMath.TriplePayouts,
-            pairMultiplier = 2,
-            tripleBooster = 1,
-            jackpotCard = PorygonJackpotId,
+            specialCombinations = NerdSlotsMath.SpecialCombinations,
+            pairMultiplier = 0,
         },
         BlackjackId => new
         {
@@ -469,7 +507,9 @@ public static class CasinoEndpoints
             bets = BlackjackBets,
             coins,
             dealerStandsOn = 17,
-            blackjackPayout = "3:2",
+            blackjackPayout = "x5",
+            normalPayoutMultiplier = 4,
+            blackjackPayoutMultiplier = 5,
             twentyOneBooster = 1,
             naturalCard = MeowthDealerId,
             activeRound,
@@ -481,6 +521,7 @@ public static class CasinoEndpoints
     {
         ArrangeDiceId => ToArrangeDiceResult(round),
         NerdSlotsId => ToSlotResult(round),
+        PokemonSlotsId => ToSlotResult(round),
         BlackjackId => ToBlackjackResult(round),
         _ => new { roundId = round.Id, round.GameId, round.Bet, round.Payout, coins = round.BalanceAfter },
     };
@@ -507,11 +548,21 @@ public static class CasinoEndpoints
             state.WildcardPending,
             state.Status,
             state.WinningRun,
+            state.SequenceRepeatCard,
+            state.SequenceRepeatCount,
+            state.RepeatMultiplier,
+            state.BestRepeatedSum,
+            state.BestRepeatedCount,
             state.Multiplier,
             payout = state.Payout,
             net = state.Status == "complete" ? state.Payout - round.Bet : -round.Bet,
             coins = round.BalanceAfter,
-            rewards = new { boosters = state.BoostersAwarded, cards = state.CardsAwarded },
+            rewards = new
+            {
+                boosters = state.BoostersAwarded,
+                boosterBalance = state.BoosterBalance,
+                cards = state.CardsAwarded,
+            },
             round.CreatedUtc,
         };
     }
@@ -524,6 +575,8 @@ public static class CasinoEndpoints
         var multiplier = root.GetProperty("multiplier").GetInt32();
         var boosters = root.TryGetProperty("boostersAwarded", out var boostersNode)
             ? boostersNode.GetInt32() : 0;
+        var boosterBalance = root.TryGetProperty("boosterBalance", out var balanceNode)
+            ? balanceNode.GetInt32() : (int?)null;
         var cards = root.TryGetProperty("cardsAwarded", out var cardsNode)
             ? cardsNode.Deserialize<CardGameReward[]>() ?? [] : [];
         return new
@@ -537,7 +590,7 @@ public static class CasinoEndpoints
             round.Payout,
             net = round.Payout - round.Bet,
             coins = round.BalanceAfter,
-            rewards = new { boosters, cards },
+            rewards = new { boosters, boosterBalance, cards },
             round.CreatedUtc,
         };
     }
@@ -570,7 +623,12 @@ public static class CasinoEndpoints
             payout = state.Payout,
             net = state.Status == "complete" ? state.Payout - round.Bet : -round.Bet,
             coins = round.BalanceAfter,
-            rewards = new { boosters = state.BoostersAwarded, cards = state.CardsAwarded },
+            rewards = new
+            {
+                boosters = state.BoostersAwarded,
+                boosterBalance = state.BoosterBalance,
+                cards = state.CardsAwarded,
+            },
             round.CreatedUtc,
         };
     }
@@ -578,19 +636,35 @@ public static class CasinoEndpoints
 
 public static class NerdSlotsMath
 {
-    public static readonly string[] Symbols = ["bug", "coffee", "code", "d20", "rocket"];
+    public sealed record SpecialCombination(
+        string[] Symbols,
+        int Boosters,
+        string? Card,
+        string Label);
+
+    public static readonly string[] Symbols =
+        ["bug", "coffee", "code", "d20", "rocket", "booster", "gengar", "charizard", "porygon"];
     public static readonly Dictionary<string, int> TriplePayouts = new()
     {
-        ["bug"] = 3,
-        ["coffee"] = 5,
+        ["bug"] = 4,
+        ["coffee"] = 6,
         ["code"] = 8,
-        ["d20"] = 15,
-        ["rocket"] = 25,
+        ["d20"] = 12,
+        ["rocket"] = 20,
     };
+    public static readonly SpecialCombination[] SpecialCombinations =
+    [
+        new(["booster", "booster", "booster"], 1, null, "1 booster"),
+        new(["gengar", "gengar", "gengar"], 0, "gengar", "Gengar Glitch"),
+        new(["charizard", "charizard", "charizard"], 0, "charizard", "Charizard Arcade"),
+        new(["porygon", "porygon", "porygon"], 0, "porygon", "Porygon Jackpot"),
+    ];
     private static readonly string[] WeightedSymbols =
     [
         "bug", "bug", "bug", "bug", "coffee", "coffee", "coffee",
         "code", "code", "d20", "d20", "rocket",
+        "booster", "booster", "booster", "booster",
+        "gengar", "gengar", "charizard", "porygon",
     ];
 
     public static string Spin() => WeightedSymbols[RandomNumberGenerator.GetInt32(WeightedSymbols.Length)];
@@ -599,8 +673,18 @@ public static class NerdSlotsMath
     {
         if (symbols.Count != 3 || symbols.Any(x => !Symbols.Contains(x)))
             throw new ArgumentException("Rolos inválidos.", nameof(symbols));
-        if (symbols.Distinct().Count() == 1) return TriplePayouts[symbols[0]];
-        return symbols.GroupBy(x => x).Any(group => group.Count() == 2) ? 2 : 0;
+        return symbols.Distinct().Count() == 1
+            && TriplePayouts.TryGetValue(symbols[0], out var multiplier)
+                ? multiplier
+                : 0;
+    }
+
+    public static SpecialCombination? SpecialReward(IReadOnlyList<string> symbols)
+    {
+        if (symbols.Count != 3 || symbols.Any(x => !Symbols.Contains(x)))
+            throw new ArgumentException("Rolos inválidos.", nameof(symbols));
+        return SpecialCombinations.FirstOrDefault(combination =>
+            combination.Symbols.SequenceEqual(symbols));
     }
 }
 
@@ -684,8 +768,8 @@ public static class BlackjackMath
         state.Natural = natural;
         state.Payout = outcome switch
         {
-            "player-blackjack" => checked(bet * 5 / 2),
-            "player-win" or "dealer-bust" => checked(bet * 2),
+            "player-blackjack" => checked(bet * 5),
+            "player-win" or "dealer-bust" => checked(bet * 4),
             "push" => bet,
             _ => 0,
         };
@@ -730,11 +814,11 @@ public static class ArrangeDiceMath
             {
                 var multiplier = length switch
                 {
-                    3 => 2,
-                    4 => 6,
-                    5 => 20,
-                    6 => 40,
-                    _ => 100,
+                    3 => 4,
+                    4 => 12,
+                    5 => 40,
+                    6 => 80,
+                    _ => 200,
                 };
                 if (winningRun is null || length > winningRun.Length)
                     winningRun = new(start, length, state.Cards.Skip(start).Take(length).ToArray(), multiplier);
@@ -742,7 +826,32 @@ public static class ArrangeDiceMath
             start = end + 1;
         }
         state.WinningRun = winningRun;
-        state.Multiplier = winningRun?.Multiplier ?? 0;
+        var mostRepeated = state.Rolls
+            .GroupBy(roll => roll.Sum)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key)
+            .FirstOrDefault();
+        state.BestRepeatedSum = mostRepeated?.Key ?? 0;
+        state.BestRepeatedCount = mostRepeated?.Count() ?? 0;
+
+        if (winningRun is not null)
+        {
+            var sequenceRepeat = winningRun.Cards
+                .Select(card => new
+                {
+                    Card = card,
+                    Count = state.Rolls.Count(roll => roll.Sum == card),
+                })
+                .OrderByDescending(item => item.Count)
+                .ThenBy(item => item.Card)
+                .First();
+            state.SequenceRepeatCard = sequenceRepeat.Card;
+            state.SequenceRepeatCount = sequenceRepeat.Count;
+            state.RepeatMultiplier = sequenceRepeat.Count >= 3 ? 20
+                : sequenceRepeat.Count == 2 ? 3
+                : 1;
+        }
+        state.Multiplier = checked((winningRun?.Multiplier ?? 0) * state.RepeatMultiplier);
         state.Payout = checked(bet * state.Multiplier);
         state.Status = "complete";
     }

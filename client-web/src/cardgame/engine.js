@@ -40,14 +40,14 @@ function validateCard(card) {
 
   for (const side of SIDES) {
     const value = card.edges[side];
-    invariant(Number.isInteger(value) && value >= 1 && value <= 10,
-      `Borda ${side} da carta ${card.id} precisa estar entre 1 e 10.`);
+    invariant(Number.isInteger(value) && value >= 1 && value <= 11,
+      `Borda ${side} da carta ${card.id} precisa estar entre 1 e 11.`);
   }
 
   if (card.shinyBonusSide != null) {
     invariant(SIDES.includes(card.shinyBonusSide), `Bônus shiny inválido na carta ${card.id}.`);
-    invariant(card.edges[card.shinyBonusSide] < 10,
-      `Bônus shiny da carta ${card.id} não pode aumentar uma borda 10.`);
+    invariant(card.edges[card.shinyBonusSide] < 11,
+      `Bônus shiny da carta ${card.id} não pode aumentar uma borda 11.`);
   }
 }
 

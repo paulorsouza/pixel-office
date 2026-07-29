@@ -99,6 +99,9 @@
 .nerd-slot-reel{display:grid;place-items:center;min-height:132px;border:3px solid #c6edff;border-radius:10px;
   background:linear-gradient(#d5f8ff,#f8ffff 48%,#c4eaff);box-shadow:inset 0 0 20px #35739c66;color:#172241}
 .nerd-slot-reel span{font:900 48px/1 system-ui}.nerd-slot-reel small{font-size:10px;font-weight:900;text-transform:uppercase}
+.nerd-slot-reel img{width:82px;height:82px;object-fit:contain;image-rendering:pixelated}
+.nerd-slot-paytable i img{width:26px;height:26px;object-fit:contain;image-rendering:pixelated}
+.nerd-slot-paytable .slot-special-prize{border-color:#ffe05f;background:#2c2545}
 .spinning .nerd-slot-reel{animation:slot-reel-flash .18s linear infinite}.spinning .nerd-slot-reel span{filter:blur(1px)}
 @keyframes slot-reel-flash{50%{transform:translateY(3px);filter:brightness(1.18)}}
 .nerd-slot-lights{display:flex;justify-content:center;gap:14px}.nerd-slot-lights i{width:9px;height:9px;border-radius:50%;

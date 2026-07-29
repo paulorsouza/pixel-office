@@ -11,6 +11,7 @@ function casinoMechanic({
   defaultLabel,
   claimKind,
   tint,
+  baseTint = 0xffffff,
 }) {
   registerMechanic(type, {
     preload({ scene }) {
@@ -90,7 +91,7 @@ function casinoMechanic({
         },
         update() {
           const near = Math.hypot(scene.player?.x - x, scene.player?.y - (bottom - tile)) <= radius;
-          display.setTint(near ? tint : 0xffffff);
+          display.setTint(near ? tint : baseTint);
         },
         destroy() {
           context.presence?.releaseEntity(claimId);

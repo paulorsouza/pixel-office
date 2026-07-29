@@ -41,15 +41,16 @@ export function roomAtPoint(map, x, y) {
 }
 
 /**
- * Zona de voz que contém o ponto. Área aberta não tem parede, então o canal vem de uma
- * zona marcada com `voice` no mapa — é o que dá call próprio à sala grande. Metades com o
- * mesmo `id` (uma sala em "L") continuam sendo um canal só.
+ * Área de voz que contém o ponto. Pode ser uma zona aberta ou o prédio inteiro marcado
+ * com `voice`; assim uma cena como o cassino compartilha um só call sem desenhar uma
+ * "sala de reunião" artificial. Metades com o mesmo `id` continuam no mesmo canal.
  */
 export function voiceZoneAtPoint(map, x, y) {
-  return (map.zones || []).find((zone) => (
-    zone.voice
-      && x >= zone.x && x <= zone.x + zone.w
-      && y >= zone.y && y <= zone.y + zone.h
+  const areas = [...(map.zones || []), ...(map.building ? [map.building] : [])];
+  return areas.find((area) => (
+    area.voice
+      && x >= area.x && x <= area.x + area.w
+      && y >= area.y && y <= area.y + area.h
   )) || null;
 }
 

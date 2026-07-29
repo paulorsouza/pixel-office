@@ -5,6 +5,10 @@ const SYMBOLS = {
   code: { icon: '</>', name: 'Código' },
   d20: { icon: '◈', name: 'D20' },
   rocket: { icon: '🚀', name: 'Foguete' },
+  booster: { icon: '🎴', name: 'Booster' },
+  gengar: { art: 'assets/cardgame/pokemon/094.png', name: 'Gengar' },
+  charizard: { art: 'assets/cardgame/pokemon/006.png', name: 'Charizard' },
+  porygon: { art: 'assets/cardgame/pokemon/137.png', name: 'Porygon' },
 };
 const SYMBOL_KEYS = Object.keys(SYMBOLS);
 
@@ -23,7 +27,7 @@ export function createNerdSlotsPanel({ gameItems, hud, onToast = () => {} }) {
       <div class="casino-content">
         <div class="casino-topline">
           <div class="casino-balance"><span>Saldo</span><strong>—</strong></div>
-          <div class="casino-step"><span>Jackpot</span><strong>🚀 🚀 🚀 paga ×25</strong></div>
+          <div class="casino-step"><span>Especial</span><strong>Pokémon dão cartas, não moedas</strong></div>
         </div>
         <section class="nerd-slot-stage" aria-label="Três rolos da máquina">
           <div class="nerd-slot-marquee"><i>👾</i><b>INSERT COIN · SHIP IT</b><i>🚀</i></div>
@@ -54,10 +58,17 @@ export function createNerdSlotsPanel({ gameItems, hud, onToast = () => {} }) {
   let busy = false;
   let closeHook = null;
 
+  const symbolMarkup = (key) => {
+    const symbol = SYMBOLS[key];
+    return symbol.art
+      ? `<img src="${symbol.art}" alt="${symbol.name}">`
+      : `<span aria-label="${symbol.name}">${symbol.icon}</span>`;
+  };
+
   const renderSymbol = (reel, key) => {
     const symbol = SYMBOLS[key];
     reel.dataset.symbol = key;
-    reel.innerHTML = `<span aria-label="${symbol.name}">${symbol.icon}</span><small>${symbol.name}</small>`;
+    reel.innerHTML = `${symbolMarkup(key)}<small>${symbol.name}</small>`;
   };
 
   const randomSymbol = () => SYMBOL_KEYS[Math.floor(Math.random() * SYMBOL_KEYS.length)];
@@ -84,11 +95,16 @@ export function createNerdSlotsPanel({ gameItems, hud, onToast = () => {} }) {
     closeHook = options.onClose || null;
     balance.textContent = `${game.coins} 🪙`;
     betSelect.innerHTML = game.bets.map((bet) => `<option value="${bet}">${bet} moedas</option>`).join('');
-    paytable.innerHTML = [...game.symbols].reverse().map((key) => `
-      <span><i>${SYMBOLS[key].icon}</i><b>${SYMBOLS[key].name}</b><em>×${game.triplePayouts[key]}</em></span>`).join('')
-      + '<span><i>◫</i><b>Qualquer par</b><em>×2</em></span>'
-      + '<span><i>🎴</i><b>Qualquer trinca</b><em>+1 booster</em></span>'
-      + '<span><i>⭐</i><b>Trinca D20 ou Foguete</b><em>+ Porygon Jackpot 8/8/8/8</em></span>';
+    const coinTriples = Object.entries(game.triplePayouts).reverse().map(([key, multiplier]) => `
+      <span><i>${symbolMarkup(key)}</i><b>${SYMBOLS[key].name} ×3</b><em>×${multiplier} moedas</em></span>`).join('');
+    const specials = game.specialCombinations.map((combination) => {
+      const key = combination.symbols[0];
+      return `<span class="slot-special-prize"><i>${symbolMarkup(key)}</i><b>${SYMBOLS[key].name} ×3</b>`
+        + `<em>${combination.label} · sem moedas</em></span>`;
+    }).join('');
+    paytable.innerHTML = coinTriples + specials
+      + '<span><i>◫</i><b>Pares</b><em>sem prêmio</em></span>'
+      + '<span><i>🪙</i><b>Prêmios especiais</b><em>não acumulam moedas</em></span>';
     reels.forEach((reel) => renderSymbol(reel, randomSymbol()));
     root.classList.remove('won', 'spinning');
     result.textContent = 'Escolha a aposta e gire os rolos.';
@@ -123,17 +139,21 @@ export function createNerdSlotsPanel({ gameItems, hud, onToast = () => {} }) {
       const round = await gameItems.playNerdSlots(game.id, Number(betSelect.value));
       await animate(round.symbols);
       balance.textContent = `${round.coins} 🪙`;
-      root.classList.toggle('won', round.payout > 0);
-      result.textContent = round.multiplier > 0
-        ? `${round.multiplier === 2 ? 'Par encontrado' : 'Trinca nerd'} · prêmio ×${round.multiplier}: ${round.payout} moedas!`
-        : 'Build sem prêmio. Tente outro commit.';
       const rewardParts = [
         round.rewards?.boosters ? `+${round.rewards.boosters} booster` : '',
         ...(round.rewards?.cards || []).map((card) => `carta ${card.name}`),
       ].filter(Boolean);
+      root.classList.toggle('won', round.payout > 0 || rewardParts.length > 0);
       if (rewardParts.length) {
-        result.textContent += ` Prêmio especial: ${rewardParts.join(' + ')}.`;
+        const balanceCopy = round.rewards?.boosterBalance != null
+          ? ` Saldo: ${round.rewards.boosterBalance} boosters.`
+          : '';
+        result.textContent = `Sequência especial: ${rewardParts.join(' + ')} — sem prêmio em moedas.${balanceCopy}`;
         onToast(`Nerd Slots: ${rewardParts.join(' + ')}!`);
+      } else if (round.multiplier > 0) {
+        result.textContent = `Trinca nerd · prêmio ×${round.multiplier}: ${round.payout} moedas!`;
+      } else {
+        result.textContent = 'Sem combinação premiada. Pares não pagam.';
       }
       if (round.payout > round.bet) onToast(`Nerd Slots: +${round.payout - round.bet} 🪙`);
     } catch (error) {

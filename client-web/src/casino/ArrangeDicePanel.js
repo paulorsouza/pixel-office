@@ -25,8 +25,8 @@ const TUTORIAL_STEPS = [
   },
   {
     eyebrow: 'PASSO 4 · PRÊMIOS', title: 'Complete a sequência',
-    text: 'Trinca, quadra e quina pagam moedas. Seis cartas dão Pikachu Jogador 8/8/8/8; todas as sete dão Mewtwo Rei do Cassino 10/10/10/10.',
-    demo: '<div class="tutorial-run"><i>5</i><i>6</i><i>7</i><b>×2 → 👑</b></div>',
+    text: 'Uma carta da sequência repetida 2 vezes multiplica o prêmio por 3; repetida 3 ou mais, por 20. Quatro somas iguais dão Alakazam Quadra, com 4 colheres e atributos 7; cinco dão Alakazam Quina, com 5 colheres e atributos 9.',
+    demo: '<div class="tutorial-run"><i>7</i><i>7</i><i>7</i><b>×20</b></div>',
   },
 ];
 
@@ -64,9 +64,12 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
         <details class="casino-paytable">
           <summary>Regras e prêmios</summary>
           <div>
-            <span><b>3 / 4 / 5 vizinhas</b><em>×2 / ×6 / ×20</em></span>
-            <span><b>6 vizinhas</b><em>×40 + Pikachu Jogador 8/8/8/8</em></span>
-            <span><b>Todas as 7</b><em>×100 + Mewtwo Rei 10/10/10/10</em></span>
+            <span><b>3 / 4 / 5 vizinhas</b><em>×4 / ×12 / ×40</em></span>
+            <span><b>6 vizinhas</b><em>×80 + Pikachu Jogador 8/8/8/8</em></span>
+            <span><b>Todas as 7</b><em>×200 + Mewtwo Rei 11/11/11/11</em></span>
+            <span><b>Carta da sequência 2× / 3×</b><em>prêmio ×3 / ×20</em></span>
+            <span><b>Mesma soma 4×</b><em>Alakazam Quadra · 4 colheres · 7/7/7/7</em></span>
+            <span><b>Mesma soma 5×</b><em>Alakazam Quina · 5 colheres · 9/9/9/9</em></span>
             <span><b>Soma 2</b><em>repete + dá uma rodada extra</em></span>
             <span><b>Soma 12</b><em>−1 rodada futura + carta coringa</em></span>
           </div>
@@ -159,9 +162,14 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
   const finish = () => {
     balance.textContent = `${round.coins} 🪙`;
     root.classList.toggle('won', round.payout > 0);
+    const repeatCopy = round.repeatMultiplier > 1
+      ? ` · carta ${round.sequenceRepeatCard} repetida ${round.sequenceRepeatCount}×: bônus ×${round.repeatMultiplier}`
+      : '';
     result.textContent = round.payout > 0
-      ? `${round.winningRun.length} cartas vizinhas · ×${round.multiplier}: ${round.payout} moedas${rewardText(round.rewards)}!`
-      : 'Nenhuma sequência de três cartas vizinhas.';
+      ? `${round.winningRun.length} cartas vizinhas${repeatCopy} · prêmio total ×${round.multiplier}: ${round.payout} moedas${rewardText(round.rewards)}!`
+      : round.rewards?.cards?.length
+        ? `Sem sequência de moedas, mas você ganhou ${round.rewards.cards.map((card) => card.name).join(' + ')}!`
+        : 'Nenhuma sequência de três cartas vizinhas.';
     if (round.rewards?.cards?.length)
       onToast(`Prêmio especial: ${round.rewards.cards.map((card) => card.name).join(', ')}!`);
     else if (round.payout > round.bet) onToast(`Arrange Dice: +${round.payout - round.bet} 🪙`);

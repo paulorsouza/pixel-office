@@ -109,8 +109,11 @@ function buildCatalog(pokemon) {
   const pikachu = cards.find((card) => card.dex === 25);
   const dragonite = cards.find((card) => card.dex === 149);
   const mewtwo = cards.find((card) => card.dex === 150);
+  const gengar = cards.find((card) => card.dex === 94);
+  const charizard = cards.find((card) => card.dex === 6);
   const porygon = cards.find((card) => card.dex === 137);
   const meowth = cards.find((card) => card.dex === 52);
+  const alakazam = cards.find((card) => card.dex === 65);
   cards.push(
     {
       ...pikachu,
@@ -144,8 +147,26 @@ function buildCatalog(pokemon) {
       id: 'special-casino-mewtwo',
       name: 'Mewtwo Rei do Cassino',
       variant: 'casino-king',
-      edges: { top: 10, right: 10, bottom: 10, left: 10 },
-      powerRating: 40,
+      edges: { top: 11, right: 11, bottom: 11, left: 11 },
+      powerRating: 44,
+      rarity: 'Special',
+    },
+    {
+      ...gengar,
+      id: 'special-slot-gengar',
+      name: 'Gengar Glitch',
+      variant: 'slot-glitch',
+      edges: { top: 8, right: 9, bottom: 8, left: 9 },
+      powerRating: 34,
+      rarity: 'Special',
+    },
+    {
+      ...charizard,
+      id: 'special-slot-charizard',
+      name: 'Charizard Arcade',
+      variant: 'slot-arcade',
+      edges: { top: 9, right: 9, bottom: 9, left: 9 },
+      powerRating: 36,
       rarity: 'Special',
     },
     {
@@ -164,6 +185,26 @@ function buildCatalog(pokemon) {
       variant: 'dealer',
       edges: { top: 8, right: 8, bottom: 8, left: 8 },
       powerRating: 32,
+      rarity: 'Special',
+    },
+    {
+      ...alakazam,
+      id: 'special-casino-quadra',
+      name: 'Alakazam Quadra',
+      variant: 'casino-four-spoons',
+      spoonCount: 4,
+      edges: { top: 7, right: 7, bottom: 7, left: 7 },
+      powerRating: 28,
+      rarity: 'Special',
+    },
+    {
+      ...alakazam,
+      id: 'special-casino-quina',
+      name: 'Alakazam Quina',
+      variant: 'casino-five-spoons',
+      spoonCount: 5,
+      edges: { top: 9, right: 9, bottom: 9, left: 9 },
+      powerRating: 36,
       rarity: 'Special',
     },
   );

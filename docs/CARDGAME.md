@@ -34,10 +34,16 @@ Não duplique as telas de trabalho dentro do cardgame. `CardGamePanel.js` apenas
 
 ## 3. Catálogo e chances
 
-O catálogo versionado contém os 151 Pokémon originais, Pikachu do Ash, Dragonite Carteiro e quatro
-prêmios do Casino Nerd: Pikachu Jogador, Mewtwo Rei do Cassino, Porygon Jackpot e Meowth Dealer.
+O catálogo versionado contém os 151 Pokémon originais, Pikachu do Ash, Dragonite Carteiro e oito
+prêmios do Casino Nerd: Pikachu Jogador, Mewtwo Rei do Cassino, Alakazam Quadra, Alakazam Quina, Gengar Glitch,
+Charizard Arcade, Porygon Jackpot e Meowth Dealer. Essas oito cartas não entram no sorteio comum de boosters: só podem ser obtidas
+pelas respectivas conquistas do cassino. Mewtwo Rei é a única carta 11/11/11/11; o motor aceita
+11 como teto absoluto.
 O script `client-web/tools/generate-cardgame-catalog.mjs` gera os valores e
 baixa os sprites para uso local; nenhuma API Pokémon é consultada em runtime.
+O álbum sempre mostra as 151 cartas-base e acrescenta cada prêmio especial depois de conquistado;
+o perfil é atualizado ao abrir Álbum ou Baralho, portanto prêmios recém-recebidos podem ser usados
+sem recarregar a página.
 
 Cada booster usa RNG criptograficamente seguro no backend. A quinta posição garante raridade
 incomum ou melhor. Os pesos relativos atuais por carta são:

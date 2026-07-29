@@ -1069,8 +1069,8 @@ class MapScene extends Phaser.Scene {
     return occupants;
   }
 
-  // cada sala fechada tem seu próprio call; a sala grande também, por ser uma zona de voz
-  // declarada no mapa. Corredor e quintal continuam sem canal.
+  // Cada sala fechada tem seu próprio call. Áreas abertas ou um prédio inteiro também
+  // podem declarar `voice` no mapa; corredor e quintal continuam sem canal.
   syncVoiceChannel() {
     const tile = this.map.tile || 16;
     const x = this.player.body.center.x / tile;

@@ -22,6 +22,7 @@ public sealed class CardGameDefinition
     public int PowerRating { get; set; }
     public string Rarity { get; set; } = "";
     public string Art { get; set; } = "";
+    public string Variant { get; set; } = "";
 }
 
 public static class CardGameCatalog

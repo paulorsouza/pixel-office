@@ -7,6 +7,7 @@ namespace VirtualOffice.Api;
 
 public sealed record CardGameDeckRequest(string[] CardIds);
 public sealed record CardGameReward(string CardId, string Name);
+public sealed record CasinoRewardGrant(int Boosters, int BoosterBalance, CardGameReward[] Cards);
 
 public static class CardGameEndpoints
 {
@@ -67,10 +68,11 @@ public static class CardGameEndpoints
             .Select(item => item.CardId)
             .Distinct()
             .ToListAsync();
-        var availableNew = CardGameCatalog.All.Values.Where(card => !ownedIds.Contains(card.Id)).ToList();
+        var boosterCatalog = CardGameCatalog.All.Values.Where(IsBoosterEligible).ToList();
+        var availableNew = boosterCatalog.Where(card => !ownedIds.Contains(card.Id)).ToList();
         var pool = availableNew.Count >= CardsPerBooster
             ? availableNew
-            : CardGameCatalog.All.Values.ToList();
+            : boosterCatalog;
         var opened = new List<object>(CardsPerBooster);
 
         for (var slot = 0; slot < CardsPerBooster; slot++)
@@ -123,7 +125,7 @@ public static class CardGameEndpoints
         return owned == ids.Length;
     }
 
-    public static async Task<CardGameReward[]> GrantCasinoRewardsAsync(
+    public static async Task<CasinoRewardGrant> GrantCasinoRewardsAsync(
         AppDb db,
         int userId,
         int boosters,
@@ -150,7 +152,7 @@ public static class CardGameEndpoints
             else item.Quantity++;
             rewards.Add(new CardGameReward(card.Id, card.Name));
         }
-        return rewards.ToArray();
+        return new(Math.Max(0, boosters), profile.BoosterCount, rewards.ToArray());
     }
 
     private static async Task<CardGameProfile> EnsureProfileAsync(AppDb db, int userId)
@@ -212,6 +214,10 @@ public static class CardGameEndpoints
         "Special" => 1,
         _ => 6_500,
     };
+
+    private static bool IsBoosterEligible(CardGameDefinition card) =>
+        card.Variant is not ("casino-player" or "casino-king" or "casino-four" or "casino-five"
+            or "jackpot" or "dealer");
 
     // Por booster completo: aproximadamente 1,25% antes de considerar os ajustes.
     private static int ShinyChance(string rarity) => rarity switch

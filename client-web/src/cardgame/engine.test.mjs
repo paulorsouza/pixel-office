@@ -124,19 +124,19 @@ test('cartas de dois tipos ainda recebem no máximo +1 e podem ter bônus bilate
 
 test('bônus shiny aumenta somente a borda marcada', () => {
   const shiny = makeCard('shiny', {
-    edges: { top: 9, right: 4, bottom: 4, left: 4 },
+    edges: { top: 10, right: 4, bottom: 4, left: 4 },
     shinyBonusSide: 'top',
   });
 
-  assert.equal(printedEdge(shiny, 'top'), 10);
+  assert.equal(printedEdge(shiny, 'top'), 11);
   assert.equal(printedEdge(shiny, 'right'), 4);
 
   const invalid = makeDeck('shiny-invalid');
   invalid[0] = makeCard('shiny-invalid-1', {
-    edges: { top: 10, right: 4, bottom: 4, left: 4 },
+    edges: { top: 11, right: 4, bottom: 4, left: 4 },
     shinyBonusSide: 'top',
   });
-  assert.throws(() => validateDeck(invalid), /não pode aumentar uma borda 10/);
+  assert.throws(() => validateDeck(invalid), /não pode aumentar uma borda 11/);
 });
 
 test('uma colocação compara e captura vários vizinhos sem combo', () => {
@@ -206,7 +206,21 @@ test('catálogo completo possui os 151 Pokémon, variantes e sprites locais', ()
   assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'special-casino-pikachu').edges,
     { top: 8, right: 8, bottom: 8, left: 8 });
   assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'special-casino-mewtwo').edges,
-    { top: 10, right: 10, bottom: 10, left: 10 });
+    { top: 11, right: 11, bottom: 11, left: 11 });
+  const quadra = fullCatalog.cards.find((card) => card.id === 'special-casino-quadra');
+  const quina = fullCatalog.cards.find((card) => card.id === 'special-casino-quina');
+  assert.deepEqual(quadra.edges, { top: 7, right: 7, bottom: 7, left: 7 });
+  assert.deepEqual(quina.edges, { top: 9, right: 9, bottom: 9, left: 9 });
+  assert.deepEqual(
+    [quadra.dex, quadra.name, quadra.spoonCount, quadra.art],
+    [65, 'Alakazam Quadra', 4, 'assets/cardgame/pokemon/065.png'],
+  );
+  assert.deepEqual(
+    [quina.dex, quina.name, quina.spoonCount, quina.art],
+    [65, 'Alakazam Quina', 5, 'assets/cardgame/pokemon/065.png'],
+  );
+  assert.ok(fullCatalog.cards.some((card) => card.id === 'special-slot-gengar'));
+  assert.ok(fullCatalog.cards.some((card) => card.id === 'special-slot-charizard'));
   assert.ok(fullCatalog.cards.some((card) => card.id === 'special-slot-porygon'));
   assert.ok(fullCatalog.cards.some((card) => card.id === 'special-blackjack-meowth'));
 

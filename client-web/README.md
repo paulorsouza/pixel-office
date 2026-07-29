@@ -47,7 +47,7 @@ Cidade Tooq (hub cercado 220×150)
   ├── Tooq Office ── elevador/escadas ── alas pessoais públicas
   ├── Coworking
   ├── Dark Company
-  ├── Casino Nerd ── Arrange Dice · Nerd Slots · Blackjack
+  ├── Casino Nerd ── Arrange Dice · Nerd Slots com prêmios Pokémon · Blackjack
   └── Vila dos Jogadores ── 12 portais ── interiores vazios dinâmicos
 ```
 
@@ -57,7 +57,8 @@ Cidade Tooq (hub cercado 220×150)
 - `tiled/maps/tooq-office-1.tmj` é a Dark Company, o escritório grande afastado do spawn.
 - `tiled/maps/tooq-campus.tmj` é o Tooq Office central e contém suas áreas comuns.
 - `tiled/maps/casino-nerd.tmj` é o salão de jogos: três mesas de Arrange Dice, duas máquinas de
-  Nerd Slots e uma mesa de Blackjack. Cada instância declara `gameId` e `tableId` no mapa.
+  duas máquinas do mesmo Nerd Slots e uma mesa de Blackjack. Cada instância declara `gameId` e `tableId`
+  no mapa.
 - `tiled/maps/personal-wing.tmj` é o andar público de 6 salas pessoais (o prédio começa com dois).
 - `tiled/maps/player-home-shell.tmj` é o interior vazio compartilhado pelas futuras casas compráveis.
 - `src/TiledRuntimeLoader.js` lê mapas, tilesets externos e templates diretamente no navegador.

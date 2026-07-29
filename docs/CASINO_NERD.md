@@ -8,7 +8,8 @@ Cassino do Office Quest: prédio no mundo aberto, cena própria e três jogos jo
 ```text
 world.casino-nerd-door
   → casino-nerd.entrance
-  → arrangeDiceTable(arrange-dice) | nerdSlotMachine(nerd-slots) | blackjackTable(blackjack)
+  → arrangeDiceTable(arrange-dice) | nerdSlotMachine(nerd-slots)
+    | blackjackTable(blackjack)
   → /api/casino/games/{gameId}
   → casino-nerd.casino-exit
   → world.from-casino-nerd
@@ -22,22 +23,30 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 2. A rodada começa com cinco lançamentos. Cada clique envia uma ação autoritativa e o backend
    sorteia e persiste somente aquele par.
 3. Cada soma entre 3 e 11 levanta a carta correspondente; repetições não levantam outra carta.
-4. Sequências de 3, 4, 5, 6 e 7 cartas pagam ×2, ×6, ×20, ×40 e ×100.
+4. Sequências de 3, 4, 5, 6 e 7 cartas pagam ×4, ×12, ×40, ×80 e ×200.
 5. Uma soma 2 repete o lançamento consumido e concede mais uma rodada extra: na prática adiciona
    duas oportunidades futuras. Para proteger a rodada de uma sequência sem fim, o total é limitado
    a quinze lançamentos.
 6. Uma soma 12 remove uma rodada futura, mas vira um coringa: o jogador escolhe qualquer carta ainda
    abaixada para levantar.
 7. Seis cartas adjacentes concedem **Pikachu Jogador** (8/8/8/8); todas as sete concedem
-   **Mewtwo Rei do Cassino** (10/10/10/10), além do prêmio em moedas.
+   **Mewtwo Rei do Cassino** (11/11/11/11), além do prêmio em moedas.
+8. Se uma carta da sequência vencedora tiver sido sorteada duas vezes, o prêmio inteiro recebe ×3.
+   Com três ou mais ocorrências dessa carta, recebe ×20.
+9. Quatro ocorrências da mesma soma em uma rodada concedem **Alakazam Quadra**, forma especial
+   com quatro colheres e atributos 7/7/7/7; cinco ou mais concedem somente o prêmio superior,
+   **Alakazam Quina**, com cinco colheres e 9/9/9/9. Esses prêmios não dependem de formar uma sequência.
 
 ## Nerd Slots
 
-- três rolos com `bug`, `coffee`, `code`, `d20` e `rocket`;
-- qualquer par paga ×2;
-- trincas pagam ×3, ×5, ×8, ×15 ou ×25, conforme o símbolo;
-- qualquer trinca concede um booster; trinca de D20 ou foguete também concede
-  **Porygon Jackpot** (8/8/8/8);
+- duas máquinas compartilham o mesmo jogo e a mesma tabela de regras;
+- três rolos misturam `bug`, `coffee`, `code`, `d20`, `rocket`, booster e Pokémon;
+- pares não pagam prêmio;
+- somente as trincas nerd pagam moedas: ×4, ×6, ×8, ×12 ou ×20, conforme o símbolo;
+- três boosters concedem **um booster persistente**, sem pagar moedas;
+- três Gengar, Charizard ou Porygon concedem, respectivamente, **Gengar Glitch** (8/9/8/9),
+  **Charizard Arcade** (9/9/9/9) ou **Porygon Jackpot** (8/8/8/8), sem pagar moedas;
+- os símbolos especiais são menos frequentes e seus prêmios nunca acumulam a premiação monetária;
 - o backend sorteia os três símbolos e liquida a rodada antes da animação;
 - o cliente anima os rolos e os para em sequência, sem decidir o resultado.
 
@@ -46,7 +55,7 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 - duas cartas para jogador e dealer; a segunda carta do dealer fica oculta;
 - `hit` compra carta e `stand` entrega a vez ao dealer;
 - o Ás vale 1 ou 11; figuras valem 10; dealer para em 17;
-- vitória normal paga ×2, blackjack natural paga 3:2 e empate devolve a aposta;
+- vitória normal retorna ×4, blackjack natural retorna ×5 e empate devolve a aposta;
 - vitória com total 21 concede um booster; blackjack natural também concede
   **Meowth Dealer** (8/8/8/8);
 - início da mão e cada ação têm chaves UUID independentes de idempotência;
@@ -55,16 +64,21 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 
 ## Cena e interação
 
-- `client-web/tiled/maps/casino-nerd.tmj`: interior 52×40, salão, lounge, saída e três mesas.
+- `client-web/tiled/maps/casino-nerd.tmj`: interior 52×40, salão, lounge, saída, mesas e a
+  reunião ambiente. O próprio `building` usa `voice:true`: todo jogador dentro do cassino entra
+  no canal `casino-nerd::casino-meeting`, sem sala ou retângulo de reunião separado. Sair do
+  prédio devolve o jogador ao áudio ambiente normal.
 - `client-web/tiled/templates/arrange-dice-table.tj`: template para novas mesas.
 - `client-web/src/mechanics/ArrangeDiceTableMechanic.js`: visual, colisão, proximidade e claim
   `arrange-dice`.
 - `client-web/src/mechanics/CasinoGameMechanics.js`: máquinas/mesa, colisão, proximidade e claims
   de `nerd-slots` e `blackjack`. O tamanho visual vem do `width`/`height` do mapa: slots usam
-  4×6 tiles e a mesa de blackjack 7×4 tiles.
+  2,5×3,75 tiles, Arrange Dice 4×2,5 e blackjack 5×2,5. As áreas ficam organizadas em Grandia no topo,
+  Arcade Nerd embaixo à esquerda e blackjack embaixo à direita.
 - `client-web/src/casino/ArrangeDicePanel.js`: seleção, ordenação, lançamento manual um a um,
   animação dos dados, tutorial em quatro passos e resultado.
-- `client-web/src/casino/NerdSlotsPanel.js`: rolos, animação sequencial e tabela de prêmios.
+- `client-web/src/casino/NerdSlotsPanel.js`: rolos mistos, animação sequencial, sprites Pokémon
+  locais e tabela que separa prêmios em moedas dos prêmios colecionáveis.
 - `client-web/src/casino/BlackjackPanel.js`: cartas, mão recuperável e ações pedir/parar.
 - `client-web/src/casino/casino.css`: desktop, celular em pé/deitado, safe areas e movimento reduzido.
 - `client-web/assets/casino/grandia3/cards/`: nove pinturas originais de fantasia JRPG. Os números
@@ -109,7 +123,7 @@ processadas. Prêmios de cartas e boosters são creditados na mesma transação 
 9. Abra `/?scene=casino-nerd&spawn=slots`, gire uma máquina e confira a parada dos três rolos.
 10. Abra `/?scene=casino-nerd&spawn=blackjack`, distribua, peça carta e pare.
 11. Recarregue com uma rodada ativa de Arrange Dice e uma mão ativa de blackjack; ambas reaparecem.
-12. Teste 390×844 e 844×390, inclusive o tutorial e os dois jogos novos.
+12. Teste 390×844 e 844×390, inclusive o tutorial e os jogos do cassino.
 
 ## Próximos cortes
 

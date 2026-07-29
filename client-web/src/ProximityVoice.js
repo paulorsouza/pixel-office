@@ -327,7 +327,9 @@ export function createProximityVoice(options = {}) {
     if (pinnedRoom) {
       return { kind: 'room', name: pinnedRoom.name || 'Sala de reunião', pinned: true, ...roomState };
     }
-    if (connectedRoomId) {
+    // Mostra o canal-alvo assim que o avatar entra na área, inclusive durante
+    // o dwell/conexão. Sem isso a HUD dizia "Área aberta" até o LiveKit terminar.
+    if (locationRoom) {
       return { kind: 'room', name: locationRoom?.name || 'Sala', pinned: false, ...roomState };
     }
     return { kind: 'open', name: 'Área aberta', pinned: false, locked: null, reserved: null };

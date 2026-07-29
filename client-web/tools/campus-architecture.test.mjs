@@ -413,7 +413,7 @@ test('mundo aberto tem cidade cercada, estradas e Tooq Office perto do spawn', (
   assert.ok(distance < 25, 'Tooq Office deve permanecer perto do spawn principal');
 });
 
-test('Casino Nerd oferece Arrange Dice, Nerd Slots e Blackjack orientados a dados', () => {
+test('Casino Nerd oferece Arrange Dice, Nerd Slots unificado e Blackjack orientados a dados', () => {
   const casino = read('../tiled/maps/casino-nerd.tmj');
   const allMechanics = objectsIn(casino, 'mechanics');
   const mechanics = allMechanics
@@ -421,21 +421,39 @@ test('Casino Nerd oferece Arrange Dice, Nerd Slots e Blackjack orientados a dado
   const slots = allMechanics.filter((item) => item.type === 'nerdSlotMachine');
   const blackjack = allMechanics.filter((item) => item.type === 'blackjackTable');
   const navigation = objectsIn(casino, 'navigation');
+  const structures = objectsIn(casino, 'structures');
+  const building = structures.find((item) => item.type === 'building');
+  const buildingExtra = JSON.parse(properties(building).extraJson);
 
   assert.equal(mechanics.length, 3);
   assert.equal(new Set(mechanics.map((item) => properties(item).tableId)).size, 3);
   assert.ok(mechanics.every((item) => properties(item).gameId === 'arrange-dice'));
-  assert.ok(mechanics.every((item) => item.width === 96 && item.height === 64));
+  assert.ok(mechanics.every((item) => item.width === 64 && item.height === 40));
   assert.equal(slots.length, 2);
   assert.ok(slots.every((item) => properties(item).gameId === 'nerd-slots'));
-  assert.ok(slots.every((item) => item.width === 64 && item.height === 96));
+  assert.ok(slots.every((item) => item.width === 40 && item.height === 60));
+  assert.equal(new Set(slots.map((item) => properties(item).tableId)).size, 2);
+  assert.equal(allMechanics.filter((item) => item.type === 'pokemonSlotMachine').length, 0);
   assert.equal(blackjack.length, 1);
   assert.equal(properties(blackjack[0]).gameId, 'blackjack');
-  assert.equal(blackjack[0].width, 112);
-  assert.equal(blackjack[0].height, 64);
+  assert.equal(blackjack[0].width, 80);
+  assert.equal(blackjack[0].height, 40);
   assert.ok(navigation.some((item) => properties(item).id === 'tables'));
   assert.ok(navigation.some((item) => properties(item).id === 'slots'));
   assert.ok(navigation.some((item) => properties(item).id === 'blackjack'));
+  for (const [spawnId, target] of [['slots', slots[0]], ['blackjack', blackjack[0]]]) {
+    const spawn = navigation.find((item) => properties(item).id === spawnId);
+    const radius = Number(properties(target).interactionRadius) * 16;
+    const interactionX = target.x + target.width / 2;
+    const interactionY = target.y + target.height - 16;
+    assert.ok(Math.hypot(spawn.x - interactionX, spawn.y - interactionY) <= radius,
+      `spawn ${spawnId} precisa alcançar a interação após redimensionar o asset`);
+  }
+  assert.equal(buildingExtra.voice, true, 'todo o prédio deve compartilhar a reunião');
+  assert.equal(buildingExtra.id, 'casino-meeting');
+  assert.equal(structures.filter((item) => (
+    item.type === 'zone' && JSON.parse(properties(item).extraJson || '{}').voice
+  )).length, 0, 'não deve existir uma sala de reunião separada');
   assert.ok(fs.existsSync(new URL('../assets/casino/generic/nerd-slot-machine.png', import.meta.url)));
   assert.ok(fs.existsSync(new URL('../assets/casino/generic/blackjack-table.png', import.meta.url)));
 });

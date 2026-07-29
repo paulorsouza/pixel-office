@@ -6,7 +6,7 @@ const SUITS = {
 };
 
 const OUTCOME_COPY = {
-  'player-blackjack': 'Blackjack natural! Prêmio 3:2.',
+  'player-blackjack': 'Blackjack natural! Retorno ×5.',
   'dealer-blackjack': 'O dealer abriu blackjack.',
   'player-bust': 'Você estourou 21.',
   'dealer-bust': 'O dealer estourou. Você venceu!',
@@ -30,14 +30,14 @@ export function createBlackjackPanel({ gameItems, hud, onToast = () => {} }) {
       <div class="casino-content">
         <div class="casino-topline">
           <div class="casino-balance"><span>Saldo</span><strong>—</strong></div>
-          <div class="casino-step"><span>Regra</span><strong>Dealer para em 17 · Blackjack 3:2</strong></div>
+          <div class="casino-step"><span>Regra</span><strong>Vitória ×4 · Blackjack ×5</strong></div>
         </div>
         <section class="blackjack-felt" aria-label="Mesa de blackjack">
           <div class="blackjack-hand dealer">
             <header><span>DEALER</span><strong>—</strong></header>
             <div class="blackjack-cards"></div>
           </div>
-          <div class="blackjack-mark"><span>BLACKJACK</span><small>PAGA 3 : 2</small></div>
+          <div class="blackjack-mark"><span>BLACKJACK</span><small>RETORNO ×5</small></div>
           <div class="blackjack-hand player">
             <header><span>VOCÊ</span><strong>—</strong></header>
             <div class="blackjack-cards"></div>
@@ -59,6 +59,7 @@ export function createBlackjackPanel({ gameItems, hud, onToast = () => {} }) {
             <span><b>Ás</b><em>vale 1 ou 11</em></span>
             <span><b>J, Q e K</b><em>valem 10</em></span>
             <span><b>Empate</b><em>devolve a aposta</em></span>
+            <span><b>Vitória / Blackjack</b><em>retorno ×4 / ×5</em></span>
             <span><b>Vitória com 21</b><em>+1 booster</em></span>
             <span><b>Blackjack natural</b><em>+ Meowth Dealer 8/8/8/8</em></span>
           </div>

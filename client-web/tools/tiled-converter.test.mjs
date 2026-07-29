@@ -765,6 +765,16 @@ for (const scene of manifest.scenes) {
   });
 }
 
+test('todo o interior do cassino pertence ao mesmo canal de reunião', async () => {
+  const casino = await loadTiledMap(
+    pathToFileURL(resolve(CLIENT_ROOT, 'tiled/maps/casino-nerd.tmj')).href,
+    { fetchJson: fileFetchJson },
+  );
+  assert.equal(decorationModule.voiceZoneAtPoint(casino, 10, 10)?.id, 'casino-meeting');
+  assert.equal(decorationModule.voiceZoneAtPoint(casino, 45, 32)?.id, 'casino-meeting');
+  assert.equal(decorationModule.voiceZoneAtPoint(casino, 1, 1), null);
+});
+
 test('móvel do Tiled leva interactionType para o runtime', async () => {
   const direct = await loadTiledMap(
     pathToFileURL(resolve(CLIENT_ROOT, 'tiled/maps/tooq-office-1.tmj')).href,

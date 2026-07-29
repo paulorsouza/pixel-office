@@ -1,5 +1,6 @@
 import { createWorkPanel } from '../WorkPanel.js';
 import { auth } from '../auth.js';
+import { albumCatalog, collectionProgress } from './CardCollection.js';
 
 const TYPES = {
   normal: 'Normal', fire: 'Fogo', water: 'Água', electric: 'Elétrico', grass: 'Planta',
@@ -86,9 +87,17 @@ function injectStyles() {
     .cg-card[data-rarity="Special"]{border-color:#ff77d7;box-shadow:0 0 18px #ff54c777,inset 0 0 20px #55dfff22}
     .cg-card-head{display:flex;align-items:center;gap:4px;padding:6px 7px 3px}.cg-card-head strong{min-width:0;overflow:hidden;
       flex:1;font-size:9px;text-overflow:ellipsis;white-space:nowrap}.cg-card-head small{color:#c7d0e6;font-size:7px}
-    .cg-card-art{display:grid;place-items:center;min-height:0;margin:0 8px;border:1px solid #ffffff1b;border-radius:8px;
+    .cg-card-art{position:relative;display:grid;place-items:center;min-height:0;margin:0 8px;border:1px solid #ffffff1b;border-radius:8px;
       background:radial-gradient(circle,#dbeaff22,#0b1022 70%)}.cg-card-art img{width:min(84%,96px);height:min(84%,96px);
-      object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 4px #0008)}
+      z-index:1;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 4px #0008)}
+    .cg-extra-spoon{position:absolute;z-index:2;width:4px;height:24px;border:1px solid #344056;border-radius:2px;
+      background:linear-gradient(90deg,#778397,#f5fbff 48%,#8793a8);box-shadow:0 0 5px #8be8ff;
+      transform:rotate(var(--spoon-angle));transform-origin:50% 75%}.cg-extra-spoon:before{position:absolute;
+      left:50%;top:-7px;width:10px;height:12px;border:1px solid #344056;border-radius:50%;content:"";
+      background:radial-gradient(ellipse at 42% 35%,#fff,#a8b5c8 58%,#596579);transform:translateX(-50%)}
+    .cg-extra-spoon.spoon-1{left:8%;top:23%;--spoon-angle:-38deg}.cg-extra-spoon.spoon-2{right:8%;top:23%;
+      --spoon-angle:38deg}.cg-extra-spoon.spoon-3{left:calc(50% - 2px);top:5%;--spoon-angle:0deg}
+    .cg-card.locked .cg-extra-spoon{opacity:.35}
     .cg-card-types{display:flex;gap:3px;padding:4px 6px 6px}.cg-type{padding:2px 4px;border-radius:5px;color:#fff;
       background:#5b6688;font-size:6px;text-transform:uppercase}.cg-owned{position:absolute;right:5px;bottom:5px;z-index:3;
       border-radius:7px;padding:3px 5px;background:#080b17dd;font-size:7px}.cg-shiny-label{color:#fff19b}
@@ -214,6 +223,13 @@ function createRoots() {
   document.body.append(...wrapper.children);
 }
 
+function extraSpoonsMarkup(card) {
+  const extras = Math.max(0, Math.min(3, Number(card.spoonCount || 0) - 2));
+  return Array.from({ length: extras }, (_, index) => (
+    `<i class="cg-extra-spoon spoon-${index + 1}" aria-hidden="true"></i>`
+  )).join('');
+}
+
 function cardMarkup(card, options = {}) {
   const { button = false, selected = false, disabled = false, locked = false, shiny = false, quantity = 0 } = options;
   const tag = button ? 'button type="button"' : 'div';
@@ -223,7 +239,8 @@ function cardMarkup(card, options = {}) {
     <div class="cg-card-head"><strong>${escapeHtml(card.name)}</strong><small>#${String(card.dex).padStart(3, '0')}</small></div>
     <span class="cg-edge top">${card.edges.top}</span><span class="cg-edge right">${card.edges.right}</span>
     <span class="cg-edge bottom">${card.edges.bottom}</span><span class="cg-edge left">${card.edges.left}</span>
-    <div class="cg-card-art"><img src="${card.art}" alt="${escapeHtml(card.name)}" draggable="false"></div>
+    <div class="cg-card-art" data-spoons="${card.spoonCount || 0}"><img src="${card.art}" alt="${escapeHtml(card.name)}"
+      draggable="false">${extraSpoonsMarkup(card)}</div>
     <div class="cg-card-types">${card.types.map((type) => `<span class="cg-type">${TYPES[type] || type}</span>`).join('')}</div>
     ${quantity ? `<span class="cg-owned">${shiny ? '<b class="cg-shiny-label">✦ SHINY</b> · ' : ''}×${quantity}</span>` : ''}
   </${close}>`;
@@ -232,7 +249,6 @@ function cardMarkup(card, options = {}) {
 export function createCardGamePanel({ presence, catalog, gameItems, onToast = () => {} }) {
   createRoots();
   const cards = catalog.cards || [];
-  const baseCards = cards.filter((card) => card.id.startsWith('pokemon-'));
   const byId = new Map(cards.map((card) => [card.id, card]));
   const menu = document.getElementById('cardgame-player-menu');
   const invite = document.getElementById('cardgame-invite');
@@ -295,6 +311,8 @@ export function createCardGamePanel({ presence, catalog, gameItems, onToast = ()
   }
 
   function renderHome() {
+    const progress = collectionProgress(cards, profile.collection);
+    const specialCopy = progress.specialOwned ? ` · ${progress.specialOwned} especiais` : '';
     shell('Central do jogador', 'Seu progresso, trabalho e coleção em um só lugar', `
       <div class="cg-hero"><section class="cg-hero-card"><h3>Bem-vindo ao seu espaço</h3>
         <p>Abra seus primeiros boosters, complete o álbum e monte um baralho de 9 cartas antes de desafiar alguém no escritório.</p>
@@ -302,7 +320,7 @@ export function createCardGamePanel({ presence, catalog, gameItems, onToast = ()
         <div class="cg-stats"><div class="cg-stat"><b>${profile.uniqueCards}</b><span>cartas únicas</span></div>
           <div class="cg-stat"><b>${profile.shinyCards}</b><span>shiny</span></div><div class="cg-stat"><b>${deck.length}/9</b><span>baralho</span></div></div></div>
       <div class="cg-shortcuts">${[
-        ['album', 'Álbum Pokémon', `${profile.uniqueCards}/151 descobertos`],
+        ['album', 'Álbum Pokémon', `${progress.baseOwned}/151 descobertos${specialCopy}`],
         ['deck', 'Montar baralho', deck.length === 9 ? 'Pronto para jogar' : 'Escolha 9 cartas'],
         ['hours', 'Relatório de horas', 'Veja e lance sua jornada'],
         ['goals', 'Objetivos', 'Metas diárias e semanais'],
@@ -312,10 +330,13 @@ export function createCardGamePanel({ presence, catalog, gameItems, onToast = ()
 
   function renderAlbum(filter = '', type = '') {
     const owned = collectionMap();
+    const progress = collectionProgress(cards, profile.collection);
     const normalized = filter.trim().toLowerCase();
-    const visible = baseCards.filter((card) => (!normalized || card.name.toLowerCase().includes(normalized)
+    const visible = albumCatalog(cards, profile.collection).filter((card) => (!normalized
+      || card.name.toLowerCase().includes(normalized)
       || String(card.dex).includes(normalized)) && (!type || card.types.includes(type)));
-    shell('Álbum Pokémon', `${profile.uniqueCards} de 151 descobertos · ${profile.shinyCards} shiny`, `
+    const specialCopy = progress.specialOwned ? ` · ${progress.specialOwned} especiais` : '';
+    shell('Álbum Pokémon', `${progress.baseOwned} de 151 descobertos${specialCopy} · ${profile.shinyCards} shiny`, `
       <div class="cg-filters"><input id="cg-search" placeholder="Buscar nome ou número" value="${escapeHtml(filter)}">
         <select id="cg-type"><option value="">Todos os tipos</option>${Object.entries(TYPES).map(([key, label]) =>
           `<option value="${key}"${key === type ? ' selected' : ''}>${label}</option>`).join('')}</select></div>
@@ -407,6 +428,10 @@ export function createCardGamePanel({ presence, catalog, gameItems, onToast = ()
     workPanel.close();
     activeTab = tab;
     hubOverlay.classList.remove('cg-hidden');
+    if (['home', 'album', 'deck', 'boosters'].includes(tab)) {
+      try { await refreshProfile(); }
+      catch (error) { onToast(`Não foi possível atualizar a coleção: ${error.message}`); }
+    }
     if (tab === 'home') renderHome();
     else if (tab === 'album') renderAlbum();
     else if (tab === 'deck') { deckDraft = [...deck]; renderDeck(); }
