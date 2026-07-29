@@ -91,6 +91,10 @@ public static class ObjectiveEngine
                 .ToListAsync();
             var tasksDone = await db.WorkItems
                 .CountAsync(w => w.AssigneeId == userId && w.DoneUtc != null && w.DoneUtc >= start && w.DoneUtc < end);
+            // Dias de presença no período: alimentam os objetivos de login. É um
+            // COUNT no banco (não a lista) porque só precisamos de quantos são.
+            var loginDays = await db.PresenceDays
+                .CountAsync(p => p.UserId == userId && p.PeriodDay >= start && p.PeriodDay < end);
 
             var existing = await db.ObjectiveProgress
                 .Where(p => p.UserId == userId && p.PeriodStart == periodStart)
@@ -109,6 +113,10 @@ public static class ObjectiveEngine
                     "tasks_done" => tasksDone,
                     "active_days" => entries
                         .Select(e => Periods.LocalDate(e.StartUtc)).Distinct().Count(),
+                    // login: 1 se apareceu hoje (a linha do dia já existe); login_days:
+                    // em quantos dias da semana apareceu. Ambos vêm da presença.
+                    "login" => loginDays > 0 ? 1 : 0,
+                    "login_days" => loginDays,
                     _ => 0,
                 };
 

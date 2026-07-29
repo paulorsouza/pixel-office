@@ -33,6 +33,9 @@ public static class WorkCatalogSeed
 
     private static readonly ObjectiveDef[] Goals =
     [
+        // As "bem bestas" primeiro: dá para fechar só entrando e batendo o ponto.
+        new("daily-login", "Deu as caras", "Entre no escritório hoje.", "👋",
+            ObjectiveScope.Daily, "login", 1, 10, 20),
         new("daily-log", "Bateu o ponto", "Faça o primeiro lançamento do dia.", "✅",
             ObjectiveScope.Daily, "entries", 1, 10, 10),
         new("daily-journey", "Jornada completa", "Lance 6 horas de trabalho no dia.", "🕕",
@@ -44,6 +47,8 @@ public static class WorkCatalogSeed
         new("daily-review", "Revisor do dia", "30 minutos de code review.", "🔍",
             ObjectiveScope.Daily, "minutes", 30, 25, 20, "review"),
 
+        new("weekly-logins", "Presença VIP", "Apareça no escritório em 5 dias.", "🗓️",
+            ObjectiveScope.Weekly, "login_days", 5, 120, 150),
         new("weekly-hours", "Semana de 30 horas", "Some 30 horas de trabalho na semana.", "🏁",
             ObjectiveScope.Weekly, "minutes", 1800, 300, 220),
         new("weekly-days", "Cinco dias ativos", "Lance horas em 5 dias diferentes.", "🔥",

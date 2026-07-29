@@ -135,6 +135,20 @@ public partial class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<O
 
         await Clients.Caller.SendAsync("Snapshot", Presence.Players.Values);
         await Clients.Others.SendAsync("PlayerJoined", state);
+
+        // Entrar no MUNDO marca presença hoje na hora — o objetivo "Deu as caras"
+        // fecha ao entrar, sem esperar o primeiro tique do acúmulo (que é a cada
+        // minuto). O painel web ("panel") não conta como presença de jogo.
+        if (kind == ClientKind.World)
+        {
+            var (_, isNew) = await PresenceRewards.EnsureDayAsync(db, userId, DateTime.UtcNow);
+            if (isNew)
+            {
+                var completions = await ObjectiveEngine.RecalculateAsync(db, userId);
+                await db.SaveChangesAsync();
+                await Notify.SendObjectivesAsync(hubContext, userId, completions);
+            }
+        }
     }
 
     /// <summary>Assina somente os eventos de inventário e da sala do cliente Phaser.</summary>

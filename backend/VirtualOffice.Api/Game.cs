@@ -40,6 +40,14 @@ public static class GameOptions
     public static int DailyGoldCapFromTime { get; private set; } = 400;
 
     /// <summary>
+    /// Gold por minuto só de estar online (sem precisar lançar atividade), e o teto
+    /// diário desse ganho. O trickle é de propósito menor que o do trabalho: ficar
+    /// logado rende, mas não substitui produzir. 1/min com teto 180 ≈ 3 h por dia.
+    /// </summary>
+    public static int PresenceGoldPerMinute { get; private set; } = 1;
+    public static int PresenceGoldDailyCap { get; private set; } = 180;
+
+    /// <summary>
     /// Fuso do time, usado para saber onde o dia começa. Sem isso a meta diária
     /// virava às 21h de Brasília e a jornada da noite caía no dia seguinte.
     /// </summary>
@@ -53,6 +61,8 @@ public static class GameOptions
         WelcomeGrantKey = section.GetValue("WelcomeGrantKey", WelcomeGrantKey) ?? "beta-v1";
         DailyXpCapFromTime = section.GetValue("DailyXpCapFromTime", DailyXpCapFromTime);
         DailyGoldCapFromTime = section.GetValue("DailyGoldCapFromTime", DailyGoldCapFromTime);
+        PresenceGoldPerMinute = section.GetValue("PresenceGoldPerMinute", PresenceGoldPerMinute);
+        PresenceGoldDailyCap = section.GetValue("PresenceGoldDailyCap", PresenceGoldDailyCap);
         TimeZoneOffsetHours = Math.Clamp(section.GetValue("TimeZoneOffsetHours", TimeZoneOffsetHours), -12, 14);
     }
 }

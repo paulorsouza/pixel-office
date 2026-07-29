@@ -262,6 +262,24 @@ public class ObjectiveProgress
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 }
 
+/// <summary>
+/// Presença do usuário num dia local. Uma linha por (usuário, dia). Serve a duas
+/// coisas: os objetivos de login (existe linha hoje? em quantos dias da semana?)
+/// e o gold por tempo online, que acumula minutos e paga até o teto diário — sem
+/// exigir que a pessoa esteja fazendo atividade.
+/// </summary>
+public class PresenceDay
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    /// <summary>Data-âncora em UTC (início do dia local), como em ObjectiveProgress.</summary>
+    public DateTime PeriodDay { get; set; }
+    public int MinutesOnline { get; set; }
+    public int GoldAwarded { get; set; }
+    public DateTime FirstSeenUtc { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
+}
+
 public class ItemDefinition
 {
     public int Id { get; set; }

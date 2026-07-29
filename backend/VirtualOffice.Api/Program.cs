@@ -19,6 +19,8 @@ builder.Services.AddDbContextFactory<AppDb>(o => o.UseNpgsql(dbConn));
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddHostedService<BotService>();
+// Paga gold por tempo online e fecha os objetivos de login, minuto a minuto.
+builder.Services.AddHostedService<PresenceAccrualService>();
 builder.Services.AddDataProtection();
 
 // Autenticação: valida o JWT próprio da app (HS256). O X-User-Id só sobrevive via DevBypass.
@@ -128,6 +130,23 @@ api.MapGet("/users", async (IDbContextFactory<AppDb> f) =>
     return await db.Users.Where(u => !u.IsBot)
         .Select(u => new { u.Id, u.Name, u.Role, u.Color, u.Xp })
         .ToListAsync();
+});
+
+// Presença de hoje: minutos online e gold já ganho contra o teto. O card de
+// horas mostra o trickle sem precisar abrir nada.
+api.MapGet("/me/presence", async (HttpRequest req, IDbContextFactory<AppDb> f) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    var day = Periods.DayStart(DateTime.UtcNow);
+    var row = await db.PresenceDays.FirstOrDefaultAsync(p => p.UserId == uid && p.PeriodDay == day);
+    return Results.Ok(new
+    {
+        minutesOnline = row?.MinutesOnline ?? 0,
+        goldToday = row?.GoldAwarded ?? 0,
+        goldCap = GameOptions.PresenceGoldDailyCap,
+        goldPerMinute = GameOptions.PresenceGoldPerMinute,
+    });
 });
 
 api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
