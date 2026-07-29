@@ -59,14 +59,20 @@ button{font:inherit}
   box-shadow:inset 2px 2px #8d4b4d,7px 8px #100a0dcc;font-family:Inter,system-ui,sans-serif}
 #map-load-error strong{font-size:14px;text-transform:uppercase}#map-load-error span{font-size:11px;line-height:1.5}
 
+/* Coluna flex com cabeçalho, abas e rodapé FIXOS e uma área rolável só: a lista
+   do baú e as camadas do personagem tinham altura fixa própria (362/365px)
+   dentro de um menu que também rolava. Duas rolagens concorrentes, e em janela
+   baixa a de dentro ficava sem espaço — parte do baú era inalcançável. */
 #equipment-menu{left:50%;top:50%;width:min(900px,calc(100vw - 32px));max-height:calc(100vh - 32px);
-  transform:translate(-50%,-50%);overflow:auto;padding:0;border:4px solid #2b1b20;
+  transform:translate(-50%,-50%);display:flex;flex-direction:column;overflow:hidden;padding:0;border:4px solid #2b1b20;
   outline:2px solid #d39a68;color:#fff0da;background:#24171c;
   box-shadow:0 0 0 5px #0f0a0c99,0 24px 80px #000c;font-family:"Courier New",ui-monospace,monospace}
 #equipment-menu::before{content:"";position:absolute;inset:6px;z-index:-1;pointer-events:none;
   border:1px solid #825348;background:linear-gradient(90deg,#ffffff05 50%,transparent 50%) 0 0/8px 8px}
 .equipment-menu-header{display:flex;align-items:center;justify-content:space-between;gap:14px;
   min-height:70px;padding:12px 14px;border-bottom:3px solid #2b1b20;
+.equipment-menu-header,.menu-view-tabs,.equipment-menu-footer{flex:0 0 auto}
+#equipment-panel-view,#character-panel-view{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}
   background:linear-gradient(#68423d,#4d3031 55%,#40272b);box-shadow:inset 0 -2px #9b6552}
 .equipment-menu-title{display:flex;align-items:center;gap:12px}
 .equipment-title-emblem{position:relative;width:42px;height:38px;flex:0 0 42px;border:3px solid #2a1b20;
@@ -122,7 +128,7 @@ button{font:inherit}
 .equipment-avatar-card strong{z-index:1;color:#ffe8c5;font-size:11px;text-transform:uppercase}
 .equipment-avatar-card small{z-index:1;color:#cf9870;font:8px Inter,system-ui,sans-serif}
 
-.inventory-panel{display:flex;min-height:404px;flex-direction:column}
+.inventory-panel{display:flex;min-height:0;flex-direction:column}
 .inventory-title-copy{display:flex;align-items:center;gap:9px}
 .chest-glyph{position:relative;width:31px;height:24px;border:3px solid #25171b;background:#a96434;
   box-shadow:inset 0 3px #dc9b56,inset 0 -4px #6f392c,2px 2px #211419}
@@ -130,7 +136,7 @@ button{font:inherit}
   border:3px solid #25171b;border-bottom:0;border-radius:7px 7px 0 0;background:#bd7540;box-shadow:inset 0 3px #e4a45b}
 .chest-glyph::after{content:"";position:absolute;left:10px;top:4px;width:6px;height:9px;background:#f0bd5e;box-shadow:inset -2px -2px #9b5b31}
 #equipment-list{display:grid;grid-template-columns:repeat(3,minmax(104px,1fr));gap:8px;align-content:start;
-  min-height:0;max-height:362px;overflow:auto;padding:10px;scrollbar-color:#976047 #24171c;scrollbar-width:thin}
+  min-height:0;padding:10px}
 .inventory-item{position:relative;display:flex;min-width:0;min-height:118px;align-items:center;flex-direction:column;
   padding:7px 5px 6px;border:3px solid #2b1b20;color:#f5e8d8;background:#3a292e;
   box-shadow:inset 0 0 0 2px #695049,2px 3px #171015;cursor:pointer;text-align:center}
@@ -176,7 +182,7 @@ button{font:inherit}
 .icon-motorcycle i::before{left:-4px;top:10px;width:10px;height:10px;border:3px solid #1b1216;border-radius:50%;background:#9aa5aa;box-shadow:24px 0 0 -3px #9aa5aa,24px 0 0 0 #1b1216}
 
 #character-panel-view{display:grid;grid-template-columns:270px 1fr;gap:12px;padding:12px;background:#1b1217}
-.character-preview-panel{display:flex;min-height:404px;flex-direction:column}
+.character-preview-panel{display:flex;min-height:0;flex-direction:column}
 .character-preview-stage{position:relative;display:grid;min-height:263px;flex:1;place-items:center;overflow:hidden;
   background:radial-gradient(circle at 50% 48%,#815149 0 17%,#4a3035 18% 39%,transparent 40%),
     linear-gradient(45deg,#ffffff05 25%,transparent 25% 75%,#ffffff05 75%) 0 0/16px 16px,#2c1d23}
@@ -195,8 +201,8 @@ button{font:inherit}
 .character-action{flex:1;padding:8px 5px;border:2px solid #26181d;color:#ffe7c2;background:#794943;
   box-shadow:inset 2px 2px #a96b54,inset -2px -2px #46272b;cursor:pointer;font-size:8px;font-weight:900;text-transform:uppercase}
 .character-action:hover{filter:brightness(1.14)}
-.character-controls-panel{display:flex;min-width:0;min-height:404px;flex-direction:column}
-#character-controls{display:flex;min-height:0;max-height:365px;overflow:auto;flex-direction:column;gap:9px;
+.character-controls-panel{display:flex;min-width:0;min-height:0;flex-direction:column}
+#character-controls{display:flex;min-height:0;flex-direction:column;gap:9px;
   padding:9px;scrollbar-color:#976047 #24171c;scrollbar-width:thin}
 .character-category{border:2px solid #3b272d;background:#332329}
 .character-category>header{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;
@@ -267,9 +273,10 @@ button{font:inherit}
   #room-decoration-panel{right:6px;top:6px;bottom:6px;width:min(350px,calc(100vw - 12px))}
   #equipment-menu{width:calc(100vw - 16px);max-height:calc(100vh - 16px)}
   .equipment-rpg-layout{grid-template-columns:1fr}.equipment-panel{width:100%}
-  .loadout-board{height:350px}.inventory-panel{min-height:350px}#equipment-list{max-height:none}
-  #character-panel-view{grid-template-columns:1fr}.character-preview-panel{min-height:360px}.character-controls-panel{min-height:350px}
-  #character-controls{max-height:none}
+  /* Uma coluna: os painéis empilham e quem rola continua sendo a área da aba.
+     `min-height` grande aqui era o que estourava o celular deitado (~390px). */
+  .loadout-board{height:350px}
+  #character-panel-view{grid-template-columns:1fr}
 }
 #furniture-interaction-panel{position:fixed;inset:50% auto auto 50%;z-index:55;width:min(920px,calc(100vw - 32px));max-height:min(680px,calc(100vh - 32px));
   transform:translate(-50%,-50%);overflow:hidden;border:4px solid #26191d;border-radius:10px;color:#ffe9c9;background:#37252b;
