@@ -145,8 +145,13 @@ export function createGameItemsClient(options = {}) {
       await refreshInventory();
       return result;
     },
-    async storeCatalog() {
-      return request('/api/game/catalog');
+    /**
+     * @param kind  balcão que está atendendo: 'furniture' | 'equipment' | 'cards'.
+     *              Vazio traz tudo (a loja única antiga). Quem filtra é o servidor.
+     */
+    async storeCatalog(kind = '') {
+      const query = kind ? `?kind=${encodeURIComponent(kind)}` : '';
+      return request(`/api/game/catalog${query}`);
     },
     async joinRoom(sceneId, roomId) {
       if (connection && room) {

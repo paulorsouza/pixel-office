@@ -28,6 +28,10 @@
     {
       "id": "casino-nerd",
       "file": "tiled/maps/casino-nerd.tmj"
+    },
+    {
+      "id": "tooq-comercio",
+      "file": "tiled/maps/tooq-comercio.tmj"
     }
   ]
 }

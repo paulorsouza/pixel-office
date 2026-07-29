@@ -109,7 +109,25 @@ public static class GameInventorySeed
             Rarity: "uncommon", Price: 280),
         new("equipment:rgb-mouse", "Mouse RGB", "peripherals", ItemType: "equipment",
             Rarity: "epic", Price: 760),
+
+        // Banca de cartas. `booster` não vira GameItemInstance: a compra credita
+        // saldo no perfil do cardgame (ver o purchase em Program.cs). Por isso
+        // StarterQuantity fica em 0 — quem dá os três iniciais é o próprio perfil.
+        new("cardgame:booster", "Booster do Tooq Triad", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 450),
     ];
+
+    /// <summary>
+    /// Qual balcão vende o quê. O tipo de loja é DERIVADO do tipo do item — sem
+    /// coluna nova e sem chance de um item existir fora de toda loja.
+    /// </summary>
+    public static string StoreKindFor(string itemType) => itemType switch
+    {
+        "furniture" => "furniture",
+        "equipment" or "vehicle" => "equipment",
+        "booster" => "cards",
+        _ => "",
+    };
 
     public static async Task RunAsync(AppDb db)
     {

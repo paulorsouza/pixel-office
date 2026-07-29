@@ -583,7 +583,7 @@ api.MapGet("/game/catalog", async (HttpRequest req, IDbContextFactory<AppDb> f) 
     await using var db = await f.CreateDbContextAsync();
     var user = await db.Users.FindAsync(uid);
     if (user is null) return Results.NotFound();
-    var definitions = await db.GameItemDefinitions
+    var rows = await db.GameItemDefinitions
         .OrderBy(x => x.ItemType).ThenBy(x => x.Category).ThenBy(x => x.Price)
         .Select(x => new
         {
@@ -592,7 +592,21 @@ api.MapGet("/game/catalog", async (HttpRequest req, IDbContextFactory<AppDb> f) 
             x.CapabilitiesJson,
         })
         .ToListAsync();
-    return Results.Ok(new { user.Coins, definitions });
+    // Cada balcão vende um tipo (`?kind=furniture|equipment|cards`). O filtro é do
+    // servidor para o jogo não precisar conhecer a regra — e para uma banca nunca
+    // mostrar, mesmo por engano, o estoque da loja vizinha.
+    var kind = req.Query["kind"].ToString();
+    var definitions = rows
+        .Select(x => new
+        {
+            x.Id, x.CatalogKey, x.Name, x.Category, x.IconPath, x.InteractionType,
+            x.ItemType, x.Rarity, x.Price, x.IsPurchasable, x.StarterQuantity,
+            x.CapabilitiesJson,
+            storeKind = GameInventorySeed.StoreKindFor(x.ItemType),
+        })
+        .Where(x => string.IsNullOrEmpty(kind) || x.storeKind == kind)
+        .ToList();
+    return Results.Ok(new { user.Coins, kind, definitions });
 });
 
 api.MapPost("/game/catalog/{catalogKey}/purchase", async (
@@ -608,6 +622,23 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
     if (user.Coins < definition.Price)
         return Results.Conflict(new { error = "Moedas insuficientes", coins = user.Coins, price = definition.Price });
     user.Coins -= definition.Price;
+
+    // Booster não é objeto: não vira instância no inventário nem se coloca numa
+    // sala. A compra credita saldo no perfil do cardgame, que é quem sabe abrir.
+    if (definition.ItemType == "booster")
+    {
+        var balance = await CardGameEndpoints.GrantBoostersAsync(db, uid, 1);
+        await db.SaveChangesAsync();
+        await tx.CommitAsync();
+        await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("InventoryChanged");
+        return Results.Ok(new
+        {
+            coins = user.Coins,
+            boosters = balance,
+            definition = new { definition.CatalogKey, definition.Name, definition.ItemType },
+        });
+    }
+
     var instance = new GameItemInstance { UserId = uid, DefinitionId = definition.Id };
     db.GameItemInstances.Add(instance);
     await db.SaveChangesAsync();

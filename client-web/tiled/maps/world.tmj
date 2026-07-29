@@ -11,7 +11,7 @@
   "version": "1.10",
   "tiledversion": "1.11.2",
   "nextlayerid": 10,
-  "nextobjectid": 107,
+  "nextobjectid": 111,
   "layers": [
     {
       "id": 1,
@@ -101152,6 +101152,35 @@
             }
           ],
           "gid": 6064
+        },
+        {
+          "id": 107,
+          "name": "office_generic",
+          "type": "prop",
+          "x": 1600,
+          "y": 1504,
+          "width": 304,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "office_generic"
+            },
+            {
+              "name": "originX",
+              "type": "int",
+              "value": 0
+            },
+            {
+              "name": "originY",
+              "type": "int",
+              "value": 1
+            }
+          ],
+          "gid": 6013
         }
       ],
       "properties": [
@@ -101403,6 +101432,18 @@
           "name": "Fachada · Casino Nerd",
           "type": "collision",
           "x": 2000,
+          "y": 1216,
+          "width": 304,
+          "height": 288,
+          "rotation": 0,
+          "visible": true,
+          "properties": []
+        },
+        {
+          "id": 108,
+          "name": "Fachada \u2014 Galeria Tooq",
+          "type": "collision",
+          "x": 1600,
           "y": 1216,
           "width": 304,
           "height": 288,
@@ -102318,6 +102359,57 @@
               "name": "label",
               "type": "string",
               "value": "Entrar no Casino Nerd"
+            }
+          ]
+        },
+        {
+          "id": 109,
+          "name": "from-tooq-comercio",
+          "type": "spawn",
+          "x": 1752,
+          "y": 1512,
+          "width": 0,
+          "height": 0,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "from-tooq-comercio"
+            }
+          ]
+        },
+        {
+          "id": 110,
+          "name": "tooq-comercio-door",
+          "type": "portal",
+          "x": 1726,
+          "y": 1496,
+          "width": 48,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "tooq-comercio-door"
+            },
+            {
+              "name": "targetScene",
+              "type": "string",
+              "value": "tooq-comercio"
+            },
+            {
+              "name": "targetSpawn",
+              "type": "string",
+              "value": "entrance"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Entrar na Galeria Tooq"
             }
           ]
         }

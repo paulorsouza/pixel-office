@@ -155,6 +155,17 @@ public static class CardGameEndpoints
         return new(Math.Max(0, boosters), profile.BoosterCount, rewards.ToArray());
     }
 
+    /// <summary>
+    /// Credita boosters comprados na banca de cartas. Fica aqui, e não na loja,
+    /// porque o saldo é do perfil do cardgame — a loja só sabe cobrar.
+    /// </summary>
+    public static async Task<int> GrantBoostersAsync(AppDb db, int userId, int boosters)
+    {
+        var profile = await EnsureProfileAsync(db, userId);
+        profile.BoosterCount = checked(profile.BoosterCount + Math.Max(0, boosters));
+        return profile.BoosterCount;
+    }
+
     private static async Task<CardGameProfile> EnsureProfileAsync(AppDb db, int userId)
     {
         var profile = await db.CardGameProfiles.SingleOrDefaultAsync(row => row.UserId == userId);

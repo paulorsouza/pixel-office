@@ -209,9 +209,26 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         target="_blank" rel="noopener noreferrer">Abrir no draw.io</a></p>`;
   }
 
-  async function renderStore() {
-    title.textContent = 'Loja Tooq';
-    subtitle.textContent = 'Móveis e meios de locomoção são instâncias únicas';
+  // Cada balcão atende um tipo. O tipo vem do próprio móvel, na `interactionKey`
+  // ("store:cards"); balcão sem tipo declarado continua sendo a loja geral.
+  const STORES = {
+    furniture: ['Loja de móveis', 'Mesas, cadeiras, estações e decoração'],
+    equipment: ['Loja de equipamentos', 'Periféricos, acessórios e meios de locomoção'],
+    cards: ['Banca de cartas', 'Boosters do Tooq Triad — abra pelo menu de Cartas'],
+    '': ['Loja Tooq', 'Todo o estoque disponível'],
+  };
+
+  const storeKindOf = (record) => {
+    const key = String(record?.item?.interactionKey || '');
+    const kind = key.startsWith('store:') ? key.slice(6) : '';
+    return Object.hasOwn(STORES, kind) ? kind : '';
+  };
+
+  async function renderStore(record) {
+    const kind = storeKindOf(record);
+    const [storeName, storeCopy] = STORES[kind];
+    title.textContent = storeName;
+    subtitle.textContent = storeCopy;
     status('Carregando catálogo…');
     try {
       const catalog = await gameItems.storeCatalog();
@@ -230,8 +247,12 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         if (!button) return;
         button.disabled = true;
         try {
-          await gameItems.purchase(button.dataset.buyItem);
-          await renderStore();
+          const bought = await gameItems.purchase(button.dataset.buyItem);
+          // Booster não entra no inventário: o retorno traz o saldo do perfil.
+          if (typeof bought?.boosters === 'number') {
+            options.onWorkStatus?.(`Booster comprado — você tem ${bought.boosters}`);
+          }
+          await renderStore(record);
         } catch (error) {
           subtitle.textContent = error.message;
           button.disabled = false;
@@ -248,7 +269,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     workstation: (record) => renderWorkstation(record),
     timeclock: () => renderWork('hours'),
     whiteboard: (record) => renderWhiteboard(record),
-    store: () => renderStore(),
+    store: (record) => renderStore(record),
     async seat(record) {
       // sentar de fato é estado com dono (a cadeira fica ocupada para todos)
       if ((await options.onSeat?.(record)) === false) return false;
