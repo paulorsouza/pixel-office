@@ -29,6 +29,7 @@ import {
 import { createHudShell } from './hud/HudShell.js';
 import { createDock } from './hud/Dock.js';
 import { createHelpSheet } from './hud/HelpSheet.js';
+import { createKeyboardGuard } from './hud/KeyboardGuard.js';
 import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
@@ -261,6 +262,12 @@ createDevMapSync(() => window.__scene?.currentSceneId);
 // A voz NÃO entra aqui de propósito: a barra da reunião já é permanente e é o
 // único lugar que conhece o estado do call — um segundo controle divergiria.
 const hud = createHudShell();
+// Dono único do teclado da cena: campo de texto em foco devolve as letras ao
+// navegador, painel aberto congela o mundo. Ver o comentário do módulo.
+const keyboardGuard = createKeyboardGuard({
+  getKeyboard: () => window.__scene?.input?.keyboard ?? null,
+  isBlocked: () => Boolean(window.__scene?.uiIsBlocking?.()),
+});
 const helpSheet = createHelpSheet(hud);
 const arrangeDicePanel = createArrangeDicePanel({
   gameItems,
@@ -680,6 +687,7 @@ class MapScene extends Phaser.Scene {
         onWorkStarted: (session) => { this.activeWorkSession = session; },
         onWorkStopped: () => { this.activeWorkSession = null; },
         onWorkStatus: (message) => proximityVoice.toast(message),
+        onBlockingChange: () => keyboardGuard.refresh(),
         activeTaskId: this.activeTaskId,
         onActiveTaskChange: (item) => { this.activeTaskId = item?.id ?? null; },
         onTimerChange: () => { this.activeWorkSession = null; },
@@ -737,6 +745,9 @@ class MapScene extends Phaser.Scene {
     });
 
     window.__scene = this;
+    // A cena reinicia a cada troca de mapa e o KeyboardPlugin é outro: o guarda
+    // precisa reaplicar o estado no plugin novo.
+    keyboardGuard.reset();
     window.__equipment = equipmentMenu;
     window.__character = characterCustomizer;
     window.__decoration = this.roomDecorationEditor;
@@ -779,6 +790,10 @@ class MapScene extends Phaser.Scene {
 
   update(time, delta) {
     this.mechanicsRuntime.update(time, delta);
+    // Rede de segurança do teclado: os eventos de foco cobrem o caso normal, mas
+    // um painel que abre/fecha sozinho (recompensa, convite de duelo) não passa
+    // por foco nenhum. Comparação de dois booleanos por frame.
+    keyboardGuard.refresh();
     // A entrada de decoração é um item do dock: some quando a sala sob o avatar
     // não é decorável. `refresh` só redesenha quando a lista visível muda.
     decorateRoom = this.roomDecorationEditor.updateAvailability(

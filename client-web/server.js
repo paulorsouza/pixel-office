@@ -109,7 +109,10 @@ const server = http.createServer((req, res) => {
       return;
     }
     const extension = path.extname(filePath).toLowerCase();
-    const sourceFile = ['.json', '.js', '.css', '.tmj', '.tsj', '.tj'].includes(extension);
+    // `.html` também é fonte editada a cada passo: com cache de 60s, salvar a
+    // página e recarregar ainda entregava a versão velha (e o teste "falhava"
+    // num código que já não existia).
+    const sourceFile = ['.json', '.js', '.css', '.html', '.tmj', '.tsj', '.tj'].includes(extension);
     res.writeHead(200, {
       'Content-Type': mime[path.extname(filePath).toLowerCase()] || 'application/octet-stream',
       'Cache-Control': sourceFile ? 'no-cache' : 'public, max-age=60',

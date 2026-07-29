@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness do KeyboardGuard (Phaser + campo de texto)</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#171a27;color:#e9ecff;font:14px Inter,system-ui,sans-serif}
+  #game{position:fixed;inset:0}
+  .panel{position:fixed;left:50%;top:50%;z-index:10;width:min(460px,calc(100vw - 24px));
+    transform:translate(-50%,-50%);padding:16px;border:1px solid #ffffff22;border-radius:14px;
+    background:#141726f2;box-shadow:0 24px 70px #000a}
+  h1{margin:0 0 4px;font-size:15px}
+  p{margin:0 0 12px;color:#a9b1d6;font-size:12px;line-height:1.5}
+  input{width:100%;padding:10px;border:1px solid #ffffff28;border-radius:9px;
+    color:#fff;background:#11172c;font:inherit}
+  .out{margin-top:10px;padding:9px;border-radius:9px;background:#0e1120;font:12px ui-monospace,monospace}
+  .out b{color:#7dffbf}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<section class="panel">
+  <h1>Digite <b>wasdef</b> no campo</h1>
+  <p>São exatamente as teclas que o jogo captura (mover, interagir, fone). Com o
+     guarda ligado elas viram texto; sem ele, o Phaser as engole antes do navegador.</p>
+  <input id="probe" placeholder="digite aqui…" autocomplete="off">
+  <div class="out">valor: <b id="value">(vazio)</b> · avatar andou: <b id="moved">não</b></div>
+</section>
+<script src="phaser.min.js"></script>
+<script type="module">
+import { createKeyboardGuard } from './src/hud/KeyboardGuard.js';
+
+const probe = document.querySelector('#probe');
+const value = document.querySelector('#value');
+const moved = document.querySelector('#moved');
+probe.addEventListener('input', () => { value.textContent = probe.value || '(vazio)'; });
+
+let scene = null;
+let walked = false;
+
+class Probe extends Phaser.Scene {
+  create() {
+    scene = this;
+    // As MESMAS chamadas do jogo: é `addKeys`/`addKey` que liga o capture.
+    this.keys = this.input.keyboard.addKeys('W,A,S,D');
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+    window.__scene = this;
+  }
+  update() {
+    if (guardOn) guard.refresh();
+    const anyDown = ['W', 'A', 'S', 'D'].some((k) => this.keys[k]?.isDown);
+    if (anyDown && !walked) { walked = true; moved.textContent = 'sim'; }
+  }
+}
+
+// `?guard=off` reproduz o bug: a mesma tela sem o guarda.
+const guardOn = new URLSearchParams(location.search).get('guard') !== 'off';
+const guard = createKeyboardGuard({
+  getKeyboard: () => scene?.input?.keyboard ?? null,
+  isBlocked: () => false,
+});
+if (!guardOn) guard.destroy();
+
+new Phaser.Game({
+  type: Phaser.AUTO, parent: 'game', backgroundColor: '#20222c',
+  scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
+  scene: [Probe],
+});
+window.__guard = guard;
+</script>
+</body>
+</html>

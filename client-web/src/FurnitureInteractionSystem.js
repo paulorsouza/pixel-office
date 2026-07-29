@@ -63,13 +63,12 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     if (value) {
       equipmentMenu.setOpen(false);
       scene.player.body.setVelocity(0, 0);
-      scene.input.keyboard.resetKeys();
     }
-    // O painel tem campos de texto (busca, título, comentário) e o Phaser captura
-    // W/A/S/D e E/F: sem desligar o teclado da cena, digitar "casa" andava com o
-    // avatar e sumia com as letras. O Escape continua funcionando porque é um
-    // listener de window, não da cena.
-    scene.input.keyboard.enabled = !value;
+    // Quem liga/desliga o teclado da cena é o KeyboardGuard (`hud/KeyboardGuard.js`),
+    // dono único desse estado: aqui só avisamos que a situação mudou. Fazer isso
+    // localmente era o que fazia W/A/S/D/E sumirem dos campos de texto — desligar
+    // o plugin não desarma o `preventDefault` do manager do Phaser.
+    options.onBlockingChange?.();
   };
 
   const status = (message, error = false) => {
