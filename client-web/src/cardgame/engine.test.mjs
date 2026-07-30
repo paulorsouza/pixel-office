@@ -13,6 +13,7 @@ import {
   projectMatchState,
   validateDeck,
 } from './engine.js';
+import { albumEntries } from './CardCollection.js';
 
 const readJson = (relativeUrl) => JSON.parse(readFileSync(new URL(relativeUrl, import.meta.url), 'utf8'));
 const typeChart = readJson('../../assets/cardgame/type-chart.json');
@@ -41,16 +42,16 @@ function playFirstCard(state, cellIndex, chart = typeChart) {
   return playCard(state, { playerIndex, cardId, cellIndex }, chart);
 }
 
-test('baralho exige nove instâncias únicas', () => {
+test('baralho exige quinze instâncias únicas', () => {
   assert.equal(validateDeck(makeDeck('a')), true);
-  assert.throws(() => validateDeck(makeDeck('a').slice(0, 8)), /exatamente 9/);
+  assert.throws(() => validateDeck(makeDeck('a').slice(0, 14)), /exatamente 15/);
 
   const duplicate = makeDeck('a');
-  duplicate[8] = duplicate[0];
+  duplicate[14] = duplicate[0];
   assert.throws(() => validateDeck(duplicate), /repetir a mesma instância/);
 });
 
-test('partida começa com mão de seis e monte de três sem alterar o baralho recebido', () => {
+test('partida começa com mão de seis e monte de nove sem alterar o baralho recebido', () => {
   const decks = [makeDeck('a'), makeDeck('b')];
   const original = structuredClone(decks);
   const state = createMatch({ decks, startingPlayer: 1 });
@@ -58,7 +59,7 @@ test('partida começa com mão de seis e monte de três sem alterar o baralho re
   assert.equal(state.currentPlayer, 1);
   assert.equal(state.board.length, BOARD_CELLS);
   assert.deepEqual(state.players.map((player) => player.hand.length), [OPENING_HAND_SIZE, OPENING_HAND_SIZE]);
-  assert.deepEqual(state.players.map((player) => player.drawPile.length), [3, 3]);
+  assert.deepEqual(state.players.map((player) => player.drawPile.length), [9, 9]);
   assert.deepEqual(decks, original);
 });
 
@@ -71,12 +72,12 @@ test('jogar remove da mão, compra do monte e alterna o turno', () => {
   assert.equal(result.drawnCardId, expectedDrawId);
   assert.equal(result.state.board[4].card.id, originalCardId);
   assert.equal(result.state.players[0].hand.length, OPENING_HAND_SIZE);
-  assert.equal(result.state.players[0].drawPile.length, 2);
+  assert.equal(result.state.players[0].drawPile.length, 8);
   assert.equal(result.state.currentPlayer, 1);
   assert.equal(state.board[4], null, 'o estado anterior deve permanecer imutável');
 });
 
-test('os dois jogadores veem as nove cartas antes da própria última escolha', () => {
+test('baralho de quinze mantém seis cartas ocultas após três compras de cada jogador', () => {
   let state = createMatch({ decks: [makeDeck('a'), makeDeck('b')] });
   const seen = state.players.map((player) => new Set(player.hand.map((card) => card.id)));
 
@@ -87,8 +88,8 @@ test('os dois jogadores veem as nove cartas antes da própria última escolha', 
     state = result.state;
   }
 
-  assert.deepEqual(state.players.map((player) => player.drawPile.length), [0, 0]);
-  assert.deepEqual(seen.map((cards) => cards.size), [DECK_SIZE, DECK_SIZE]);
+  assert.deepEqual(state.players.map((player) => player.drawPile.length), [6, 6]);
+  assert.deepEqual(seen.map((cards) => cards.size), [9, 9]);
   assert.equal(state.turn, 6);
 });
 
@@ -124,19 +125,43 @@ test('cartas de dois tipos ainda recebem no máximo +1 e podem ter bônus bilate
 
 test('bônus shiny aumenta somente a borda marcada', () => {
   const shiny = makeCard('shiny', {
-    edges: { top: 10, right: 4, bottom: 4, left: 4 },
+    edges: { top: 15, right: 4, bottom: 4, left: 4 },
     shinyBonusSide: 'top',
   });
 
-  assert.equal(printedEdge(shiny, 'top'), 11);
+  assert.equal(printedEdge(shiny, 'top'), 16);
   assert.equal(printedEdge(shiny, 'right'), 4);
 
-  const invalid = makeDeck('shiny-invalid');
-  invalid[0] = makeCard('shiny-invalid-1', {
-    edges: { top: 11, right: 4, bottom: 4, left: 4 },
+  assert.equal(validateDeck(makeDeck('shiny-valid', {
+    edges: { top: 15, right: 4, bottom: 4, left: 4 },
     shinyBonusSide: 'top',
-  });
-  assert.throws(() => validateDeck(invalid), /não pode aumentar uma borda 11/);
+  })), true);
+  const invalid = makeDeck('invalid-edge');
+  invalid[0] = makeCard('invalid-edge-1', { edges: { top: 16, right: 4, bottom: 4, left: 4 } });
+  assert.throws(() => validateDeck(invalid), /entre 1 e 15/);
+});
+
+test('álbum separa a carta normal de cada variante shiny por atributo', () => {
+  const card = fullCatalog.cards.find((entry) => entry.id === 'pokemon-006');
+  const entries = albumEntries([card], [
+    { cardId: card.id, quantity: 5, isShiny: false, cardToken: card.id },
+    { cardId: card.id, quantity: 2, isShiny: true, shinyBonusSide: 'top', cardToken: `${card.id}~top` },
+    { cardId: card.id, quantity: 1, isShiny: true, shinyBonusSide: 'left', cardToken: `${card.id}~left` },
+  ]);
+
+  assert.equal(entries.length, 3);
+  assert.deepEqual(entries.map(({ isShiny, shinyBonusSide, quantity }) => (
+    [isShiny, shinyBonusSide, quantity]
+  )), [
+    [false, '', 5],
+    [true, 'top', 2],
+    [true, 'left', 1],
+  ]);
+  assert.equal(entries[0].locked, false);
+  assert.deepEqual(entries.slice(1).map((entry) => entry.cardToken), [
+    `${card.id}~top`,
+    `${card.id}~left`,
+  ]);
 });
 
 test('uma colocação compara e captura vários vizinhos sem combo', () => {
@@ -164,7 +189,7 @@ test('snapshot do oponente nunca revela mão nem ordem do monte', () => {
   assert.equal(snapshot.players[0].drawPile, undefined);
   assert.equal(snapshot.players[1].hand, undefined);
   assert.equal(snapshot.players[1].handCount, OPENING_HAND_SIZE);
-  assert.equal(snapshot.players[1].drawPileCount, 3);
+  assert.equal(snapshot.players[1].drawPileCount, 9);
 });
 
 test('nove jogadas encerram a partida com vencedor calculado pelo tabuleiro', () => {
@@ -195,22 +220,28 @@ test('catálogo-protótipo possui vinte Pokémon válidos e matriz cobre os 18 t
   }
 });
 
-test('catálogo completo possui os 151 Pokémon, variantes e sprites locais', () => {
+test('catálogo completo possui os 1025 Pokémon, gerações, variantes e sprites locais', () => {
   const base = fullCatalog.cards.filter((card) => !card.variant);
-  assert.equal(fullCatalog.baseCount, 151);
-  assert.equal(base.length, 151);
-  assert.deepEqual(base.map((card) => card.dex), Array.from({ length: 151 }, (_, index) => index + 1));
+  assert.equal(fullCatalog.baseCount, 1025);
+  assert.equal(base.length, 1025);
+  assert.deepEqual(base.map((card) => card.dex), Array.from({ length: 1025 }, (_, index) => index + 1));
+  assert.deepEqual([...new Set(base.map((card) => card.generation))], [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'pokemon-001').evolvesTo, ['pokemon-002']);
+  assert.deepEqual(new Set(fullCatalog.cards.find((card) => card.id === 'pokemon-133').evolvesTo), new Set([
+    'pokemon-134', 'pokemon-135', 'pokemon-136', 'pokemon-196',
+    'pokemon-197', 'pokemon-470', 'pokemon-471', 'pokemon-700',
+  ]));
   assert.equal(new Set(fullCatalog.cards.map((card) => card.id)).size, fullCatalog.cards.length);
   assert.ok(fullCatalog.cards.some((card) => card.id === 'special-ash-pikachu'));
   assert.ok(fullCatalog.cards.some((card) => card.id === 'special-mailman-dragonite'));
   assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'special-casino-pikachu').edges,
-    { top: 8, right: 8, bottom: 8, left: 8 });
+    { top: 13, right: 13, bottom: 13, left: 13 });
   assert.deepEqual(fullCatalog.cards.find((card) => card.id === 'special-casino-mewtwo').edges,
-    { top: 11, right: 11, bottom: 11, left: 11 });
+    { top: 15, right: 15, bottom: 15, left: 15 });
   const quadra = fullCatalog.cards.find((card) => card.id === 'special-casino-quadra');
   const quina = fullCatalog.cards.find((card) => card.id === 'special-casino-quina');
-  assert.deepEqual(quadra.edges, { top: 7, right: 7, bottom: 7, left: 7 });
-  assert.deepEqual(quina.edges, { top: 9, right: 9, bottom: 9, left: 9 });
+  assert.deepEqual(quadra.edges, { top: 11, right: 11, bottom: 11, left: 11 });
+  assert.deepEqual(quina.edges, { top: 14, right: 14, bottom: 14, left: 14 });
   assert.deepEqual(
     [quadra.dex, quadra.name, quadra.spoonCount, quadra.art],
     [65, 'Alakazam Quadra', 4, 'assets/cardgame/pokemon/065.png'],
@@ -227,6 +258,8 @@ test('catálogo completo possui os 151 Pokémon, variantes e sprites locais', ()
   for (const card of fullCatalog.cards) {
     assert.equal(card.powerRating, Object.values(card.edges).reduce((sum, value) => sum + value, 0));
     assert.ok(card.types.every((type) => Object.hasOwn(typeChart, type)), `${card.name} tem tipo conhecido`);
+    assert.ok((card.evolvesTo || []).every((id) => fullCatalog.cards.some((target) => target.id === id)),
+      `${card.name} só aponta para evoluções conhecidas`);
     assert.ok(existsSync(new URL(`../../${card.art}`, import.meta.url)), `sprite existe: ${card.art}`);
   }
   assert.deepEqual(backendCatalog, fullCatalog, 'backend e cliente usam exatamente o mesmo catálogo');

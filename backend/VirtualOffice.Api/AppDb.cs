@@ -29,6 +29,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<ObjectiveProgress> ObjectiveProgress => Set<ObjectiveProgress>();
     public DbSet<CardGameProfile> CardGameProfiles => Set<CardGameProfile>();
     public DbSet<CardGameCollectionItem> CardGameCollection => Set<CardGameCollectionItem>();
+    public DbSet<CardGameBoosterBalance> CardGameBoosterBalances => Set<CardGameBoosterBalance>();
     public DbSet<CasinoRound> CasinoRounds => Set<CasinoRound>();
     public DbSet<PresenceDay> PresenceDays => Set<PresenceDay>();
 
@@ -48,7 +49,9 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<PresenceDay>().HasIndex(x => new { x.UserId, x.PeriodDay }).IsUnique();
         modelBuilder.Entity<CardGameProfile>().HasIndex(x => x.UserId).IsUnique();
         modelBuilder.Entity<CardGameCollectionItem>()
-            .HasIndex(x => new { x.UserId, x.CardId, x.IsShiny }).IsUnique();
+            .HasIndex(x => new { x.UserId, x.CardId, x.IsShiny, x.ShinyBonusSide }).IsUnique();
+        modelBuilder.Entity<CardGameBoosterBalance>()
+            .HasIndex(x => new { x.UserId, x.BoosterId, x.TargetCardId }).IsUnique();
         modelBuilder.Entity<CasinoRound>()
             .HasIndex(x => new { x.UserId, x.IdempotencyKey }).IsUnique();
         modelBuilder.Entity<CasinoRound>()

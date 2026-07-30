@@ -1,10 +1,14 @@
-import { albumCatalog, collectionProgress } from './CardCollection.js';
+import { albumEntries, collectionProgress } from './CardCollection.js';
 
 const TYPES = {
   normal: 'Normal', fire: 'Fogo', water: 'Água', electric: 'Elétrico', grass: 'Planta',
   ice: 'Gelo', fighting: 'Lutador', poison: 'Veneno', ground: 'Terra', flying: 'Voador',
   psychic: 'Psíquico', bug: 'Inseto', rock: 'Pedra', ghost: 'Fantasma', dragon: 'Dragão',
   dark: 'Sombrio', steel: 'Aço', fairy: 'Fada',
+};
+
+const SHINY_SIDES = {
+  top: 'CIMA', right: 'DIREITA', bottom: 'BAIXO', left: 'ESQUERDA',
 };
 
 /** Seções que este módulo publica no menu do jogo. */
@@ -49,6 +53,22 @@ function injectStyles() {
     .cg-card.locked img{opacity:.35}
     .cg-card.shiny:after{position:absolute;inset:0;content:"";pointer-events:none;
       background:linear-gradient(115deg,transparent 25%,#fff8 43%,transparent 58%);animation:cg-shine 2.4s infinite}
+    .cg-card .cg-edge.boosted{z-index:4;border-color:#fff3a0;color:#1a1300;
+      background:linear-gradient(145deg,#fff7a8,#ffc928 62%,#f0a900);
+      box-shadow:0 0 0 2px #ffdc4d55,0 0 13px #ffd83dcc,inset 0 1px 0 #fffbd6;
+      animation:cg-bonus-pulse 1.8s ease-in-out infinite}
+    .cg-card .cg-edge.boosted:after{position:absolute;right:-14px;top:-9px;display:grid;place-items:center;
+      min-width:18px;height:12px;padding:0 2px;border:1px solid #fff6b0;border-radius:5px;
+      content:"+1";color:#281b00;background:#ffd83d;box-shadow:0 2px 5px #0008;font:900 7px/1 monospace}
+    .cg-card .cg-edge.right.boosted:after{right:auto;left:-14px}
+    .cg-card .cg-edge.left.boosted:after{right:-14px}
+    .cg-info{position:absolute;z-index:5;right:2px;top:21px;display:grid;place-items:center;width:24px;height:24px;
+      border:0;background:transparent;font-size:0;cursor:pointer}
+    .cg-info:before{display:grid;place-items:center;width:24px;height:24px;content:"i";border:1px solid #ffffff45;
+      border-radius:50%;color:#fff;background:#080c1dcc;font:900 11px system-ui}
+    .cg-card-entry{display:grid;gap:6px;min-width:0}
+    .cg-exchange-btn{min-height:38px;border:1px solid #f2bf5755;border-radius:9px;color:#ffe3a0;background:#3a2b15;cursor:pointer}
+    .cg-evolution-btn{min-height:38px;border:1px solid #72d99a55;border-radius:9px;color:#c8ffda;background:#173624;cursor:pointer}
     .cg-card[data-rarity="Uncommon"]{border-color:#57bc83}
     .cg-card[data-rarity="Rare"]{border-color:#4ca8ed}
     .cg-card[data-rarity="Epic"]{border-color:#b96af1}
@@ -84,6 +104,15 @@ function injectStyles() {
     .cg-deck-slot strong{flex:1;font-size:10px}
     .cg-deck-slot button{border:0;color:#ffb4c7;background:transparent;cursor:pointer}
     .cg-booster-stage{display:grid;place-items:center;min-height:min(500px,calc(100dvh - 200px));text-align:center}
+    .cg-booster-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;width:100%;text-align:left}
+    .cg-booster-option{min-height:96px;padding:13px;border:1px solid #ffffff22;border-radius:13px;color:#fff;
+      background:linear-gradient(145deg,#34296f,#171d39);cursor:pointer}
+    .cg-booster-option:disabled{cursor:not-allowed;filter:grayscale(1);opacity:.45}
+    .cg-booster-option strong,.cg-booster-option small{display:block}.cg-booster-option small{margin-top:5px;color:#b9c4df}
+    .cg-booster-option b{float:right;color:#ffe079}
+    .cg-rare-exchange{margin-bottom:12px;padding:13px;border:1px solid #f5c75f66;border-radius:13px;
+      text-align:left;background:linear-gradient(145deg,#493311,#21180d)}
+    .cg-rare-exchange strong,.cg-rare-exchange small{display:block}.cg-rare-exchange small{margin:5px 0 10px;color:#d8c9a7}
     .cg-pack{position:relative;width:220px;height:320px;
       border:3px solid #d6b65e;border-radius:18px;color:#fff;background:radial-gradient(circle at 50% 38%,#8a7aff,#372a82 42%,#121735 75%);
       box-shadow:0 24px 70px #000a,inset 0 0 30px #fff2;cursor:pointer;animation:cg-float 2.2s ease-in-out infinite}
@@ -101,6 +130,8 @@ function injectStyles() {
     @keyframes cg-float{50%{transform:translateY(-9px) rotate(1deg)}}
     @keyframes cg-reveal{from{opacity:0;transform:translateY(80px) rotateY(90deg)}to{opacity:1;transform:none}}
     @keyframes cg-shine{from{transform:translateX(-140%)}to{transform:translateX(140%)}}
+    @keyframes cg-bonus-pulse{50%{filter:brightness(1.16);box-shadow:0 0 0 3px #ffdc4d66,0 0 17px #ffd83dee,inset 0 1px 0 #fffbd6}}
+    @media (prefers-reduced-motion:reduce){.cg-card .cg-edge.boosted{animation:none}}
     .cg-match-window{width:min(1180px,100%);height:min(760px,calc(100dvh - 24px));overflow:auto}
     .cg-match{display:grid;grid-template-rows:auto 1fr;height:100%}
     .cg-match-top{display:flex;align-items:center;gap:10px;padding:10px 15px;
@@ -138,13 +169,23 @@ function injectStyles() {
 .cg-arena{grid-template-columns:1fr}
 .cg-board{width:min(46vh,100%)}
 .cg-hand{grid-template-columns:repeat(3,1fr)}
-.cg-card-grid{grid-template-columns:repeat(3,minmax(92px,1fr))}
+.cg-card-grid{grid-template-columns:repeat(3,minmax(80px,1fr))}
 }
     html[data-touch="on"] .cg-nav button,
     html[data-touch="on"] .cg-shortcut,
     html[data-touch="on"] .cg-stat,
     html[data-touch="on"] .cg-cell{min-height:44px}
     html[data-touch="on"] .cg-deck-slot button{min-width:44px;min-height:44px}
+    html[data-touch="on"] .cg-info,html[data-touch="on"] .cg-exchange-btn,
+    html[data-touch="on"] .cg-evolution-btn{min-width:44px;min-height:44px}
+    .cg-type-dialog{width:min(480px,calc(100vw - 24px));padding:18px;border:1px solid #ffffff30;border-radius:16px;
+      color:#fff;background:#151b34;box-shadow:0 24px 80px #000c;font-family:Inter,system-ui,sans-serif}
+    #cardgame-type-overlay{z-index:155}
+    .cg-type-dialog header{display:flex;align-items:center;gap:10px}.cg-type-dialog header img{width:58px;height:58px;image-rendering:pixelated}
+    .cg-type-dialog header div{flex:1}.cg-type-dialog h3{margin:0 0 4px}.cg-type-dialog p{color:#c0cae2;font-size:12px;line-height:1.55}
+    .cg-type-groups{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cg-type-group{padding:10px;border-radius:11px;background:#ffffff09}
+    .cg-type-group strong{display:block;margin-bottom:7px;font-size:11px}.cg-type-chips{display:flex;flex-wrap:wrap;gap:5px}
+    .cg-type-dialog [data-close]{min-width:44px;min-height:44px;border:0;border-radius:9px;color:#fff;background:#ffffff12;cursor:pointer}
   `;
   document.head.append(style);
 }
@@ -158,6 +199,7 @@ function createRoots() {
     <div id="cardgame-player-menu" class="cg-hidden"></div>
     <div id="cardgame-invite" class="cg-hidden"></div>
     <div id="player-hub-overlay" class="cg-overlay cg-hidden"></div>
+    <div id="cardgame-type-overlay" class="cg-overlay cg-hidden"></div>
     <div id="cardgame-match-overlay" class="cg-overlay cg-hidden"></div>`;
   document.body.append(...wrapper.children);
 }
@@ -170,18 +212,25 @@ function extraSpoonsMarkup(card) {
 }
 
 function cardMarkup(card, options = {}) {
-  const { button = false, selected = false, disabled = false, locked = false, shiny = false, quantity = 0 } = options;
+  const {
+    button = false, selected = false, disabled = false, locked = false, shiny = false,
+    shinyBonusSide = '', quantity = 0, cardToken = card.id, showInfo = false,
+    showShinySide = false,
+  } = options;
   const tag = button ? 'button type="button"' : 'div';
   const close = button ? 'button' : 'div';
   return `<${tag} class="cg-card${selected ? ' selected' : ''}${disabled ? ' disabled' : ''}${locked ? ' locked' : ''}${shiny ? ' shiny' : ''}"
-    data-card-id="${card.id}" data-rarity="${card.rarity}">
+    data-card-id="${card.id}" data-card-token="${escapeHtml(cardToken)}" data-rarity="${card.rarity}">
     <div class="cg-card-head"><strong>${escapeHtml(card.name)}</strong><small>#${String(card.dex).padStart(3, '0')}</small></div>
-    <span class="cg-edge top">${card.edges.top}</span><span class="cg-edge right">${card.edges.right}</span>
-    <span class="cg-edge bottom">${card.edges.bottom}</span><span class="cg-edge left">${card.edges.left}</span>
+    ${showInfo ? '<span class="cg-info" role="button" aria-label="Ver vantagens e desvantagens">i</span>' : ''}
+    <span class="cg-edge top${shinyBonusSide === 'top' ? ' boosted' : ''}">${card.edges.top + (shinyBonusSide === 'top' ? 1 : 0)}</span>
+    <span class="cg-edge right${shinyBonusSide === 'right' ? ' boosted' : ''}">${card.edges.right + (shinyBonusSide === 'right' ? 1 : 0)}</span>
+    <span class="cg-edge bottom${shinyBonusSide === 'bottom' ? ' boosted' : ''}">${card.edges.bottom + (shinyBonusSide === 'bottom' ? 1 : 0)}</span>
+    <span class="cg-edge left${shinyBonusSide === 'left' ? ' boosted' : ''}">${card.edges.left + (shinyBonusSide === 'left' ? 1 : 0)}</span>
     <div class="cg-card-art" data-spoons="${card.spoonCount || 0}"><img src="${card.art}" alt="${escapeHtml(card.name)}"
       draggable="false">${extraSpoonsMarkup(card)}</div>
     <div class="cg-card-types">${card.types.map((type) => `<span class="cg-type">${TYPES[type] || type}</span>`).join('')}</div>
-    ${quantity ? `<span class="cg-owned">${shiny ? '<b class="cg-shiny-label">✦ SHINY</b> · ' : ''}×${quantity}</span>` : ''}
+    ${quantity ? `<span class="cg-owned">${shiny ? `<b class="cg-shiny-label">✦ SHINY${showShinySide && shinyBonusSide ? ` +1 ${SHINY_SIDES[shinyBonusSide] || shinyBonusSide.toUpperCase()}` : ''}</b> · ` : ''}×${quantity}</span>` : ''}
   </${close}>`;
 }
 
@@ -192,7 +241,7 @@ function cardMarkup(card, options = {}) {
  * @param options.isMenuOpen  o menu está na frente? (toque no mundo não vale)
  */
 export function createCardGamePanel({
-  presence, catalog, gameItems, onToast = () => {},
+  presence, catalog, typeChart = {}, gameItems, onToast = () => {},
   openMenu = () => {}, closeMenu = () => {}, isMenuOpen = () => false,
 }) {
   createRoots();
@@ -200,13 +249,18 @@ export function createCardGamePanel({
   const byId = new Map(cards.map((card) => [card.id, card]));
   const menu = document.getElementById('cardgame-player-menu');
   const invite = document.getElementById('cardgame-invite');
+  const typeOverlay = document.getElementById('cardgame-type-overlay');
   const matchOverlay = document.getElementById('cardgame-match-overlay');
   // A janela é do menu (`hud/MainMenu.js`); este módulo só desenha dentro dela.
   // `host` é a área de conteúdo emprestada e `menuApi` é como se troca o
   // cabeçalho e se navega entre seções.
   let host = document.createElement('div');
   let menuApi = { setHeader: () => {}, open: () => {}, close: () => {} };
-  let profile = { boosters: 0, deck: [], collection: [], uniqueCards: 0, shinyCards: 0, baseTotal: 151 };
+  let profile = {
+    boosters: 0, boosterInventory: [], boosterDefinitions: [], deck: [], collection: [],
+    uniqueCards: 0, shinyCards: 0, baseTotal: catalog.baseCount || 1025,
+    specialExchangeCost: 10, evolutionExchangeCost: 5,
+  };
   let deck = [];
   let deckDraft = [];
   let activeTab = 'home';
@@ -214,20 +268,61 @@ export function createCardGamePanel({
   let selectedCardId = null;
   let pendingMove = false;
   let opening = false;
-
+  let albumLimit = 120;
 
   const collectionMap = () => {
     const result = new Map();
     for (const item of profile.collection || []) {
-      const current = result.get(item.cardId) || { normal: 0, shiny: 0 };
+      const current = result.get(item.cardId) || { normal: 0, shiny: 0, variants: [] };
       current[item.isShiny ? 'shiny' : 'normal'] += item.quantity;
+      current.variants.push(item);
       result.set(item.cardId, current);
     }
     return result;
   };
-  const ownedIds = () => new Set((profile.collection || []).map((item) => item.cardId));
-  const validDeck = (candidate) => Array.isArray(candidate) && candidate.length === 9
-    && new Set(candidate).size === 9 && candidate.every((id) => ownedIds().has(id));
+  const tokenCardId = (token) => String(token || '').split('~', 1)[0];
+  const tokenSide = (token) => String(token || '').includes('~') ? String(token).split('~', 2)[1] : '';
+  const ownedTokens = () => new Set((profile.collection || []).map((item) => (
+    item.cardToken || (item.isShiny ? `${item.cardId}~${item.shinyBonusSide}` : item.cardId)
+  )));
+  const validDeck = (candidate) => Array.isArray(candidate) && candidate.length === 15
+    && new Set(candidate.map(tokenCardId)).size === 15 && candidate.every((token) => ownedTokens().has(token));
+
+  function bindCardInfo(container) {
+    container.querySelectorAll('.cg-info').forEach((info) => {
+      const open = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const cardElement = info.closest('.cg-card');
+        showTypeOverlay(byId.get(cardElement.dataset.cardId));
+      };
+      info.addEventListener('pointerup', open);
+      info.addEventListener('click', open);
+    });
+  }
+
+  function showTypeOverlay(card) {
+    if (!card) return;
+    const strong = [...new Set(card.types.flatMap((type) => typeChart[type] || []))];
+    const weak = Object.entries(typeChart)
+      .filter(([, targets]) => card.types.some((type) => targets.includes(type)))
+      .map(([type]) => type);
+    const chips = (types) => types.length
+      ? types.map((type) => `<span class="cg-type">${TYPES[type] || type}</span>`).join('')
+      : '<span class="cg-type">Nenhum</span>';
+    typeOverlay.innerHTML = `<section class="cg-type-dialog" role="dialog" aria-modal="true">
+      <header><img src="${card.art}" alt=""><div><h3>${escapeHtml(card.name)}</h3>
+        <div class="cg-type-chips">${chips(card.types)}</div></div><button data-close aria-label="Fechar">✕</button></header>
+      <p>Durante um confronto, vantagem de tipo acrescenta <b>+1 TIPO</b> ao valor comparado.</p>
+      <div class="cg-type-groups"><div class="cg-type-group"><strong>Vantagem contra</strong>
+        <div class="cg-type-chips">${chips(strong)}</div></div><div class="cg-type-group"><strong>Desvantagem contra</strong>
+        <div class="cg-type-chips">${chips(weak)}</div></div></div></section>`;
+    typeOverlay.classList.remove('cg-hidden');
+    typeOverlay.querySelector('[data-close]').onclick = () => typeOverlay.classList.add('cg-hidden');
+    typeOverlay.onclick = (event) => {
+      if (event.target === typeOverlay) typeOverlay.classList.add('cg-hidden');
+    };
+  }
 
   async function refreshProfile() {
     profile = await gameItems.cardGameProfile();
@@ -242,90 +337,212 @@ export function createCardGamePanel({
     host.innerHTML = body;
   }
 
-  function renderAlbum(filter = '', type = '') {
+  function renderAlbum(filter = '', type = '', finish = '') {
     const owned = collectionMap();
+    const specialCost = Number(profile.specialExchangeCost) || 10;
+    const evolutionCost = Number(profile.evolutionExchangeCost) || 5;
     const progress = collectionProgress(cards, profile.collection);
     const normalized = filter.trim().toLowerCase();
-    const visible = albumCatalog(cards, profile.collection).filter((card) => (!normalized
+    const filtered = albumEntries(cards, profile.collection).filter(({ card, isShiny }) => (!normalized
       || card.name.toLowerCase().includes(normalized)
-      || String(card.dex).includes(normalized)) && (!type || card.types.includes(type)));
+      || String(card.dex).includes(normalized)) && (!type || card.types.includes(type))
+      && (!finish || (finish === 'shiny') === isShiny));
+    const visible = filtered.slice(0, albumLimit);
     const specialCopy = progress.specialOwned ? ` · ${progress.specialOwned} especiais` : '';
-    shell('Álbum Pokémon', `${progress.baseOwned} de 151 descobertos${specialCopy} · ${profile.shinyCards} shiny`, `
+    shell('Álbum Pokémon', `${progress.baseOwned} de ${profile.baseTotal} descobertos${specialCopy} · ${profile.shinyCards} shiny`, `
       <div class="cg-filters"><input id="cg-search" placeholder="Buscar nome ou número" value="${escapeHtml(filter)}">
         <select id="cg-type"><option value="">Todos os tipos</option>${Object.entries(TYPES).map(([key, label]) =>
-          `<option value="${key}"${key === type ? ' selected' : ''}>${label}</option>`).join('')}</select></div>
-      <div class="cg-card-grid">${visible.map((card) => {
+          `<option value="${key}"${key === type ? ' selected' : ''}>${label}</option>`).join('')}</select>
+        <select id="cg-finish"><option value="">Normais e shinies</option>
+          <option value="normal"${finish === 'normal' ? ' selected' : ''}>Somente normais</option>
+          <option value="shiny"${finish === 'shiny' ? ' selected' : ''}>Somente shinies</option>
+        </select></div>
+      <div class="cg-card-grid">${visible.map((entry) => {
+        const { card } = entry;
         const count = owned.get(card.id);
-        return cardMarkup(card, { locked: !count, shiny: Boolean(count?.shiny), quantity: (count?.normal || 0) + (count?.shiny || 0) });
-      }).join('')}</div>`);
+        const canExchange = !entry.isShiny && (count?.normal || 0) >= specialCost && !card.variant;
+        const evolutionTargets = !entry.isShiny && (count?.normal || 0) >= evolutionCost
+          ? (card.evolvesTo || []).map((id) => byId.get(id)).filter(Boolean)
+          : [];
+        return `<div class="cg-card-entry">${cardMarkup(card, {
+          locked: entry.locked,
+          shiny: entry.isShiny,
+          shinyBonusSide: entry.shinyBonusSide,
+          quantity: entry.quantity,
+          cardToken: entry.cardToken,
+          showInfo: true,
+          showShinySide: true,
+        })}${evolutionTargets.map((evolution) => `<button class="cg-evolution-btn"
+          data-evolve-from="${card.id}" data-evolve-to="${evolution.id}">
+          Evoluir ${evolutionCost} → ${escapeHtml(evolution.name)}</button>`).join('')}
+          ${canExchange ? `<button class="cg-exchange-btn" data-exchange="${card.id}">
+          Entregar ${specialCost} → Booster Especial</button>` : ''}</div>`;
+      }).join('')}</div>
+      ${filtered.length > visible.length ? `<button class="cg-btn" data-more style="width:100%;margin-top:12px">
+        Mostrar mais (${visible.length}/${filtered.length})</button>` : ''}`);
     const search = host.querySelector('#cg-search');
     const typeSelect = host.querySelector('#cg-type');
-    search.oninput = () => renderAlbum(search.value, typeSelect.value);
-    typeSelect.onchange = () => renderAlbum(search.value, typeSelect.value);
+    const finishSelect = host.querySelector('#cg-finish');
+    const rerenderFiltered = () => {
+      albumLimit = 120;
+      renderAlbum(search.value, typeSelect.value, finishSelect.value);
+    };
+    search.oninput = rerenderFiltered;
+    typeSelect.onchange = rerenderFiltered;
+    finishSelect.onchange = rerenderFiltered;
+    host.querySelector('[data-more]')?.addEventListener('click', () => {
+      albumLimit += 120;
+      renderAlbum(filter, type, finish);
+    });
+    host.querySelectorAll('[data-exchange]').forEach((button) => {
+      button.onclick = async () => {
+        try {
+          const result = await gameItems.exchangeCardGameDuplicates(button.dataset.exchange);
+          profile = result.profile;
+          onToast(result.message);
+          renderAlbum(filter, type, finish);
+        } catch (error) { onToast(error.message); }
+      };
+    });
+    host.querySelectorAll('[data-evolve-from]').forEach((button) => {
+      button.onclick = async () => {
+        try {
+          const result = await gameItems.exchangeCardGameEvolution(
+            button.dataset.evolveFrom,
+            button.dataset.evolveTo,
+          );
+          profile = result.profile;
+          onToast(result.message);
+          renderAlbum(filter, type, finish);
+        } catch (error) { onToast(error.message); }
+      };
+    });
+    bindCardInfo(host);
   }
 
   function renderDeck(filter = '') {
-    const owned = collectionMap();
     const normalized = filter.trim().toLowerCase();
-    const visible = cards.filter((card) => owned.has(card.id)
-      && (!normalized || card.name.toLowerCase().includes(normalized) || String(card.dex).includes(normalized)));
-    shell('Baralho de batalha', 'Escolha 9 cartas únicas do seu álbum', `<div class="cg-deck-body">
-      <aside class="cg-deck-slots"><div class="cg-section-head"><h3>Baralho ativo</h3><span>${deckDraft.length}/9</span></div>
-        ${deckDraft.length ? deckDraft.map((id, index) => { const card = byId.get(id); return `<div class="cg-deck-slot">
-          <img src="${card.art}" alt=""><strong>${index + 1}. ${escapeHtml(card.name)}</strong><button data-remove="${id}">✕</button></div>`; }).join('')
-          : '<p style="color:#94a0bf;font-size:11px;line-height:1.6">Seu baralho está vazio. Abra boosters e escolha nove cartas.</p>'}
-        <button class="cg-btn primary" data-action="save" ${deckDraft.length === 9 ? '' : 'disabled'} style="width:100%;margin-top:8px">Salvar baralho</button>
+    const choices = (profile.collection || []).map((item) => {
+      const card = byId.get(item.cardId);
+      const token = item.cardToken || (item.isShiny ? `${item.cardId}~${item.shinyBonusSide}` : item.cardId);
+      return { card, token, item };
+    }).filter(({ card }) => card && (!normalized
+      || card.name.toLowerCase().includes(normalized) || String(card.dex).includes(normalized)));
+    shell('Baralho de batalha', 'Escolha 15 espécies únicas; shinies usam o atributo bonificado', `<div class="cg-deck-body">
+      <aside class="cg-deck-slots"><div class="cg-section-head"><h3>Baralho ativo</h3><span>${deckDraft.length}/15</span></div>
+        ${deckDraft.length ? deckDraft.map((token, index) => {
+          const card = byId.get(tokenCardId(token));
+          return `<div class="cg-deck-slot"><img src="${card.art}" alt=""><strong>${index + 1}. ${escapeHtml(card.name)}
+            ${tokenSide(token) ? ` <span class="cg-shiny-label">✦ ${tokenSide(token)}</span>` : ''}</strong>
+            <button data-remove="${escapeHtml(token)}">✕</button></div>`;
+        }).join('')
+          : '<p style="color:#94a0bf;font-size:11px;line-height:1.6">Seu baralho está vazio. Abra boosters e escolha quinze cartas.</p>'}
+        <button class="cg-btn primary" data-action="save" ${deckDraft.length === 15 ? '' : 'disabled'} style="width:100%;margin-top:8px">Salvar baralho</button>
       </aside><main><div class="cg-filters"><input id="cg-search" placeholder="Buscar no álbum" value="${escapeHtml(filter)}"></div>
-        <div class="cg-card-grid">${visible.map((card) => cardMarkup(card, { button: true, selected: deckDraft.includes(card.id),
-          disabled: deckDraft.length >= 9 && !deckDraft.includes(card.id), shiny: Boolean(owned.get(card.id)?.shiny),
-          quantity: (owned.get(card.id)?.normal || 0) + (owned.get(card.id)?.shiny || 0) })).join('')}</div></main></div>`);
+        <div class="cg-card-grid">${choices.map(({ card, token, item }) => cardMarkup(card, {
+          button: true,
+          selected: deckDraft.includes(token),
+          disabled: deckDraft.length >= 15 && !deckDraft.some((entry) => tokenCardId(entry) === card.id),
+          shiny: item.isShiny,
+          shinyBonusSide: item.shinyBonusSide,
+          cardToken: token,
+          quantity: item.quantity,
+          showInfo: true,
+        })).join('')}</div></main></div>`);
     host.querySelector('[data-action="save"]').onclick = async () => {
       try {
         profile = await gameItems.saveCardGameDeck(deckDraft);
         deck = [...deckDraft];
-        onToast('Baralho de 9 cartas salvo');
+        onToast('Baralho de 15 cartas salvo');
         renderDeck(filter);
       } catch (error) { onToast(error.message); }
     };
     host.querySelectorAll('[data-remove]').forEach((button) => {
       button.onclick = () => { deckDraft = deckDraft.filter((id) => id !== button.dataset.remove); renderDeck(filter); };
     });
-    host.querySelectorAll('.cg-card[data-card-id]').forEach((button) => {
+    host.querySelectorAll('button.cg-card[data-card-token]').forEach((button) => {
       button.onclick = () => {
-        const id = button.dataset.cardId;
-        if (deckDraft.includes(id)) deckDraft = deckDraft.filter((entry) => entry !== id);
-        else if (deckDraft.length < 9) deckDraft.push(id);
+        const token = button.dataset.cardToken;
+        const cardId = tokenCardId(token);
+        if (deckDraft.includes(token)) deckDraft = deckDraft.filter((entry) => entry !== token);
+        else if (deckDraft.some((entry) => tokenCardId(entry) === cardId)) {
+          deckDraft = deckDraft.map((entry) => tokenCardId(entry) === cardId ? token : entry);
+        } else if (deckDraft.length < 15) deckDraft.push(token);
         renderDeck(filter);
       };
     });
     host.querySelector('#cg-search').oninput = (event) => renderDeck(event.target.value);
+    bindCardInfo(host);
   }
 
   function renderBoosters(revealed = null) {
-    shell('Abrir boosters', `${profile.boosters} pacote${profile.boosters === 1 ? '' : 's'} disponível${profile.boosters === 1 ? '' : 'is'}`, `
+    const definitions = new Map((profile.boosterDefinitions || []).map((item) => [item.id, item]));
+    const balances = profile.boosterInventory || [];
+    const regularEntries = [...definitions.values()].filter((definition) => !definition.isSpecial).map((definition) => ({
+      definition,
+      targetCardId: '',
+      quantity: balances.find((item) => item.boosterId === definition.id && !item.targetCardId)?.quantity || 0,
+    }));
+    const specialDefinition = definitions.get('special');
+    const specialEntries = balances.filter((item) => item.boosterId === 'special').map((item) => ({
+      definition: specialDefinition,
+      targetCardId: item.targetCardId,
+      quantity: item.quantity,
+    }));
+    const entries = [...regularEntries, ...specialEntries];
+    const rareCost = Number(profile.rareExchangeCost) || 50;
+    const rareMinSpecies = Number(profile.rareExchangeMinSpecies) || 10;
+    const rareSpareCards = Number(profile.rareExchangeSpareCards) || 0;
+    const rareSpecies = Number(profile.rareExchangeSpecies) || 0;
+    const canExchangeRare = rareSpareCards >= rareCost && rareSpecies >= rareMinSpecies;
+    shell('Abrir boosters', `${profile.boosters} pacote${profile.boosters === 1 ? '' : 's'} ${profile.boosters === 1 ? 'disponível' : 'disponíveis'}`, `
       <div class="cg-booster-stage">${revealed ? `<div><div class="cg-reveal">${revealed.map((item) =>
-        cardMarkup(byId.get(item.cardId), { shiny: item.isShiny, quantity: 1 })).join('')}</div>
+        cardMarkup(byId.get(item.cardId), {
+          shiny: item.isShiny, shinyBonusSide: item.shinyBonusSide, cardToken: item.cardToken, quantity: 1, showInfo: true,
+        })).join('')}</div>
         <button class="cg-btn primary" data-action="continue" style="margin-top:24px">${profile.boosters ? 'Abrir próximo' : 'Ver álbum'}</button></div>`
-      : profile.boosters ? `<div><button class="cg-pack" data-action="open"><b>TOOQ TRIAD</b><small>5 CARTAS</small></button>
-        <p style="color:#9ca8c7;font-size:10px">Clique no pacote para rasgar e revelar</p></div>`
-      : `<div><div style="font-size:60px">◇</div><h3>Todos os boosters foram abertos</h3>
-        <p style="color:#9ca8c7;font-size:11px">Suas cartas já estão guardadas no álbum.</p>
-        <button class="cg-btn primary" data-go="album">Ir para o álbum</button></div>`}</div>`);
-    host.querySelector('[data-action="open"]')?.addEventListener('click', async (event) => {
-      if (opening) return;
-      opening = true;
-      event.currentTarget.style.animation = 'none';
-      event.currentTarget.style.transform = 'scale(1.12) rotate(4deg)';
+      : `<div style="width:100%"><div class="cg-rare-exchange"><strong>✦ Ritual do Booster Raro</strong>
+          <small>Entregue ${rareCost} cópias normais Rare+ excedentes de pelo menos ${rareMinSpecies} espécies.
+          Progresso: ${Math.min(rareSpareCards, rareCost)}/${rareCost} cartas · ${Math.min(rareSpecies, rareMinSpecies)}/${rareMinSpecies} espécies.</small>
+          <button class="cg-btn primary" data-exchange-rare ${canExchangeRare ? '' : 'disabled'}>
+            Entregar ${rareCost} cartas → Booster Raro</button></div>
+        <div class="cg-booster-list">${entries.map(({ definition, targetCardId, quantity }) => {
+        const target = targetCardId ? byId.get(targetCardId) : null;
+        const title = target ? `${definition?.name || 'Booster Especial'} · ${target.name}` : definition.name;
+        return `<button class="cg-booster-option" data-booster="${definition.id}" data-target="${targetCardId}"
+          ${quantity > 0 ? '' : 'disabled'}><b>×${quantity}</b><strong>${escapeHtml(title)}</strong>
+          <small>${escapeHtml(definition.description)}</small></button>`;
+      }).join('')}</div>
+        ${profile.boosters ? '<p style="color:#9ca8c7;font-size:10px">Escolha uma edição para abrir cinco cartas.</p>' : ''}
+      </div>`}</div>`);
+    host.querySelectorAll('[data-booster]:not(:disabled)').forEach((button) => {
+      button.addEventListener('click', async () => {
+        if (opening) return;
+        opening = true;
+        try {
+          const result = await gameItems.openCardGameBooster(button.dataset.booster, button.dataset.target);
+          profile = result.profile;
+          setTimeout(() => { opening = false; renderBoosters(result.cards); }, 260);
+        } catch (error) { opening = false; onToast(error.message); }
+      });
+    });
+    host.querySelector('[data-exchange-rare]:not(:disabled)')?.addEventListener('click', async (event) => {
+      event.currentTarget.disabled = true;
       try {
-        const result = await gameItems.openCardGameBooster();
+        const result = await gameItems.exchangeCardGameRareBooster();
         profile = result.profile;
-        setTimeout(() => { opening = false; renderBoosters(result.cards); }, 420);
-      } catch (error) { opening = false; onToast(error.message); }
+        onToast(result.message);
+        renderBoosters();
+      } catch (error) {
+        onToast(error.message);
+        renderBoosters();
+      }
     });
     host.querySelector('[data-action="continue"]')?.addEventListener('click', () => (
       profile.boosters ? renderBoosters() : menuApi.open('album')
     ));
     host.querySelector('[data-go="album"]')?.addEventListener('click', () => menuApi.open('album'));
+    bindCardInfo(host);
   }
 
   /**
@@ -354,7 +571,7 @@ export function createCardGamePanel({
     menu.style.top = `${Math.min(pointer.y + 12, innerHeight - 120)}px`;
     menu.classList.remove('cg-hidden');
     menu.querySelector('[data-action="challenge"]').onclick = () => {
-      if (!validDeck(deck)) { onToast('Abra boosters e monte um baralho de 9 cartas primeiro'); openMenu('deck'); return; }
+      if (!validDeck(deck)) { onToast('Abra boosters e monte um baralho de 15 cartas primeiro'); openMenu('deck'); return; }
       presence.cardGameChallenge(peer.key, deck);
       onToast(`Desafio enviado para ${peer.name}`);
       closePlayerMenu();
@@ -365,12 +582,12 @@ export function createCardGamePanel({
 
   function showInvite(data) {
     invite.innerHTML = `<strong>⚔ ${escapeHtml(data.fromName)} desafiou você!</strong>
-      <p>Cardgame 3×3 · baralho de 9 · mão de 6</p><div class="cg-invite-actions">
+      <p>Cardgame 3×3 · baralho de 15 · mão de 6</p><div class="cg-invite-actions">
       <button class="cg-btn" data-action="decline">Agora não</button><button class="cg-btn primary" data-action="accept">Aceitar duelo</button></div>`;
     invite.classList.remove('cg-hidden');
     invite.querySelector('[data-action="decline"]').onclick = () => { presence.cardGameDecline(data.challengeId); invite.classList.add('cg-hidden'); };
     invite.querySelector('[data-action="accept"]').onclick = () => {
-      if (!validDeck(deck)) { invite.classList.add('cg-hidden'); onToast('Monte um baralho de 9 cartas primeiro'); openMenu('deck'); return; }
+      if (!validDeck(deck)) { invite.classList.add('cg-hidden'); onToast('Monte um baralho de 15 cartas primeiro'); openMenu('deck'); return; }
       presence.cardGameAccept(data.challengeId, deck); invite.classList.add('cg-hidden');
     };
     setTimeout(() => invite.classList.add('cg-hidden'), 45000);
@@ -389,13 +606,16 @@ export function createCardGamePanel({
         <button class="cg-btn ${matchState.status === 'ongoing' ? 'danger' : ''}" data-action="exit">${matchState.status === 'ongoing' ? 'Desistir' : 'Fechar'}</button>
       </header><div class="cg-arena"><div class="cg-board">${matchState.board.map((cell, index) =>
         `<button class="cg-cell${cell ? ` controller-${cell.controller}` : ''}" data-cell="${index}"
-          ${cell || !myTurn || !selectedCardId || pendingMove ? 'disabled' : ''}>${cell ? cardMarkup(byId.get(cell.cardId)) : ''}</button>`).join('')}</div>
+          ${cell || !myTurn || !selectedCardId || pendingMove ? 'disabled' : ''}>${cell ? cardMarkup(byId.get(tokenCardId(cell.cardId)), {
+            shiny: Boolean(tokenSide(cell.cardId)), shinyBonusSide: tokenSide(cell.cardId), cardToken: cell.cardId,
+          }) : ''}</button>`).join('')}</div>
         <aside class="cg-hand-zone"><div class="cg-opponent"><strong>${escapeHtml(matchState.players[opponent].name)}</strong>
           <small> · ${matchState.players[opponent].handCount} na mão · ${matchState.players[opponent].drawPileCount} no monte</small>
           <div class="cg-card-backs">${Array.from({ length: matchState.players[opponent].handCount }, () => '<i class="cg-back"></i>').join('')}</div></div>
           <div class="cg-hand-title"><strong>Sua mão</strong><span>${matchState.players[mine].drawPileCount} no monte</span></div>
-          <div class="cg-hand">${matchState.hand.map((id) => cardMarkup(byId.get(id), { button: true,
-            selected: selectedCardId === id, disabled: !myTurn || pendingMove })).join('')}</div>
+          <div class="cg-hand">${matchState.hand.map((id) => cardMarkup(byId.get(tokenCardId(id)), { button: true,
+            selected: selectedCardId === id, disabled: !myTurn || pendingMove, shiny: Boolean(tokenSide(id)),
+            shinyBonusSide: tokenSide(id), cardToken: id, showInfo: true })).join('')}</div>
           ${result ? `<div class="cg-result">${result} · ${matchState.score[mine]} a ${matchState.score[opponent]}</div>` : ''}</aside>
       </div></div></section>`;
     matchOverlay.classList.remove('cg-hidden');
@@ -404,7 +624,7 @@ export function createCardGamePanel({
       else closeMatch();
     };
     matchOverlay.querySelectorAll('.cg-hand .cg-card').forEach((button) => {
-      button.onclick = () => { if (myTurn && !pendingMove) { selectedCardId = button.dataset.cardId; renderMatch(); } };
+      button.onclick = () => { if (myTurn && !pendingMove) { selectedCardId = button.dataset.cardToken; renderMatch(); } };
     });
     matchOverlay.querySelectorAll('[data-cell]').forEach((cell) => {
       cell.onclick = () => {
@@ -414,6 +634,7 @@ export function createCardGamePanel({
         renderMatch();
       };
     });
+    bindCardInfo(matchOverlay);
   }
   function closeMatch() { matchState = null; selectedCardId = null; pendingMove = false; matchOverlay.classList.add('cg-hidden'); }
 

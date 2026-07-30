@@ -31,6 +31,7 @@ public sealed class ArrangeDiceState
     public int Multiplier { get; set; }
     public int Payout { get; set; }
     public int BoostersAwarded { get; set; }
+    public string BoosterIdAwarded { get; set; } = "";
     public int? BoosterBalance { get; set; }
     public List<CardGameReward> CardsAwarded { get; set; } = [];
 }
@@ -57,9 +58,9 @@ public static class CasinoEndpoints
     // Mantido somente para desserializar rodadas históricas da máquina removida.
     private const string PokemonSlotsId = "pokemon-slots";
     private const string BlackjackId = "blackjack";
-    private const string ArrangeDiceRules = "2026-07-29.3";
+    private const string ArrangeDiceRules = "2026-07-30.1";
     private const string NerdSlotsRules = "2026-07-29.5";
-    private const string BlackjackRules = "2026-07-29.3";
+    private const string BlackjackRules = "2026-07-30.1";
     private const string PikachuPlayerId = "special-casino-pikachu";
     private const string MewtwoKingId = "special-casino-mewtwo";
     private const string GengarJackpotId = "special-slot-gengar";
@@ -267,8 +268,14 @@ public static class CasinoEndpoints
             if (state.BestRepeatedCount >= 5) rewardCards.Add(QuinaId);
             else if (state.BestRepeatedCount >= 4) rewardCards.Add(QuadraId);
             var grant = await CardGameEndpoints.GrantCasinoRewardsAsync(db, userId, 0, rewardCards.ToArray());
-            state.BoosterBalance = grant.BoosterBalance;
             state.CardsAwarded = grant.Cards.ToList();
+            if (state.WinningRun?.Length >= 5)
+            {
+                state.BoostersAwarded = 1;
+                state.BoosterIdAwarded = "rare";
+                state.BoosterBalance = await CardGameEndpoints.GrantBoostersAsync(db, userId, 1, "rare");
+            }
+            else state.BoosterBalance = grant.BoosterBalance;
             var user = await db.Users.SingleAsync(x => x.Id == userId);
             user.Coins = checked(user.Coins + state.Payout);
             round.Payout = state.Payout;
@@ -428,10 +435,9 @@ public static class CasinoEndpoints
 
     private static async Task GrantBlackjackRewardsAsync(AppDb db, int userId, BlackjackState state)
     {
-        var wonWithTwentyOne = (state.Outcome is "player-blackjack" or "player-win" or "dealer-bust")
-            && BlackjackMath.Score(state.PlayerCards).Total == 21;
-        var cards = state.Outcome == "player-blackjack" ? new[] { MeowthDealerId } : [];
-        state.BoostersAwarded = wonWithTwentyOne ? 1 : 0;
+        var naturalWin = state.Outcome == "player-blackjack";
+        var cards = naturalWin ? new[] { MeowthDealerId } : [];
+        state.BoostersAwarded = naturalWin && BlackjackMath.WinsNaturalBooster() ? 1 : 0;
         var grant = await CardGameEndpoints.GrantCasinoRewardsAsync(
             db, userId, state.BoostersAwarded, cards);
         state.BoosterBalance = grant.BoosterBalance;
@@ -467,11 +473,11 @@ public static class CasinoEndpoints
             coins,
             payouts = new[]
             {
-                new { run = 3, multiplier = 4, card = (string?)null },
-                new { run = 4, multiplier = 12, card = (string?)null },
-                new { run = 5, multiplier = 40, card = (string?)null },
-                new { run = 6, multiplier = 80, card = (string?)PikachuPlayerId },
-                new { run = 7, multiplier = 200, card = (string?)MewtwoKingId },
+                new { run = 3, multiplier = 4, card = (string?)null, booster = (string?)null },
+                new { run = 4, multiplier = 12, card = (string?)null, booster = (string?)null },
+                new { run = 5, multiplier = 40, card = (string?)null, booster = (string?)"rare" },
+                new { run = 6, multiplier = 80, card = (string?)PikachuPlayerId, booster = (string?)"rare" },
+                new { run = 7, multiplier = 200, card = (string?)MewtwoKingId, booster = (string?)"rare" },
             },
             deuce = "Repete o lançamento e concede uma rodada extra.",
             boxcars = "Remove uma rodada futura e permite levantar qualquer carta.",
@@ -507,10 +513,10 @@ public static class CasinoEndpoints
             bets = BlackjackBets,
             coins,
             dealerStandsOn = 17,
-            blackjackPayout = "x5",
-            normalPayoutMultiplier = 4,
-            blackjackPayoutMultiplier = 5,
-            twentyOneBooster = 1,
+            blackjackPayout = "3:2",
+            normalPayoutMultiplier = 2,
+            blackjackPayoutMultiplier = 2.5m,
+            naturalBoosterChancePercent = BlackjackMath.NaturalBoosterChancePercent,
             naturalCard = MeowthDealerId,
             activeRound,
         },
@@ -560,6 +566,7 @@ public static class CasinoEndpoints
             rewards = new
             {
                 boosters = state.BoostersAwarded,
+                boosterId = state.BoosterIdAwarded,
                 boosterBalance = state.BoosterBalance,
                 cards = state.CardsAwarded,
             },
@@ -690,6 +697,7 @@ public static class NerdSlotsMath
 
 public static class BlackjackMath
 {
+    public const int NaturalBoosterChancePercent = 10;
     private static readonly string[] Ranks =
         ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
     private static readonly string[] Suits = ["hearts", "diamonds", "clubs", "spades"];
@@ -714,6 +722,9 @@ public static class BlackjackMath
         state.Deck.RemoveAt(state.Deck.Count - 1);
         return card;
     }
+
+    public static bool WinsNaturalBooster() =>
+        RandomNumberGenerator.GetInt32(100) < NaturalBoosterChancePercent;
 
     public static HandScore Score(IReadOnlyList<BlackjackCard> cards)
     {
@@ -768,8 +779,8 @@ public static class BlackjackMath
         state.Natural = natural;
         state.Payout = outcome switch
         {
-            "player-blackjack" => checked(bet * 5),
-            "player-win" or "dealer-bust" => checked(bet * 4),
+            "player-blackjack" => checked(bet * 5 / 2),
+            "player-win" or "dealer-bust" => checked(bet * 2),
             "push" => bet,
             _ => 0,
         };

@@ -25,7 +25,7 @@ const TUTORIAL_STEPS = [
   },
   {
     eyebrow: 'PASSO 4 · PRÊMIOS', title: 'Complete a sequência',
-    text: 'Uma carta da sequência repetida 2 vezes multiplica o prêmio por 3; repetida 3 ou mais, por 20. Quatro somas iguais dão Alakazam Quadra, com 4 colheres e atributos 7; cinco dão Alakazam Quina, com 5 colheres e atributos 9.',
+    text: 'Cinco cartas vizinhas dão um Booster Raro. Seis também dão Pikachu Jogador 13/13/13/13; sete dão Mewtwo Rei 15/15/15/15. Repetições ainda multiplicam o prêmio.',
     demo: '<div class="tutorial-run"><i>7</i><i>7</i><i>7</i><b>×20</b></div>',
   },
 ];
@@ -64,9 +64,10 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
         <details class="casino-paytable">
           <summary>Regras e prêmios</summary>
           <div>
-            <span><b>3 / 4 / 5 vizinhas</b><em>×4 / ×12 / ×40</em></span>
-            <span><b>6 vizinhas</b><em>×80 + Pikachu Jogador 8/8/8/8</em></span>
-            <span><b>Todas as 7</b><em>×200 + Mewtwo Rei 11/11/11/11</em></span>
+            <span><b>3 / 4 vizinhas</b><em>×4 / ×12</em></span>
+            <span><b>5 vizinhas</b><em>×40 + Booster Raro</em></span>
+            <span><b>6 vizinhas</b><em>×80 + Booster Raro + Pikachu Jogador 13/13/13/13</em></span>
+            <span><b>Todas as 7</b><em>×200 + Booster Raro + Mewtwo Rei 15/15/15/15</em></span>
             <span><b>Carta da sequência 2× / 3×</b><em>prêmio ×3 / ×20</em></span>
             <span><b>Mesma soma 4×</b><em>Alakazam Quadra · 4 colheres · 7/7/7/7</em></span>
             <span><b>Mesma soma 5×</b><em>Alakazam Quina · 5 colheres · 9/9/9/9</em></span>
@@ -155,7 +156,7 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
 
   const rewardText = (rewards) => {
     const parts = [];
-    if (rewards?.boosters) parts.push(`+${rewards.boosters} booster`);
+    if (rewards?.boosters) parts.push(`+${rewards.boosters} ${rewards.boosterId === 'rare' ? 'Booster Raro' : 'booster'}`);
     for (const card of rewards?.cards || []) parts.push(`carta ${card.name}`);
     return parts.length ? ` · ${parts.join(' + ')}` : '';
   };
@@ -170,7 +171,9 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
       : round.rewards?.cards?.length
         ? `Sem sequência de moedas, mas você ganhou ${round.rewards.cards.map((card) => card.name).join(' + ')}!`
         : 'Nenhuma sequência de três cartas vizinhas.';
-    if (round.rewards?.cards?.length)
+    if (round.rewards?.boosters)
+      onToast(`Sequência especial: +${round.rewards.boosters} Booster Raro!`);
+    else if (round.rewards?.cards?.length)
       onToast(`Prêmio especial: ${round.rewards.cards.map((card) => card.name).join(', ')}!`);
     else if (round.payout > round.bet) onToast(`Arrange Dice: +${round.payout - round.bet} 🪙`);
   };

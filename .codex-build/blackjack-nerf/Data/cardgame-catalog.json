@@ -1,0 +1,2768 @@
+{
+  "version": 1,
+  "generatedFrom": "PokeAPI",
+  "baseCount": 151,
+  "cards": [
+    {
+      "id": "pokemon-001",
+      "dex": 1,
+      "name": "Bulbasaur",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 3,
+        "bottom": 3,
+        "left": 5
+      },
+      "powerRating": 15,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/001.png"
+    },
+    {
+      "id": "pokemon-002",
+      "dex": 2,
+      "name": "Ivysaur",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 5,
+        "bottom": 5,
+        "left": 6
+      },
+      "powerRating": 22,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/002.png"
+    },
+    {
+      "id": "pokemon-003",
+      "dex": 3,
+      "name": "Venusaur",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 7,
+        "bottom": 7,
+        "left": 8
+      },
+      "powerRating": 30,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/003.png"
+    },
+    {
+      "id": "pokemon-004",
+      "dex": 4,
+      "name": "Charmander",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 3,
+        "left": 5
+      },
+      "powerRating": 15,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/004.png"
+    },
+    {
+      "id": "pokemon-005",
+      "dex": 5,
+      "name": "Charmeleon",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 6,
+        "bottom": 5,
+        "left": 7
+      },
+      "powerRating": 23,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/005.png"
+    },
+    {
+      "id": "pokemon-006",
+      "dex": 6,
+      "name": "Charizard",
+      "types": [
+        "fire",
+        "flying"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 8,
+        "bottom": 7,
+        "left": 9
+      },
+      "powerRating": 31,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/006.png"
+    },
+    {
+      "id": "pokemon-007",
+      "dex": 7,
+      "name": "Squirtle",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 3,
+        "bottom": 4,
+        "left": 3
+      },
+      "powerRating": 15,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/007.png"
+    },
+    {
+      "id": "pokemon-008",
+      "dex": 8,
+      "name": "Wartortle",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 5,
+        "bottom": 6,
+        "left": 5
+      },
+      "powerRating": 23,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/008.png"
+    },
+    {
+      "id": "pokemon-009",
+      "dex": 9,
+      "name": "Blastoise",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 7,
+        "bottom": 8,
+        "left": 7
+      },
+      "powerRating": 31,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/009.png"
+    },
+    {
+      "id": "pokemon-010",
+      "dex": 10,
+      "name": "Caterpie",
+      "types": [
+        "bug"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 2,
+        "bottom": 3,
+        "left": 2
+      },
+      "powerRating": 9,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/010.png"
+    },
+    {
+      "id": "pokemon-011",
+      "dex": 11,
+      "name": "Metapod",
+      "types": [
+        "bug"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 2,
+        "bottom": 4,
+        "left": 2
+      },
+      "powerRating": 11,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/011.png"
+    },
+    {
+      "id": "pokemon-012",
+      "dex": 12,
+      "name": "Butterfree",
+      "types": [
+        "bug",
+        "flying"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 4,
+        "bottom": 4,
+        "left": 7
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/012.png"
+    },
+    {
+      "id": "pokemon-013",
+      "dex": 13,
+      "name": "Weedle",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 3,
+        "bottom": 2,
+        "left": 2
+      },
+      "powerRating": 9,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/013.png"
+    },
+    {
+      "id": "pokemon-014",
+      "dex": 14,
+      "name": "Kakuna",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 2,
+        "bottom": 3,
+        "left": 2
+      },
+      "powerRating": 10,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/014.png"
+    },
+    {
+      "id": "pokemon-015",
+      "dex": 15,
+      "name": "Beedrill",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 7,
+        "bottom": 4,
+        "left": 4
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/015.png"
+    },
+    {
+      "id": "pokemon-016",
+      "dex": 16,
+      "name": "Pidgey",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 3,
+        "bottom": 3,
+        "left": 3
+      },
+      "powerRating": 12,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/016.png"
+    },
+    {
+      "id": "pokemon-017",
+      "dex": 17,
+      "name": "Pidgeotto",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 5,
+        "bottom": 5,
+        "left": 5
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/017.png"
+    },
+    {
+      "id": "pokemon-018",
+      "dex": 18,
+      "name": "Pidgeot",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 8,
+        "bottom": 7,
+        "left": 7
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/018.png"
+    },
+    {
+      "id": "pokemon-019",
+      "dex": 19,
+      "name": "Rattata",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 5,
+        "bottom": 2,
+        "left": 3
+      },
+      "powerRating": 12,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/019.png"
+    },
+    {
+      "id": "pokemon-020",
+      "dex": 20,
+      "name": "Raticate",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 8,
+        "bottom": 4,
+        "left": 6
+      },
+      "powerRating": 23,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/020.png"
+    },
+    {
+      "id": "pokemon-021",
+      "dex": 21,
+      "name": "Spearow",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 5,
+        "bottom": 2,
+        "left": 3
+      },
+      "powerRating": 12,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/021.png"
+    },
+    {
+      "id": "pokemon-022",
+      "dex": 22,
+      "name": "Fearow",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 8,
+        "bottom": 6,
+        "left": 7
+      },
+      "powerRating": 26,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/022.png"
+    },
+    {
+      "id": "pokemon-023",
+      "dex": 23,
+      "name": "Ekans",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 3,
+        "left": 3
+      },
+      "powerRating": 13,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/023.png"
+    },
+    {
+      "id": "pokemon-024",
+      "dex": 24,
+      "name": "Arbok",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 7,
+        "bottom": 5,
+        "left": 6
+      },
+      "powerRating": 24,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/024.png"
+    },
+    {
+      "id": "pokemon-025",
+      "dex": 25,
+      "name": "Pikachu",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 6,
+        "bottom": 2,
+        "left": 5
+      },
+      "powerRating": 16,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/025.png"
+    },
+    {
+      "id": "pokemon-026",
+      "dex": 26,
+      "name": "Raichu",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 8,
+        "bottom": 5,
+        "left": 8
+      },
+      "powerRating": 26,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/026.png"
+    },
+    {
+      "id": "pokemon-027",
+      "dex": 27,
+      "name": "Sandshrew",
+      "types": [
+        "ground"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 4,
+        "bottom": 6,
+        "left": 2
+      },
+      "powerRating": 17,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/027.png"
+    },
+    {
+      "id": "pokemon-028",
+      "dex": 28,
+      "name": "Sandslash",
+      "types": [
+        "ground"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 7,
+        "bottom": 8,
+        "left": 4
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/028.png"
+    },
+    {
+      "id": "pokemon-029",
+      "dex": 29,
+      "name": "Nidoran F",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 3,
+        "bottom": 4,
+        "left": 3
+      },
+      "powerRating": 13,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/029.png"
+    },
+    {
+      "id": "pokemon-030",
+      "dex": 30,
+      "name": "Nidorina",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 4,
+        "bottom": 6,
+        "left": 4
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/030.png"
+    },
+    {
+      "id": "pokemon-031",
+      "dex": 31,
+      "name": "Nidoqueen",
+      "types": [
+        "poison",
+        "ground"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 7,
+        "bottom": 8,
+        "left": 7
+      },
+      "powerRating": 30,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/031.png"
+    },
+    {
+      "id": "pokemon-032",
+      "dex": 32,
+      "name": "Nidoran M",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 3,
+        "left": 3
+      },
+      "powerRating": 13,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/032.png"
+    },
+    {
+      "id": "pokemon-033",
+      "dex": 33,
+      "name": "Nidorino",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 5,
+        "bottom": 5,
+        "left": 5
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/033.png"
+    },
+    {
+      "id": "pokemon-034",
+      "dex": 34,
+      "name": "Nidoking",
+      "types": [
+        "poison",
+        "ground"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 8,
+        "bottom": 7,
+        "left": 7
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/034.png"
+    },
+    {
+      "id": "pokemon-035",
+      "dex": 35,
+      "name": "Clefairy",
+      "types": [
+        "fairy"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 2,
+        "bottom": 5,
+        "left": 4
+      },
+      "powerRating": 15,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/035.png"
+    },
+    {
+      "id": "pokemon-036",
+      "dex": 36,
+      "name": "Clefable",
+      "types": [
+        "fairy"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 5,
+        "bottom": 8,
+        "left": 7
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/036.png"
+    },
+    {
+      "id": "pokemon-037",
+      "dex": 37,
+      "name": "Vulpix",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 4,
+        "bottom": 3,
+        "left": 4
+      },
+      "powerRating": 15,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/037.png"
+    },
+    {
+      "id": "pokemon-038",
+      "dex": 38,
+      "name": "Ninetales",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 7,
+        "bottom": 7,
+        "left": 7
+      },
+      "powerRating": 28,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/038.png"
+    },
+    {
+      "id": "pokemon-039",
+      "dex": 39,
+      "name": "Jigglypuff",
+      "types": [
+        "normal",
+        "fairy"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 2,
+        "bottom": 6,
+        "left": 3
+      },
+      "powerRating": 13,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/039.png"
+    },
+    {
+      "id": "pokemon-040",
+      "dex": 40,
+      "name": "Wigglytuff",
+      "types": [
+        "normal",
+        "fairy"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 9,
+        "left": 6
+      },
+      "powerRating": 22,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/040.png"
+    },
+    {
+      "id": "pokemon-041",
+      "dex": 41,
+      "name": "Zubat",
+      "types": [
+        "poison",
+        "flying"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 3,
+        "bottom": 2,
+        "left": 3
+      },
+      "powerRating": 10,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/041.png"
+    },
+    {
+      "id": "pokemon-042",
+      "dex": 42,
+      "name": "Golbat",
+      "types": [
+        "poison",
+        "flying"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 7,
+        "bottom": 6,
+        "left": 6
+      },
+      "powerRating": 25,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/042.png"
+    },
+    {
+      "id": "pokemon-043",
+      "dex": 43,
+      "name": "Oddish",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 2,
+        "bottom": 4,
+        "left": 5
+      },
+      "powerRating": 15,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/043.png"
+    },
+    {
+      "id": "pokemon-044",
+      "dex": 44,
+      "name": "Gloom",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 3,
+        "bottom": 6,
+        "left": 6
+      },
+      "powerRating": 21,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/044.png"
+    },
+    {
+      "id": "pokemon-045",
+      "dex": 45,
+      "name": "Vileplume",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 5,
+        "bottom": 7,
+        "left": 8
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/045.png"
+    },
+    {
+      "id": "pokemon-046",
+      "dex": 46,
+      "name": "Paras",
+      "types": [
+        "bug",
+        "grass"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 3,
+        "bottom": 3,
+        "left": 3
+      },
+      "powerRating": 13,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/046.png"
+    },
+    {
+      "id": "pokemon-047",
+      "dex": 47,
+      "name": "Parasect",
+      "types": [
+        "bug",
+        "grass"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 4,
+        "bottom": 6,
+        "left": 4
+      },
+      "powerRating": 21,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/047.png"
+    },
+    {
+      "id": "pokemon-048",
+      "dex": 48,
+      "name": "Venonat",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 3,
+        "bottom": 4,
+        "left": 3
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/048.png"
+    },
+    {
+      "id": "pokemon-049",
+      "dex": 49,
+      "name": "Venomoth",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 6,
+        "bottom": 6,
+        "left": 8
+      },
+      "powerRating": 25,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/049.png"
+    },
+    {
+      "id": "pokemon-050",
+      "dex": 50,
+      "name": "Diglett",
+      "types": [
+        "ground"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 6,
+        "bottom": 2,
+        "left": 4
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/050.png"
+    },
+    {
+      "id": "pokemon-051",
+      "dex": 51,
+      "name": "Dugtrio",
+      "types": [
+        "ground"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 9,
+        "bottom": 3,
+        "left": 6
+      },
+      "powerRating": 22,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/051.png"
+    },
+    {
+      "id": "pokemon-052",
+      "dex": 52,
+      "name": "Meowth",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 5,
+        "bottom": 2,
+        "left": 5
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/052.png"
+    },
+    {
+      "id": "pokemon-053",
+      "dex": 53,
+      "name": "Persian",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 8,
+        "bottom": 5,
+        "left": 7
+      },
+      "powerRating": 25,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/053.png"
+    },
+    {
+      "id": "pokemon-054",
+      "dex": 54,
+      "name": "Psyduck",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 4,
+        "left": 5
+      },
+      "powerRating": 16,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/054.png"
+    },
+    {
+      "id": "pokemon-055",
+      "dex": 55,
+      "name": "Golduck",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 7,
+        "bottom": 7,
+        "left": 8
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/055.png"
+    },
+    {
+      "id": "pokemon-056",
+      "dex": 56,
+      "name": "Mankey",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 6,
+        "bottom": 2,
+        "left": 3
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/056.png"
+    },
+    {
+      "id": "pokemon-057",
+      "dex": 57,
+      "name": "Primeape",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 8,
+        "bottom": 5,
+        "left": 6
+      },
+      "powerRating": 24,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/057.png"
+    },
+    {
+      "id": "pokemon-058",
+      "dex": 58,
+      "name": "Growlithe",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 5,
+        "bottom": 4,
+        "left": 6
+      },
+      "powerRating": 18,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/058.png"
+    },
+    {
+      "id": "pokemon-059",
+      "dex": 59,
+      "name": "Arcanine",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 8,
+        "bottom": 8,
+        "left": 8
+      },
+      "powerRating": 31,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/059.png"
+    },
+    {
+      "id": "pokemon-060",
+      "dex": 60,
+      "name": "Poliwag",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 6,
+        "bottom": 3,
+        "left": 5
+      },
+      "powerRating": 17,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/060.png"
+    },
+    {
+      "id": "pokemon-061",
+      "dex": 61,
+      "name": "Poliwhirl",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 6,
+        "bottom": 6,
+        "left": 5
+      },
+      "powerRating": 22,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/061.png"
+    },
+    {
+      "id": "pokemon-062",
+      "dex": 62,
+      "name": "Poliwrath",
+      "types": [
+        "water",
+        "fighting"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 7,
+        "bottom": 8,
+        "left": 6
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/062.png"
+    },
+    {
+      "id": "pokemon-063",
+      "dex": 63,
+      "name": "Abra",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 4,
+        "bottom": 2,
+        "left": 8
+      },
+      "powerRating": 16,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/063.png"
+    },
+    {
+      "id": "pokemon-064",
+      "dex": 64,
+      "name": "Kadabra",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 6,
+        "bottom": 2,
+        "left": 9
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/064.png"
+    },
+    {
+      "id": "pokemon-065",
+      "dex": 65,
+      "name": "Alakazam",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 7,
+        "bottom": 4,
+        "left": 9
+      },
+      "powerRating": 25,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/065.png"
+    },
+    {
+      "id": "pokemon-066",
+      "dex": 66,
+      "name": "Machop",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 5,
+        "left": 2
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/066.png"
+    },
+    {
+      "id": "pokemon-067",
+      "dex": 67,
+      "name": "Machoke",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 5,
+        "bottom": 7,
+        "left": 4
+      },
+      "powerRating": 21,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/067.png"
+    },
+    {
+      "id": "pokemon-068",
+      "dex": 68,
+      "name": "Machamp",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 7,
+        "bottom": 8,
+        "left": 5
+      },
+      "powerRating": 27,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/068.png"
+    },
+    {
+      "id": "pokemon-069",
+      "dex": 69,
+      "name": "Bellsprout",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 4,
+        "bottom": 3,
+        "left": 5
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/069.png"
+    },
+    {
+      "id": "pokemon-070",
+      "dex": 70,
+      "name": "Weepinbell",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 6,
+        "bottom": 5,
+        "left": 6
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/070.png"
+    },
+    {
+      "id": "pokemon-071",
+      "dex": 71,
+      "name": "Victreebel",
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 7,
+        "bottom": 7,
+        "left": 8
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/071.png"
+    },
+    {
+      "id": "pokemon-072",
+      "dex": 72,
+      "name": "Tentacool",
+      "types": [
+        "water",
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 4,
+        "bottom": 2,
+        "left": 5
+      },
+      "powerRating": 15,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/072.png"
+    },
+    {
+      "id": "pokemon-073",
+      "dex": 73,
+      "name": "Tentacruel",
+      "types": [
+        "water",
+        "poison"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 7,
+        "bottom": 7,
+        "left": 7
+      },
+      "powerRating": 28,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/073.png"
+    },
+    {
+      "id": "pokemon-074",
+      "dex": 74,
+      "name": "Geodude",
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 3,
+        "bottom": 6,
+        "left": 2
+      },
+      "powerRating": 17,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/074.png"
+    },
+    {
+      "id": "pokemon-075",
+      "dex": 75,
+      "name": "Graveler",
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 5,
+        "bottom": 7,
+        "left": 3
+      },
+      "powerRating": 23,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/075.png"
+    },
+    {
+      "id": "pokemon-076",
+      "dex": 76,
+      "name": "Golem",
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 6,
+        "bottom": 9,
+        "left": 4
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/076.png"
+    },
+    {
+      "id": "pokemon-077",
+      "dex": 77,
+      "name": "Ponyta",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 7,
+        "bottom": 4,
+        "left": 6
+      },
+      "powerRating": 21,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/077.png"
+    },
+    {
+      "id": "pokemon-078",
+      "dex": 78,
+      "name": "Rapidash",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 9,
+        "bottom": 6,
+        "left": 8
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/078.png"
+    },
+    {
+      "id": "pokemon-079",
+      "dex": 79,
+      "name": "Slowpoke",
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 2,
+        "bottom": 7,
+        "left": 2
+      },
+      "powerRating": 15,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/079.png"
+    },
+    {
+      "id": "pokemon-080",
+      "dex": 80,
+      "name": "Slowbro",
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 3,
+        "bottom": 9,
+        "left": 7
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/080.png"
+    },
+    {
+      "id": "pokemon-081",
+      "dex": 81,
+      "name": "Magnemite",
+      "types": [
+        "electric",
+        "steel"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 2,
+        "bottom": 3,
+        "left": 7
+      },
+      "powerRating": 17,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/081.png"
+    },
+    {
+      "id": "pokemon-082",
+      "dex": 82,
+      "name": "Magneton",
+      "types": [
+        "electric",
+        "steel"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 5,
+        "bottom": 6,
+        "left": 8
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/082.png"
+    },
+    {
+      "id": "pokemon-083",
+      "dex": 83,
+      "name": "Farfetchd",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 6,
+        "bottom": 4,
+        "left": 5
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/083.png"
+    },
+    {
+      "id": "pokemon-084",
+      "dex": 84,
+      "name": "Doduo",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 7,
+        "bottom": 3,
+        "left": 4
+      },
+      "powerRating": 17,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/084.png"
+    },
+    {
+      "id": "pokemon-085",
+      "dex": 85,
+      "name": "Dodrio",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 9,
+        "bottom": 6,
+        "left": 7
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/085.png"
+    },
+    {
+      "id": "pokemon-086",
+      "dex": 86,
+      "name": "Seel",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 3,
+        "bottom": 5,
+        "left": 3
+      },
+      "powerRating": 16,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/086.png"
+    },
+    {
+      "id": "pokemon-087",
+      "dex": 87,
+      "name": "Dewgong",
+      "types": [
+        "water",
+        "ice"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 6,
+        "bottom": 8,
+        "left": 6
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/087.png"
+    },
+    {
+      "id": "pokemon-088",
+      "dex": 88,
+      "name": "Grimer",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 3,
+        "bottom": 6,
+        "left": 2
+      },
+      "powerRating": 15,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/088.png"
+    },
+    {
+      "id": "pokemon-089",
+      "dex": 89,
+      "name": "Muk",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 6,
+        "bottom": 8,
+        "left": 5
+      },
+      "powerRating": 26,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/089.png"
+    },
+    {
+      "id": "pokemon-090",
+      "dex": 90,
+      "name": "Shellder",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 3,
+        "bottom": 5,
+        "left": 3
+      },
+      "powerRating": 17,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/090.png"
+    },
+    {
+      "id": "pokemon-091",
+      "dex": 91,
+      "name": "Cloyster",
+      "types": [
+        "water",
+        "ice"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 7,
+        "bottom": 9,
+        "left": 7
+      },
+      "powerRating": 32,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/091.png"
+    },
+    {
+      "id": "pokemon-092",
+      "dex": 92,
+      "name": "Gastly",
+      "types": [
+        "ghost",
+        "poison"
+      ],
+      "edges": {
+        "top": 2,
+        "right": 4,
+        "bottom": 2,
+        "left": 8
+      },
+      "powerRating": 16,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/092.png"
+    },
+    {
+      "id": "pokemon-093",
+      "dex": 93,
+      "name": "Haunter",
+      "types": [
+        "ghost",
+        "poison"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 6,
+        "bottom": 3,
+        "left": 9
+      },
+      "powerRating": 21,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/093.png"
+    },
+    {
+      "id": "pokemon-094",
+      "dex": 94,
+      "name": "Gengar",
+      "types": [
+        "ghost",
+        "poison"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 8,
+        "bottom": 5,
+        "left": 9
+      },
+      "powerRating": 27,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/094.png"
+    },
+    {
+      "id": "pokemon-095",
+      "dex": 95,
+      "name": "Onix",
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 4,
+        "bottom": 8,
+        "left": 3
+      },
+      "powerRating": 24,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/095.png"
+    },
+    {
+      "id": "pokemon-096",
+      "dex": 96,
+      "name": "Drowzee",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 3,
+        "bottom": 4,
+        "left": 3
+      },
+      "powerRating": 15,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/096.png"
+    },
+    {
+      "id": "pokemon-097",
+      "dex": 97,
+      "name": "Hypno",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 5,
+        "bottom": 7,
+        "left": 6
+      },
+      "powerRating": 26,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/097.png"
+    },
+    {
+      "id": "pokemon-098",
+      "dex": 98,
+      "name": "Krabby",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 6,
+        "bottom": 4,
+        "left": 2
+      },
+      "powerRating": 18,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/098.png"
+    },
+    {
+      "id": "pokemon-099",
+      "dex": 99,
+      "name": "Kingler",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 8,
+        "bottom": 7,
+        "left": 5
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/099.png"
+    },
+    {
+      "id": "pokemon-100",
+      "dex": 100,
+      "name": "Voltorb",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 5,
+        "bottom": 3,
+        "left": 6
+      },
+      "powerRating": 18,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/100.png"
+    },
+    {
+      "id": "pokemon-101",
+      "dex": 101,
+      "name": "Electrode",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 9,
+        "bottom": 6,
+        "left": 8
+      },
+      "powerRating": 29,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/101.png"
+    },
+    {
+      "id": "pokemon-102",
+      "dex": 102,
+      "name": "Exeggcute",
+      "types": [
+        "grass",
+        "psychic"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 2,
+        "bottom": 6,
+        "left": 4
+      },
+      "powerRating": 18,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/102.png"
+    },
+    {
+      "id": "pokemon-103",
+      "dex": 103,
+      "name": "Exeggutor",
+      "types": [
+        "grass",
+        "psychic"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 6,
+        "bottom": 8,
+        "left": 8
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/103.png"
+    },
+    {
+      "id": "pokemon-104",
+      "dex": 104,
+      "name": "Cubone",
+      "types": [
+        "ground"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 3,
+        "bottom": 6,
+        "left": 3
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/104.png"
+    },
+    {
+      "id": "pokemon-105",
+      "dex": 105,
+      "name": "Marowak",
+      "types": [
+        "ground"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 5,
+        "bottom": 7,
+        "left": 4
+      },
+      "powerRating": 25,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/105.png"
+    },
+    {
+      "id": "pokemon-106",
+      "dex": 106,
+      "name": "Hitmonlee",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 9,
+        "bottom": 4,
+        "left": 4
+      },
+      "powerRating": 23,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/106.png"
+    },
+    {
+      "id": "pokemon-107",
+      "dex": 107,
+      "name": "Hitmonchan",
+      "types": [
+        "fighting"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 7,
+        "bottom": 5,
+        "left": 4
+      },
+      "powerRating": 24,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/107.png"
+    },
+    {
+      "id": "pokemon-108",
+      "dex": 108,
+      "name": "Lickitung",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 3,
+        "bottom": 7,
+        "left": 4
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/108.png"
+    },
+    {
+      "id": "pokemon-109",
+      "dex": 109,
+      "name": "Koffing",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 3,
+        "bottom": 6,
+        "left": 4
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/109.png"
+    },
+    {
+      "id": "pokemon-110",
+      "dex": 110,
+      "name": "Weezing",
+      "types": [
+        "poison"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 6,
+        "bottom": 8,
+        "left": 7
+      },
+      "powerRating": 30,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/110.png"
+    },
+    {
+      "id": "pokemon-111",
+      "dex": 111,
+      "name": "Rhyhorn",
+      "types": [
+        "ground",
+        "rock"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 4,
+        "bottom": 8,
+        "left": 2
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/111.png"
+    },
+    {
+      "id": "pokemon-112",
+      "dex": 112,
+      "name": "Rhydon",
+      "types": [
+        "ground",
+        "rock"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 7,
+        "bottom": 9,
+        "left": 3
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/112.png"
+    },
+    {
+      "id": "pokemon-113",
+      "dex": 113,
+      "name": "Chansey",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 2,
+        "bottom": 9,
+        "left": 3
+      },
+      "powerRating": 17,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/113.png"
+    },
+    {
+      "id": "pokemon-114",
+      "dex": 114,
+      "name": "Tangela",
+      "types": [
+        "grass"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 4,
+        "bottom": 8,
+        "left": 7
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/114.png"
+    },
+    {
+      "id": "pokemon-115",
+      "dex": 115,
+      "name": "Kangaskhan",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 8,
+        "bottom": 8,
+        "left": 5
+      },
+      "powerRating": 28,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/115.png"
+    },
+    {
+      "id": "pokemon-116",
+      "dex": 116,
+      "name": "Horsea",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 3,
+        "bottom": 3,
+        "left": 6
+      },
+      "powerRating": 16,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/116.png"
+    },
+    {
+      "id": "pokemon-117",
+      "dex": 117,
+      "name": "Seadra",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 6,
+        "bottom": 6,
+        "left": 8
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/117.png"
+    },
+    {
+      "id": "pokemon-118",
+      "dex": 118,
+      "name": "Goldeen",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 5,
+        "bottom": 4,
+        "left": 3
+      },
+      "powerRating": 16,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/118.png"
+    },
+    {
+      "id": "pokemon-119",
+      "dex": 119,
+      "name": "Seaking",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 7,
+        "bottom": 7,
+        "left": 5
+      },
+      "powerRating": 25,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/119.png"
+    },
+    {
+      "id": "pokemon-120",
+      "dex": 120,
+      "name": "Staryu",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 5,
+        "bottom": 3,
+        "left": 7
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/120.png"
+    },
+    {
+      "id": "pokemon-121",
+      "dex": 121,
+      "name": "Starmie",
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 8,
+        "bottom": 6,
+        "left": 9
+      },
+      "powerRating": 31,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/121.png"
+    },
+    {
+      "id": "pokemon-122",
+      "dex": 122,
+      "name": "Mr Mime",
+      "types": [
+        "psychic",
+        "fairy"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 5,
+        "bottom": 4,
+        "left": 8
+      },
+      "powerRating": 24,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/122.png"
+    },
+    {
+      "id": "pokemon-123",
+      "dex": 123,
+      "name": "Scyther",
+      "types": [
+        "bug",
+        "flying"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 9,
+        "bottom": 7,
+        "left": 6
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/123.png"
+    },
+    {
+      "id": "pokemon-124",
+      "dex": 124,
+      "name": "Jynx",
+      "types": [
+        "ice",
+        "psychic"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 6,
+        "bottom": 4,
+        "left": 9
+      },
+      "powerRating": 23,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/124.png"
+    },
+    {
+      "id": "pokemon-125",
+      "dex": 125,
+      "name": "Electabuzz",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 8,
+        "bottom": 5,
+        "left": 8
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/125.png"
+    },
+    {
+      "id": "pokemon-126",
+      "dex": 126,
+      "name": "Magmar",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 8,
+        "bottom": 5,
+        "left": 8
+      },
+      "powerRating": 27,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/126.png"
+    },
+    {
+      "id": "pokemon-127",
+      "dex": 127,
+      "name": "Pinsir",
+      "types": [
+        "bug"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 9,
+        "bottom": 7,
+        "left": 5
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/127.png"
+    },
+    {
+      "id": "pokemon-128",
+      "dex": 128,
+      "name": "Tauros",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 9,
+        "bottom": 8,
+        "left": 5
+      },
+      "powerRating": 30,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/128.png"
+    },
+    {
+      "id": "pokemon-129",
+      "dex": 129,
+      "name": "Magikarp",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 3,
+        "bottom": 2,
+        "left": 3
+      },
+      "powerRating": 11,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/129.png"
+    },
+    {
+      "id": "pokemon-130",
+      "dex": 130,
+      "name": "Gyarados",
+      "types": [
+        "water",
+        "flying"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 8,
+        "bottom": 8,
+        "left": 6
+      },
+      "powerRating": 30,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/130.png"
+    },
+    {
+      "id": "pokemon-131",
+      "dex": 131,
+      "name": "Lapras",
+      "types": [
+        "water",
+        "ice"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 6,
+        "bottom": 9,
+        "left": 7
+      },
+      "powerRating": 30,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/131.png"
+    },
+    {
+      "id": "pokemon-132",
+      "dex": 132,
+      "name": "Ditto",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 3,
+        "bottom": 3,
+        "left": 4
+      },
+      "powerRating": 13,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/132.png"
+    },
+    {
+      "id": "pokemon-133",
+      "dex": 133,
+      "name": "Eevee",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 4,
+        "right": 4,
+        "bottom": 4,
+        "left": 4
+      },
+      "powerRating": 16,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/133.png"
+    },
+    {
+      "id": "pokemon-134",
+      "dex": 134,
+      "name": "Vaporeon",
+      "types": [
+        "water"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 5,
+        "bottom": 9,
+        "left": 8
+      },
+      "powerRating": 28,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/134.png"
+    },
+    {
+      "id": "pokemon-135",
+      "dex": 135,
+      "name": "Jolteon",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 8,
+        "bottom": 5,
+        "left": 9
+      },
+      "powerRating": 28,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/135.png"
+    },
+    {
+      "id": "pokemon-136",
+      "dex": 136,
+      "name": "Flareon",
+      "types": [
+        "fire"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 8,
+        "bottom": 5,
+        "left": 7
+      },
+      "powerRating": 27,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/136.png"
+    },
+    {
+      "id": "pokemon-137",
+      "dex": 137,
+      "name": "Porygon",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 3,
+        "bottom": 6,
+        "left": 6
+      },
+      "powerRating": 21,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/137.png"
+    },
+    {
+      "id": "pokemon-138",
+      "dex": 138,
+      "name": "Omanyte",
+      "types": [
+        "rock",
+        "water"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 2,
+        "bottom": 5,
+        "left": 6
+      },
+      "powerRating": 20,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/138.png"
+    },
+    {
+      "id": "pokemon-139",
+      "dex": 139,
+      "name": "Omastar",
+      "types": [
+        "rock",
+        "water"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 4,
+        "bottom": 8,
+        "left": 8
+      },
+      "powerRating": 29,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/139.png"
+    },
+    {
+      "id": "pokemon-140",
+      "dex": 140,
+      "name": "Kabuto",
+      "types": [
+        "rock",
+        "water"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 5,
+        "bottom": 4,
+        "left": 4
+      },
+      "powerRating": 19,
+      "rarity": "Uncommon",
+      "art": "assets/cardgame/pokemon/140.png"
+    },
+    {
+      "id": "pokemon-141",
+      "dex": 141,
+      "name": "Kabutops",
+      "types": [
+        "rock",
+        "water"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 8,
+        "bottom": 7,
+        "left": 6
+      },
+      "powerRating": 29,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/141.png"
+    },
+    {
+      "id": "pokemon-142",
+      "dex": 142,
+      "name": "Aerodactyl",
+      "types": [
+        "rock",
+        "flying"
+      ],
+      "edges": {
+        "top": 6,
+        "right": 9,
+        "bottom": 7,
+        "left": 7
+      },
+      "powerRating": 29,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/142.png"
+    },
+    {
+      "id": "pokemon-143",
+      "dex": 143,
+      "name": "Snorlax",
+      "types": [
+        "normal"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 5,
+        "bottom": 9,
+        "left": 4
+      },
+      "powerRating": 25,
+      "rarity": "Epic",
+      "art": "assets/cardgame/pokemon/143.png"
+    },
+    {
+      "id": "pokemon-144",
+      "dex": 144,
+      "name": "Articuno",
+      "types": [
+        "ice",
+        "flying"
+      ],
+      "edges": {
+        "top": 10,
+        "right": 7,
+        "bottom": 8,
+        "left": 8
+      },
+      "powerRating": 33,
+      "rarity": "Legendary",
+      "art": "assets/cardgame/pokemon/144.png"
+    },
+    {
+      "id": "pokemon-145",
+      "dex": 145,
+      "name": "Zapdos",
+      "types": [
+        "electric",
+        "flying"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 8,
+        "bottom": 8,
+        "left": 10
+      },
+      "powerRating": 34,
+      "rarity": "Legendary",
+      "art": "assets/cardgame/pokemon/145.png"
+    },
+    {
+      "id": "pokemon-146",
+      "dex": 146,
+      "name": "Moltres",
+      "types": [
+        "fire",
+        "flying"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 8,
+        "bottom": 8,
+        "left": 10
+      },
+      "powerRating": 34,
+      "rarity": "Legendary",
+      "art": "assets/cardgame/pokemon/146.png"
+    },
+    {
+      "id": "pokemon-147",
+      "dex": 147,
+      "name": "Dratini",
+      "types": [
+        "dragon"
+      ],
+      "edges": {
+        "top": 3,
+        "right": 4,
+        "bottom": 3,
+        "left": 4
+      },
+      "powerRating": 14,
+      "rarity": "Common",
+      "art": "assets/cardgame/pokemon/147.png"
+    },
+    {
+      "id": "pokemon-148",
+      "dex": 148,
+      "name": "Dragonair",
+      "types": [
+        "dragon"
+      ],
+      "edges": {
+        "top": 5,
+        "right": 6,
+        "bottom": 5,
+        "left": 6
+      },
+      "powerRating": 22,
+      "rarity": "Rare",
+      "art": "assets/cardgame/pokemon/148.png"
+    },
+    {
+      "id": "pokemon-149",
+      "dex": 149,
+      "name": "Dragonite",
+      "types": [
+        "dragon",
+        "flying"
+      ],
+      "edges": {
+        "top": 10,
+        "right": 9,
+        "bottom": 8,
+        "left": 8
+      },
+      "powerRating": 35,
+      "rarity": "Legendary",
+      "art": "assets/cardgame/pokemon/149.png"
+    },
+    {
+      "id": "pokemon-150",
+      "dex": 150,
+      "name": "Mewtwo",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 8,
+        "right": 10,
+        "bottom": 9,
+        "left": 9
+      },
+      "powerRating": 36,
+      "rarity": "Legendary",
+      "art": "assets/cardgame/pokemon/150.png"
+    },
+    {
+      "id": "pokemon-151",
+      "dex": 151,
+      "name": "Mew",
+      "types": [
+        "psychic"
+      ],
+      "edges": {
+        "top": 10,
+        "right": 8,
+        "bottom": 9,
+        "left": 8
+      },
+      "powerRating": 35,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/151.png"
+    },
+    {
+      "id": "special-ash-pikachu",
+      "dex": 25,
+      "name": "Pikachu do Ash",
+      "types": [
+        "electric"
+      ],
+      "edges": {
+        "top": 7,
+        "right": 9,
+        "bottom": 6,
+        "left": 9
+      },
+      "powerRating": 31,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/025.png",
+      "variant": "ash"
+    },
+    {
+      "id": "special-mailman-dragonite",
+      "dex": 149,
+      "name": "Dragonite Carteiro",
+      "types": [
+        "dragon",
+        "flying"
+      ],
+      "edges": {
+        "top": 9,
+        "right": 8,
+        "bottom": 10,
+        "left": 8
+      },
+      "powerRating": 35,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/149.png",
+      "variant": "mailman"
+    },
+    {
+      "id": "special-casino-pikachu",
+      "dex": 25,
+      "name": "Pikachu Jogador",
+      "types": ["electric"],
+      "edges": {"top": 8, "right": 8, "bottom": 8, "left": 8},
+      "powerRating": 32,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/025.png",
+      "variant": "casino-player"
+    },
+    {
+      "id": "special-casino-mewtwo",
+      "dex": 150,
+      "name": "Mewtwo Rei do Cassino",
+      "types": ["psychic"],
+      "edges": {"top": 11, "right": 11, "bottom": 11, "left": 11},
+      "powerRating": 44,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/150.png",
+      "variant": "casino-king"
+    },
+    {
+      "id": "special-slot-gengar",
+      "dex": 94,
+      "name": "Gengar Glitch",
+      "types": ["ghost", "poison"],
+      "edges": {"top": 8, "right": 9, "bottom": 8, "left": 9},
+      "powerRating": 34,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/094.png",
+      "variant": "slot-glitch"
+    },
+    {
+      "id": "special-slot-charizard",
+      "dex": 6,
+      "name": "Charizard Arcade",
+      "types": ["fire", "flying"],
+      "edges": {"top": 9, "right": 9, "bottom": 9, "left": 9},
+      "powerRating": 36,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/006.png",
+      "variant": "slot-arcade"
+    },
+    {
+      "id": "special-slot-porygon",
+      "dex": 137,
+      "name": "Porygon Jackpot",
+      "types": ["normal"],
+      "edges": {"top": 8, "right": 8, "bottom": 8, "left": 8},
+      "powerRating": 32,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/137.png",
+      "variant": "jackpot"
+    },
+    {
+      "id": "special-blackjack-meowth",
+      "dex": 52,
+      "name": "Meowth Dealer",
+      "types": ["normal"],
+      "edges": {"top": 8, "right": 8, "bottom": 8, "left": 8},
+      "powerRating": 32,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/052.png",
+      "variant": "dealer"
+    },
+    {
+      "id": "special-casino-quadra",
+      "dex": 65,
+      "name": "Alakazam Quadra",
+      "types": ["psychic"],
+      "edges": {"top": 7, "right": 7, "bottom": 7, "left": 7},
+      "powerRating": 28,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/065.png",
+      "variant": "casino-four-spoons",
+      "spoonCount": 4
+    },
+    {
+      "id": "special-casino-quina",
+      "dex": 65,
+      "name": "Alakazam Quina",
+      "types": ["psychic"],
+      "edges": {"top": 9, "right": 9, "bottom": 9, "left": 9},
+      "powerRating": 36,
+      "rarity": "Special",
+      "art": "assets/cardgame/pokemon/065.png",
+      "variant": "casino-five-spoons",
+      "spoonCount": 5
+    }
+  ]
+}

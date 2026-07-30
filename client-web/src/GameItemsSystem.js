@@ -210,12 +210,45 @@ export function createGameItemsClient(options = {}) {
     async cardGameProfile() {
       return request('/api/cardgame/profile');
     },
-    async openCardGameBooster() {
-      return request('/api/cardgame/boosters/open', { method: 'POST', body: '{}' });
+    async openCardGameBooster(boosterId = 'standard', targetCardId = '') {
+      return request('/api/cardgame/boosters/open', {
+        method: 'POST', body: JSON.stringify({ boosterId, targetCardId }),
+      });
+    },
+    async exchangeCardGameDuplicates(cardId) {
+      return request('/api/cardgame/boosters/exchange', {
+        method: 'POST', body: JSON.stringify({ cardId }),
+      });
+    },
+    async exchangeCardGameRareBooster() {
+      return request('/api/cardgame/boosters/rare/exchange', { method: 'POST' });
+    },
+    async exchangeCardGameEvolution(cardId, evolutionCardId) {
+      return request('/api/cardgame/evolutions/exchange', {
+        method: 'POST', body: JSON.stringify({ cardId, evolutionCardId }),
+      });
     },
     async saveCardGameDeck(cardIds) {
       return request('/api/cardgame/deck', {
         method: 'PUT', body: JSON.stringify({ cardIds }),
+      });
+    },
+    async pokemonCasinoTable() {
+      return request('/api/cardgame/casino-table');
+    },
+    async startPokemonCasinoBattle(idempotencyKey = crypto.randomUUID()) {
+      return request('/api/cardgame/casino-table/start', {
+        method: 'POST', body: JSON.stringify({ idempotencyKey }),
+      });
+    },
+    async playPokemonCasinoCard(roundId, cardId, cellIndex, idempotencyKey = crypto.randomUUID()) {
+      return request('/api/cardgame/casino-table/move', {
+        method: 'POST', body: JSON.stringify({ roundId, cardId, cellIndex, idempotencyKey }),
+      });
+    },
+    async leavePokemonCasinoTable(roundId, idempotencyKey = crypto.randomUUID()) {
+      return request('/api/cardgame/casino-table/leave', {
+        method: 'POST', body: JSON.stringify({ roundId, idempotencyKey }),
       });
     },
     async casinoGame(gameId) {

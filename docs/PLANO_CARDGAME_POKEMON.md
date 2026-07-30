@@ -4,6 +4,15 @@
 **Codinome provisório:** Tooq Triad
 **Escopo inicial:** PvP, 151 Pokémon originais, coleção, decks e boosters de 5 cartas
 
+> **Atualização 2026-07-30:** a implementação atual ampliou o escopo para os 1.025 Pokémon das
+> gerações I–IX, atributos-base até 15, shiny com uma borda persistente +1 (podendo imprimir 16),
+> deck de 15 e sorteios com reposição. Boosters agora possuem edições; entregar dez cópias normais
+> iguais concede um Booster Especial de cinco cartas dos tipos do alvo, com 10% exatos de
+> shiny-alvo. As seções abaixo preservam o raciocínio histórico da primeira versão; para a regra
+> operacional vigente, consulte [`CARDGAME.md`](CARDGAME.md).
+> Cinco cópias normais de um Pokémon que evolui também podem ser trocadas diretamente por uma
+> cópia normal da próxima evolução; ramificações são escolhidas pelo jogador.
+
 ## Progresso
 
 - [x] Motor puro do tabuleiro 3×3.

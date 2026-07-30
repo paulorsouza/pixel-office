@@ -182,6 +182,19 @@
           ]
         },
         {
+          "id": 20,
+          "name": "pokemon-table",
+          "type": "spawn",
+          "x": 400,
+          "y": 352,
+          "point": true,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "pokemon-table" }
+          ]
+        },
+        {
           "id": 7,
           "name": "casino-exit",
           "type": "portal",
@@ -318,6 +331,24 @@
             { "name": "label", "type": "string", "value": "Jogar Blackjack" },
             { "name": "interactionRadius", "type": "float", "value": 4.5 }
           ]
+        },
+        {
+          "id": 19,
+          "name": "Liga Pokémon · Casa",
+          "type": "pokemonCardTable",
+          "x": 352,
+          "y": 272,
+          "width": 96,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "pokemon-card-table-01" },
+            { "name": "tableId", "type": "string", "value": "pokemon-card-table-01" },
+            { "name": "gameId", "type": "string", "value": "pokemon-card-table" },
+            { "name": "label", "type": "string", "value": "Desafiar Liga Pokémon da Casa" },
+            { "name": "interactionRadius", "type": "float", "value": 4.5 }
+          ]
         }
       ],
       "properties": [
@@ -351,7 +382,7 @@
     }
   ],
   "nextlayerid": 6,
-  "nextobjectid": 19,
+  "nextobjectid": 21,
   "orientation": "orthogonal",
   "renderorder": "right-down",
   "tiledversion": "1.12.2",

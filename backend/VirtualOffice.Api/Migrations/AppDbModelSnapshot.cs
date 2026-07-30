@@ -112,6 +112,36 @@ namespace VirtualOffice.Api.Migrations
                     b.ToTable("AppRefreshTokens");
                 });
 
+            modelBuilder.Entity("VirtualOffice.Api.CardGameBoosterBalance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BoosterId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TargetCardId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "BoosterId", "TargetCardId")
+                        .IsUnique();
+
+                    b.ToTable("CardGameBoosterBalances");
+                });
+
             modelBuilder.Entity("VirtualOffice.Api.CardGameCollectionItem", b =>
                 {
                     b.Property<int>("Id")
@@ -133,12 +163,16 @@ namespace VirtualOffice.Api.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ShinyBonusSide")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "CardId", "IsShiny")
+                    b.HasIndex("UserId", "CardId", "IsShiny", "ShinyBonusSide")
                         .IsUnique();
 
                     b.ToTable("CardGameCollection");

@@ -646,7 +646,10 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
     // sala. A compra credita saldo no perfil do cardgame, que é quem sabe abrir.
     if (definition.ItemType == "booster")
     {
-        var balance = await CardGameEndpoints.GrantBoostersAsync(db, uid, 1);
+        var boosterId = definition.CatalogKey == "cardgame:booster"
+            ? "standard"
+            : definition.CatalogKey["cardgame:booster-".Length..];
+        var balance = await CardGameEndpoints.GrantBoostersAsync(db, uid, 1, boosterId);
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         await hub.Clients.Group(OfficeHub.UserGroup(uid)).SendAsync("InventoryChanged");
@@ -654,7 +657,7 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
         {
             coins = user.Coins,
             boosters = balance,
-            definition = new { definition.CatalogKey, definition.Name, definition.ItemType },
+            definition = new { definition.CatalogKey, definition.Name, definition.ItemType, boosterId },
         });
     }
 

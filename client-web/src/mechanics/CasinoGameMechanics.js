@@ -12,6 +12,7 @@ function casinoMechanic({
   claimKind,
   tint,
   baseTint = 0xffffff,
+  badge = '',
 }) {
   registerMechanic(type, {
     preload({ scene }) {
@@ -39,6 +40,14 @@ function casinoMechanic({
         .setOrigin(0.5, 1)
         .setDisplaySize(width * tile, height * tile)
         .setDepth(bottom);
+      const badgeText = badge ? scene.add.text(x, bottom - height * tile * 0.54, badge, {
+        color: '#ffe46f',
+        fontFamily: 'monospace',
+        fontSize: `${Math.max(8, tile * 0.58)}px`,
+        fontStyle: 'bold',
+        stroke: '#201633',
+        strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(bottom + 1) : null;
       const solid = scene.add.zone(
         (Number(entity.x) + 0.45) * tile,
         (Number(entity.y) + height - 1.15) * tile,
@@ -92,10 +101,12 @@ function casinoMechanic({
         update() {
           const near = Math.hypot(scene.player?.x - x, scene.player?.y - (bottom - tile)) <= radius;
           display.setTint(near ? tint : baseTint);
+          badgeText?.setScale(near ? 1.08 : 1);
         },
         destroy() {
           context.presence?.releaseEntity(claimId);
           display.destroy();
+          badgeText?.destroy();
           if (solid.active) solid.destroy();
         },
       };
@@ -121,4 +132,16 @@ casinoMechanic({
   defaultLabel: 'Jogar Blackjack',
   claimKind: 'blackjack',
   tint: 0xd4fff4,
+});
+
+casinoMechanic({
+  type: 'pokemonCardTable',
+  texture: 'casino_pokemon_card_table',
+  asset: 'assets/casino/generic/blackjack-table.png',
+  panelKey: 'pokemonCasinoPanel',
+  defaultLabel: 'Desafiar Liga Pokémon da Casa',
+  claimKind: 'pokemon-card-table',
+  tint: 0xffe27a,
+  baseTint: 0xd7c7ff,
+  badge: 'PKMN',
 });

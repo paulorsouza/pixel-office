@@ -57,6 +57,9 @@ public static class WorkCatalogSeed
             ObjectiveScope.Weekly, "tasks_done", 3, 150, 120),
         new("weekly-study", "Duas horas de estudo", "Acumule 2 horas de estudo na semana.", "🎓",
             ObjectiveScope.Weekly, "minutes", 120, 120, 90, "estudo"),
+        new("weekly-card-master", "Mestre da semana",
+            "Conclua os cinco objetivos semanais para receber um Booster Raro.", "🃏",
+            ObjectiveScope.Weekly, "weekly_objectives", 5, 0, 0),
     ];
 
     private static readonly (string Name, string Color)[] Labels =

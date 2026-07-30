@@ -31,7 +31,7 @@ para o mundo atrás.
 
 **Central do jogador:** `Cartas`, no dock, abre Álbum, Boosters,
 Baralho, Horas, Objetivos, Quadro e Backlog. Cada jogador começa com o álbum vazio e três boosters
-de cinco cartas; depois de montar e salvar um baralho de 9 cartas, aproxime-se de outro jogador,
+de cinco cartas; depois de montar e salvar um baralho de 15 cartas, aproxime-se de outro jogador,
 clique no avatar dele e escolha `Desafiar`.
 
 Arquitetura, chances, persistência e roteiro completo de teste:

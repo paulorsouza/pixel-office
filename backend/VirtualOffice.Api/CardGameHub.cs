@@ -20,6 +20,8 @@ public sealed class CardGameDefinition
     public List<string> Types { get; set; } = [];
     public Dictionary<string, int> Edges { get; set; } = [];
     public int PowerRating { get; set; }
+    public int Generation { get; set; }
+    public List<string> EvolvesTo { get; set; } = [];
     public string Rarity { get; set; } = "";
     public string Art { get; set; } = "";
     public string Variant { get; set; } = "";
@@ -28,25 +30,35 @@ public sealed class CardGameDefinition
 public static class CardGameCatalog
 {
     private static readonly Lazy<IReadOnlyDictionary<string, CardGameDefinition>> Definitions = new(Load);
+    private static int _baseCount;
 
     public static IReadOnlyDictionary<string, CardGameDefinition> All => Definitions.Value;
+    public static int BaseCount
+    {
+        get
+        {
+            _ = Definitions.Value;
+            return _baseCount;
+        }
+    }
 
     public static bool TryValidateDeck(IEnumerable<string>? ids, out string[] deck, out string error)
     {
         deck = ids?.Where(id => !string.IsNullOrWhiteSpace(id)).ToArray() ?? [];
-        if (deck.Length != 9)
+        if (deck.Length != 15)
         {
-            error = "O baralho precisa ter exatamente 9 cartas.";
+            error = "O baralho precisa ter exatamente 15 cartas.";
             return false;
         }
-        if (deck.Distinct(StringComparer.Ordinal).Count() != deck.Length)
-        {
-            error = "O baralho não pode repetir a mesma carta.";
-            return false;
-        }
-        if (deck.Any(id => !All.ContainsKey(id)))
+        var references = deck.Select(CardGameEndpoints.ParseCardToken).ToArray();
+        if (references.Any(card => card is null))
         {
             error = "O baralho contém uma carta desconhecida.";
+            return false;
+        }
+        if (references.Select(card => card!.Value.CardId).Distinct(StringComparer.Ordinal).Count() != deck.Length)
+        {
+            error = "O baralho não pode repetir a mesma carta.";
             return false;
         }
         error = "";
@@ -61,7 +73,8 @@ public static class CardGameCatalog
         {
             PropertyNameCaseInsensitive = true,
         }) ?? throw new InvalidOperationException("Catálogo do cardgame inválido.");
-        if (catalog.BaseCount != 151) throw new InvalidOperationException("O catálogo precisa conter os 151 Pokémon-base.");
+        if (catalog.BaseCount < 1) throw new InvalidOperationException("Catálogo sem Pokémon-base.");
+        _baseCount = catalog.BaseCount;
         return catalog.Cards.ToDictionary(card => card.Id, StringComparer.Ordinal);
     }
 }
@@ -355,7 +368,8 @@ public partial class OfficeHub
             (Side: "bottom", Opposite: "top", Row: 1, Col: 0),
             (Side: "left", Opposite: "right", Row: 0, Col: -1),
         };
-        var placed = CardGameCatalog.All[match.Board[cellIndex]!.CardId];
+        var placedRef = CardGameEndpoints.ParseCardToken(match.Board[cellIndex]!.CardId)!.Value;
+        var placed = CardGameCatalog.All[placedRef.CardId];
         foreach (var direction in directions)
         {
             var neighborRow = row + direction.Row;
@@ -364,12 +378,18 @@ public partial class OfficeHub
             var neighborIndex = neighborRow * 3 + neighborCol;
             var neighbor = match.Board[neighborIndex];
             if (neighbor is null || neighbor.Controller == player) continue;
-            var defending = CardGameCatalog.All[neighbor.CardId];
-            var attack = placed.Edges[direction.Side] + (HasTypeAdvantage(placed, defending) ? 1 : 0);
-            var defense = defending.Edges[direction.Opposite] + (HasTypeAdvantage(defending, placed) ? 1 : 0);
+            var defendingRef = CardGameEndpoints.ParseCardToken(neighbor.CardId)!.Value;
+            var defending = CardGameCatalog.All[defendingRef.CardId];
+            var attack = PrintedEdge(placed, placedRef, direction.Side)
+                + (HasTypeAdvantage(placed, defending) ? 1 : 0);
+            var defense = PrintedEdge(defending, defendingRef, direction.Opposite)
+                + (HasTypeAdvantage(defending, placed) ? 1 : 0);
             if (attack > defense) neighbor.Controller = player;
         }
     }
+
+    private static int PrintedEdge(CardGameDefinition card, CardGameCardRef reference, string side) =>
+        card.Edges[side] + (reference.ShinyBonusSide == side ? 1 : 0);
 
     private static bool HasTypeAdvantage(CardGameDefinition attacker, CardGameDefinition defender) =>
         attacker.Types.Any(type => TypeAdvantages.TryGetValue(type, out var targets)

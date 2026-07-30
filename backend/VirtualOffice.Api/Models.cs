@@ -390,6 +390,21 @@ public class CardGameCollectionItem
     public int UserId { get; set; }
     public string CardId { get; set; } = "";
     public bool IsShiny { get; set; }
+    /// <summary>top/right/bottom/left para shiny; vazio para carta normal.</summary>
+    public string ShinyBonusSide { get; set; } = "";
     public int Quantity { get; set; } = 1;
     public DateTime FirstAcquiredUtc { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// Saldo de um tipo de booster. TargetCardId só é preenchido no booster especial
+/// obtido ao entregar dez cópias normais da mesma carta.
+/// </summary>
+public class CardGameBoosterBalance
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string BoosterId { get; set; } = "";
+    public string TargetCardId { get; set; } = "";
+    public int Quantity { get; set; }
 }

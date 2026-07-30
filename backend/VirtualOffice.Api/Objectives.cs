@@ -51,7 +51,7 @@ public static class Periods
     public static DateOnly LocalDate(DateTime utc) => DateOnly.FromDateTime(ToLocal(utc));
 }
 
-public record ObjectiveCompletion(Objective Objective, XpResult Reward);
+public record ObjectiveCompletion(Objective Objective, XpResult Reward, string BoosterId = "");
 
 /// <summary>
 /// Motor de objetivos. O progresso é sempre <b>recalculado a partir dos lançamentos</b>,
@@ -117,6 +117,8 @@ public static class ObjectiveEngine
                     // em quantos dias da semana apareceu. Ambos vêm da presença.
                     "login" => loginDays > 0 ? 1 : 0,
                     "login_days" => loginDays,
+                    "weekly_objectives" => existing.Count(p => p.CompletedUtc is not null
+                        && scoped.Any(o => o.Id == p.ObjectiveId && o.Metric != "weekly_objectives")),
                     _ => 0,
                 };
 
@@ -129,6 +131,7 @@ public static class ObjectiveEngine
                         UserId = userId, ObjectiveId = objective.Id, PeriodStart = periodStart,
                     };
                     db.ObjectiveProgress.Add(progress);
+                    existing.Add(progress);
                 }
                 progress.Value = value;
                 progress.UpdatedUtc = DateTime.UtcNow;
@@ -139,7 +142,13 @@ public static class ObjectiveEngine
                     var reward = await Game.AwardAsync(
                         db, user, new Reward(objective.XpReward, objective.GoldReward),
                         $"objetivo: {objective.Name}", "objective");
-                    completions.Add(new ObjectiveCompletion(objective, reward));
+                    var boosterId = "";
+                    if (objective.Metric == "weekly_objectives")
+                    {
+                        await CardGameEndpoints.GrantBoostersAsync(db, userId, 1, "rare");
+                        boosterId = "rare";
+                    }
+                    completions.Add(new ObjectiveCompletion(objective, reward, boosterId));
                 }
             }
         }

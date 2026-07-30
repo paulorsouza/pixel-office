@@ -110,11 +110,30 @@ public static class GameInventorySeed
         new("equipment:rgb-mouse", "Mouse RGB", "peripherals", ItemType: "equipment",
             Rarity: "epic", Price: 760),
 
-        // Banca de cartas. `booster` não vira GameItemInstance: a compra credita
-        // saldo no perfil do cardgame (ver o purchase em Program.cs). Por isso
-        // StarterQuantity fica em 0 — quem dá os três iniciais é o próprio perfil.
-        new("cardgame:booster", "Booster do Tooq Triad", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 450),
+        // Boosters continuam no catálogo para histórico/ícones, mas não são vendidos.
+        // Eles entram no cardgame somente por recompensas, conquistas e trocas.
+        new("cardgame:booster", "Booster Nacional", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-1", "Edição Kanto", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-2", "Edição Johto", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-3", "Edição Hoenn", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-4", "Edição Sinnoh", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-5", "Edição Unova", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-6", "Edição Kalos", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-7", "Edição Alola", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-8", "Edição Galar/Hisui", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-generation-9", "Edição Paldea", "cards", ItemType: "booster",
+            Rarity: "rare", Price: 0, Purchasable: false),
+        new("cardgame:booster-rare", "Booster Raro", "cards", ItemType: "booster",
+            Rarity: "epic", Price: 0, Purchasable: false),
     ];
 
     /// <summary>

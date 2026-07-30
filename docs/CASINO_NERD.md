@@ -1,7 +1,7 @@
 # Casino Nerd
 
-Cassino do Office Quest: prédio no mundo aberto, cena própria e três jogos jogáveis:
-**Arrange Dice**, **Nerd Slots** e **Blackjack**.
+Cassino do Office Quest: prédio no mundo aberto, cena própria e quatro jogos jogáveis:
+**Arrange Dice**, **Nerd Slots**, **Blackjack** e **Liga Pokémon da Casa**.
 
 ## Fluxo
 
@@ -23,14 +23,15 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 2. A rodada começa com cinco lançamentos. Cada clique envia uma ação autoritativa e o backend
    sorteia e persiste somente aquele par.
 3. Cada soma entre 3 e 11 levanta a carta correspondente; repetições não levantam outra carta.
-4. Sequências de 3, 4, 5, 6 e 7 cartas pagam ×4, ×12, ×40, ×80 e ×200.
+4. Sequências de 3, 4, 5, 6 e 7 cartas pagam ×4, ×12, ×40, ×80 e ×200. Uma sequência de cinco
+   ou mais também concede um **Booster Raro**.
 5. Uma soma 2 repete o lançamento consumido e concede mais uma rodada extra: na prática adiciona
    duas oportunidades futuras. Para proteger a rodada de uma sequência sem fim, o total é limitado
    a quinze lançamentos.
 6. Uma soma 12 remove uma rodada futura, mas vira um coringa: o jogador escolhe qualquer carta ainda
    abaixada para levantar.
-7. Seis cartas adjacentes concedem **Pikachu Jogador** (8/8/8/8); todas as sete concedem
-   **Mewtwo Rei do Cassino** (11/11/11/11), além do prêmio em moedas.
+7. Seis cartas adjacentes concedem **Pikachu Jogador** (13/13/13/13); todas as sete concedem
+   **Mewtwo Rei do Cassino** (15/15/15/15), além do prêmio em moedas e do Booster Raro.
 8. Se uma carta da sequência vencedora tiver sido sorteada duas vezes, o prêmio inteiro recebe ×3.
    Com três ou mais ocorrências dessa carta, recebe ×20.
 9. Quatro ocorrências da mesma soma em uma rodada concedem **Alakazam Quadra**, forma especial
@@ -55,12 +56,36 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 - duas cartas para jogador e dealer; a segunda carta do dealer fica oculta;
 - `hit` compra carta e `stand` entrega a vez ao dealer;
 - o Ás vale 1 ou 11; figuras valem 10; dealer para em 17;
-- vitória normal retorna ×4, blackjack natural retorna ×5 e empate devolve a aposta;
-- vitória com total 21 concede um booster; blackjack natural também concede
-  **Meowth Dealer** (8/8/8/8);
+- vitória normal retorna ×2, blackjack natural retorna ×2,5 e empate devolve a aposta;
+- somente o blackjack natural participa do sorteio de booster, com 10% de chance;
+- blackjack natural continua concedendo **Meowth Dealer** (8/8/8/8);
 - início da mão e cada ação têm chaves UUID independentes de idempotência;
 - uma mão ativa é recuperada no `GET` do jogo após reload ou queda de conexão;
 - não é possível abrir outra mão ou deixar a mesa antes de concluir a atual.
+
+## Liga Pokémon da Casa
+
+- usa o baralho ativo de 15 cartas do jogador e o mesmo tabuleiro 3×3 do PvP;
+- a partida e a sequência são autoritativas e persistidas no backend; recarregar a página retoma
+  a batalha em andamento;
+- iniciar uma nova sequência custa 100 moedas; os níveis seguintes da mesma sequência não possuem
+  novo custo;
+- a casa possui seis níveis. Cada nível escolhe 15 espécies numa faixa progressivamente mais forte
+  do catálogo; a partir do nível 2, a IA prioriza capturas, força impressa e controle do centro;
+- vencer apenas reserva o prêmio daquele patamar e libera o próximo nível. Ao sair da mesa ou
+  perder, o jogador recebe somente o maior prêmio alcançado na sequência, sem acumular os anteriores;
+- vencer o nível 6 encerra e paga a sequência automaticamente. Depois de qualquer encerramento,
+  a próxima entrada começa no nível 1 e custa novamente 100 moedas;
+- nível 1: 1 Booster Nacional;
+- nível 2: 3 Boosters Nacionais;
+- nível 3: 1 Nacional e 1 Raro;
+- nível 4: 3 Nacionais e 3 Raros;
+- nível 5: 5 Raros;
+- nível 6: 1 Raro e 1 Ultrarraro;
+- cada ação possui UUID de idempotência. O servidor valida posse do deck, mão, turno, casa livre,
+  captura, recompensa e progressão;
+- o Booster Ultrarraro entrega cinco cartas `Rare+`, com `Legendary` garantida na quinta posição e
+  10% de chance shiny por carta.
 
 ## Cena e interação
 
@@ -78,6 +103,8 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 - `client-web/src/casino/ArrangeDicePanel.js`: seleção, ordenação, lançamento manual um a um,
   animação dos dados, tutorial em quatro passos e resultado.
 - `client-web/src/casino/NerdSlotsPanel.js`: rolos mistos, animação sequencial, sprites Pokémon
+- `client-web/src/casino/PokemonCasinoTablePanel.js`: tabuleiro, mão, escada de prêmios e retomada
+  da Liga Pokémon da Casa.
   locais e tabela que separa prêmios em moedas dos prêmios colecionáveis.
 - `client-web/src/casino/BlackjackPanel.js`: cartas, mão recuperável e ações pedir/parar.
 - `client-web/src/casino/casino.css`: desktop, celular em pé/deitado, safe areas e movimento reduzido.

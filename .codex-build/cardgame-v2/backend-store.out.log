@@ -1,0 +1,478 @@
+Using launch settings from E:\workspace\pixel-office\backend\VirtualOffice.Api\Properties\launchSettings.json...
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" character varying(150) NOT NULL,
+          "ProductVersion" character varying(32) NOT NULL,
+          CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."AllowsPair", a."Color", a."CountsAsWork", a."DailyTargetMinutes", a."DefaultMinutes", a."GoldPerHour", a."Icon", a."IsActive", a."Key", a."Name", a."RequiresWorkItem", a."SortOrder", a."XpPerHour"
+      FROM "ActivityTypes" AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."ActivityKey", o."Description", o."GoldReward", o."Icon", o."IsActive", o."Key", o."Metric", o."Name", o."Scope", o."SortOrder", o."Target", o."XpReward"
+      FROM "Objectives" AS o
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT l."Name"
+      FROM "Labels" AS l
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Users" AS u)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (10ms) [Parameters=[@p1='?' (DbType = Int32), @p0='?', @p2='?', @p3='?', @p4='?', @p5='?', @p6='?', @p7='?' (DbType = Boolean), @p8='?', @p9='?', @p10='?' (DbType = Int32), @p11='?', @p12='?' (DbType = Int32), @p13='?', @p14='?', @p15='?', @p16='?', @p17='?', @p18='?' (DbType = Boolean), @p19='?', @p20='?', @p21='?' (DbType = Int32), @p22='?', @p23='?' (DbType = Int32), @p24='?', @p25='?', @p26='?', @p27='?', @p28='?', @p29='?' (DbType = Boolean), @p30='?', @p31='?', @p32='?' (DbType = Int32), @p33='?', @p34='?' (DbType = Int32), @p35='?', @p36='?', @p37='?', @p38='?', @p39='?', @p40='?' (DbType = Boolean), @p41='?', @p42='?', @p43='?' (DbType = Int32), @p44='?', @p45='?' (DbType = Int32), @p46='?', @p47='?', @p48='?', @p49='?', @p50='?', @p51='?' (DbType = Boolean), @p52='?', @p53='?', @p54='?' (DbType = Int32), @p55='?', @p56='?' (DbType = Int32), @p57='?', @p58='?', @p59='?', @p60='?', @p61='?', @p62='?' (DbType = Boolean), @p63='?', @p64='?', @p65='?' (DbType = Int32), @p66='?', @p67='?' (DbType = Int32), @p68='?', @p69='?', @p70='?', @p71='?', @p72='?', @p73='?' (DbType = Boolean), @p74='?', @p75='?', @p76='?' (DbType = Int32), @p77='?', @p78='?' (DbType = Int32), @p79='?', @p80='?', @p81='?', @p82='?', @p83='?', @p84='?' (DbType = Boolean), @p85='?', @p86='?', @p87='?' (DbType = Int32), @p88='?', @p89='?' (DbType = Int32), @p90='?', @p91='?', @p92='?', @p93='?', @p94='?', @p95='?' (DbType = Boolean), @p96='?', @p97='?', @p98='?' (DbType = Int32), @p99='?', @p100='?' (DbType = Int32), @p101='?', @p102='?', @p103='?', @p104='?', @p105='?', @p106='?' (DbType = Boolean), @p107='?', @p108='?', @p109='?' (DbType = Int32), @p110='?', @p111='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      UPDATE "GameItemDefinitions" SET "Name" = @p0
+      WHERE "Id" = @p1;
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p24, @p25, @p26, @p27, @p28, @p29, @p30, @p31, @p32, @p33, @p34)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p35, @p36, @p37, @p38, @p39, @p40, @p41, @p42, @p43, @p44, @p45)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p46, @p47, @p48, @p49, @p50, @p51, @p52, @p53, @p54, @p55, @p56)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p57, @p58, @p59, @p60, @p61, @p62, @p63, @p64, @p65, @p66, @p67)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p68, @p69, @p70, @p71, @p72, @p73, @p74, @p75, @p76, @p77, @p78)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p79, @p80, @p81, @p82, @p83, @p84, @p85, @p86, @p87, @p88, @p89)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p90, @p91, @p92, @p93, @p94, @p95, @p96, @p97, @p98, @p99, @p100)
+      RETURNING "Id";
+      INSERT INTO "GameItemDefinitions" ("CapabilitiesJson", "CatalogKey", "Category", "IconPath", "InteractionType", "IsPurchasable", "ItemType", "Name", "Price", "Rarity", "StarterQuantity")
+      VALUES (@p101, @p102, @p103, @p104, @p105, @p106, @p107, @p108, @p109, @p110, @p111)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      ORDER BY p."WingIndex", p."SlotIndex", p."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id"
+      FROM "Users" AS u
+      WHERE NOT (u."IsBot")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5210
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: E:\workspace\pixel-office\backend\VirtualOffice.Api
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."IsBot"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CatalogKey", g."Name", g."Category", g."IconPath", g."InteractionType", g."ItemType", g."Rarity", g."Price", g."IsPurchasable", g."StarterQuantity", g."CapabilitiesJson"
+      FROM "GameItemDefinitions" AS g
+      ORDER BY g."ItemType", g."Category", g."Price"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."CatalogKey" = @catalogKey
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterCount", c."CreatedUtc", c."DeckJson", c."UserId"
+      FROM "CardGameProfiles" AS c
+      WHERE c."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32), @boosterId='?', @targetCardId='?'], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterId", c."Quantity", c."TargetCardId", c."UserId"
+      FROM "CardGameBoosterBalances" AS c
+      WHERE c."UserId" = @userId AND c."BoosterId" = @boosterId AND c."TargetCardId" = @targetCardId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?', @p1='?' (DbType = Int32), @p2='?', @p3='?' (DbType = Int32), @p4='?' (DbType = Int32), @p5='?' (DbType = DateTime), @p6='?', @p7='?' (DbType = Int32), @p9='?' (DbType = Int32), @p8='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "CardGameBoosterBalances" ("BoosterId", "Quantity", "TargetCardId", "UserId")
+      VALUES (@p0, @p1, @p2, @p3)
+      RETURNING "Id";
+      INSERT INTO "CardGameProfiles" ("BoosterCount", "CreatedUtc", "DeckJson", "UserId")
+      VALUES (@p4, @p5, @p6, @p7)
+      RETURNING "Id";
+      UPDATE "Users" SET "Coins" = @p8
+      WHERE "Id" = @p9;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32), @boosterId='?', @targetCardId='?'], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterId", c."Quantity", c."TargetCardId", c."UserId"
+      FROM "CardGameBoosterBalances" AS c
+      WHERE c."UserId" = @userId AND c."BoosterId" = @boosterId AND c."TargetCardId" = @targetCardId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?', @p1='?' (DbType = Int32), @p2='?', @p3='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "CardGameBoosterBalances" ("BoosterId", "Quantity", "TargetCardId", "UserId")
+      VALUES (@p0, @p1, @p2, @p3)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."CatalogKey" = @catalogKey
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterCount", c."CreatedUtc", c."DeckJson", c."UserId"
+      FROM "CardGameProfiles" AS c
+      WHERE c."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32), @boosterId='?', @targetCardId='?'], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterId", c."Quantity", c."TargetCardId", c."UserId"
+      FROM "CardGameBoosterBalances" AS c
+      WHERE c."UserId" = @userId AND c."BoosterId" = @boosterId AND c."TargetCardId" = @targetCardId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?', @p1='?' (DbType = Int32), @p2='?', @p3='?' (DbType = Int32), @p5='?' (DbType = Int32), @p4='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "CardGameBoosterBalances" ("BoosterId", "Quantity", "TargetCardId", "UserId")
+      VALUES (@p0, @p1, @p2, @p3)
+      RETURNING "Id";
+      UPDATE "Users" SET "Coins" = @p4
+      WHERE "Id" = @p5;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterCount", c."CreatedUtc", c."DeckJson", c."UserId"
+      FROM "CardGameProfiles" AS c
+      WHERE c."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@profile_UserId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."CardId" AS "cardId", c."IsShiny" AS "isShiny", c."ShinyBonusSide" AS "shinyBonusSide", CASE
+          WHEN c."IsShiny" THEN c."CardId" || '~' || c."ShinyBonusSide"
+          ELSE c."CardId"
+      END AS "cardToken", c."Quantity" AS quantity, c."FirstAcquiredUtc" AS "firstAcquiredUtc"
+      FROM "CardGameCollection" AS c
+      WHERE c."UserId" = @profile_UserId AND c."Quantity" > 0
+      ORDER BY c."CardId", c."IsShiny", c."ShinyBonusSide"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@profile_UserId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."BoosterId" AS "boosterId", c."TargetCardId" AS "targetCardId", c."Quantity" AS quantity
+      FROM "CardGameBoosterBalances" AS c
+      WHERE c."UserId" = @profile_UserId AND c."Quantity" > 0
+      ORDER BY c."BoosterId", c."TargetCardId"

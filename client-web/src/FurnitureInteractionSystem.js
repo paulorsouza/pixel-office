@@ -229,7 +229,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
           const bought = await gameItems.purchase(button.dataset.buyItem);
           // Booster não entra no inventário: o retorno traz o saldo do perfil.
           if (typeof bought?.boosters === 'number') {
-            options.onWorkStatus?.(`Booster comprado — você tem ${bought.boosters}`);
+            options.onWorkStatus?.(`${bought.definition?.name || 'Booster'} comprado — você tem ${bought.boosters}`);
           }
           await renderStore(record);
         } catch (error) {

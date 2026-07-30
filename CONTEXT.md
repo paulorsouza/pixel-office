@@ -34,7 +34,7 @@ Unity (ver §4).
 | **LiveKit** | `livekit/` (local) ou **LiveKit Cloud** | ✅ SFU. Local (LAN) ou Cloud (entre redes). URL vem do backend (`LiveKit:Url`). |
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
 | **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez e cardgame social. |
-| **Tooq Triad** | `client-web/src/cardgame`, `backend/.../CardGame*.cs` | ✅ 151 Pokémon, álbum e deck persistentes, 3 boosters iniciais e PvP por proximidade. Partidas ainda ficam em memória. Ver [`docs/CARDGAME.md`](docs/CARDGAME.md). |
+| **Tooq Triad** | `client-web/src/cardgame`, `backend/.../CardGame*.cs` | ✅ 1.025 Pokémon das gerações I–IX, álbum e deck persistentes de 15 cartas, boosters tipados e PvP por proximidade. Partidas ainda ficam em memória. Ver [`docs/CARDGAME.md`](docs/CARDGAME.md). |
 | **Casino Nerd** | `client-web/src/casino`, `backend/.../CasinoEndpoints.cs` | ✅ Prédio no hub e cena própria com Arrange Dice, Nerd Slots e Blackjack. O slot único mistura trincas nerd de moedas com sequências Pokémon exclusivas de boosters/cartas. Todos usam resultados autoritativos, idempotência, moedas persistentes, claim de mesa e histórico auditável; boosters e cartas Pokémon especiais ligam o cassino ao Tooq Triad. Ver [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md). |
 | **Deploy** | `docker-compose.yml`, `run-beta.ps1` | ✅ Produção (Docker+Postgres+Caddy) e beta local via túnel. Ver [`docs/DEPLOY_DOCKER.md`](docs/DEPLOY_DOCKER.md), [`docs/BETA_TUNEL.md`](docs/BETA_TUNEL.md). |
 | Cliente Unity (antigo) | `office-unity/` | ⏸️ Abandonado (ver §4). Mantido só como arquivo. |
@@ -213,10 +213,10 @@ usuário, inclusive nos já existentes. Detalhes: [`docs/KANBAN_HORAS.md`](docs/
 **Tooq Triad — coleção persistente e PvP próximo (primeira fatia feita).** `Cartas`, no dock, abre a
 Central do Jogador com Álbum, Boosters, Baralho e as mesmas telas compartilhadas de Horas,
 Objetivos, Quadro e Backlog. Todo perfil novo do cardgame nasce com álbum vazio e três boosters de
-cinco cartas. Coleção, shiny, saldo de boosters e deck de nove cartas ficam no Postgres; o backend
+cinco cartas. Coleção, shiny com lado bonificado, saldos por tipo de booster e deck de 15 cartas ficam no Postgres; o backend
 recusa decks com cartas que o jogador não possui. Clicar em outro avatar humano próximo abre o
 desafio, e o `OfficeHub` controla mãos privadas, compra automática, turnos, captura e resultado.
-O catálogo e os 151 sprites são locais. Partidas ainda são efêmeras e não sobrevivem ao restart.
+O catálogo e os 1.025 sprites são locais. Partidas ainda são efêmeras e não sobrevivem ao restart.
 Detalhes e roteiro de teste: [`docs/CARDGAME.md`](docs/CARDGAME.md).
 
 **Movimento por destino (clique e toque):** clicar ou tocar no chão manda o avatar até lá,

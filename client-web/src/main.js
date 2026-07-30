@@ -47,6 +47,7 @@ import { createCardGamePanel, CARD_SECTIONS } from './cardgame/CardGamePanel.js'
 import { createArrangeDicePanel } from './casino/ArrangeDicePanel.js';
 import { createNerdSlotsPanel } from './casino/NerdSlotsPanel.js';
 import { createBlackjackPanel } from './casino/BlackjackPanel.js';
+import { createPokemonCasinoTablePanel } from './casino/PokemonCasinoTablePanel.js';
 import { createProximityVoice } from './ProximityVoice.js';
 import { createMeetingHeadsets } from './MeetingHeadset.js';
 import { ensureSession } from './LoginScreen.js';
@@ -82,6 +83,7 @@ const equipmentCatalog = await fetchJson('assets/equipment/catalog.json');
 const characterCatalog = await fetchJson('assets/character/catalog.json');
 const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
 const cardGameCatalog = await fetchJson('assets/cardgame/catalog.json');
+const cardGameTypeChart = await fetchJson('assets/cardgame/type-chart.json');
 const gameItems = createGameItemsClient();
 await gameItems.initialize();
 const presence = createPresence({
@@ -129,6 +131,7 @@ let mainMenu = null;
 const cardGame = createCardGamePanel({
   presence,
   catalog: cardGameCatalog,
+  typeChart: cardGameTypeChart,
   gameItems,
   onToast: (message) => proximityVoice.toast(message),
   openMenu: (section) => mainMenu?.open(section),
@@ -293,6 +296,12 @@ const nerdSlotsPanel = createNerdSlotsPanel({
 const blackjackPanel = createBlackjackPanel({
   gameItems,
   hud,
+  onToast: (message) => proximityVoice.toast(message),
+});
+const pokemonCasinoPanel = createPokemonCasinoTablePanel({
+  gameItems,
+  hud,
+  catalog: cardGameCatalog,
   onToast: (message) => proximityVoice.toast(message),
 });
 // ---------------------------------------------------------------- o menu
@@ -540,6 +549,7 @@ class MapScene extends Phaser.Scene {
       arrangeDicePanel,
       nerdSlotsPanel,
       blackjackPanel,
+      pokemonCasinoPanel,
       presence,
       onToast: (message) => proximityVoice.toast(message),
     });

@@ -594,6 +594,7 @@ public static class Notify
             c.Objective.Icon,
             xp = c.Objective.XpReward,
             gold = c.Objective.GoldReward,
+            boosterId = c.BoosterId,
             coins = c.Reward.Coins,
             totalXp = c.Reward.TotalXp,
         }));
@@ -602,7 +603,9 @@ public static class Notify
         foreach (var c in completions)
             await hub.Clients.Clients(keys).SendAsync("Notify", new
             {
-                message = $"{c.Objective.Icon} Objetivo concluído: {c.Objective.Name} · +{c.Objective.XpReward} XP · +{c.Objective.GoldReward} 🪙",
+                message = c.BoosterId == "rare"
+                    ? $"{c.Objective.Icon} Objetivos semanais concluídos · +1 Booster Raro"
+                    : $"{c.Objective.Icon} Objetivo concluído: {c.Objective.Name} · +{c.Objective.XpReward} XP · +{c.Objective.GoldReward} 🪙",
                 xp = c.Objective.XpReward,
                 level = c.Reward.Level,
                 leveledUp = c.Reward.LeveledUp,

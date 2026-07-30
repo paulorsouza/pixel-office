@@ -5,7 +5,7 @@
 
 export const BOARD_WIDTH = 3;
 export const BOARD_CELLS = BOARD_WIDTH * BOARD_WIDTH;
-export const DECK_SIZE = 9;
+export const DECK_SIZE = 15;
 export const OPENING_HAND_SIZE = 6;
 
 export const SIDES = Object.freeze(['top', 'right', 'bottom', 'left']);
@@ -40,14 +40,12 @@ function validateCard(card) {
 
   for (const side of SIDES) {
     const value = card.edges[side];
-    invariant(Number.isInteger(value) && value >= 1 && value <= 11,
-      `Borda ${side} da carta ${card.id} precisa estar entre 1 e 11.`);
+    invariant(Number.isInteger(value) && value >= 1 && value <= 15,
+      `Borda ${side} da carta ${card.id} precisa estar entre 1 e 15.`);
   }
 
   if (card.shinyBonusSide != null) {
     invariant(SIDES.includes(card.shinyBonusSide), `Bônus shiny inválido na carta ${card.id}.`);
-    invariant(card.edges[card.shinyBonusSide] < 11,
-      `Bônus shiny da carta ${card.id} não pode aumentar uma borda 11.`);
   }
 }
 
