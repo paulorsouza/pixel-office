@@ -41,11 +41,13 @@ public sealed class PokemonCasinoState
 public static class PokemonCasinoTableEndpoints
 {
     private const string GameId = "pokemon-card-table";
-    private const string RulesVersion = "2026-07-30.2";
+    private const string RulesVersion = "2026-07-30.3";
+    private const string MewtwoKingId = "special-casino-mewtwo";
     private const int DeckSize = 15;
     private const int OpeningHand = 6;
     private const int MaxLevel = 6;
     private const int EntryCost = 100;
+    private static readonly string[] PowerUpSides = ["top", "right", "bottom", "left"];
 
     private static readonly (int Normal, int Rare, int UltraRare)[] Rewards =
     [
@@ -291,8 +293,21 @@ public static class PokemonCasinoTableEndpoints
             _ => 0.82,
         };
         var start = Math.Min(ordered.Count - bandSize, (int)(ordered.Count * startRatio));
-        return Shuffle(ordered.Skip(Math.Max(0, start)).Take(bandSize).Select(card => card.Id))
-            .Take(DeckSize).ToArray();
+        var selected = Shuffle(ordered.Skip(Math.Max(0, start)).Take(bandSize).Select(card => card.Id))
+            .Take(level == MaxLevel ? DeckSize - 1 : DeckSize)
+            .ToArray();
+        var powerUps = level switch
+        {
+            4 => 1,
+            5 => 3,
+            6 => 5,
+            _ => 0,
+        };
+        for (var index = 0; index < Math.Min(powerUps, selected.Length); index++)
+            selected[index] = CardGameEndpoints.FormatCardToken(
+                selected[index],
+                PowerUpSides[RandomNumberGenerator.GetInt32(PowerUpSides.Length)]);
+        return level == MaxLevel ? [MewtwoKingId, .. selected] : selected;
     }
 
     private static void PlayHouseTurn(PokemonCasinoState state)
@@ -314,9 +329,11 @@ public static class PokemonCasinoTableEndpoints
 
     private static int HouseMoveScore(PokemonCasinoState state, string cardId, int cell)
     {
-        var card = CardGameCatalog.All[cardId];
+        var reference = CardGameEndpoints.ParseCardToken(cardId)!.Value;
+        var card = CardGameCatalog.All[reference.CardId];
         var captures = CapturableNeighbors(state.Board, cell, cardId, 1).Count;
-        var printedPower = card.Edges.Values.Sum();
+        var printedPower = card.Edges.Values.Sum()
+            + (string.IsNullOrEmpty(reference.ShinyBonusSide) ? 0 : 1);
         var centerBonus = cell == 4 ? 5 : cell is 0 or 2 or 6 or 8 ? 2 : 0;
         return captures * 1_000 + printedPower * state.Level + centerBonus;
     }
@@ -446,6 +463,12 @@ public static class PokemonCasinoTableEndpoints
             playerDrawCount = state.PlayerDrawPile.Count,
             houseHandCount = state.HouseHand.Count,
             houseDrawCount = state.HouseDrawPile.Count,
+            housePowerUps = state.Level switch { 4 => 1, 5 => 3, 6 => 5, _ => 0 },
+            houseBoss = state.Level == MaxLevel ? new
+            {
+                cardId = MewtwoKingId,
+                name = CardGameCatalog.All[MewtwoKingId].Name,
+            } : null,
             board = state.Board,
             score,
             reward = new

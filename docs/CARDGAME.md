@@ -25,8 +25,9 @@ O cardgame não mantém um painel fixo grande sobre o mundo, nem botão próprio
 - **Visão geral** — quantidade de cartas únicas, shiny e estado do baralho;
 - **Álbum** — as 1.025 posições da Pokédex Nacional, filtros, carregamento progressivo, silhuetas
   e entradas separadas para a carta normal e cada bônus shiny possuído;
-- **Boosters** — pacote animado e revelação sequencial das cinco cartas;
-- **Baralho** — seleção de 15 espécies pertencentes ao jogador, incluindo a variante shiny escolhida;
+- **Boosters** — pacote animado, revelação de cinco cartas e abertura em lote de todo o inventário;
+- **Baralho** — seleção de 15 espécies pertencentes ao jogador, incluindo a variante shiny escolhida,
+  com rolagens independentes entre o baralho ativo e as cartas disponíveis;
 - **Horas, Objetivos, Quadro e Backlog** — os módulos oficiais de
   `backend/VirtualOffice.Api/wwwroot/shared/`, também usados pelo app web.
 
@@ -87,9 +88,10 @@ edições numa semana custa uma semana cheia de moeda — perseguir uma geraçã
 O Booster Raro possui duas rotas sem moedas:
 
 - concluir os cinco objetivos semanais ativos concede um por semana;
-- entregar 50 cópias normais `Rare`, `Epic` ou `Legendary` excedentes, distribuídas entre pelo
-  menos 10 espécies, concede um. A troca preserva uma cópia de cada espécie e consome as cartas
-  da menor raridade primeiro.
+- entregar 50 cartas normais excedentes, contendo pelo menos 10 cartas `Rare`, `Epic` ou
+  `Legendary` e cobrindo ao menos 10 tipos Pokémon, concede um. A troca preserva uma cópia de
+  cada variante normal, atende primeiro os requisitos do ritual e completa o restante consumindo
+  as cartas de menor raridade.
 
 No Arrange Dice, completar cinco ou mais cartas vizinhas também concede um Booster Raro.
 
@@ -129,6 +131,7 @@ REST implementado:
 ```text
 GET  /api/cardgame/profile
 POST /api/cardgame/boosters/open
+POST /api/cardgame/boosters/open-all
 POST /api/cardgame/boosters/exchange
 POST /api/cardgame/evolutions/exchange
 GET  /api/cardgame/casino-table

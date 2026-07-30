@@ -302,6 +302,7 @@ const pokemonCasinoPanel = createPokemonCasinoTablePanel({
   gameItems,
   hud,
   catalog: cardGameCatalog,
+  typeChart: cardGameTypeChart,
   onToast: (message) => proximityVoice.toast(message),
 });
 // ---------------------------------------------------------------- o menu

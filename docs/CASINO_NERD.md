@@ -72,6 +72,9 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
   novo custo;
 - a casa possui seis níveis. Cada nível escolhe 15 espécies numa faixa progressivamente mais forte
   do catálogo; a partir do nível 2, a IA prioriza capturas, força impressa e controle do centro;
+- no nível 4, uma carta da mão inicial da casa recebe `+1` numa borda; no nível 5 são três;
+  no nível 6 são cinco cartas energizadas e o **Mewtwo Rei do Cassino** (15/15/15/15) ocupa
+  a sexta posição da mão inicial, tornando o confronto final deliberadamente muito difícil;
 - vencer apenas reserva o prêmio daquele patamar e libera o próximo nível. Ao sair da mesa ou
   perder, o jogador recebe somente o maior prêmio alcançado na sequência, sem acumular os anteriores;
 - vencer o nível 6 encerra e paga a sequência automaticamente. Depois de qualquer encerramento,
@@ -103,8 +106,9 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 - `client-web/src/casino/ArrangeDicePanel.js`: seleção, ordenação, lançamento manual um a um,
   animação dos dados, tutorial em quatro passos e resultado.
 - `client-web/src/casino/NerdSlotsPanel.js`: rolos mistos, animação sequencial, sprites Pokémon
-- `client-web/src/casino/PokemonCasinoTablePanel.js`: tabuleiro, mão, escada de prêmios e retomada
-  da Liga Pokémon da Casa.
+- `client-web/src/casino/PokemonCasinoTablePanel.js`: reutiliza o padrão visual do duelo X1
+  (placar, tabuleiro, oponente, mão e overlay de tipos), acrescentando somente a faixa compacta
+  de progresso e o prêmio protegido da Liga Pokémon da Casa.
   locais e tabela que separa prêmios em moedas dos prêmios colecionáveis.
 - `client-web/src/casino/BlackjackPanel.js`: cartas, mão recuperável e ações pedir/parar.
 - `client-web/src/casino/casino.css`: desktop, celular em pé/deitado, safe areas e movimento reduzido.
