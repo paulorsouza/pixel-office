@@ -44,6 +44,11 @@ node_modules/
 package-lock.json
 /.tmp/
 
+# ---------- Ferramentas locais de agentes ----------
+/.agents/
+/.claude/
+/.codex-build/
+
 # ---------- Assets ----------
 # Os packs LimeZu crus e seus backups locais NÃO são versionados — ver ASSETS.md.
 # O wildcard também protege cópias como /LimeZu 2/ e /LimeZu.zip.
