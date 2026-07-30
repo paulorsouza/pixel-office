@@ -40,12 +40,15 @@ services:
       Auth__PasswordEnabled: "${AUTH_PASSWORD_ENABLED:-true}"
       Auth__AllowRegistration: "${AUTH_ALLOW_REGISTRATION:-true}"
       Auth__JwtKey: "${JWT_KEY}"
-      Auth__AllowedOrigins__0: "https://localhost"
-      Auth__AllowedOrigins__1: "https://localhost:8443"
+      # A PRIMEIRA origem é também o destino padrão do login (AuthEndpoints.IsAllowedReturn),
+      # então PUBLIC_ORIGIN tem que ser a do produto. Em produção as duas viram o domínio
+      # real (o app web fica em /app/ da mesma origem). Ver docs/DEPLOY_SERVIDOR.md.
+      Auth__AllowedOrigins__0: "${PUBLIC_ORIGIN:-https://localhost}"
+      Auth__AllowedOrigins__1: "${PUBLIC_APP_ORIGIN:-https://localhost:8443}"
       Auth__HostedDomain: "${GOOGLE_HOSTED_DOMAIN}"
       Auth__GoogleClientId: "${GOOGLE_CLIENT_ID}"
       Auth__GoogleClientSecret: "${GOOGLE_CLIENT_SECRET}"
-      Auth__GoogleRedirectUri: "https://localhost/auth/google/callback"
+      Auth__GoogleRedirectUri: "${PUBLIC_ORIGIN:-https://localhost}/auth/google/callback"
       # --- livekit ---
       # A URL é a que o NAVEGADOR usa. Com LiveKit Cloud (LIVEKIT_URL preenchido) a
       # mídia vai direto para a nuvem e a voz atravessa redes — é o que o túnel exige,
@@ -73,8 +76,8 @@ services:
     volumes:
       - ./livekit/livekit.docker.yaml:/etc/livekit.yaml:ro
     ports:
-      - "7881:7881"               # RTC/TCP (fallback)
-      - "50000-50100:50000-50100/udp"  # mídia WebRTC (UDP)
+      - "7881:7881"        # RTC/TCP (fallback para rede que bloqueia UDP)
+      - "7882:7882/udp"    # mídia WebRTC (UDP mux — uma porta só, ver livekit.docker.yaml)
     restart: unless-stopped
 
   caddy:

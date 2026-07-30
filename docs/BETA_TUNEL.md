@@ -52,8 +52,9 @@ O LiveKit transmite mídia por **UDP/WebRTC**, e o túnel HTTP **não passa UDP*
   voz conecta). Pra quem entra de fora pelo túnel, a voz **não** conecta — e degrada em silêncio,
   sem quebrar o resto.
 
-Pra voz funcionar para externos com LiveKit local, só **abrindo as portas UDP 50000–50100 do
-LiveKit no roteador** + IP público (o que o túnel justamente evita). Fica pra quando você quiser.
+Pra voz funcionar para externos com LiveKit local, só **abrindo a porta UDP 7882 do LiveKit no
+roteador** + IP público (o que o túnel justamente evita). Num servidor de verdade isso já vem
+resolvido — ver [`DEPLOY_SERVIDOR.md`](DEPLOY_SERVIDOR.md).
 
 ## Segurança da beta
 

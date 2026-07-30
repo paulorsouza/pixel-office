@@ -13,7 +13,7 @@ Navegador ──HTTPS──▶ Caddy (self-signed, sem domínio)
                        │                             (game na raiz, app web em /app/)
                        └─ wss://localhost:7443     → LiveKit local (perfil local-livekit)
 Backend ──▶ Postgres (volume pgdata)
-A/V      ──▶ LiveKit Cloud (padrão) ou SFU em container (UDP 50000–50100 + TCP 7881)
+A/V      ──▶ LiveKit Cloud (padrão) ou SFU em container (UDP 7882 mux + TCP 7881)
 ```
 
 O game e a API ficam na **mesma origem** (`https://localhost`) — isso elimina CORS e faz o
@@ -128,10 +128,11 @@ gerados e banco limpo. Para publicar num servidor de verdade falta:
    [`PLANO_AUTH.md`](PLANO_AUTH.md). Feche o cadastro (`AUTH_ALLOW_REGISTRATION=false`) depois
    de criar as contas, se quiser beta por convite.
 2. `JWT_KEY` forte e único (o script gera; num servidor, gere você).
-3. **Com domínio real:** troque `tls internal` por `tls seu@email.com` (ou remova, o Caddy pega
-   Let's Encrypt automático) e use o domínio no lugar de `localhost` no
-   [`Caddyfile`](../deploy/Caddyfile); ajuste `Auth__GoogleRedirectUri`, `AllowedOrigins` e
-   `LiveKit__Url` no compose para o domínio.
+3. **Com domínio real:** isso já está pronto — use o override
+   [`docker-compose.server.yml`](../docker-compose.server.yml), que troca o Caddyfile pelo
+   [`Caddyfile.server`](../deploy/Caddyfile.server) (Let's Encrypt) e liga o `use_external_ip`
+   do LiveKit. As origens e o `GoogleRedirectUri` saem do `PUBLIC_ORIGIN` no `.env`. Specs de
+   máquina, DNS, firewall e backup: [`DEPLOY_SERVIDOR.md`](DEPLOY_SERVIDOR.md).
 
 ## LiveKit / A/V — atenção
 
@@ -140,10 +141,11 @@ O WebRTC precisa de UDP direto entre navegador e LiveKit. Isso é sensível a NA
 - **Docker Desktop (Windows/Mac):** a mídia UDP através da VM do Docker Desktop é limitada; o
   áudio por proximidade **pode não conectar** mesmo com as portas mapeadas. Para validar A/V de
   verdade, rode o LiveKit num host **Linux** com `network_mode: host`, ou fora do Docker.
-- **Servidor Linux com IP público:** em [`livekit/livekit.docker.yaml`](../livekit/livekit.docker.yaml)
-  troque `use_external_ip: true` (ou defina `node_ip`) para o LiveKit anunciar candidatos
-  alcançáveis. As chaves `LIVEKIT_API_KEY/SECRET` do `.env` têm que bater com o backend (já batem
-  via compose).
+- **Servidor Linux com IP público:** use o [`docker-compose.server.yml`](../docker-compose.server.yml),
+  que monta o [`livekit.server.yaml`](../livekit/livekit.server.yaml) com `use_external_ip: true` —
+  sem isso o SFU anuncia o IP interno do container e ninguém de fora conecta. As chaves
+  `LIVEKIT_API_KEY/SECRET` do `.env` têm que bater com o backend (já batem via compose).
+- **Mídia UDP:** uma porta só (**7882**, UDP mux), não mais o range 50000–50100.
 
 O resto do jogo (mundo, presença, tarefas, xadrez) **não depende do LiveKit** e funciona normal.
 

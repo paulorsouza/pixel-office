@@ -1,0 +1,14 @@
+# Configuração do LiveKit para o SERVIDOR Linux com IP público.
+# Diferença para o livekit.docker.yaml: use_external_ip ligado — sem isso o SFU
+# anuncia o IP interno do container nos candidatos ICE e ninguém de fora conecta.
+# Usada pelo docker-compose.server.yml. Ver docs/DEPLOY_SERVIDOR.md.
+port: 7880
+rtc:
+  tcp_port: 7881
+  # UDP mux numa porta só (abra 7882/udp no firewall do provedor).
+  udp_port: 7882
+  # Descobre o IP público sozinho. Se o provedor faz NAT 1:1 e a descoberta
+  # falhar, troque por: node_ip: <ip.publico.do.servidor>
+  use_external_ip: true
+logging:
+  level: info

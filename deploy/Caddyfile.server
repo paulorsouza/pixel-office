@@ -1,0 +1,52 @@
+# Caddyfile do SERVIDOR Linux com domínio real e certificado Let's Encrypt.
+# O local (deploy/Caddyfile) usa CA interna e host fixo `localhost`; aqui o host vem
+# do env PUBLIC_DOMAIN, definido no .env. Usado pelo docker-compose.server.yml.
+#
+# Uma origem só para tudo: game na raiz, app web em /app/, backend em /api,/hub,/auth,/shared.
+# Sem CORS, o SignalR faz upgrade de WebSocket e o cookie de sessão vale nas duas UIs.
+{
+	# Contato do Let's Encrypt (avisos de expiração). Vazio também funciona.
+	email {$ACME_EMAIL}
+}
+
+{$PUBLIC_DOMAIN} {
+	# Vale principalmente pelo bundle JS do Phaser; PNG/áudio já vêm comprimidos.
+	encode zstd gzip
+
+	# App web (kanban/horas/objetivos). handle_path tira o /app antes de repassar,
+	# e os caminhos relativos do index.html (css/, js/) voltam certos por baixo dele.
+	redir /app /app/
+	handle_path /app/* {
+		reverse_proxy backend:8080
+	}
+
+	# API, SignalR, auth e a UI compartilhada — precisam da raiz, não do /app.
+	# /shared/* é o kanban/horas que o JOGO importa em runtime: sem esta rota o
+	# painel dentro do jogo abre vazio (e só em produção).
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+	handle /hub/* {
+		reverse_proxy backend:8080
+	}
+	handle /auth/* {
+		reverse_proxy backend:8080
+	}
+	handle /shared/* {
+		reverse_proxy backend:8080
+	}
+
+	# resto: o game (Phaser)
+	handle {
+		reverse_proxy game:80
+	}
+}
+
+# Sinalização do LiveKit self-hosted (a mídia vai direto nas portas 7882/udp e 7881/tcp
+# do container, sem passar por aqui). Precisa de um registro DNS para o subdomínio.
+#
+# USANDO LIVEKIT CLOUD? Apague este bloco — sem DNS o Caddy fica tentando emitir um
+# certificado que nunca vai sair. Com ele, LIVEKIT_URL=wss://livekit.SEU-DOMINIO.
+livekit.{$PUBLIC_DOMAIN} {
+	reverse_proxy livekit:7880
+}

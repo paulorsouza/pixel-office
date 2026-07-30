@@ -1,10 +1,12 @@
-# Configuração do LiveKit para o build Docker. As chaves vêm do env LIVEKIT_KEYS.
+# Configuração do LiveKit para o build Docker LOCAL. As chaves vêm do env LIVEKIT_KEYS.
+# Para o servidor Linux com IP público use livekit.server.yaml (ver docs/DEPLOY_SERVIDOR.md).
 port: 7880
 rtc:
   tcp_port: 7881
-  port_range_start: 50000
-  port_range_end: 50100
-  # Em um servidor Linux com IP público, troque para true (ou defina node_ip).
+  # UDP mux: uma porta só para toda a mídia, em vez de um range de 101 portas.
+  # Publicar range grande no Docker deixa o `up` lento e não compra nada — o mux
+  # atende dezenas de participantes numa porta. Muda também no compose, se mexer.
+  udp_port: 7882
   # No Docker Desktop (Windows/Mac) a mídia UDP é limitada — ver docs/DEPLOY_DOCKER.md.
   use_external_ip: false
 logging:

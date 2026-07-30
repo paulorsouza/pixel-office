@@ -1,0 +1,29 @@
+# Override do servidor Linux (domínio real + Let's Encrypt + SFU com IP público).
+# Não substitui o docker-compose.yml: soma a ele.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.server.yml \
+#                  --profile local-livekit up -d --build
+#
+# Sem o --profile, o serviço livekit não sobe (é o certo se você usa LiveKit Cloud).
+# Ver docs/DEPLOY_SERVIDOR.md.
+
+services:
+  caddy:
+    # `!override` TROCA a lista em vez de somar (o padrão do compose é unir). É o que
+    # importa aqui: sem isso o :8080 do compose base — a origem HTTP SEM TLS do túnel —
+    # ficaria publicada na internet. E publicar porta no Docker fura o ufw (as regras
+    # entram na DOCKER-USER, antes das suas), então não dá para contar com o firewall
+    # do host para tapar. A 80 é o desafio HTTP-01 do Let's Encrypt + redirect http→https.
+    ports: !override
+      - "80:80"
+      - "443:443"
+    environment:
+      PUBLIC_DOMAIN: "${PUBLIC_DOMAIN}"
+      ACME_EMAIL: "${ACME_EMAIL}"
+    volumes:
+      # Mesmo destino do compose base => troca o arquivo (merge de volume é por destino).
+      - ./deploy/Caddyfile.server:/etc/caddy/Caddyfile:ro
+
+  livekit:
+    volumes:
+      - ./livekit/livekit.server.yaml:/etc/livekit.yaml:ro
