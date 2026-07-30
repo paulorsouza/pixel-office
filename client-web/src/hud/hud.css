@@ -346,8 +346,12 @@ button{font:inherit}
 .hud-item-copy small{color:var(--cg-muted);font-size:9.5px}
 .hud-item-action{flex:0 0 auto;padding:5px 9px;border-radius:8px;color:#dfe5f6;
   background:#ffffff12;font-size:10px;font-weight:700;white-space:nowrap}
+/* Esgotado não é o mesmo que caro: a etiqueta deixa de parecer preço. */
+.hud-item-row[data-soldout] .hud-item-action{border:1px dashed #ffffff33;color:var(--cg-muted);
+  background:none;font-weight:600}
 .hud-empty{margin:0;padding:16px;border:1px dashed #ffffff22;border-radius:12px;
   color:var(--cg-muted);font-size:11px;text-align:center}
+.hud-note{margin:0;color:var(--cg-muted);font-size:10px;line-height:1.5}
 .hud-banner{display:flex;align-items:center;gap:12px;padding:13px 15px;
   border:1px solid #ffffff16;border-radius:15px;background:#151c36}
 .hud-banner-icon{font-size:22px}

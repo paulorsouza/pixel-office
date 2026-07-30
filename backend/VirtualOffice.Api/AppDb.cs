@@ -32,6 +32,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<CardGameBoosterBalance> CardGameBoosterBalances => Set<CardGameBoosterBalance>();
     public DbSet<CasinoRound> CasinoRounds => Set<CasinoRound>();
     public DbSet<PresenceDay> PresenceDays => Set<PresenceDay>();
+    public DbSet<StorePurchaseQuota> StorePurchaseQuotas => Set<StorePurchaseQuota>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,10 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
             .HasIndex(x => new { x.UserId, x.CardId, x.IsShiny, x.ShinyBonusSide }).IsUnique();
         modelBuilder.Entity<CardGameBoosterBalance>()
             .HasIndex(x => new { x.UserId, x.BoosterId, x.TargetCardId }).IsUnique();
+        // Mesma forma do ObjectiveProgress: a unicidade por período é o que impede
+        // dois cliques simultâneos de abrirem duas cotas e furarem o teto.
+        modelBuilder.Entity<StorePurchaseQuota>()
+            .HasIndex(x => new { x.UserId, x.DefinitionId, x.PeriodStart }).IsUnique();
         modelBuilder.Entity<CasinoRound>()
             .HasIndex(x => new { x.UserId, x.IdempotencyKey }).IsUnique();
         modelBuilder.Entity<CasinoRound>()

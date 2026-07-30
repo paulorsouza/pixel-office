@@ -63,8 +63,26 @@ Existem Booster Nacional, nove edições por geração, Booster Raro e Booster E
 chance shiny aumentada. Entregar dez cópias normais iguais concede um Booster Especial daquela
 espécie: as cinco cartas compartilham ao menos um tipo com o alvo, há 10% exatos de incluir o
 shiny-alvo e as demais espécies têm 0,05% de shiny por carta.
-Nenhum booster é vendido na loja por moedas. Os pacotes entram no cardgame somente por
-recompensas, conquistas e trocas; prêmios existentes do cassino continuam creditando o Nacional.
+
+### 3.1 O que a Banca de cartas vende
+
+A Banca de cartas da Galeria Tooq (`store:cards`) vende **somente as nove Edições por geração**,
+por **400 moedas** e no máximo **uma de cada por semana**, por jogador. A semana é a mesma dos
+objetivos — segunda-feira no fuso do time, via `Periods.WeekStart`.
+
+Nacional, Raro, Ultrarraro e Especial **continuam fora do balcão**: eles são a moeda das
+conquistas (cassino, objetivo semanal, Liga, trocas do álbum) e vendê-los apagaria essas rotas.
+
+O teto é do balcão, não do cardgame: `GameItemDefinition.WeeklyPurchaseLimit` (0 = sem teto, o
+caso de todo móvel e equipamento) com o consumo em `StorePurchaseQuota`, uma linha por
+usuário/item/semana. A compra roda em transação `Serializable` — em `ReadCommitted` dois cliques
+simultâneos leem a mesma cota zerada e ambos passam.
+
+`GET /api/game/catalog` devolve `weeklyLimit`, `weeklyPurchased` e `weeklyRemaining` por item, para
+o balcão marcar `Esgotado` antes do clique em vez de recusar só na hora de pagar.
+
+Calibragem: com o teto diário de 400 de gold do trabalho mais 180 de presença, comprar as nove
+edições numa semana custa uma semana cheia de moeda — perseguir uma geração continua sendo escolha.
 
 O Booster Raro possui duas rotas sem moedas:
 
@@ -96,6 +114,12 @@ O schema é criado pela migration `20260728000327_AddCardGameCollection`:
 | `CardGameProfile` | usuário e baralho em JSON |
 | `CardGameCollectionItem` | usuário, carta, lado shiny, quantidade e primeira aquisição |
 | `CardGameBoosterBalance` | usuário, tipo do booster, alvo opcional e quantidade |
+
+A cota semanal da Banca vem da migration `20260730213348_AddStorePurchaseQuota`:
+
+| Entidade | Conteúdo |
+|---|---|
+| `StorePurchaseQuota` | usuário, item, início da semana e quantidade já comprada |
 
 O perfil é criado de forma preguiçosa no primeiro acesso, com três Boosters Nacionais. O backend
 valida que as quinze referências salvas e usadas em desafio pertencem ao álbum do usuário.
@@ -167,14 +191,20 @@ Checagens automatizadas:
 
 ```powershell
 node --test client-web/src/cardgame/engine.test.mjs
+node --test client-web/src/store-catalog.test.mjs
 node --test client-web/tools/tiled-converter.test.mjs
 dotnet build backend/VirtualOffice.Api/VirtualOffice.Api.csproj --no-restore
 ```
 
+Para conferir a Banca à mão: abra a Galeria Tooq, vá ao balcão de cartas e compre uma edição
+duas vezes. A segunda precisa recusar com o aviso de limite semanal, e a linha do item passa a
+mostrar `Esgotado` / `volta segunda` mesmo com moeda sobrando.
+
 ## 7. Pendências conhecidas
 
 - persistir e recuperar partida em andamento;
-- ampliar as fontes recorrentes das edições e do Booster Raro, com loja, custo e histórico de abertura;
+- ampliar as fontes recorrentes do Booster Raro (as edições já têm balcão e custo) e registrar
+  histórico de abertura;
 - adicionar pity e mostrar probabilidades finais na interface;
 - animações específicas para captura e vantagem de tipo;
 - telemetria e balanceamento em larga escala.

@@ -1,3 +1,4 @@
+using System.Data;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -607,10 +608,16 @@ api.MapGet("/game/catalog", async (HttpRequest req, IDbContextFactory<AppDb> f) 
         .Select(x => new
         {
             x.Id, x.CatalogKey, x.Name, x.Category, x.IconPath, x.InteractionType,
-            x.ItemType, x.Rarity, x.Price, x.IsPurchasable, x.StarterQuantity,
-            x.CapabilitiesJson,
+            x.ItemType, x.Rarity, x.Price, x.IsPurchasable, x.WeeklyPurchaseLimit,
+            x.StarterQuantity, x.CapabilitiesJson,
         })
         .ToListAsync();
+    // Item com teto precisa mostrar o que sobrou ANTES do clique: um balcão que só
+    // recusa na hora de pagar é um balcão que mente sobre o próprio estoque.
+    var weekStart = Periods.WeekStart(DateTime.UtcNow);
+    var usedThisWeek = await db.StorePurchaseQuotas
+        .Where(x => x.UserId == uid && x.PeriodStart == weekStart)
+        .ToDictionaryAsync(x => x.DefinitionId, x => x.Quantity);
     // Cada balcão vende um tipo (`?kind=furniture|equipment|cards`). O filtro é do
     // servidor para o jogo não precisar conhecer a regra — e para uma banca nunca
     // mostrar, mesmo por engano, o estoque da loja vizinha.
@@ -619,13 +626,22 @@ api.MapGet("/game/catalog", async (HttpRequest req, IDbContextFactory<AppDb> f) 
         .Select(x => new
         {
             x.Id, x.CatalogKey, x.Name, x.Category, x.IconPath, x.InteractionType,
-            x.ItemType, x.Rarity, x.Price, x.IsPurchasable, x.StarterQuantity,
-            x.CapabilitiesJson,
+            x.ItemType, x.Rarity, x.Price, x.IsPurchasable,
+            x.StarterQuantity, x.CapabilitiesJson,
             storeKind = GameInventorySeed.StoreKindFor(x.ItemType),
+            weeklyLimit = x.WeeklyPurchaseLimit,
+            weeklyPurchased = usedThisWeek.GetValueOrDefault(x.Id),
+            weeklyRemaining = x.WeeklyPurchaseLimit <= 0
+                ? (int?)null
+                : Math.Max(0, x.WeeklyPurchaseLimit - usedThisWeek.GetValueOrDefault(x.Id)),
         })
         .Where(x => string.IsNullOrEmpty(kind) || x.storeKind == kind)
         .ToList();
-    return Results.Ok(new { user.Coins, kind, definitions });
+    return Results.Ok(new
+    {
+        user.Coins, kind, definitions,
+        weekStart, weekEnd = weekStart.AddDays(7),
+    });
 });
 
 api.MapPost("/game/catalog/{catalogKey}/purchase", async (
@@ -633,14 +649,40 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
 {
     if (UserId(req) is not int uid) return Results.Unauthorized();
     await using var db = await f.CreateDbContextAsync();
-    await using var tx = await db.Database.BeginTransactionAsync();
+    // Serializable porque o teto semanal é ler-conferir-gravar: em ReadCommitted dois
+    // cliques simultâneos leem a mesma cota zerada e ambos passam.
+    await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
     var user = await db.Users.FindAsync(uid);
     var definition = await db.GameItemDefinitions.SingleOrDefaultAsync(x => x.CatalogKey == catalogKey);
     if (user is null || definition is null) return Results.NotFound();
     if (!definition.IsPurchasable) return Results.BadRequest(new { error = "Este item não está à venda" });
+
+    StorePurchaseQuota? quota = null;
+    if (definition.WeeklyPurchaseLimit > 0)
+    {
+        var weekStart = Periods.WeekStart(DateTime.UtcNow);
+        quota = await db.StorePurchaseQuotas.SingleOrDefaultAsync(x =>
+            x.UserId == uid && x.DefinitionId == definition.Id && x.PeriodStart == weekStart);
+        if (quota is null)
+        {
+            quota = new StorePurchaseQuota { UserId = uid, DefinitionId = definition.Id, PeriodStart = weekStart };
+            db.StorePurchaseQuotas.Add(quota);
+        }
+        if (quota.Quantity >= definition.WeeklyPurchaseLimit)
+            return Results.Conflict(new
+            {
+                error = $"Limite semanal atingido: {definition.WeeklyPurchaseLimit} por semana. "
+                    + "O estoque volta na segunda.",
+                weeklyLimit = definition.WeeklyPurchaseLimit,
+                weeklyPurchased = quota.Quantity,
+                weekEnd = weekStart.AddDays(7),
+            });
+    }
+
     if (user.Coins < definition.Price)
         return Results.Conflict(new { error = "Moedas insuficientes", coins = user.Coins, price = definition.Price });
     user.Coins -= definition.Price;
+    if (quota is not null) quota.Quantity++;
 
     // Booster não é objeto: não vira instância no inventário nem se coloca numa
     // sala. A compra credita saldo no perfil do cardgame, que é quem sabe abrir.
@@ -657,6 +699,9 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
         {
             coins = user.Coins,
             boosters = balance,
+            weeklyRemaining = quota is null
+                ? (int?)null
+                : definition.WeeklyPurchaseLimit - quota.Quantity,
             definition = new { definition.CatalogKey, definition.Name, definition.ItemType, boosterId },
         });
     }

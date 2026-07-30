@@ -474,3 +474,69 @@ test('vilarejo possui doze destinos únicos para o interior vazio compartilhado'
     .find((item) => properties(item).id === 'return-home');
   assert.equal(properties(returnPortal).targetScene, 'world');
 });
+
+// O vão da porta é recortado da parede por chave de tile no `MapRenderer`
+// (`${rect.x + door.at + i},${bottom}`): meio tile de desalinho não casa com chave
+// nenhuma, a parede continua inteira e a porta vira um adesivo colado por cima.
+test('toda porta cai na grade de tiles do prédio ou do cômodo', () => {
+  const manifest = read('../maps/scenes.json');
+  for (const scene of manifest.scenes) {
+    const map = read(`../${scene.file}`);
+    const objects = map.layers.flatMap((layer) => layer.objects || []);
+    const parents = new Map(objects
+      .filter((item) => ['building', 'room'].includes(item.type))
+      .map((item) => [item.type === 'building' ? 'building' : properties(item).id, item]));
+    for (const door of objects.filter((item) => item.type === 'door')) {
+      const parent = parents.get(properties(door).parent);
+      assert.ok(parent, `${scene.id}: porta sem parent — ${door.name}`);
+      const at = ['N', 'S'].includes(properties(door).side)
+        ? (door.x - parent.x) / 16
+        : (door.y - parent.y) / 16;
+      assert.ok(Number.isInteger(at), `${scene.id}: porta fora da grade — ${door.name} (at=${at})`);
+    }
+  }
+});
+
+// `casino_nerd.png` reaproveita o footprint e a máscara do `office_generic.png`, então
+// a entrada desenhada cai no mesmo recorte nos dois prédios: portal e spawn precisam
+// pousar sobre ela, senão o jogador entra atravessando a parede ao lado da porta.
+test('portal e spawn dos prédios do mundo pousam sobre a entrada da fachada', () => {
+  const world = read('../tiled/maps/world.tmj');
+  const props = objectsIn(world, 'props');
+  const navigation = objectsIn(world, 'navigation');
+  // Faixa da porta medida em pixels nas duas artes (`assets/world/*.png`).
+  const doorway = { start: 90, end: 121 };
+  const entrances = [
+    { assetId: 'casino_nerd', portal: 'casino-nerd-door', spawn: 'from-casino-nerd' },
+    { assetId: 'office_generic', portal: 'tooq-comercio-door', spawn: 'from-tooq-comercio' },
+  ].map((entry) => {
+    const portal = navigation.find((item) => item.name === entry.portal);
+    const spawn = navigation.find((item) => item.name === entry.spawn);
+    // `office_generic` se repete no mundo (o Coworking usa a mesma arte): a fachada
+    // desta entrada é a que fica embaixo do portal, não a primeira da camada.
+    const façade = props.find((item) => (
+      properties(item).assetId === entry.assetId
+      && portal.x >= item.x && portal.x < item.x + item.width
+    ));
+    assert.ok(façade, `${entry.portal} não está sobre nenhuma fachada ${entry.assetId}`);
+    return {
+      ...entry,
+      left: portal.x - façade.x,
+      right: portal.x + portal.width - façade.x,
+      spawnAt: spawn.x - façade.x,
+    };
+  });
+
+  for (const entrance of entrances) {
+    assert.ok(
+      entrance.left <= doorway.start && entrance.right >= doorway.end,
+      `${entrance.portal} não cobre a porta desenhada na fachada`,
+    );
+    assert.ok(
+      entrance.spawnAt >= entrance.left && entrance.spawnAt <= entrance.right,
+      `${entrance.spawn} devolve o jogador fora da soleira`,
+    );
+  }
+  assert.equal(entrances[0].left, entrances[1].left, 'fachadas iguais, mesmo offset de porta');
+  assert.equal(entrances[0].spawnAt, entrances[1].spawnAt);
+});

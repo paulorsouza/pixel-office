@@ -14,7 +14,17 @@ public static class GameInventorySeed
         int Price = 0,
         bool Purchasable = true,
         int StarterQuantity = 0,
-        string Capabilities = "[]");
+        string Capabilities = "[]",
+        int WeeklyLimit = 0);
+
+    /// <summary>
+    /// Preço e teto das Edições por geração, os únicos boosters vendidos por moeda.
+    /// Um por semana cada: com o teto diário de 400 de gold do trabalho mais 180 de
+    /// presença, comprar a estante inteira custa uma semana cheia — a escolha de qual
+    /// geração perseguir continua sendo escolha, não rotina.
+    /// </summary>
+    private const int GenerationBoosterPrice = 400;
+    private const int GenerationBoosterWeeklyLimit = 1;
 
     private static readonly CatalogItem[] Catalog =
     [
@@ -110,28 +120,29 @@ public static class GameInventorySeed
         new("equipment:rgb-mouse", "Mouse RGB", "peripherals", ItemType: "equipment",
             Rarity: "epic", Price: 760),
 
-        // Boosters continuam no catálogo para histórico/ícones, mas não são vendidos.
-        // Eles entram no cardgame somente por recompensas, conquistas e trocas.
+        // Nacional e Raro continuam fora do balcão: eles são a moeda das conquistas
+        // (cassino, objetivo semanal, troca de 50 cartas) e vender apagaria isso.
+        // As nove Edições são as únicas com preço — e com teto de uma por semana.
         new("cardgame:booster", "Booster Nacional", "cards", ItemType: "booster",
             Rarity: "rare", Price: 0, Purchasable: false),
         new("cardgame:booster-generation-1", "Edição Kanto", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-2", "Edição Johto", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-3", "Edição Hoenn", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-4", "Edição Sinnoh", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-5", "Edição Unova", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-6", "Edição Kalos", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-7", "Edição Alola", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-8", "Edição Galar/Hisui", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-generation-9", "Edição Paldea", "cards", ItemType: "booster",
-            Rarity: "rare", Price: 0, Purchasable: false),
+            Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-rare", "Booster Raro", "cards", ItemType: "booster",
             Rarity: "epic", Price: 0, Purchasable: false),
     ];
@@ -168,6 +179,7 @@ public static class GameInventorySeed
             definition.Rarity = item.Rarity;
             definition.Price = item.Price;
             definition.IsPurchasable = item.Purchasable;
+            definition.WeeklyPurchaseLimit = item.WeeklyLimit;
             definition.StarterQuantity = item.StarterQuantity;
             definition.CapabilitiesJson = item.Capabilities;
         }

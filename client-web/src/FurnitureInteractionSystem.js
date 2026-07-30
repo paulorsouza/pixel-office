@@ -20,6 +20,75 @@ const SCENERY_INTERACTIONS = new Set([
   'seat', 'coffee', 'kanban', 'workstation', 'timeclock', 'whiteboard', 'store',
 ]);
 
+// Cada balcão atende um tipo. O tipo vem do próprio móvel, na `interactionKey`
+// ("store:cards"); balcão sem tipo declarado continua sendo a loja geral.
+const STORES = {
+  furniture: ['Loja de móveis', 'Mesas, cadeiras, estações e decoração'],
+  equipment: ['Loja de equipamentos', 'Periféricos, acessórios e meios de locomoção'],
+  cards: ['Banca de cartas', 'Boosters do Tooq Triad — abra pelo menu de Cartas'],
+  '': ['Loja Tooq', 'Todo o estoque disponível'],
+};
+
+// Rodapé que explica por que o balcão vende POUCO. Sem isso, uma banca com nove
+// itens de teto 1 parece um catálogo quebrado em vez de uma escolha de design.
+const STORE_NOTES = {
+  cards: 'Nacional e Raro não são vendidos: eles vêm do cassino, dos objetivos '
+    + 'semanais e das trocas do álbum.',
+};
+
+export const storeKindOf = (record) => {
+  const key = String(record?.item?.interactionKey || '');
+  const kind = key.startsWith('store:') ? key.slice(6) : '';
+  return Object.hasOwn(STORES, kind) ? kind : '';
+};
+
+/**
+ * "rare · 1/semana · resta 1". Vazio para item sem teto (todo móvel).
+ * Curto de propósito: a linha divide uma coluna estreita com o nome do item.
+ */
+function weeklyLabel(item) {
+  if (!item.weeklyLimit) return '';
+  const rate = ` · ${item.weeklyLimit}/semana`;
+  if (!item.weeklyRemaining) return `${rate} · volta segunda`;
+  return `${rate} · resta${item.weeklyRemaining > 1 ? 'm' : ''} ${item.weeklyRemaining}`;
+}
+
+function storeRowHtml(item, coins) {
+  // Duas formas de não poder comprar, e elas não se confundem: sem moeda o preço
+  // continua à vista, porque juntar moeda é o que resolve; esgotado, o que importa
+  // é quando volta, então o preço sai da frente.
+  const soldOut = item.weeklyLimit > 0 && !item.weeklyRemaining;
+  const disabled = soldOut || coins < item.price;
+  return `<button class="hud-item-row" type="button" data-buy-item="${escapeHtml(item.catalogKey)}"
+    data-rarity="${escapeHtml(item.rarity)}"${disabled ? ' disabled' : ''}${soldOut ? ' data-soldout' : ''}>
+    ${itemThumbHtml(item)}
+    <span class="hud-item-copy"><b>${escapeHtml(item.name)}</b>
+      <small>${escapeHtml(item.rarity + weeklyLabel(item))}</small></span>
+    <span class="hud-item-action">${soldOut ? 'Esgotado' : `${item.price} 🪙`}</span>
+  </button>`;
+}
+
+/**
+ * Marcação do balcão. Pura de propósito: é o único jeito de conferir estoque
+ * esgotado e teto semanal sem subir Phaser (ver docs/CARDGAME.md).
+ * @param catalog  resposta de `GET /api/game/catalog?kind=`
+ */
+export function storeCatalogHtml(catalog, kind = '') {
+  const coins = catalog?.coins ?? 0;
+  const items = (catalog?.definitions || []).filter((item) => item.isPurchasable);
+  // Item com teto carrega uma linha a mais embaixo do nome. Em três colunas essa
+  // linha sobra em 70px e quebra em três; a grade larga é o que a faz caber.
+  const columns = items.some((item) => item.weeklyLimit > 0) ? 'two' : 'three';
+  const rows = items.map((item) => storeRowHtml(item, coins)).join('');
+  const note = STORE_NOTES[kind];
+  return `<div class="hud-stack">
+    <div class="hud-banner"><span class="hud-banner-icon">🪙</span>
+      <b>${coins} moedas</b><small>saldo da carteira</small></div>
+    <div class="hud-item-list ${columns}">${rows || '<p class="hud-empty">Este balcão está sem estoque</p>'}</div>
+    ${note ? `<p class="hud-note">${escapeHtml(note)}</p>` : ''}
+  </div>`;
+}
+
 function distanceToPlayer(record, player, tile) {
   return Phaser.Math.Distance.Between(
     record.display.x,
@@ -184,21 +253,6 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
         target="_blank" rel="noopener noreferrer">Abrir no draw.io</a></p>`;
   }
 
-  // Cada balcão atende um tipo. O tipo vem do próprio móvel, na `interactionKey`
-  // ("store:cards"); balcão sem tipo declarado continua sendo a loja geral.
-  const STORES = {
-    furniture: ['Loja de móveis', 'Mesas, cadeiras, estações e decoração'],
-    equipment: ['Loja de equipamentos', 'Periféricos, acessórios e meios de locomoção'],
-    cards: ['Banca de cartas', 'Boosters do Tooq Triad — abra pelo menu de Cartas'],
-    '': ['Loja Tooq', 'Todo o estoque disponível'],
-  };
-
-  const storeKindOf = (record) => {
-    const key = String(record?.item?.interactionKey || '');
-    const kind = key.startsWith('store:') ? key.slice(6) : '';
-    return Object.hasOwn(STORES, kind) ? kind : '';
-  };
-
   async function renderStore(record) {
     const kind = storeKindOf(record);
     const [storeName, storeCopy] = STORES[kind];
@@ -207,20 +261,7 @@ export function createFurnitureInteractionSystem(scene, map, gameItems, equipmen
     status('Carregando catálogo…');
     try {
       const catalog = await gameItems.storeCatalog(kind);
-      const purchasable = (catalog.definitions || []).filter((item) => item.isPurchasable);
-      content.innerHTML = `<div class="hud-stack">
-        <div class="hud-banner"><span class="hud-banner-icon">🪙</span>
-          <b>${catalog.coins} moedas</b><small>saldo da carteira</small></div>
-        <div class="hud-item-list three">${purchasable.map((item) => `
-          <button class="hud-item-row" type="button" data-buy-item="${escapeHtml(item.catalogKey)}"
-            ${catalog.coins < item.price ? 'disabled' : ''} data-rarity="${escapeHtml(item.rarity)}">
-            ${itemThumbHtml(item)}
-            <span class="hud-item-copy"><b>${escapeHtml(item.name)}</b>
-              <small>${escapeHtml(item.rarity)}</small></span>
-            <span class="hud-item-action">${item.price} 🪙</span>
-          </button>
-        `).join('') || '<p class="hud-empty">Este balcão está sem estoque</p>'}</div>
-      </div>`;
+      content.innerHTML = storeCatalogHtml(catalog, kind);
       content.onclick = async (event) => {
         const button = event.target.closest('[data-buy-item]');
         if (!button) return;

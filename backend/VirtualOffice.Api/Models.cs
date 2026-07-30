@@ -324,9 +324,29 @@ public class GameItemDefinition
     public string Rarity { get; set; } = "common";
     public int Price { get; set; }
     public bool IsPurchasable { get; set; }
+    /// <summary>
+    /// Quantas unidades um jogador pode comprar por semana. 0 = sem teto, que é o
+    /// caso de todo móvel e equipamento — a raridade deles já mora no preço.
+    /// </summary>
+    public int WeeklyPurchaseLimit { get; set; }
     public int StarterQuantity { get; set; }
     // Capacidades desacoplam regra de negócio do asset visual (ex.: ["kanban","wall-mounted"]).
     public string CapabilitiesJson { get; set; } = "[]";
+}
+
+/// <summary>
+/// Quanto de um item o jogador já levou na semana corrente. Uma linha por
+/// usuário/item/semana: é ela que torna o teto verificável dentro da transação
+/// da compra, em vez de recontar o histórico a cada clique.
+/// </summary>
+public class StorePurchaseQuota
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int DefinitionId { get; set; }
+    /// <summary>Segunda-feira local da semana, em UTC (<see cref="Periods.WeekStart"/>).</summary>
+    public DateTime PeriodStart { get; set; }
+    public int Quantity { get; set; }
 }
 
 public class GameItemInstance
