@@ -1,0 +1,1461 @@
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" character varying(150) NOT NULL,
+          "ProductVersion" character varying(32) NOT NULL,
+          CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."AllowsPair", a."Color", a."CountsAsWork", a."DailyTargetMinutes", a."DefaultMinutes", a."GoldPerHour", a."Icon", a."IsActive", a."Key", a."Name", a."RequiresWorkItem", a."SortOrder", a."XpPerHour"
+      FROM "ActivityTypes" AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."ActivityKey", o."Description", o."GoldReward", o."Icon", o."IsActive", o."Key", o."Metric", o."Name", o."Scope", o."SortOrder", o."Target", o."XpReward"
+      FROM "Objectives" AS o
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT l."Name"
+      FROM "Labels" AS l
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Users" AS u)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      ORDER BY p."WingIndex", p."SlotIndex", p."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id"
+      FROM "Users" AS u
+      WHERE NOT (u."IsBot")
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[63]
+      User profile is available. Using 'C:\Users\prs\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+warn: Microsoft.AspNetCore.StaticFiles.StaticFileMiddleware[16]
+      The WebRootPath was not found: E:\workspace\pixel-office\wwwroot. Static files may be unavailable.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:5211
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: E:\workspace\pixel-office
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."IsBot"
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/auth/config - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /auth/config'
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType11`5' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /auth/config'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/auth/config - 200 - application/json;+charset=utf-8 156.1040ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/game/personal-rooms - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/game/personal-rooms - 204 - - 2.0335ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/game/personal-rooms - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/game/personal-rooms'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."CreatedUtc", p."RoomKey", p."SceneTemplate", p."SlotIndex", p."UserId", p."WingIndex"
+      FROM "PersonalRooms" AS p
+      WHERE p."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT p."WingIndex", p."SlotIndex"
+      FROM "PersonalRooms" AS p
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?', @p2='?', @p3='?' (DbType = Int32), @p4='?' (DbType = Int32), @p5='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "PersonalRooms" ("CreatedUtc", "RoomKey", "SceneTemplate", "SlotIndex", "UserId", "WingIndex")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."CapabilitiesJson", g."CatalogKey", g."Category", g."IconPath", g."InteractionType", g."IsPurchasable", g."ItemType", g."Name", g."Price", g."Rarity", g."StarterQuantity"
+      FROM "GameItemDefinitions" AS g
+      WHERE g."StarterQuantity" > 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @definition_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "GameItemInstances" AS g
+      WHERE g."UserId" = @_8__locals1_userId AND g."DefinitionId" = @definition_Id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (DbType = Int32), @p2='?' (DbType = Int32), @p3='?', @p4='?', @p5='?', @p6='?' (DbType = Int32), @p7='?' (DbType = DateTime), @p8='?' (DbType = Int32), @p9='?' (DbType = Int32), @p10='?', @p11='?', @p12='?', @p13='?' (DbType = Int32), @p14='?' (DbType = DateTime), @p15='?' (DbType = Int32), @p16='?' (DbType = Int32), @p17='?', @p18='?', @p19='?', @p20='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "GameItemInstances" ("AcquiredUtc", "ContainerPlacementId", "DefinitionId", "InstanceKey", "Location", "StateJson", "UserId")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)
+      RETURNING "Id";
+      INSERT INTO "GameItemInstances" ("AcquiredUtc", "ContainerPlacementId", "DefinitionId", "InstanceKey", "Location", "StateJson", "UserId")
+      VALUES (@p7, @p8, @p9, @p10, @p11, @p12, @p13)
+      RETURNING "Id";
+      INSERT INTO "GameItemInstances" ("AcquiredUtc", "ContainerPlacementId", "DefinitionId", "InstanceKey", "Location", "StateJson", "UserId")
+      VALUES (@p14, @p15, @p16, @p17, @p18, @p19, @p20)
+      RETURNING "Id";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_userId='?' (DbType = Int32), @catalogKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @_8__locals2_userId AND g0."CatalogKey" = @catalogKey
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@instance_Id='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "FurniturePlacements" AS f
+          WHERE f."ItemInstanceId" = @instance_Id)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p0='?' (DbType = Boolean), @p1='?' (DbType = Int32), @p2='?', @p3='?', @p4='?', @p5='?' (DbType = Int32), @p6='?' (DbType = Double), @p7='?' (DbType = Double), @p8='?' (DbType = Boolean), @p9='?' (DbType = Int32), @p10='?', @p11='?', @p12='?', @p13='?' (DbType = Int32), @p14='?' (DbType = Double), @p15='?' (DbType = Double), @p17='?' (DbType = Int32), @p16='?', @p19='?' (DbType = Int32), @p18='?'], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "FurniturePlacements" ("FlipX", "ItemInstanceId", "RoomId", "SceneId", "StateJson", "UserId", "X", "Y")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7)
+      RETURNING "Id";
+      INSERT INTO "FurniturePlacements" ("FlipX", "ItemInstanceId", "RoomId", "SceneId", "StateJson", "UserId", "X", "Y")
+      VALUES (@p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15)
+      RETURNING "Id";
+      UPDATE "GameItemInstances" SET "Location" = @p16
+      WHERE "Id" = @p17;
+      UPDATE "GameItemInstances" SET "Location" = @p18
+      WHERE "Id" = @p19;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT p."RoomKey", p."WingIndex", p."SlotIndex", p."SceneTemplate", u."Id", u."Name", u."Color", u."Id" = @uid AS mine
+      FROM "PersonalRooms" AS p
+      INNER JOIN "Users" AS u ON p."UserId" = u."Id"
+      ORDER BY p."WingIndex", p."SlotIndex"
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType137`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/game/personal-rooms'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/game/personal-rooms - 200 - application/json;+charset=utf-8 193.1919ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/game/inventory - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/game/inventory - 204 - - 0.1252ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/game/inventory - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/game/inventory'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT f."Id", f."FlipX", f."ItemInstanceId", f."RoomId", f."SceneId", f."StateJson", f."UserId", f."X", f."Y"
+      FROM "FurniturePlacements" AS f
+      WHERE f."UserId" = @uid
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId", g0."Id", g0."CapabilitiesJson", g0."CatalogKey", g0."Category", g0."IconPath", g0."InteractionType", g0."IsPurchasable", g0."ItemType", g0."Name", g0."Price", g0."Rarity", g0."StarterQuantity"
+      FROM "GameItemInstances" AS g
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE g."UserId" = @uid
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type 'ListSelectIterator`2' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/game/inventory'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/game/inventory - 200 - application/json;+charset=utf-8 33.0974ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - 204 - - 0.3669ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - - 0
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub/office/negotiate'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub/office/negotiate'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - 200 316 application/json 4.5433ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/hub/office?id=I7AenGd69uUAFrofIe582A - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub/office'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - 204 - - 0.1551ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - - 0
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub/office/negotiate'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub/office/negotiate'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/hub/office/negotiate?negotiateVersion=1 - 200 316 application/json 0.3494ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/hub/office?id=XJgkdOz6CyeTNCg6QkJauA - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint '/hub/office'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT i0."Id", i0."Data", i0."Icon", i0."Kind", i0."Name", i0."Rarity"
+      FROM "Inventory" AS i
+      INNER JOIN "ItemDefinitions" AS i0 ON i."ItemDefinitionId" = i0."Id"
+      WHERE i."UserId" = @userId AND i."Equipped" AND i0."Kind" = 0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Id", t."Category", t."EndUtc", t."GoldAwarded", t."Note", t."PairUserId", t."Source", t."StartUtc", t."UserId", t."WorkItemId", t."XpAwarded"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @userId AND t."EndUtc" IS NULL
+      ORDER BY t."StartUtc" DESC
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id"
+      FROM "Users" AS u
+      WHERE NOT (u."IsBot")
+      ORDER BY u."Id"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32), @day='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."FirstSeenUtc", p."GoldAwarded", p."MinutesOnline", p."PeriodDay", p."UpdatedUtc", p."UserId"
+      FROM "PresenceDays" AS p
+      WHERE p."UserId" = @userId AND p."PeriodDay" = @day
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."ActivityKey", o."Description", o."GoldReward", o."Icon", o."IsActive", o."Key", o."Metric", o."Name", o."Scope", o."SortOrder", o."Target", o."XpReward"
+      FROM "Objectives" AS o
+      WHERE o."IsActive"
+      ORDER BY o."SortOrder"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a."Key"
+      FROM "ActivityTypes" AS a
+      WHERE a."CountsAsWork"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Category", t."StartUtc", t."EndUtc"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @_8__locals2_8__locals1_userId AND t."EndUtc" IS NOT NULL AND t."StartUtc" >= @start AND t."StartUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @_8__locals2_8__locals1_userId AND w."DoneUtc" IS NOT NULL AND w."DoneUtc" >= @start AND w."DoneUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "PresenceDays" AS p
+      WHERE p."UserId" = @_8__locals2_8__locals1_userId AND p."PeriodDay" >= @start AND p."PeriodDay" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @periodStart='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."CompletedUtc", o."ObjectiveId", o."PeriodStart", o."UpdatedUtc", o."UserId", o."Value"
+      FROM "ObjectiveProgress" AS o
+      WHERE o."UserId" = @_8__locals2_8__locals1_userId AND o."PeriodStart" = @periodStart
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Category", t."StartUtc", t."EndUtc"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @_8__locals2_8__locals1_userId AND t."EndUtc" IS NOT NULL AND t."StartUtc" >= @start AND t."StartUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @_8__locals2_8__locals1_userId AND w."DoneUtc" IS NOT NULL AND w."DoneUtc" >= @start AND w."DoneUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "PresenceDays" AS p
+      WHERE p."UserId" = @_8__locals2_8__locals1_userId AND p."PeriodDay" >= @start AND p."PeriodDay" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @periodStart='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."CompletedUtc", o."ObjectiveId", o."PeriodStart", o."UpdatedUtc", o."UserId", o."Value"
+      FROM "ObjectiveProgress" AS o
+      WHERE o."UserId" = @_8__locals2_8__locals1_userId AND o."PeriodStart" = @periodStart
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (DbType = Int32), @p2='?' (DbType = Int32), @p3='?' (DbType = DateTime), @p4='?' (DbType = DateTime), @p5='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "PresenceDays" ("FirstSeenUtc", "GoldAwarded", "MinutesOnline", "PeriodDay", "UpdatedUtc", "UserId")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5)
+      RETURNING "Id";
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/profile - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/profile - 204 - - 0.2523ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/cardgame/profile - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/cardgame/profile => Profile'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterCount", c."CreatedUtc", c."DeckJson", c."UserId"
+      FROM "CardGameProfiles" AS c
+      WHERE c."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@profile_UserId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."CardId" AS "cardId", c."IsShiny" AS "isShiny", c."ShinyBonusSide" AS "shinyBonusSide", CASE
+          WHEN c."IsShiny" THEN c."CardId" || '~' || c."ShinyBonusSide"
+          ELSE c."CardId"
+      END AS "cardToken", c."Quantity" AS quantity, c."FirstAcquiredUtc" AS "firstAcquiredUtc"
+      FROM "CardGameCollection" AS c
+      WHERE c."UserId" = @profile_UserId AND c."Quantity" > 0
+      ORDER BY c."CardId", c."IsShiny", c."ShinyBonusSide"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@profile_UserId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."BoosterId" AS "boosterId", c."TargetCardId" AS "targetCardId", c."Quantity" AS quantity
+      FROM "CardGameBoosterBalances" AS c
+      WHERE c."UserId" = @profile_UserId AND c."Quantity" > 0
+      ORDER BY c."BoosterId", c."TargetCardId"
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType24`16' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/cardgame/profile => Profile'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/cardgame/profile - 200 - application/json;+charset=utf-8 84.7316ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/me - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/me - 204 - - 0.3091ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/timesheet?from=2026-07-27T03:00:00.000Z&to=2026-08-03T03:00:00.000Z - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/timesheet?from=2026-07-27T03:00:00.000Z&to=2026-08-03T03:00:00.000Z - 204 - - 0.1574ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/me - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/me'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/timesheet?from=2026-07-27T03:00:00.000Z&to=2026-08-03T03:00:00.000Z - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/timesheet'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Category", t."StartUtc", t."EndUtc"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @uid AND t."EndUtc" IS NOT NULL
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32), @from='?' (DbType = DateTime), @to='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Id", t."Category", t."EndUtc", t."GoldAwarded", t."Note", t."PairUserId", t."Source", t."StartUtc", t."UserId", t."WorkItemId", t."XpAwarded"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @uid AND t."StartUtc" >= @from AND t."StartUtc" < @to
+      ORDER BY t."StartUtc" DESC
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."AllowsPair", a."Color", a."CountsAsWork", a."DailyTargetMinutes", a."DefaultMinutes", a."GoldPerHour", a."Icon", a."IsActive", a."Key", a."Name", a."RequiresWorkItem", a."SortOrder", a."XpPerHour"
+      FROM "ActivityTypes" AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @uid AND w."Status" = 4 AND w."Type" = 0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @uid AND w."Status" = 4 AND w."Type" = 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @uid AND w."Status" = 4 AND w."Type" = 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT i."Id", i."Data", i."Icon", i."Kind", i."Name", i."Rarity"
+      FROM "ItemDefinitions" AS i
+      WHERE i."Kind" = 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT i."ItemDefinitionId"
+      FROM "Inventory" AS i
+      WHERE i."UserId" = @uid
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@uid='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Id", t."Category", t."EndUtc", t."GoldAwarded", t."Note", t."PairUserId", t."Source", t."StartUtc", t."UserId", t."WorkItemId", t."XpAwarded"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @uid AND t."EndUtc" IS NULL
+      ORDER BY t."StartUtc" DESC
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id"
+      FROM "Users" AS u
+      WHERE NOT (u."IsBot")
+      ORDER BY u."Id"
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType112`9' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/me'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/me - 200 - application/json;+charset=utf-8 129.6975ms
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (87ms) [Parameters=[@wiIds='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+      SELECT w."Id", w."ArchivedUtc", w."AssigneeId", w."BlockedReason", w."BoardOrder", w."Code", w."CreatedById", w."CreatedUtc", w."Description", w."DoneUtc", w."DueUtc", w."EpicId", w."EstimateHours", w."IsBlocked", w."Priority", w."SprintId", w."StartedUtc", w."Status", w."Title", w."Type", w."UpdatedUtc"
+      FROM "WorkItems" AS w
+      WHERE w."Id" = ANY (@wiIds)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@pairIds='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = ANY (@pairIds)
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType170`10' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/timesheet'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/timesheet?from=2026-07-27T03:00:00.000Z&to=2026-08-03T03:00:00.000Z - 200 - application/json;+charset=utf-8 151.7136ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/game/scenes/casino-nerd/furniture - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/game/scenes/casino-nerd/furniture - 204 - - 0.3610ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/game/scenes/casino-nerd/furniture - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/game/scenes/{sceneId}/furniture'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[@sceneId='?'], CommandType='Text', CommandTimeout='30']
+      SELECT f."Id", f."FlipX", f."ItemInstanceId", f."RoomId", f."SceneId", f."StateJson", f."UserId", f."X", f."Y", g."Id", g."AcquiredUtc", g."ContainerPlacementId", g."DefinitionId", g."InstanceKey", g."Location", g."StateJson", g."UserId", g0."Id", g0."CapabilitiesJson", g0."CatalogKey", g0."Category", g0."IconPath", g0."InteractionType", g0."IsPurchasable", g0."ItemType", g0."Name", g0."Price", g0."Rarity", g0."StarterQuantity"
+      FROM "FurniturePlacements" AS f
+      INNER JOIN "GameItemInstances" AS g ON f."ItemInstanceId" = g."Id"
+      INNER JOIN "GameItemDefinitions" AS g0 ON g."DefinitionId" = g0."Id"
+      WHERE f."SceneId" = @sceneId
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type 'ListSelectIterator`2' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/game/scenes/{sceneId}/furniture'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/game/scenes/casino-nerd/furniture - 200 - application/json;+charset=utf-8 32.0640ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1788ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 23.0579ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.4101ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 4.4846ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/casino-table - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/casino-table - 204 - - 0.2072ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://127.0.0.1:5211/api/cardgame/casino-table - application/json -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: GET /api/cardgame/casino-table => Snapshot'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BalanceAfter", c."BalanceBefore", c."Bet", c."CreatedUtc", c."GameId", c."IdempotencyKey", c."OutcomeJson", c."Payout", c."RulesVersion", c."UserId"
+      FROM "CasinoRounds" AS c
+      WHERE c."UserId" = @userId AND c."GameId" = 'pokemon-card-table'
+      ORDER BY c."Id" DESC
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Coins"
+      FROM "Users" AS u
+      WHERE u."Id" = @userId
+      LIMIT 2
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType103`7' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: GET /api/cardgame/casino-table => Snapshot'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/api/cardgame/casino-table - 200 - application/json;+charset=utf-8 26.0600ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1474ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 3.1664ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/casino-table/start - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/casino-table/start - 204 - - 0.2610ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/cardgame/casino-table/start - application/json 57
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/cardgame/casino-table/start => Start'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@userId='?' (DbType = Int32), @_8__locals1_body_IdempotencyKey='?'], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BalanceAfter", c."BalanceBefore", c."Bet", c."CreatedUtc", c."GameId", c."IdempotencyKey", c."OutcomeJson", c."Payout", c."RulesVersion", c."UserId"
+      FROM "CasinoRounds" AS c
+      WHERE c."UserId" = @userId AND c."IdempotencyKey" = @_8__locals1_body_IdempotencyKey
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BalanceAfter", c."BalanceBefore", c."Bet", c."CreatedUtc", c."GameId", c."IdempotencyKey", c."OutcomeJson", c."Payout", c."RulesVersion", c."UserId"
+      FROM "CasinoRounds" AS c
+      WHERE c."UserId" = @userId AND c."GameId" = 'pokemon-card-table'
+      ORDER BY c."Id" DESC
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BoosterCount", c."CreatedUtc", c."DeckJson", c."UserId"
+      FROM "CardGameProfiles" AS c
+      WHERE c."UserId" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals1_userId='?' (DbType = Int32), @card_CardId='?', @card_ShinyBonusSide='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "CardGameCollection" AS c
+          WHERE c."UserId" = @_8__locals1_userId AND c."Quantity" > 0 AND c."CardId" = @card_CardId AND c."ShinyBonusSide" = @card_ShinyBonusSide)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @userId
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32), @p2='?' (DbType = Int32), @p3='?' (DbType = DateTime), @p4='?', @p5='?', @p6='?', @p7='?' (DbType = Int32), @p8='?', @p9='?' (DbType = Int32), @p11='?' (DbType = Int32), @p10='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "CasinoRounds" ("BalanceAfter", "BalanceBefore", "Bet", "CreatedUtc", "GameId", "IdempotencyKey", "OutcomeJson", "Payout", "RulesVersion", "UserId")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)
+      RETURNING "Id";
+      UPDATE "Users" SET "Coins" = @p10
+      WHERE "Id" = @p11;
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType106`17' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/cardgame/casino-table/start => Start'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/cardgame/casino-table/start - 200 - application/json;+charset=utf-8 109.5811ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1440ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 3.0284ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.2446ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 2.8375ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1259ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 2.6222ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1655ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 3.0682ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1057ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 3.3522ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/casino-table/move - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/cardgame/casino-table/move - 204 - - 0.1059ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/cardgame/casino-table/move - application/json 108
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/cardgame/casino-table/move => Move'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals1_body_RoundId='?' (DbType = Int64), @userId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT c."Id", c."BalanceAfter", c."BalanceBefore", c."Bet", c."CreatedUtc", c."GameId", c."IdempotencyKey", c."OutcomeJson", c."Payout", c."RulesVersion", c."UserId"
+      FROM "CasinoRounds" AS c
+      WHERE c."Id" = @_8__locals1_body_RoundId AND c."UserId" = @userId AND c."GameId" = 'pokemon-card-table'
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p1='?' (DbType = Int64), @p0='?'], CommandType='Text', CommandTimeout='30']
+      UPDATE "CasinoRounds" SET "OutcomeJson" = @p0
+      WHERE "Id" = @p1;
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType106`17' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/cardgame/casino-table/move => Move'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/cardgame/casino-table/move - 200 - application/json;+charset=utf-8 32.4324ms
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Int32), @day='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT p."Id", p."FirstSeenUtc", p."GoldAwarded", p."MinutesOnline", p."PeriodDay", p."UpdatedUtc", p."UserId"
+      FROM "PresenceDays" AS p
+      WHERE p."UserId" = @userId AND p."PeriodDay" = @day
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."ActivityKey", o."Description", o."GoldReward", o."Icon", o."IsActive", o."Key", o."Metric", o."Name", o."Scope", o."SortOrder", o."Target", o."XpReward"
+      FROM "Objectives" AS o
+      WHERE o."IsActive"
+      ORDER BY o."SortOrder"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a."Key"
+      FROM "ActivityTypes" AS a
+      WHERE a."CountsAsWork"
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Category", t."StartUtc", t."EndUtc"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @_8__locals2_8__locals1_userId AND t."EndUtc" IS NOT NULL AND t."StartUtc" >= @start AND t."StartUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @_8__locals2_8__locals1_userId AND w."DoneUtc" IS NOT NULL AND w."DoneUtc" >= @start AND w."DoneUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "PresenceDays" AS p
+      WHERE p."UserId" = @_8__locals2_8__locals1_userId AND p."PeriodDay" >= @start AND p."PeriodDay" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @periodStart='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."CompletedUtc", o."ObjectiveId", o."PeriodStart", o."UpdatedUtc", o."UserId", o."Value"
+      FROM "ObjectiveProgress" AS o
+      WHERE o."UserId" = @_8__locals2_8__locals1_userId AND o."PeriodStart" = @periodStart
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT t."Category", t."StartUtc", t."EndUtc"
+      FROM "TimeEntries" AS t
+      WHERE t."UserId" = @_8__locals2_8__locals1_userId AND t."EndUtc" IS NOT NULL AND t."StartUtc" >= @start AND t."StartUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "WorkItems" AS w
+      WHERE w."AssigneeId" = @_8__locals2_8__locals1_userId AND w."DoneUtc" IS NOT NULL AND w."DoneUtc" >= @start AND w."DoneUtc" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @start='?' (DbType = DateTime), @end='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT count(*)::int
+      FROM "PresenceDays" AS p
+      WHERE p."UserId" = @_8__locals2_8__locals1_userId AND p."PeriodDay" >= @start AND p."PeriodDay" < @end
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@_8__locals2_8__locals1_userId='?' (DbType = Int32), @periodStart='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT o."Id", o."CompletedUtc", o."ObjectiveId", o."PeriodStart", o."UpdatedUtc", o."UserId", o."Value"
+      FROM "ObjectiveProgress" AS o
+      WHERE o."UserId" = @_8__locals2_8__locals1_userId AND o."PeriodStart" = @periodStart
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p0='?' (DbType = DateTime), @p1='?' (DbType = Int32), @p2='?' (DbType = DateTime), @p3='?' (DbType = DateTime), @p4='?' (DbType = Int32), @p5='?' (DbType = Int32), @p6='?' (DbType = DateTime), @p7='?' (DbType = Int32), @p8='?' (DbType = DateTime), @p9='?' (DbType = DateTime), @p10='?' (DbType = Int32), @p11='?' (DbType = Int32), @p15='?' (DbType = Int32), @p12='?' (DbType = Int32), @p13='?' (DbType = Int32), @p14='?' (DbType = DateTime), @p18='?' (DbType = Int32), @p16='?' (DbType = Int32), @p17='?' (DbType = Int32), @p19='?' (DbType = Int32), @p20='?' (DbType = DateTime), @p21='?' (DbType = Int32), @p22='?', @p23='?', @p24='?' (DbType = Int32), @p25='?' (DbType = Int32), @p26='?' (DbType = DateTime), @p27='?' (DbType = Int32), @p28='?', @p29='?', @p30='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO "ObjectiveProgress" ("CompletedUtc", "ObjectiveId", "PeriodStart", "UpdatedUtc", "UserId", "Value")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5)
+      RETURNING "Id";
+      INSERT INTO "ObjectiveProgress" ("CompletedUtc", "ObjectiveId", "PeriodStart", "UpdatedUtc", "UserId", "Value")
+      VALUES (@p6, @p7, @p8, @p9, @p10, @p11)
+      RETURNING "Id";
+      UPDATE "PresenceDays" SET "GoldAwarded" = @p12, "MinutesOnline" = @p13, "UpdatedUtc" = @p14
+      WHERE "Id" = @p15;
+      UPDATE "Users" SET "Coins" = @p16, "Xp" = @p17
+      WHERE "Id" = @p18;
+      INSERT INTO "XpEvents" ("Amount", "CreatedUtc", "Gold", "Reason", "Source", "UserId")
+      VALUES (@p19, @p20, @p21, @p22, @p23, @p24)
+      RETURNING "Id";
+      INSERT INTO "XpEvents" ("Amount", "CreatedUtc", "Gold", "Reason", "Source", "UserId")
+      VALUES (@p25, @p26, @p27, @p28, @p29, @p30)
+      RETURNING "Id";
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1241ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 3.0579ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1852ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 2.4342ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.2743ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 2.4962ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1024ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 2.8680ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1170ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 3.3260ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 OPTIONS http://127.0.0.1:5211/api/av/proximity-token - 204 - - 0.1641ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - application/json 51
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT u."Id", u."ActiveWorkItemId", u."AppRole", u."Coins", u."Color", u."Email", u."GoogleSubject", u."IsBot", u."Name", u."PasswordHash", u."PasswordUpdatedUtc", u."Role", u."Username", u."Xp"
+      FROM "Users" AS u
+      WHERE u."Id" = @p
+      LIMIT 1
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[1]
+      Setting HTTP status code 200.
+info: Microsoft.AspNetCore.Http.Result.OkObjectResult[3]
+      Writing value of type '<>f__AnonymousType130`4' as Json.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'HTTP: POST /api/av/proximity-token'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://127.0.0.1:5211/api/av/proximity-token - 200 - application/json;+charset=utf-8 2.6344ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub/office'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint '/hub/office'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/hub/office?id=I7AenGd69uUAFrofIe582A - 101 - - 67783.5462ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://127.0.0.1:5211/hub/office?id=XJgkdOz6CyeTNCg6QkJauA - 101 - - 67762.5181ms

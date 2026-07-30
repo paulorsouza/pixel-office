@@ -95,9 +95,14 @@ function injectStyles() {
     .cg-edge.right{right:3px;top:50%;transform:translateY(-50%)}
     .cg-edge.bottom{left:50%;bottom:20px;transform:translateX(-50%)}
     .cg-edge.left{left:3px;top:50%;transform:translateY(-50%)}
-    .cg-deck-body{display:grid;grid-template-columns:250px 1fr;gap:14px}
+    .cg-hub-content.cg-deck-host{display:flex;overflow:hidden}
+    .cg-deck-body{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;width:100%;height:100%;min-height:0}
+    .cg-deck-slots,.cg-deck-choices{min-height:0;overflow-y:auto;overscroll-behavior:contain;
+      scrollbar-width:thin;-webkit-overflow-scrolling:touch}
     .cg-deck-slots{padding:12px;border:1px solid #ffffff16;
       border-radius:14px;background:#0c1122aa}
+    .cg-deck-choices{padding-right:4px}.cg-deck-choices .cg-filters{position:sticky;z-index:6;top:0;
+      padding-bottom:8px;background:#141a31}
     .cg-deck-slot{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:6px;
       border:1px solid #ffffff18;border-radius:9px;background:#202947}
     .cg-deck-slot img{width:38px;height:38px;image-rendering:pixelated}
@@ -163,8 +168,8 @@ function injectStyles() {
     .cg-hand .cg-card-types{display:none}
     .cg-hand .cg-edge{width:20px;height:20px;border-radius:6px;font-size:9px}
     .cg-result{padding:9px;text-align:center;border-radius:10px;background:#ffffff10;font-weight:900}
-    @media(max-width:760px){
-.cg-deck-body{grid-template-columns:1fr}
+@media(max-width:760px){
+.cg-deck-body{grid-template-columns:1fr;grid-template-rows:minmax(150px,.8fr) minmax(220px,1.2fr)}
 .cg-reveal{grid-template-columns:repeat(3,1fr)}
 .cg-arena{grid-template-columns:1fr}
 .cg-board{width:min(46vh,100%)}
@@ -334,6 +339,7 @@ export function createCardGamePanel({
   /** Desenha uma seção do cardgame na janela do menu. */
   function shell(title, subtitle, body) {
     menuApi.setHeader(title, subtitle);
+    host.classList.toggle('cg-deck-host', title === 'Baralho de batalha');
     host.innerHTML = body;
   }
 
@@ -438,7 +444,7 @@ export function createCardGamePanel({
         }).join('')
           : '<p style="color:#94a0bf;font-size:11px;line-height:1.6">Seu baralho está vazio. Abra boosters e escolha quinze cartas.</p>'}
         <button class="cg-btn primary" data-action="save" ${deckDraft.length === 15 ? '' : 'disabled'} style="width:100%;margin-top:8px">Salvar baralho</button>
-      </aside><main><div class="cg-filters"><input id="cg-search" placeholder="Buscar no álbum" value="${escapeHtml(filter)}"></div>
+      </aside><main class="cg-deck-choices"><div class="cg-filters"><input id="cg-search" placeholder="Buscar no álbum" value="${escapeHtml(filter)}"></div>
         <div class="cg-card-grid">${choices.map(({ card, token, item }) => cardMarkup(card, {
           button: true,
           selected: deckDraft.includes(token),
@@ -475,7 +481,7 @@ export function createCardGamePanel({
     bindCardInfo(host);
   }
 
-  function renderBoosters(revealed = null) {
+  function renderBoosters(revealed = null, revealSummary = '') {
     const definitions = new Map((profile.boosterDefinitions || []).map((item) => [item.id, item]));
     const balances = profile.boosterInventory || [];
     const regularEntries = [...definitions.values()].filter((definition) => !definition.isSpecial).map((definition) => ({
@@ -491,21 +497,29 @@ export function createCardGamePanel({
     }));
     const entries = [...regularEntries, ...specialEntries];
     const rareCost = Number(profile.rareExchangeCost) || 50;
-    const rareMinSpecies = Number(profile.rareExchangeMinSpecies) || 10;
+    const rareMinRareCards = Number(profile.rareExchangeMinRareCards) || 10;
+    const rareMinTypes = Number(profile.rareExchangeMinTypes) || 10;
     const rareSpareCards = Number(profile.rareExchangeSpareCards) || 0;
-    const rareSpecies = Number(profile.rareExchangeSpecies) || 0;
-    const canExchangeRare = rareSpareCards >= rareCost && rareSpecies >= rareMinSpecies;
+    const rareCards = Number(profile.rareExchangeRareCards) || 0;
+    const rareTypes = Number(profile.rareExchangeTypes) || 0;
+    const canExchangeRare = rareSpareCards >= rareCost
+      && rareCards >= rareMinRareCards && rareTypes >= rareMinTypes;
     shell('Abrir boosters', `${profile.boosters} pacote${profile.boosters === 1 ? '' : 's'} ${profile.boosters === 1 ? 'disponível' : 'disponíveis'}`, `
-      <div class="cg-booster-stage">${revealed ? `<div><div class="cg-reveal">${revealed.map((item) =>
+      <div class="cg-booster-stage">${revealed ? `<div>${revealSummary
+    ? `<p class="cg-result">${escapeHtml(revealSummary)}</p>` : ''}<div class="cg-reveal">${revealed.map((item) =>
         cardMarkup(byId.get(item.cardId), {
           shiny: item.isShiny, shinyBonusSide: item.shinyBonusSide, cardToken: item.cardToken, quantity: 1, showInfo: true,
         })).join('')}</div>
         <button class="cg-btn primary" data-action="continue" style="margin-top:24px">${profile.boosters ? 'Abrir próximo' : 'Ver álbum'}</button></div>`
       : `<div style="width:100%"><div class="cg-rare-exchange"><strong>✦ Ritual do Booster Raro</strong>
-          <small>Entregue ${rareCost} cópias normais Rare+ excedentes de pelo menos ${rareMinSpecies} espécies.
-          Progresso: ${Math.min(rareSpareCards, rareCost)}/${rareCost} cartas · ${Math.min(rareSpecies, rareMinSpecies)}/${rareMinSpecies} espécies.</small>
+          <small>Entregue ${rareCost} cartas normais excedentes, incluindo pelo menos ${rareMinRareCards} Rare+
+          e ${rareMinTypes} tipos. Progresso: ${Math.min(rareSpareCards, rareCost)}/${rareCost} cartas ·
+          ${Math.min(rareCards, rareMinRareCards)}/${rareMinRareCards} Rare+ ·
+          ${Math.min(rareTypes, rareMinTypes)}/${rareMinTypes} tipos.</small>
           <button class="cg-btn primary" data-exchange-rare ${canExchangeRare ? '' : 'disabled'}>
             Entregar ${rareCost} cartas → Booster Raro</button></div>
+        ${profile.boosters > 0 ? `<button class="cg-btn primary" data-open-all style="width:100%;min-height:44px;margin-bottom:12px">
+          ABRIR TODOS OS ${profile.boosters} BOOSTERS</button>` : ''}
         <div class="cg-booster-list">${entries.map(({ definition, targetCardId, quantity }) => {
         const target = targetCardId ? byId.get(targetCardId) : null;
         const title = target ? `${definition?.name || 'Booster Especial'} · ${target.name}` : definition.name;
@@ -534,6 +548,21 @@ export function createCardGamePanel({
         onToast(result.message);
         renderBoosters();
       } catch (error) {
+        onToast(error.message);
+        renderBoosters();
+      }
+    });
+    host.querySelector('[data-open-all]')?.addEventListener('click', async (event) => {
+      if (opening) return;
+      opening = true;
+      event.currentTarget.disabled = true;
+      try {
+        const result = await gameItems.openAllCardGameBoosters();
+        profile = result.profile;
+        opening = false;
+        renderBoosters(result.cards, `${result.openedBoosters} boosters abertos · ${result.cards.length} cartas recebidas`);
+      } catch (error) {
+        opening = false;
         onToast(error.message);
         renderBoosters();
       }

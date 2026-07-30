@@ -33,7 +33,8 @@ public static class CardGameEndpoints
     private const int SpecialExchangeCost = 10;
     private const int EvolutionExchangeCost = 5;
     private const int RareExchangeCost = 50;
-    private const int RareExchangeMinSpecies = 10;
+    private const int RareExchangeMinRareCards = 10;
+    private const int RareExchangeMinTypes = 10;
     private const int SpecialTargetShinyChance = 10_000; // 10%
     private const int SpecialOtherShinyChance = 50; // 0,05% por carta
     private static readonly string[] Sides = ["top", "right", "bottom", "left"];
@@ -61,6 +62,7 @@ public static class CardGameEndpoints
     {
         api.MapGet("/cardgame/profile", Profile);
         api.MapPost("/cardgame/boosters/open", OpenBooster);
+        api.MapPost("/cardgame/boosters/open-all", OpenAllBoosters);
         api.MapPost("/cardgame/boosters/exchange", ExchangeDuplicates);
         api.MapPost("/cardgame/boosters/rare/exchange", ExchangeRareBooster);
         api.MapPost("/cardgame/evolutions/exchange", ExchangeEvolution);
@@ -129,6 +131,59 @@ public static class CardGameEndpoints
         return Results.Ok(new
         {
             cards,
+            profile = await SnapshotAsync(db, profile),
+        });
+    }
+
+    private static async Task<IResult> OpenAllBoosters(
+        HttpRequest req,
+        IDbContextFactory<AppDb> factory)
+    {
+        if (Identity.UserId(req) is not int userId) return Results.Unauthorized();
+
+        await using var db = await factory.CreateDbContextAsync();
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var profile = await EnsureProfileAsync(db, userId);
+        var balances = await db.CardGameBoosterBalances
+            .Where(row => row.UserId == userId && row.Quantity > 0)
+            .OrderBy(row => row.BoosterId)
+            .ThenBy(row => row.TargetCardId)
+            .ToListAsync();
+        if (balances.Count == 0)
+            return Results.BadRequest(new { error = "Você não tem boosters para abrir." });
+
+        var cards = new List<object>();
+        var openedBoosters = 0;
+        foreach (var balance in balances)
+        {
+            var definition = BoosterDefinitions.SingleOrDefault(item => item.Id == balance.BoosterId);
+            if (definition is null) continue;
+            CardGameDefinition? target = null;
+            if (definition.IsSpecial
+                && (!CardGameCatalog.All.TryGetValue(balance.TargetCardId, out target)
+                    || !IsBaseCard(target)))
+                continue;
+
+            var quantity = balance.Quantity;
+            for (var index = 0; index < quantity; index++)
+            {
+                var opened = definition.IsSpecial
+                    ? await OpenSpecialBoosterAsync(db, userId, target!)
+                    : await OpenRegularBoosterAsync(db, userId, definition);
+                cards.AddRange(opened);
+            }
+            balance.Quantity = 0;
+            openedBoosters = checked(openedBoosters + quantity);
+        }
+        if (openedBoosters == 0)
+            return Results.BadRequest(new { error = "Nenhum booster válido estava disponível." });
+
+        await db.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return Results.Ok(new
+        {
+            cards,
+            openedBoosters,
             profile = await SnapshotAsync(db, profile),
         });
     }
@@ -211,29 +266,70 @@ public static class CardGameEndpoints
             .ToListAsync();
         var eligible = normalStacks
             .Where(row => CardGameCatalog.All.TryGetValue(row.CardId, out var card)
-                && IsBaseCard(card) && IsRareExchangeRarity(card.Rarity))
+                && IsBaseCard(card))
             .OrderBy(row => RareExchangeRarityRank(CardGameCatalog.All[row.CardId].Rarity))
             .ThenByDescending(row => row.Quantity)
             .ThenBy(row => row.CardId, StringComparer.Ordinal)
             .ToList();
-        var species = eligible.Count;
         var spareCards = eligible.Sum(row => row.Quantity - 1);
-        if (species < RareExchangeMinSpecies || spareCards < RareExchangeCost)
+        var rareSpareCards = eligible
+            .Where(row => IsRareExchangeRarity(CardGameCatalog.All[row.CardId].Rarity))
+            .Sum(row => row.Quantity - 1);
+        var availableTypes = eligible
+            .SelectMany(row => CardGameCatalog.All[row.CardId].Types)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
+        if (spareCards < RareExchangeCost
+            || rareSpareCards < RareExchangeMinRareCards
+            || availableTypes < RareExchangeMinTypes)
             return Results.BadRequest(new
             {
-                error = $"Você precisa de {RareExchangeCost} cópias normais Rare+ excedentes "
-                    + $"distribuídas entre pelo menos {RareExchangeMinSpecies} espécies.",
+                error = $"Você precisa entregar {RareExchangeCost} cartas normais excedentes, "
+                    + $"incluindo pelo menos {RareExchangeMinRareCards} Rare+ e {RareExchangeMinTypes} tipos.",
                 spareCards,
-                species,
+                rareSpareCards,
+                types = availableTypes,
             });
 
-        var remaining = RareExchangeCost;
+        var allocation = eligible.ToDictionary(stack => stack, _ => 0);
+        var selectedTypes = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var stack in eligible
+            .OrderByDescending(row => CardGameCatalog.All[row.CardId].Types
+                .Count(type => !selectedTypes.Contains(type)))
+            .ThenBy(row => RareExchangeRarityRank(CardGameCatalog.All[row.CardId].Rarity)))
+        {
+            var card = CardGameCatalog.All[stack.CardId];
+            if (card.Types.All(selectedTypes.Contains)) continue;
+            allocation[stack]++;
+            foreach (var type in card.Types) selectedTypes.Add(type);
+            if (selectedTypes.Count >= RareExchangeMinTypes) break;
+        }
+
+        var selectedRareCards = allocation
+            .Where(pair => IsRareExchangeRarity(CardGameCatalog.All[pair.Key.CardId].Rarity))
+            .Sum(pair => pair.Value);
+        foreach (var stack in eligible.Where(row =>
+                     IsRareExchangeRarity(CardGameCatalog.All[row.CardId].Rarity)))
+        {
+            if (selectedRareCards >= RareExchangeMinRareCards) break;
+            var available = stack.Quantity - 1 - allocation[stack];
+            var consumed = Math.Min(available, RareExchangeMinRareCards - selectedRareCards);
+            allocation[stack] += consumed;
+            selectedRareCards += consumed;
+        }
+
+        var remaining = RareExchangeCost - allocation.Values.Sum();
         foreach (var stack in eligible)
         {
-            var consumed = Math.Min(stack.Quantity - 1, remaining);
-            stack.Quantity -= consumed;
-            remaining -= consumed;
             if (remaining == 0) break;
+            var available = stack.Quantity - 1 - allocation[stack];
+            var consumed = Math.Min(available, remaining);
+            allocation[stack] += consumed;
+            remaining -= consumed;
+        }
+        foreach (var (stack, quantity) in allocation)
+        {
+            stack.Quantity -= quantity;
         }
 
         var balance = await GetOrCreateBoosterBalanceAsync(db, userId, "rare", "");
@@ -243,7 +339,8 @@ public static class CardGameEndpoints
         var profile = await EnsureProfileAsync(db, userId);
         return Results.Ok(new
         {
-            message = $"Ritual concluído: {RareExchangeCost} cartas entregues e um Booster Raro recebido.",
+            message = $"Ritual concluído: {RareExchangeCost} cartas, "
+                + $"{selectedRareCards} Rare+ e {selectedTypes.Count} tipos entregues.",
             profile = await SnapshotAsync(db, profile),
         });
     }
@@ -328,7 +425,12 @@ public static class CardGameEndpoints
     private static async Task AddCardAsync(AppDb db, int userId, string cardId, string shinyBonusSide)
     {
         var shiny = !string.IsNullOrEmpty(shinyBonusSide);
-        var item = await db.CardGameCollection.SingleOrDefaultAsync(entry =>
+        var item = db.CardGameCollection.Local.SingleOrDefault(entry =>
+            entry.UserId == userId
+            && entry.CardId == cardId
+            && entry.IsShiny == shiny
+            && entry.ShinyBonusSide == shinyBonusSide);
+        item ??= await db.CardGameCollection.SingleOrDefaultAsync(entry =>
             entry.UserId == userId
             && entry.CardId == cardId
             && entry.IsShiny == shiny
@@ -470,8 +572,15 @@ public static class CardGameEndpoints
         var rareExchangeStacks = collection
             .Where(item => !item.isShiny && item.quantity > 1
                 && CardGameCatalog.All.TryGetValue(item.cardId, out var card)
-                && IsBaseCard(card) && IsRareExchangeRarity(card.Rarity))
+                && IsBaseCard(card))
             .ToList();
+        var rareExchangeRareCards = rareExchangeStacks
+            .Where(item => IsRareExchangeRarity(CardGameCatalog.All[item.cardId].Rarity))
+            .Sum(item => item.quantity - 1);
+        var rareExchangeTypes = rareExchangeStacks
+            .SelectMany(item => CardGameCatalog.All[item.cardId].Types)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
         string[] deck;
         try { deck = JsonSerializer.Deserialize<string[]>(profile.DeckJson) ?? []; }
         catch { deck = []; }
@@ -488,9 +597,11 @@ public static class CardGameEndpoints
             specialExchangeCost = SpecialExchangeCost,
             evolutionExchangeCost = EvolutionExchangeCost,
             rareExchangeCost = RareExchangeCost,
-            rareExchangeMinSpecies = RareExchangeMinSpecies,
+            rareExchangeMinRareCards = RareExchangeMinRareCards,
+            rareExchangeMinTypes = RareExchangeMinTypes,
             rareExchangeSpareCards = rareExchangeStacks.Sum(item => item.quantity - 1),
-            rareExchangeSpecies = rareExchangeStacks.Count,
+            rareExchangeRareCards,
+            rareExchangeTypes,
         };
     }
 
@@ -539,10 +650,12 @@ public static class CardGameEndpoints
 
     private static int RareExchangeRarityRank(string rarity) => rarity switch
     {
-        "Rare" => 0,
-        "Epic" => 1,
-        "Legendary" => 2,
-        _ => 3,
+        "Common" => 0,
+        "Uncommon" => 1,
+        "Rare" => 2,
+        "Epic" => 3,
+        "Legendary" => 4,
+        _ => 5,
     };
 
     private static bool IsBoosterEligible(CardGameDefinition card) =>

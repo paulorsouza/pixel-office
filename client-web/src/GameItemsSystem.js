@@ -215,6 +215,9 @@ export function createGameItemsClient(options = {}) {
         method: 'POST', body: JSON.stringify({ boosterId, targetCardId }),
       });
     },
+    async openAllCardGameBoosters() {
+      return request('/api/cardgame/boosters/open-all', { method: 'POST' });
+    },
     async exchangeCardGameDuplicates(cardId) {
       return request('/api/cardgame/boosters/exchange', {
         method: 'POST', body: JSON.stringify({ cardId }),
