@@ -315,6 +315,40 @@ export function furnitureCollision(item) {
   } : null);
 }
 
+const OPPOSITE = { left: 'right', right: 'left', up: 'up', down: 'down' };
+
+/**
+ * Onde e como o avatar encaixa neste móvel, em tiles a partir da âncora dele.
+ *
+ * São duas origens, e a diferença importa. **Móvel do cenário** (Tiled) traz
+ * `seatX/seatY/seatDir/...` já resolvidos: lá cada instância é posicionada à mão,
+ * inclusive as espelhadas, então o número no mapa é o número final. **Móvel do
+ * inventário** traz o `seat` do catálogo, que descreve a peça NÃO espelhada —
+ * girar a cadeira no editor precisa girar o assento junto, senão o avatar senta
+ * no encosto quando a peça está espelhada.
+ */
+export function furnitureSeat(item) {
+  if (item.seat) {
+    const mirrored = Boolean(item.flipX);
+    const dir = item.seat.dir || 'left';
+    return {
+      x: mirrored ? -(item.seat.x || 0) : (item.seat.x || 0),
+      y: item.seat.y ?? -0.125,
+      dir: mirrored ? (OPPOSITE[dir] || dir) : dir,
+      pose: item.seat.pose || 'sit',
+      cover: item.seat.cover || 0,
+    };
+  }
+  return {
+    x: item.seatX || 0,
+    // Sem calibração, o encaixe antigo: dois pixels acima da âncora.
+    y: item.seatY === undefined ? -0.125 : item.seatY,
+    dir: item.seatDir || (item.flipX ? 'right' : 'left'),
+    pose: item.seatPose || 'sit',
+    cover: item.seatCover || 0,
+  };
+}
+
 export function furnitureSortDepth(item, tile, displayY) {
   const collision = furnitureCollision(item);
   if (!collision) return displayY;

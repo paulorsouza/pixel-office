@@ -274,6 +274,9 @@ button{font:inherit}
   cursor:pointer;overflow:hidden}
 .room-decoration-item:hover,.room-decoration-item.active{border-color:#d79257;background:#5c3b3a}
 .room-decoration-item:disabled{opacity:.38;filter:grayscale(.7);cursor:not-allowed}
+.room-decoration-empty{grid-column:1/-1;margin:0;padding:9px 10px;border:2px dashed #6b4740;
+  color:#e0b892;background:#2d1f24;font:9px/1.55 Inter,system-ui,sans-serif}
+.room-decoration-empty strong{color:#f6c66d}
 .room-decoration-item span{display:grid;width:64px;height:66px;place-items:center}
 .room-decoration-item img{max-width:48px;max-height:64px;image-rendering:pixelated;transform:scale(1.8)}
 .room-decoration-item strong{z-index:1;width:100%;overflow:hidden;color:#ffe9c9;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
@@ -403,9 +406,18 @@ button{font:inherit}
   #equipment-panel-view,#character-panel-view{-webkit-overflow-scrolling:touch}
   .equipment-menu-footer{padding-bottom:calc(9px + env(safe-area-inset-bottom))}
 
-  /* Editor de decoração: gaveta de baixo em vez de coluna lateral. */
+  /* Editor de decoração: gaveta de baixo em vez de coluna lateral. Decorar é
+     arrastar móvel NA SALA, então o que não pode faltar é sala à vista: a
+     gaveta de 72dvh deixava uma faixa de mundo em que não dava para mirar. */
   #room-decoration-panel{left:0;right:0;top:auto;bottom:0;width:100vw;max-width:100vw;
-    max-height:72dvh;border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+    max-height:52dvh;border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+  /* Celular deitado tem ~390px de altura: aí a gaveta precisa ser ainda menor. */
+  @media(max-height:520px){
+    #room-decoration-panel{max-height:62dvh}
+    .room-decoration-item{min-height:78px}
+    .room-decoration-item span{width:44px;height:44px}
+    .room-decoration-item img{max-width:34px;max-height:44px;transform:scale(1.3)}
+  }
 
   /* HUD: o card de cena não pode brigar com o botão do cardgame (topo direito). */
   #scene-card{left:calc(12px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));
@@ -438,8 +450,11 @@ html[data-touch="on"] .menu-view-tab{min-height:44px}
 #hud-dock{position:fixed;z-index:50;left:calc(14px + env(safe-area-inset-left));
   bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:7px;align-items:flex-end;
   font-family:Inter,system-ui,sans-serif}
-/* Em foco/split da reunião a tela é da reunião: o dock sai da frente. */
-html[data-mh-mode] #hud-dock{display:none}
+/* Em foco/split da reunião a tela é da reunião: o dock sai da frente.
+   Decorando vale o mesmo: no celular a gaveta do editor sobe exatamente por
+   cima do dock, e o botão ficaria flutuando sobre o catálogo. */
+html[data-mh-mode] #hud-dock,
+html[data-decorating] #hud-dock{display:none}
 
 .hud-dock-btn{position:relative;display:grid;place-items:center;width:42px;height:42px;
   border:1px solid #ffffff26;border-radius:13px;color:#e9ecff;background:#171923e0;

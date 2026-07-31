@@ -1,5 +1,5 @@
 // Office Quest — runtime de cenas Phaser orientado a dados.
-import { renderScene, updateAutomaticDoors } from './MapRenderer.js';
+import { furnitureSeat, renderScene, updateAutomaticDoors } from './MapRenderer.js';
 import {
   createEquipmentMenu,
   createEquipmentVisual,
@@ -13,7 +13,6 @@ import {
 } from './CharacterSystem.js';
 import {
   createRoomDecorationEditor,
-  createRoomDecorationStore,
   preloadRoomDecorationAssets,
   roomAtPoint,
   voiceZoneAtPoint,
@@ -235,7 +234,6 @@ function materializeScene(sceneRef) {
 let roomDecorationEditor = null;
 let furnitureInteractions = null;
 let decorateRoom = null;   // sala decorável sob o avatar, ou null
-const decorationStore = createRoomDecorationStore(sceneMaps, furnitureCatalog);
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
   isOwned: (equipmentId) => gameItems.ownsEquipment(equipmentId),
@@ -342,6 +340,12 @@ mainMenu.register({
 
 // O dock virou UM botão: "menus no canto" foi exatamente a reclamação. O que
 // existe é uma porta; tudo o que dá para abrir está atrás dela.
+//
+// A exceção é "Decorar": não é uma TELA que se abre de qualquer lugar, é uma
+// ação presa a um lugar — só existe em pé dentro da sua sala. Escondida atrás
+// do menu ela não se anuncia (ninguém abre o menu para descobrir que ali dentro
+// apareceu um item novo). Contextual no dock, ela some sozinha ao sair da sala,
+// então não volta a ser "menu no canto".
 const dock = createDock(hud, [
   {
     id: 'menu',
@@ -349,6 +353,14 @@ const dock = createDock(hud, [
     label: 'Menu',
     hint: 'Personagem, itens, trabalho e cartas',
     onSelect: () => mainMenu.toggle('character'),
+  },
+  {
+    id: 'decorate',
+    icon: '✦',
+    label: 'Decorar',
+    hint: 'Mover e guardar os móveis desta sala',
+    visible: () => Boolean(decorateRoom),
+    onSelect: () => { mainMenu.close(); roomDecorationEditor?.open(); },
   },
 ]);
 
@@ -699,7 +711,6 @@ class MapScene extends Phaser.Scene {
       this,
       this.map,
       furnitureCatalog,
-      decorationStore,
       equipmentMenu,
       gameItems,
     );
@@ -836,12 +847,20 @@ class MapScene extends Phaser.Scene {
     // um painel que abre/fecha sozinho (recompensa, convite de duelo) não passa
     // por foco nenhum. Comparação de dois booleanos por frame.
     keyboardGuard.refresh();
-    // A entrada de decoração é um item do dock: some quando a sala sob o avatar
+    // A entrada de decoração é um item do menu: some quando a sala sob o avatar
     // não é decorável. `refresh` só redesenha quando a lista visível muda.
+    //
+    // O único motivo de "não dá para decorar agora" é o avatar não estar parado
+    // numa sala — ou seja, transição de cena. Painel aberto NÃO entra aqui: a
+    // única porta para o editor é o menu, e `equipmentMenu.isOpen()` passou a
+    // significar "a seção Itens está na tela", que é exatamente o estado em que
+    // o menu está aberto. Com ele na conta, a entrada "Decorar a sala" era
+    // apagada no mesmo quadro em que o menu abria — ela nunca aparecia.
     decorateRoom = this.roomDecorationEditor.updateAvailability(
       this.player,
-      this.transitioning || equipmentMenu.isOpen() || this.furnitureInteractions.isOpen(),
+      this.transitioning,
     );
+    dock.refresh();
     mainMenu.refresh();
     this.activeFurniturePrompt = this.furnitureInteractions.update(
       this.player,
@@ -1020,16 +1039,17 @@ class MapScene extends Phaser.Scene {
       : `scenery:${record.item.id}@${record.item.x},${record.item.y}`;
     // Onde o avatar encosta: a âncora do móvel é o centro-inferior do quadro, mas o
     // assento desenhado fica acima dela (e nas peças de 32 px, meio tile à esquerda).
-    // `seatX`/`seatY` vêm em tiles no próprio móvel; sem eles vale o encaixe antigo.
+    // `furnitureSeat` resolve as duas origens do encaixe — cenário do Tiled e peça
+    // do catálogo — e já aplica o espelhamento da cadeira girada no editor.
     const tile = this.map.tile || 16;
-    const item = record.item;
-    const dir = item.seatDir || (item.flipX ? 'right' : 'left');
+    const seat = furnitureSeat(record.item);
+    const dir = seat.dir;
     const anchor = {
-      x: Math.round(record.display.x + (item.seatX || 0) * tile),
-      y: Math.round(record.display.y + (item.seatY === undefined ? -2 / tile : item.seatY) * tile),
+      x: Math.round(record.display.x + seat.x * tile),
+      y: Math.round(record.display.y + seat.y * tile),
       dir,
       // pose: `sit` só tem lateral boa; a estação usa idle de costas (trabalhando)
-      pose: item.seatPose || 'sit',
+      pose: seat.pose,
       // desenhar o avatar acima do móvel em que senta
       depth: record.display.depth + 1,
     };
@@ -1052,7 +1072,7 @@ class MapScene extends Phaser.Scene {
   // ficam encaixadas no assento. É a única forma de "aninhar" o avatar num sprite
   // composto sem fatiar a arte.
   showSeatCover(record) {
-    const cover = record.item.seatCover;
+    const cover = furnitureSeat(record.item).cover;
     if (!cover) return;
     const src = record.display;
     const frameH = src.frame?.realHeight ?? src.height;

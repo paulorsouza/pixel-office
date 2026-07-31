@@ -5,23 +5,11 @@ import {
   updateFurnitureObject,
 } from './MapRenderer.js';
 
+// A decoração do jogador é INSTÂNCIA no backend, não preferência local: o que
+// existia aqui de `localStorage` (a store, o estado por cena, o `applyRoomDecorationState`)
+// não participava mais do runtime desde que a mobília virou item com dono, e
+// continuava construído e passado ao editor sem ninguém ler.
 const clone = (value) => JSON.parse(JSON.stringify(value));
-
-function storageGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function storageSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // O editor continua funcional durante a sessão sem storage.
-  }
-}
 
 export function furnitureCatalogItem(catalog, itemId) {
   return (catalog.items || []).find((item) => item.id === itemId) || null;
@@ -54,16 +42,6 @@ export function voiceZoneAtPoint(map, x, y) {
   )) || null;
 }
 
-export function roomFurniture(map, room) {
-  return (map.furniture || []).filter((item) => furnitureBelongsToRoom(item, room));
-}
-
-export function replaceRoomFurniture(map, room, furniture) {
-  const outside = (map.furniture || []).filter((item) => !furnitureBelongsToRoom(item, room));
-  map.furniture = [...outside, ...clone(furniture)];
-  return map;
-}
-
 function cleanNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.round(number * 100) / 100 : null;
@@ -77,73 +55,14 @@ export function normalizePlacedFurniture(catalog, candidate) {
   const item = { id: spec.id, x, y };
   if (candidate.flipX) item.flipX = true;
   if (spec.collision) item.collision = clone(spec.collision);
+  // Encaixe do assento vem do CATÁLOGO, não do que o servidor devolveu: é
+  // propriedade da peça, e o espelhamento é resolvido na hora de sentar
+  // (`furnitureSeat`), então girar a cadeira no editor gira o assento junto.
+  if (spec.seat) item.seat = clone(spec.seat);
   for (const key of ['placementId', 'inventoryItemId', 'ownerId', 'interactionType', 'instanceKey', 'owned']) {
     if (candidate?.[key] !== undefined) item[key] = candidate[key];
   }
   return item;
-}
-
-export function applyRoomDecorationState(baseMap, sceneState, catalog) {
-  const map = clone(baseMap);
-  for (const room of (map.rooms || [])) {
-    const saved = sceneState?.[room.id];
-    if (!Array.isArray(saved)) continue;
-    const valid = saved
-      .map((item) => normalizePlacedFurniture(catalog, item))
-      .filter(Boolean);
-    replaceRoomFurniture(map, room, valid);
-  }
-  return map;
-}
-
-export function createRoomDecorationStore(baseMaps, catalog, options = {}) {
-  const storageKey = catalog.storageKey || 'office-quest-room-decoration-v1';
-  let state = { version: 1, scenes: {} };
-  const raw = storageGet(storageKey);
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.version === 1 && parsed.scenes && typeof parsed.scenes === 'object') state = parsed;
-    } catch {
-      // Storage antigo ou corrompido volta ao estado vazio.
-    }
-  }
-
-  const persist = () => storageSet(storageKey, JSON.stringify(state));
-  const sceneState = (sceneId) => state.scenes[sceneId] || {};
-
-  return {
-    mapForScene(sceneId) {
-      const baseMap = baseMaps[sceneId];
-      return baseMap ? applyRoomDecorationState(baseMap, sceneState(sceneId), catalog) : null;
-    },
-    baseRoomFurniture(sceneId, roomId) {
-      const map = baseMaps[sceneId];
-      const room = map?.rooms?.find((candidate) => candidate.id === roomId);
-      return room ? clone(roomFurniture(map, room)) : [];
-    },
-    saveRoom(sceneId, roomId, furniture) {
-      const normalized = furniture
-        .map((item) => normalizePlacedFurniture(catalog, item))
-        .filter(Boolean);
-      state.scenes[sceneId] ||= {};
-      state.scenes[sceneId][roomId] = normalized;
-      persist();
-      options.onSave?.({ sceneId, roomId, furniture: clone(normalized) });
-      return clone(normalized);
-    },
-    resetRoom(sceneId, roomId) {
-      if (state.scenes[sceneId]) {
-        delete state.scenes[sceneId][roomId];
-        if (Object.keys(state.scenes[sceneId]).length === 0) delete state.scenes[sceneId];
-      }
-      persist();
-      const furniture = this.baseRoomFurniture(sceneId, roomId);
-      options.onSave?.({ sceneId, roomId, furniture: clone(furniture), reset: true });
-      return furniture;
-    },
-    snapshot: () => clone(state),
-  };
 }
 
 export function preloadRoomDecorationAssets(scene, catalog) {
@@ -220,7 +139,7 @@ function snapped(value, step) {
   return Math.round(value / step) * step;
 }
 
-export function createRoomDecorationEditor(scene, map, catalog, store, equipmentMenu, gameItems = null) {
+export function createRoomDecorationEditor(scene, map, catalog, equipmentMenu, gameItems = null) {
   const panel = document.querySelector('#room-decoration-panel');
   const close = document.querySelector('#room-decoration-close');
   const roomName = document.querySelector('#room-decoration-room');
@@ -256,11 +175,20 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     status.dataset.tone = tone;
   };
 
+  // O que EU posso pegar e mover nesta sala.
   const recordsInRoom = () => (scene.furnitureObjects || []).filter((record) => (
     activeRoom && record.item.owned && record.item.ownerId === gameItems?.userId
       && furnitureBelongsToRoom(record.item, activeRoom)
   ));
-  const captureRoom = () => clone(recordsInRoom().map((record) => record.item));
+  // O que OCUPA esta sala — inclui o cenário do Tiled e o móvel de quem divide o
+  // espaço. Espaço ocupado é espaço ocupado, não importa de quem: validar só
+  // contra os meus deixava empilhar cadeira em cima de mesa do cenário.
+  const occupantsInRoom = () => (scene.furnitureObjects || []).filter((record) => (
+    activeRoom && furnitureBelongsToRoom(record.item, activeRoom)
+  ));
+  const occupantsExcept = (record = null) => occupantsInRoom()
+    .filter((candidate) => candidate !== record)
+    .map((candidate) => candidate.item);
 
   const updateActions = () => {
     flipButton.disabled = !selected;
@@ -298,17 +226,27 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
       (activeCategory === 'all' || item.category === activeCategory)
       && (!term || `${item.name} ${item.id}`.toLocaleLowerCase('pt-BR').includes(term))
     ));
-    catalogGrid.innerHTML = items.map((item) => {
-      const count = gameItems?.count(item.id) || 0;
-      return `
+    // Peça que você tem vem primeiro: o catálogo inteiro cinza, em ordem fixa,
+    // fazia o editor parecer quebrado — 37 quadradinhos apagados e nenhuma pista
+    // de que o que falta é ESTOQUE, não a feature.
+    const stock = (item) => gameItems?.count(item.id) || 0;
+    const ordered = [...items].sort((a, b) => Math.sign(stock(b)) - Math.sign(stock(a)));
+    const owned = ordered.filter((item) => stock(item) > 0).length;
+    catalogGrid.innerHTML = `
+      ${owned ? '' : `<p class="room-decoration-empty">Seu inventário de móveis está vazio.
+        Compre na <strong>Loja de móveis</strong>, na Galeria Tooq — o que você comprar
+        aparece aqui na hora.</p>`}
+      ${ordered.map((item) => {
+    const count = stock(item);
+    return `
       <button class="room-decoration-item${item.id === brushId ? ' active' : ''}" type="button"
         data-decoration-item="${item.id}" aria-pressed="${item.id === brushId}"
         title="${item.name}" ${count ? '' : 'disabled'}>
         <span><img src="${item.path}" alt=""></span>
-        <strong>${item.name}</strong><small>${count} no inventário</small>
-      </button>
-    `;
-    }).join('');
+        <strong>${item.name}</strong>
+        <small>${count ? `${count} no inventário` : 'na loja'}</small>
+      </button>`;
+  }).join('')}`;
   };
 
   categories.innerHTML = [
@@ -325,68 +263,144 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     updateActions();
   };
 
-  const rebuildRoom = (items) => {
-    for (const record of [...recordsInRoom()]) destroyFurnitureObject(record);
-    map.furniture = (map.furniture || []).filter((item) => !furnitureBelongsToRoom(item, activeRoom));
-    for (const source of items) {
-      const item = normalizePlacedFurniture(catalog, source);
-      if (!item) continue;
-      map.furniture.push(item);
-      createFurnitureObject(scene, item, map.tile || 16, scene.solids);
+  // ------------------------------------------------------------------ desfazer
+  //
+  // Desfazer é uma pilha de OPERAÇÕES INVERSAS que passam pela MESMA API, não uma
+  // foto do estado. A foto tinha dois defeitos: ninguém chamava o `commitBefore`
+  // que a empilhava (os dois botões viviam desabilitados, sempre), e restaurá-la
+  // recriava sprites sem falar com o servidor — desfazer uma remoção devolvia à
+  // sala um móvel com `placementId` que já não existia em banco, e o próximo
+  // arrasto morria em 404.
+  //
+  // Cada operação, ao rodar, devolve a operação que desfaz o que ela acabou de
+  // fazer. Então ida e volta usam exatamente o mesmo caminho de rede, e o
+  // servidor continua sendo a única fonte da verdade.
+  const HISTORY_LIMIT = 30;
+
+  // Recolocar um móvel cria um placement NOVO, com id novo. As operações já
+  // empilhadas apontariam para o id morto, então elas não guardam o id: guardam
+  // esta alça, que é reapontada junto.
+  const handles = new Map();
+  const handleFor = (placementId) => {
+    if (!handles.has(placementId)) handles.set(placementId, { id: placementId });
+    return handles.get(placementId);
+  };
+  const rekey = (handle, nextId) => {
+    handles.delete(handle.id);
+    handle.id = nextId;
+    handles.set(nextId, handle);
+  };
+
+  const undoPlace = (handle, item, name) => ({
+    label: `${name} devolvido ao inventário`,
+    async run() {
+      await gameItems.remove(handle.id);
+      removeServerPlacement({ id: handle.id });
+      renderCatalog();
+      return undoRemove(handle, item, name);
+    },
+  });
+
+  const undoRemove = (handle, item, name) => ({
+    label: `${name} de volta na sala`,
+    async run() {
+      const placed = await gameItems.place(
+        item.id, scene.currentSceneId, activeRoom.id, item.x, item.y, Boolean(item.flipX),
+      );
+      rekey(handle, placed.id);
+      addServerPlacement(placed);
+      renderCatalog();
+      return undoPlace(handle, item, name);
+    },
+  });
+
+  const undoMove = (handle, before, name) => ({
+    label: `${name} de volta ao lugar`,
+    async run() {
+      const record = findPlacement(handle.id);
+      const current = {
+        x: record?.item.x ?? before.x,
+        y: record?.item.y ?? before.y,
+        flipX: Boolean(record?.item.flipX),
+      };
+      await gameItems.move(handle.id, before.x, before.y, Boolean(before.flipX));
+      moveServerPlacement({ id: handle.id, ...before });
+      return undoMove(handle, current, name);
+    },
+  });
+
+  /** "Recolher seus móveis" é uma operação só; desfazer devolve a sala inteira. */
+  const undoBatch = (entries, label) => ({
+    label,
+    async run() {
+      const inverses = [];
+      for (const entry of entries) inverses.push(await entry.run());
+      return undoBatch(inverses, label);
+    },
+  });
+
+  const pushHistory = (entry) => {
+    history.push(entry);
+    if (history.length > HISTORY_LIMIT) history.shift();
+    future = [];
+    updateActions();
+  };
+
+  /** Roda uma ponta da pilha e joga a inversa na outra. Falha não consome nada. */
+  const rewind = async (from, to) => {
+    const entry = from.pop();
+    if (!entry) return;
+    undoButton.disabled = true;
+    redoButton.disabled = true;
+    try {
+      to.push(await entry.run());
+      setStatus(entry.label, 'saved');
+    } catch (error) {
+      from.push(entry);
+      setStatus(error.message, 'error');
     }
     selectRecord(null);
+    updateActions();
   };
 
-  const commitBefore = (before) => {
-    history.push(clone(before));
-    if (history.length > 50) history.shift();
-    future = [];
-  };
-
-  const undo = () => {
-    if (!history.length) return;
-    future.push(captureRoom());
-    rebuildRoom(history.pop());
-    save('Alteração desfeita');
-  };
-
-  const redo = () => {
-    if (!future.length) return;
-    history.push(captureRoom());
-    rebuildRoom(future.pop());
-    save('Alteração refeita');
-  };
+  const undo = () => rewind(history, future);
+  const redo = () => rewind(future, history);
 
   const removeSelected = async () => {
-    if (!selected) return;
-    if (!selected.item.placementId || !gameItems) return;
+    if (!selected?.item.placementId || !gameItems) return;
     const record = selected;
-    const item = selected.item;
+    const item = clone(record.item);
+    const name = furnitureCatalogItem(catalog, item.id)?.name || 'Móvel';
+    const handle = handleFor(item.placementId);
     try {
-      await gameItems.remove(item.placementId);
+      await gameItems.remove(handle.id);
     } catch (error) {
       setStatus(error.message, 'error');
       return;
     }
     destroyFurnitureObject(record);
-    map.furniture = (map.furniture || []).filter((candidate) => candidate !== item);
+    map.furniture = (map.furniture || []).filter((candidate) => candidate !== record.item);
     selected = null;
     renderCatalog();
+    pushHistory(undoRemove(handle, item, name));
     save('Móvel recolhido para o inventário');
   };
 
   const flipSelected = async () => {
     if (!selected) return;
-    const previous = Boolean(selected.item.flipX);
-    selected.item.flipX = !selected.item.flipX;
-    if (!selected.item.flipX) delete selected.item.flipX;
+    const item = selected.item;
+    const before = { x: item.x, y: item.y, flipX: Boolean(item.flipX) };
+    const name = furnitureCatalogItem(catalog, item.id)?.name || 'Móvel';
+    const handle = handleFor(item.placementId);
+    item.flipX = !before.flipX;
+    if (!item.flipX) delete item.flipX;
     updateFurnitureObject(selected, true);
     try {
-      await gameItems.move(selected.item.placementId, selected.item.x, selected.item.y, Boolean(selected.item.flipX));
+      await gameItems.move(handle.id, item.x, item.y, Boolean(item.flipX));
+      pushHistory(undoMove(handle, before, name));
       save('Móvel espelhado');
     } catch (error) {
-      selected.item.flipX = previous;
-      if (!previous) delete selected.item.flipX;
+      if (before.flipX) item.flipX = true; else delete item.flipX;
       updateFurnitureObject(selected, true);
       setStatus(error.message, 'error');
     }
@@ -409,10 +423,43 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     boundaryGraphics.lineStyle(1, 0xf6c66d, 0.9).strokeRect(left, top, right - left, bottom - top);
   };
 
+  /**
+   * Põe a sala no meio do que SOBRA da tela depois do painel.
+   *
+   * A conta antiga era fixa no eixo X ("o painel é a coluna da direita"), e no
+   * celular o painel é uma gaveta que ocupa a largura inteira embaixo: deslocar
+   * meia tela na horizontal jogava a sala para fora da vista, e quem abria o
+   * editor no telefone via o corredor. Aqui o lado é MEDIDO, então a mesma conta
+   * serve coluna à direita, coluna à esquerda e gaveta.
+   */
+  const centerOnRoom = (room) => {
+    const tile = map.tile || 16;
+    const camera = scene.cameras.main;
+    const rect = panel.getBoundingClientRect();
+
+    // Em cada eixo, a maior faixa livre ao lado do painel. Sobrando pouco dos dois
+    // lados, o painel ATRAVESSA o eixo e não há para onde deslocar — é o caso da
+    // coluna do desktop na vertical (ela tem quase a altura da janela) e o da
+    // gaveta do celular na horizontal.
+    const shift = (before, after, viewport) => {
+      const free = Math.max(before, after);
+      if (free < viewport * 0.25) return 0;
+      const middleOfFree = after > before ? viewport - free / 2 : free / 2;
+      return (viewport / 2 - middleOfFree) / camera.zoom;
+    };
+    camera.centerOn(
+      (room.x + room.w / 2) * tile
+        + shift(rect.left, window.innerWidth - rect.right, window.innerWidth),
+      (room.y + room.h / 2) * tile
+        + shift(rect.top, window.innerHeight - rect.bottom, window.innerHeight),
+    );
+  };
+
   const closeEditor = () => {
     if (!open) return;
     open = false;
     panel.hidden = true;
+    delete document.documentElement.dataset.decorating;
     gridGraphics?.destroy();
     boundaryGraphics?.destroy();
     gridGraphics = null;
@@ -430,9 +477,15 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     equipmentMenu.setOpen(false);
     activeRoom = room;
     open = true;
+    // O histórico é da SESSÃO de edição desta sala: desfazer não atravessa portas.
     history = [];
     future = [];
+    handles.clear();
     panel.hidden = false;
+    // O dock mora no canto de baixo, e no celular o painel é uma gaveta que sobe
+    // exatamente por cima dele. Enquanto se decora, a porta de saída é o × do
+    // painel — não um botão flutuando sobre ele.
+    document.documentElement.dataset.decorating = 'on';
     roomName.textContent = room.name || room.id;
     setStatus(gameItems?.isOnline() ? 'Alterações são salvas no servidor' : 'Servidor indisponível', gameItems?.isOnline() ? 'normal' : 'error');
     search.value = '';
@@ -442,12 +495,7 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     scene.player.body.setVelocity(0, 0);
     scene.input.keyboard.resetKeys();
     scene.cameras.main.stopFollow();
-    const panelWidth = panel.getBoundingClientRect().width;
-    scene.cameras.main.centerOn(
-      (room.x + room.w / 2) * (map.tile || 16)
-        + panelWidth / (2 * scene.cameras.main.zoom),
-      (room.y + room.h / 2) * (map.tile || 16),
-    );
+    centerOnRoom(room);
     updateActions();
     return true;
   };
@@ -475,7 +523,7 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
       const spec = furnitureCatalogItem(catalog, brushId);
       const position = pointToPlacement(pointer);
       const item = normalizePlacedFurniture(catalog, { id: spec.id, ...position });
-      const validation = validateFurniturePlacement(activeRoom, item, captureRoom());
+      const validation = validateFurniturePlacement(activeRoom, item, occupantsExcept());
       if (!validation.valid) {
         setStatus(validation.reason, 'error');
         return;
@@ -495,18 +543,17 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
         renderCatalog();
         return;
       }
+      // O hub devolve o `FurniturePlaced` para quem colocou também: se o eco
+      // chegou antes do `await`, o sprite já existe e não se cria um segundo.
       const synchronized = (scene.furnitureObjects || [])
         .find((candidate) => candidate.item.placementId === item.placementId);
-      if (synchronized) {
-        selectRecord(synchronized);
-        renderCatalog();
-        save(`${spec.name} adicionado`);
-        return;
+      if (synchronized) selectRecord(synchronized);
+      else {
+        map.furniture.push(item);
+        selectRecord(createFurnitureObject(scene, item, map.tile || 16, scene.solids));
       }
-      map.furniture.push(item);
-      const record = createFurnitureObject(scene, item, map.tile || 16, scene.solids);
-      selectRecord(record);
       renderCatalog();
+      pushHistory(undoPlace(handleFor(item.placementId), clone(item), spec.name));
       save(`${spec.name} adicionado`);
       return;
     }
@@ -516,7 +563,7 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     if (!record) return;
     dragging = {
       record,
-      before: captureRoom(),
+      before: { x: record.item.x, y: record.item.y, flipX: Boolean(record.item.flipX) },
       offsetX: pointer.worldX - record.display.x,
       offsetY: pointer.worldY - record.display.y,
       changed: false,
@@ -528,10 +575,11 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     const position = pointToPlacement(pointer, dragging.offsetX, dragging.offsetY);
     if (position.x === dragging.record.item.x && position.y === dragging.record.item.y) return;
     const candidate = { ...dragging.record.item, ...position };
-    const others = recordsInRoom()
-      .filter((record) => record !== dragging.record)
-      .map((record) => record.item);
-    const validation = validateFurniturePlacement(activeRoom, candidate, others);
+    const validation = validateFurniturePlacement(
+      activeRoom,
+      candidate,
+      occupantsExcept(dragging.record),
+    );
     if (!validation.valid) {
       dragging.record.display.setTint(0xff6b6b);
       setStatus(validation.reason, 'error');
@@ -548,25 +596,22 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
 
   const pointerUp = async () => {
     if (!dragging) return;
-    dragging.record.display.setTint(0xffd37a);
-    if (dragging.changed) {
-      updateFurnitureObject(dragging.record, true);
-      try {
-        await gameItems.move(
-          dragging.record.item.placementId,
-          dragging.record.item.x,
-          dragging.record.item.y,
-          Boolean(dragging.record.item.flipX),
-        );
-        save('Posição atualizada');
-      } catch (error) {
-        const previous = dragging.before.find((item) => item.placementId === dragging.record.item.placementId);
-        if (previous) Object.assign(dragging.record.item, previous);
-        updateFurnitureObject(dragging.record, true);
-        setStatus(error.message, 'error');
-      }
-    }
+    const { record, before, changed } = dragging;
     dragging = null;
+    record.display.setTint(0xffd37a);
+    if (!changed) return;
+    updateFurnitureObject(record, true);
+    const handle = handleFor(record.item.placementId);
+    try {
+      await gameItems.move(handle.id, record.item.x, record.item.y, Boolean(record.item.flipX));
+      pushHistory(undoMove(handle, before, furnitureCatalogItem(catalog, record.item.id)?.name || 'Móvel'));
+      save('Posição atualizada');
+    } catch (error) {
+      Object.assign(record.item, { x: before.x, y: before.y });
+      if (before.flipX) record.item.flipX = true; else delete record.item.flipX;
+      updateFurnitureObject(record, true);
+      setStatus(error.message, 'error');
+    }
   };
 
   const categoryClick = (event) => {
@@ -609,12 +654,23 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   const resetRoom = async () => {
     const records = [...recordsInRoom()];
     if (!records.length) return;
+    // Esvaziar a sala com um toque é o botão mais destrutivo do editor e ficava
+    // colado no rodapé, sem pergunta nenhuma.
+    if (!window.confirm(
+      `Recolher ${records.length} ${records.length === 1 ? 'móvel' : 'móveis'} desta sala `
+      + 'para o inventário? Dá para desfazer no botão Desfazer.',
+    )) return;
     resetButton.disabled = true;
+    const undone = [];
     try {
-      await Promise.all(records.map((record) => gameItems.remove(record.item.placementId)));
       for (const record of records) {
-        map.furniture = map.furniture.filter((item) => item !== record.item);
+        const item = clone(record.item);
+        const name = furnitureCatalogItem(catalog, item.id)?.name || 'Móvel';
+        const handle = handleFor(item.placementId);
+        await gameItems.remove(handle.id);
+        map.furniture = map.furniture.filter((candidate) => candidate !== record.item);
         destroyFurnitureObject(record);
+        undone.push(undoRemove(handle, item, name));
       }
       selectRecord(null);
       renderCatalog();
@@ -622,6 +678,8 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     } catch (error) {
       setStatus(error.message, 'error');
     } finally {
+      // O que já saiu continua desfazível, mesmo se o meio do caminho falhou.
+      if (undone.length) pushHistory(undoBatch(undone, 'Sala restaurada'));
       resetButton.disabled = false;
     }
   };
@@ -636,6 +694,11 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
   categories.onclick = categoryClick;
   catalogGrid.onclick = catalogClick;
   search.oninput = renderCatalog;
+  // Girar o celular troca a gaveta de tamanho e a coluna de lado: sem reenquadrar,
+  // a sala fica meio escondida atrás do painel até fechar e abrir de novo.
+  const onResize = () => { if (open && activeRoom) centerOnRoom(activeRoom); };
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
   window.addEventListener('keydown', keyDown);
   scene.input.on('pointerdown', pointerDown);
   scene.input.on('pointermove', pointerMove);
@@ -722,6 +785,8 @@ export function createRoomDecorationEditor(scene, map, catalog, store, equipment
     catalogGrid.onclick = null;
     search.oninput = null;
     window.removeEventListener('keydown', keyDown);
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', onResize);
     scene.input.off('pointerdown', pointerDown);
     scene.input.off('pointermove', pointerMove);
     scene.input.off('pointerup', pointerUp);

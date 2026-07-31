@@ -192,10 +192,30 @@ com dono e localização (`inventory`, `placed` ou `chest`). O editor mostra ape
 consome a instância ao colocar e devolve a mesma unidade ao recolher. Posição, espelhamento, cena e
 sala são persistidos atomicamente; SignalR replica inclusão, movimento e remoção para todos que
 estão na mesma sala. O Tiled continua fornecendo estrutura e cenário-base, enquanto a decoração do
-jogador é uma camada de dados separada. A chave antiga de `localStorage` não participa mais do runtime.
-O seed cria duas unidades de cada item curado para cada usuário humano, apenas para validar a
-economia; não é uma regra definitiva de balanceamento. O cliente usa `X-User-Id`/`?userId=` no
-protótipo e precisa migrar para autenticação real antes de produção.
+jogador é uma camada de dados separada. A store de `localStorage` foi removida — o backend é a única
+fonte. O cliente usa `X-User-Id`/`?userId=` no protótipo e precisa migrar para autenticação real
+antes de produção.
+
+Quatro regras que a feature aprendeu apanhando (ver `RoomDecorationSystem.js`):
+
+1. **A porta é contextual, não um item de menu escondido.** "Decorar" entra no dock só em pé
+   dentro da sua sala e some ao sair. Enquanto ela morava apenas dentro do menu, era literalmente
+   inalcançável: abrir o menu ligava o `equipmentMenu.isOpen()`, que entrava na conta de "bloqueado"
+   de `updateAvailability` e apagava a entrada no mesmo quadro em que o menu aparecia.
+2. **Desfazer é operação inversa pela mesma API, nunca foto do estado.** Restaurar um snapshot
+   local recriava sprites com `placementId` morto. Recolocar gera id NOVO, então as operações
+   guardam uma alça reapontável, não o id.
+3. **A mobília do dono é coordenada ABSOLUTA do mapa.** Mudar a planta do andar deixa a mobília
+   antiga na parede, no corredor ou fora do mapa. `GameInventorySeed.RealignPersonalFurnitureAsync`
+   reancora o conjunto inteiro junto (preservando o arranjo) a todo boot, e é idempotente.
+4. **Provisionar é evento, não estado a reconciliar.** A mesa e o kanban iniciais são colocados
+   na criação da sala e ponto — reconciliar a cada boot desfazia "Recolher seus móveis".
+
+O seed cria uma unidade dos itens iniciais por usuário humano, apenas para a sala nascer usável;
+não é uma regra de balanceamento. O encaixe do avatar sentado numa peça COMPRADA vem do `seat` do
+`assets/furniture/catalog.json` (os mesmos números que o Tiled já calibrou) e é espelhado por
+`furnitureSeat` quando a peça é girada no editor; peça do cenário continua trazendo `seatX/seatY/…`
+já resolvidos.
 
 **Kanban, horas e objetivos — uma UI, dois clientes (feito).** A tela de trabalho não é
 reimplementada no jogo: `wwwroot/shared/*` é servido pelo backend e importado tanto pelo

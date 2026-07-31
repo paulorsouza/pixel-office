@@ -202,7 +202,9 @@ public static class GameInventorySeed
         }
         await db.SaveChangesAsync();
 
+        await DropOrphanPersonalRoomsAsync(db);
         await RepackPersonalRoomsAsync(db);
+        await RealignPersonalFurnitureAsync(db);
         var users = await db.Users.Where(x => !x.IsBot).Select(x => x.Id).ToListAsync();
         foreach (var userId in users) await EnsureUserStockAsync(db, userId);
     }
@@ -213,6 +215,13 @@ public static class GameInventorySeed
     /// <summary>Andares de salas pessoais que sempre existem, mesmo com o prédio vazio.</summary>
     public const int MinimumFloors = 2;
 
+    /// <summary>Tamanho da sala do slot, em tiles. Espelha `personal-wing.tmj`.</summary>
+    private const int RoomWidth = 16;
+    private const int RoomHeight = 16;
+
+    /// <summary>Distância entre colunas de sala. Vizinhas dividem parede.</summary>
+    private const int ColumnPitch = 15;
+
     /// <summary>
     /// Canto superior esquerdo da sala do slot, em tiles, na planta do andar.
     /// Espelha `wingBoundaries` de `tools/generate-tooq-campus.mjs`: três salas de cada lado
@@ -222,47 +231,117 @@ public static class GameInventorySeed
     {
         var column = slotIndex % 3;
         var lowerRow = slotIndex >= 3;
-        return (2 + column * 15, lowerRow ? 28 : 2);
+        return (2 + column * ColumnPitch, lowerRow ? 28 : 2);
+    }
+
+    /// <summary>
+    /// Área útil da sala, em tiles: para dentro das paredes lateral, norte e sul.
+    /// Mesmo recorte que `validateFurniturePlacement` usa no cliente.
+    /// </summary>
+    private static (double X, double Y, double Right, double Bottom) SlotInterior(int slotIndex)
+    {
+        var (x, y) = FloorSlotOrigin(slotIndex);
+        return (x + 1, y + 2, x + RoomWidth - 1, y + RoomHeight - 2);
+    }
+
+    /// <summary>
+    /// Sala de usuário que não existe mais continua ocupando slot na planta — e a mobília
+    /// dela continua sendo desenhada por quem entra no andar. Some com as duas.
+    /// </summary>
+    public static async Task DropOrphanPersonalRoomsAsync(AppDb db)
+    {
+        var live = await db.Users.Select(x => x.Id).ToListAsync();
+        var orphans = await db.PersonalRooms.Where(x => !live.Contains(x.UserId)).ToListAsync();
+        if (orphans.Count == 0) return;
+        var keys = orphans.Select(x => x.RoomKey).ToList();
+        await db.FurniturePlacements.Where(x => keys.Contains(x.RoomId)).ExecuteDeleteAsync();
+        db.PersonalRooms.RemoveRange(orphans);
+        await db.SaveChangesAsync();
     }
 
     /// <summary>
     /// Reacomoda salas que ficaram fora da planta quando o andar passou a ter seis slots.
-    /// Preserva a ordem de chegada, então ninguém troca de sala com ninguém.
+    /// Preserva a ordem de chegada, então ninguém troca de sala com ninguém. Só mexe no
+    /// slot: quem reancora a mobília é <see cref="RealignPersonalFurnitureAsync"/>.
     /// </summary>
     public static async Task RepackPersonalRoomsAsync(AppDb db)
     {
         var rooms = await db.PersonalRooms
             .OrderBy(x => x.WingIndex).ThenBy(x => x.SlotIndex).ThenBy(x => x.Id)
             .ToListAsync();
+        // Buraco no meio do andar não é problema: o próximo usuário ocupa o slot vago.
+        // Recompactar sem necessidade trocaria a sala (e os vizinhos) de todo mundo.
         if (rooms.All(x => x.SlotIndex < RoomsPerFloor)) return;
-
         for (var ordinal = 0; ordinal < rooms.Count; ordinal++)
         {
-            var room = rooms[ordinal];
-            var wing = ordinal / RoomsPerFloor;
-            var slot = ordinal % RoomsPerFloor;
-            if (room.WingIndex == wing && room.SlotIndex == slot) continue;
+            rooms[ordinal].WingIndex = ordinal / RoomsPerFloor;
+            rooms[ordinal].SlotIndex = ordinal % RoomsPerFloor;
+        }
+        await db.SaveChangesAsync();
+    }
 
-            var previousScene = $"{room.SceneTemplate}@{room.WingIndex}";
-            var (previousX, previousY) = FloorSlotOrigin(room.SlotIndex);
-            room.WingIndex = wing;
-            room.SlotIndex = slot;
-            var (nextX, nextY) = FloorSlotOrigin(slot);
-
-            // A mobília do dono é coordenada absoluta do mapa: sem reancorar, ela ficaria
-            // atravessada na parede da sala nova (ou dentro da sala de outra pessoa).
+    /// <summary>
+    /// A mobília do dono é coordenada ABSOLUTA do mapa, e a planta do andar já mudou de
+    /// forma duas vezes (seis salas em fila viraram três de cada lado do corredor). Quem
+    /// foi colocado sob a planta antiga ficou dentro da parede, no corredor ou fora do
+    /// mapa — invisível e impossível de recolher, porque o editor só enxerga móvel dentro
+    /// da sala.
+    ///
+    /// A reancoragem é idempotente e roda todo boot: mobília que já está na área útil não
+    /// é tocada. Preferimos SEMPRE mover o conjunto inteiro junto, para o arranjo que a
+    /// pessoa montou sobreviver à mudança de planta.
+    /// </summary>
+    public static async Task RealignPersonalFurnitureAsync(AppDb db)
+    {
+        foreach (var room in await db.PersonalRooms.ToListAsync())
+        {
             var placements = await db.FurniturePlacements
-                .Where(x => x.RoomId == room.RoomKey && x.SceneId == previousScene)
+                .Where(x => x.RoomId == room.RoomKey)
                 .ToListAsync();
+            if (placements.Count == 0) continue;
+            foreach (var placement in placements)
+                placement.SceneId = $"{room.SceneTemplate}@{room.WingIndex}";
+
+            var interior = SlotInterior(room.SlotIndex);
+            var (minX, maxX) = (placements.Min(p => p.X), placements.Max(p => p.X));
+            var (minY, maxY) = (placements.Min(p => p.Y), placements.Max(p => p.Y));
+            if (Fits(minX, maxX, interior.X, interior.Right)
+                && Fits(minY, maxY, interior.Y, interior.Bottom)) continue;
+
+            // Primeira tentativa: descobrir a origem sob a qual o conjunto foi colocado.
+            // As origens possíveis formam uma grade (colunas de 15 em 15, duas fileiras),
+            // então arredondar o canto do conjunto para baixo até a grade devolve a sala
+            // antiga — e a translação preserva o arranjo exatamente como estava.
+            var deltaX = interior.X - (LatticeColumn(minX) + 1);
+            var deltaY = interior.Y - (LatticeRow(minY) + 2);
+            if (!Fits(minX + deltaX, maxX + deltaX, interior.X, interior.Right)
+                || !Fits(minY + deltaY, maxY + deltaY, interior.Y, interior.Bottom))
+            {
+                // Origem irreconhecível (planta de uma era ainda mais antiga): vale o menor
+                // deslocamento que traga o conjunto inteiro para dentro.
+                deltaX = Shift(minX, maxX, interior.X, interior.Right);
+                deltaY = Shift(minY, maxY, interior.Y, interior.Bottom);
+            }
             foreach (var placement in placements)
             {
-                placement.SceneId = $"{room.SceneTemplate}@{wing}";
-                placement.X += nextX - previousX;
-                placement.Y += nextY - previousY;
+                placement.X = Math.Clamp(placement.X + deltaX, interior.X, interior.Right);
+                placement.Y = Math.Clamp(placement.Y + deltaY, interior.Y, interior.Bottom);
             }
         }
         await db.SaveChangesAsync();
     }
+
+    private static bool Fits(double min, double max, double low, double high) =>
+        min >= low && max <= high;
+
+    /// <summary>Menor deslocamento que encaixa [min,max] em [low,high]. 0 se já cabe.</summary>
+    private static double Shift(double min, double max, double low, double high) =>
+        min < low ? low - min : max > high ? high - max : 0;
+
+    private static double LatticeColumn(double x) =>
+        2 + ColumnPitch * Math.Max(0, Math.Floor((x - 2) / ColumnPitch));
+
+    private static double LatticeRow(double y) => y >= 28 ? 28 : 2;
 
     /// <summary>
     /// Provisionamento idempotente: cria a instância de sala e garante somente os itens iniciais.
@@ -271,6 +350,7 @@ public static class GameInventorySeed
     public static async Task<PersonalRoom> EnsureUserStockAsync(AppDb db, int userId)
     {
         var room = await db.PersonalRooms.SingleOrDefaultAsync(x => x.UserId == userId);
+        var roomIsNew = room is null;
         if (room is null)
         {
             var occupied = await db.PersonalRooms
@@ -301,6 +381,12 @@ public static class GameInventorySeed
         await db.SaveChangesAsync();
 
         // A sala nasce usável: mesa e kanban pertencem ao usuário e já estão colocados.
+        //
+        // Só na criação. Isto rodava a cada boot e recolocava a mobília inicial sempre
+        // que a primeira instância do item estivesse sem placement — ou seja, DESFAZIA
+        // "Recolher seus móveis" e devolvia a mesa guardada no baú para o meio da sala,
+        // no login seguinte. Provisionar é um evento, não um estado a reconciliar.
+        if (!roomIsNew) return room;
         var sceneId = $"{room.SceneTemplate}@{room.WingIndex}";
         var (roomX, roomY) = FloorSlotOrigin(room.SlotIndex);
         var placements = new Dictionary<string, (double X, double Y)>

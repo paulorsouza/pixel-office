@@ -393,26 +393,6 @@ test('catálogo de decoração é curado, categorizado e usa assets versionados'
   assert.match(clientIndexSource, /id="room-decoration-catalog"/);
 });
 
-test('decoração persistida substitui apenas os móveis da sala escolhida', () => {
-  const baseMap = readJson(resolve(CLIENT_ROOT, 'maps/tooq-office.json'));
-  const officeA = baseMap.rooms.find((room) => room.id === 'office-a');
-  const officeB = baseMap.rooms.find((room) => room.id === 'office-b');
-  const officeBBefore = decorationModule.roomFurniture(baseMap, officeB);
-  const decorated = decorationModule.applyRoomDecorationState(baseMap, {
-    'office-a': [{ id: 'of_258', x: 8, y: 9, flipX: true }],
-  }, furnitureCatalog);
-
-  assert.deepEqual(decorationModule.roomFurniture(decorated, officeA), [{
-    id: 'of_258',
-    x: 8,
-    y: 9,
-    flipX: true,
-    collision: furnitureCatalog.items.find((item) => item.id === 'of_258').collision,
-  }]);
-  assert.deepEqual(decorationModule.roomFurniture(decorated, officeB), officeBBefore);
-  assert.notEqual(decorated, baseMap);
-});
-
 test('posicionamento respeita limites, circulação da porta e outros móveis', () => {
   const room = {
     id: 'test-room', x: 0, y: 0, w: 10, h: 10,
