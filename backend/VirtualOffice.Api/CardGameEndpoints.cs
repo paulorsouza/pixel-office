@@ -53,6 +53,8 @@ public static class CardGameEndpoints
         new("generation-9", "Edição Paldea", "Pokémon da Geração IX.", 9, 250),
         new("rare", "Booster Raro", "Cartas raras com chance shiny aumentada.", null, 2_500),
         new("ultra-rare", "Booster Ultrarraro",
+            "Cinco cartas Rare+, uma Epic garantida e 5% de shiny por carta.", null, 5_000),
+        new("legendary", "Booster Lendário",
             "Cinco cartas Rare+, uma Legendary garantida e 10% de shiny por carta.", null, 10_000),
         new("special", "Booster Especial", "Cinco cartas dos tipos do alvo e 10% de shiny do alvo.", null,
             SpecialOtherShinyChance, true),
@@ -353,7 +355,7 @@ public static class CardGameEndpoints
         var pool = CardGameCatalog.All.Values
             .Where(IsBoosterEligible)
             .Where(card => definition.Generation is null || card.Generation == definition.Generation)
-            .Where(card => definition.Id is not ("rare" or "ultra-rare")
+            .Where(card => !IsRarePlusBooster(definition.Id)
                 || card.Rarity is "Rare" or "Epic" or "Legendary")
             .ToList();
         if (pool.Count == 0) throw new InvalidOperationException($"Booster {definition.Id} sem cartas.");
@@ -361,10 +363,14 @@ public static class CardGameEndpoints
         var opened = new List<object>(CardsPerBooster);
         for (var slot = 0; slot < CardsPerBooster; slot++)
         {
+            // A garantia da última carta é o que separa os três degraus do topo: o
+            // Lendário crava `Legendary`, o Ultrarraro (comprável) só chega a `Epic`
+            // e o Raro não promete nada além do próprio pool Rare+.
             var candidates = slot == CardsPerBooster - 1
                 ? definition.Id switch
                 {
-                    "ultra-rare" => pool.Where(card => card.Rarity == "Legendary").ToList(),
+                    "legendary" => pool.Where(card => card.Rarity == "Legendary").ToList(),
+                    "ultra-rare" => pool.Where(card => card.Rarity is "Epic" or "Legendary").ToList(),
                     "rare" => pool,
                     _ => pool.Where(card => card.Rarity != "Common").ToList(),
                 }
@@ -644,6 +650,10 @@ public static class CardGameEndpoints
     };
 
     private static bool IsBaseCard(CardGameDefinition card) => string.IsNullOrEmpty(card.Variant);
+
+    /// <summary>Boosters do topo: sorteiam só de `Rare`, `Epic` e `Legendary`.</summary>
+    private static bool IsRarePlusBooster(string boosterId) =>
+        boosterId is "rare" or "ultra-rare" or "legendary";
 
     private static bool IsRareExchangeRarity(string rarity) =>
         rarity is "Rare" or "Epic" or "Legendary";

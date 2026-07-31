@@ -84,11 +84,12 @@ O jogo usa somente `User.Coins`. Não existe compra com dinheiro real, saque ou 
 - nível 3: 1 Nacional e 1 Raro;
 - nível 4: 3 Nacionais e 3 Raros;
 - nível 5: 5 Raros;
-- nível 6: 1 Raro e 1 Ultrarraro;
+- nível 6: 1 Raro e 1 **Lendário**;
 - cada ação possui UUID de idempotência. O servidor valida posse do deck, mão, turno, casa livre,
   captura, recompensa e progressão;
-- o Booster Ultrarraro entrega cinco cartas `Rare+`, com `Legendary` garantida na quinta posição e
-  10% de chance shiny por carta.
+- o Booster Lendário entrega cinco cartas `Rare+`, com `Legendary` garantida na quinta posição e
+  10% de chance shiny por carta. Ele **não é vendido**: a Banca de cartas para no Ultrarraro, que
+  garante só `Epic` e tem metade da chance shiny. Seis vitórias seguidas são a única fonte.
 
 ## Cena e interação
 

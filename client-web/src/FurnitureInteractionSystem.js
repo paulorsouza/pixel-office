@@ -29,11 +29,10 @@ const STORES = {
   '': ['Loja Tooq', 'Todo o estoque disponível'],
 };
 
-// Rodapé que explica por que o balcão vende POUCO. Sem isso, uma banca com nove
-// itens de teto 1 parece um catálogo quebrado em vez de uma escolha de design.
+// Rodapé que explica o que o balcão NÃO vende, para a ausência não parecer defeito.
 const STORE_NOTES = {
-  cards: 'Nacional e Raro não são vendidos: eles vêm do cassino, dos objetivos '
-    + 'semanais e das trocas do álbum.',
+  cards: 'O Nacional e o Especial não são vendidos: o Nacional vem do cassino e das '
+    + 'recompensas, e o Especial sai de dez cópias iguais no álbum.',
 };
 
 export const storeKindOf = (record) => {

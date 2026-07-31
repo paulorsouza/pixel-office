@@ -35,7 +35,7 @@ public sealed class PokemonCasinoState
     public int RewardLevelAwarded { get; set; }
     public int NormalBoostersAwarded { get; set; }
     public int RareBoostersAwarded { get; set; }
-    public int UltraRareBoostersAwarded { get; set; }
+    public int LegendaryBoostersAwarded { get; set; }
 }
 
 public static class PokemonCasinoTableEndpoints
@@ -49,7 +49,7 @@ public static class PokemonCasinoTableEndpoints
     private const int EntryCost = 100;
     private static readonly string[] PowerUpSides = ["top", "right", "bottom", "left"];
 
-    private static readonly (int Normal, int Rare, int UltraRare)[] Rewards =
+    private static readonly (int Normal, int Rare, int Legendary)[] Rewards =
     [
         (1, 0, 0),
         (3, 0, 0),
@@ -427,11 +427,14 @@ public static class PokemonCasinoTableEndpoints
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Normal, "standard");
         if (reward.Rare > 0)
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Rare, "rare");
-        if (reward.UltraRare > 0)
-            await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.UltraRare, "ultra-rare");
+        // O topo da Liga paga o Lendário, que NÃO está à venda: a Banca só chega ao
+        // Ultrarraro, um degrau abaixo. Seis vitórias seguidas continuam valendo
+        // algo que moeda nenhuma compra.
+        if (reward.Legendary > 0)
+            await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Legendary, "legendary");
         state.NormalBoostersAwarded = reward.Normal;
         state.RareBoostersAwarded = reward.Rare;
-        state.UltraRareBoostersAwarded = reward.UltraRare;
+        state.LegendaryBoostersAwarded = reward.Legendary;
         state.RewardLevelAwarded = achievedLevel;
         state.RewardGranted = true;
     }
@@ -475,7 +478,7 @@ public static class PokemonCasinoTableEndpoints
             {
                 normal = state.NormalBoostersAwarded,
                 rare = state.RareBoostersAwarded,
-                ultraRare = state.UltraRareBoostersAwarded,
+                legendary = state.LegendaryBoostersAwarded,
             },
             rewardLevel = state.RewardLevelAwarded,
             entryCost = round.Bet,
@@ -489,7 +492,7 @@ public static class PokemonCasinoTableEndpoints
         level = index + 1,
         normal = reward.Normal,
         rare = reward.Rare,
-        ultraRare = reward.UltraRare,
+        legendary = reward.Legendary,
     }).ToArray();
 
     private static string[] Shuffle(IEnumerable<string> cards) =>

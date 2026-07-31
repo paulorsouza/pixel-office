@@ -77,7 +77,7 @@ function injectStyles() {
 const rewardCopy = (reward) => [
   reward?.normal ? `${reward.normal} Nacional` : '',
   reward?.rare ? `${reward.rare} Raro` : '',
-  reward?.ultraRare ? `${reward.ultraRare} Ultrarraro` : '',
+  reward?.legendary ? `${reward.legendary} Lendário` : '',
 ].filter(Boolean).join(' + ');
 
 const winsCopy = (count) => `${count} ${count === 1 ? 'vitória' : 'vitórias'}`;

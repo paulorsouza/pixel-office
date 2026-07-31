@@ -473,6 +473,7 @@ paredes, pisos, móveis, exteriores, porta animada):
   novos interiores pelo Tiled.
 - [`client-web/tiled/README.md`](client-web/tiled/README.md) — operação do editor visual Tiled.
 - [`client-web/TUTORIAL.md`](client-web/TUTORIAL.md) — padrões de Phaser + debug no navegador.
+- [`docs/ECONOMIA.md`](docs/ECONOMIA.md) — **balanceamento**: de onde vem a moeda, os tetos, o que ela compra e o que reconferir ao mudar a renda.
 - [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md) — quadro, lançamento de horas, objetivos, economia e a UI compartilhada.
 - [`docs/CARDGAME.md`](docs/CARDGAME.md) — estado implementado do Tooq Triad, arquitetura, chances e testes.
 - [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md) — prédio, cena, Arrange Dice, economia e testes.

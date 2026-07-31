@@ -79,8 +79,8 @@ test('item fora de venda não aparece no balcão', () => {
 });
 
 test('só a banca de cartas explica de onde vêm os boosters não vendidos', () => {
-  assert.match(storeCatalogHtml(catalog([booster()]), 'cards'), /vêm do cassino/);
-  assert.doesNotMatch(storeCatalogHtml(catalog([booster()]), 'furniture'), /vêm do cassino/);
+  assert.match(storeCatalogHtml(catalog([booster()]), 'cards'), /não são vendidos/);
+  assert.doesNotMatch(storeCatalogHtml(catalog([booster()]), 'furniture'), /não são vendidos/);
 });
 
 test('o balcão de cartas é reconhecido pela interactionKey do móvel', () => {

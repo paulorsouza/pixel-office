@@ -67,12 +67,26 @@ shiny-alvo e as demais espécies têm 0,05% de shiny por carta.
 
 ### 3.1 O que a Banca de cartas vende
 
-A Banca de cartas da Galeria Tooq (`store:cards`) vende **somente as nove Edições por geração**,
-por **400 moedas** e no máximo **uma de cada por semana**, por jogador. A semana é a mesma dos
-objetivos — segunda-feira no fuso do time, via `Periods.WeekStart`.
+A Banca de cartas da Galeria Tooq (`store:cards`) vende por moeda, com teto **por jogador e por
+semana**. A semana é a mesma dos objetivos — segunda-feira no fuso do time, via `Periods.WeekStart`.
 
-Nacional, Raro, Ultrarraro e Especial **continuam fora do balcão**: eles são a moeda das
-conquistas (cassino, objetivo semanal, Liga, trocas do álbum) e vendê-los apagaria essas rotas.
+| Booster | Preço | Teto semanal | Semana cheia |
+|---|---:|---:|---:|
+| Edição por geração (nove) | 400 | 10 de **cada** | 36.000 |
+| Booster Raro | 1.200 | 3 | 3.600 |
+| Booster Ultrarraro | 2.500 | 1 | 2.500 |
+
+O Ultrarraro custa **menos** que três Raros (3.600) de propósito: ele garante `Epic` e não
+`Legendary`, então cobrar mais o deixaria dominado — três Raros dão 15 cartas contra as 5 dele.
+
+O **Nacional** e o **Especial** continuam fora do balcão: o Nacional é a moeda de recompensa do
+cassino e o pacote inicial, e o Especial é preso a uma espécie-alvo — ele não cabe num item de
+catálogo, que não tem onde guardar o alvo escolhido.
+
+Calibragem: a renda semanal máxima é de **~5.945 moedas** — detalhe em
+[`ECONOMIA.md`](ECONOMIA.md). Em uso normal **quem limita é a carteira**, não o teto: três Raros
+mais um Ultrarraro já custam 6.100, ou seja, mais de uma semana inteira. O teto existe para o
+**pico** — uma noite boa no cassino não vira cinquenta pacotes da mesma geração.
 
 O teto é do balcão, não do cardgame: `GameItemDefinition.WeeklyPurchaseLimit` (0 = sem teto, o
 caso de todo móvel e equipamento) com o consumo em `StorePurchaseQuota`, uma linha por
@@ -82,10 +96,7 @@ simultâneos leem a mesma cota zerada e ambos passam.
 `GET /api/game/catalog` devolve `weeklyLimit`, `weeklyPurchased` e `weeklyRemaining` por item, para
 o balcão marcar `Esgotado` antes do clique em vez de recusar só na hora de pagar.
 
-Calibragem: com o teto diário de 400 de gold do trabalho mais 180 de presença, comprar as nove
-edições numa semana custa uma semana cheia de moeda — perseguir uma geração continua sendo escolha.
-
-O Booster Raro possui duas rotas sem moedas:
+Além do balcão, o Booster Raro possui duas rotas sem moedas:
 
 - concluir os cinco objetivos semanais ativos concede um por semana;
 - entregar 50 cartas normais excedentes, contendo pelo menos 10 cartas `Rare`, `Epic` ou
@@ -95,9 +106,22 @@ O Booster Raro possui duas rotas sem moedas:
 
 No Arrange Dice, completar cinco ou mais cartas vizinhas também concede um Booster Raro.
 
-O **Booster Ultrarraro** não é vendido e, neste momento, só vem da sexta vitória consecutiva na
-Liga Pokémon da Casa. Ele contém cinco cartas `Rare+`, garante `Legendary` na quinta posição e
-aplica 10% de chance shiny independentemente em cada carta.
+### 3.2 Os três degraus do topo
+
+Os boosters de topo sorteiam do mesmo pool (só `Rare`, `Epic` e `Legendary`). O que os separa é a
+**garantia da quinta carta** e a chance shiny:
+
+| Booster | 5ª carta | Shiny/carta | Fonte |
+|---|---|---:|---|
+| Raro | nada além do pool | 2,5% | Banca (1.200), objetivo semanal, troca de 50, Arrange Dice |
+| Ultrarraro | `Epic` garantida | 5% | **só a Banca** (2.500, 1/semana) |
+| Lendário | `Legendary` garantida | 10% | **só a Liga**, sexta vitória consecutiva |
+
+A regra que sustenta isso: **moeda não compra `Legendary` garantida**. O melhor pacote do jogo
+continua saindo só de seis vitórias seguidas na Liga Pokémon da Casa, e a Banca para um degrau
+antes. Sem essa separação a Liga viraria a rota lenta de um item que se compra no balcão.
+
+O corte mora em `OpenRegularBoosterAsync`, no `switch` da última carta.
 
 Pokémon com próxima evolução possuem outra troca direta no Álbum: cinco cópias normais da espécie
 viram uma cópia normal da evolução escolhida. Em linhas ramificadas, como Eevee, o jogador escolhe

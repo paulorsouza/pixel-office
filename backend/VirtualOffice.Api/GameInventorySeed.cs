@@ -18,13 +18,28 @@ public static class GameInventorySeed
         int WeeklyLimit = 0);
 
     /// <summary>
-    /// Preço e teto das Edições por geração, os únicos boosters vendidos por moeda.
-    /// Um por semana cada: com o teto diário de 400 de gold do trabalho mais 180 de
-    /// presença, comprar a estante inteira custa uma semana cheia — a escolha de qual
-    /// geração perseguir continua sendo escolha, não rotina.
+    /// Preço e teto dos boosters vendidos por moeda. A renda semanal máxima é de
+    /// ~5.945 moedas (ver docs/ECONOMIA.md), então em uso normal quem limita é a
+    /// carteira: os três Raros mais o Ultrarraro já custam uma semana inteira, e o
+    /// jogador escolhe onde gastar. O teto existe para o pico — uma noite boa no
+    /// cassino não vira cinquenta pacotes da mesma geração.
     /// </summary>
     private const int GenerationBoosterPrice = 400;
-    private const int GenerationBoosterWeeklyLimit = 1;
+    private const int GenerationBoosterWeeklyLimit = 10;
+
+    /// <summary>Só cartas Rare+ e 2,5% de shiny: vale três Edições.</summary>
+    private const int RareBoosterPrice = 1_200;
+    private const int RareBoosterWeeklyLimit = 3;
+
+    /// <summary>
+    /// `Epic` garantida e 5% de shiny — o teto do que MOEDA compra. A `Legendary`
+    /// garantida é do Booster Lendário, que só sai da Liga.
+    ///
+    /// Preço abaixo de três Raros (3.600) de propósito: com a garantia menor, cobrar
+    /// mais deixaria o item dominado — três Raros dão 15 cartas contra estas 5.
+    /// </summary>
+    private const int UltraRareBoosterPrice = 2_500;
+    private const int UltraRareBoosterWeeklyLimit = 1;
 
     private static readonly CatalogItem[] Catalog =
     [
@@ -120,9 +135,9 @@ public static class GameInventorySeed
         new("equipment:rgb-mouse", "Mouse RGB", "peripherals", ItemType: "equipment",
             Rarity: "epic", Price: 760),
 
-        // Nacional e Raro continuam fora do balcão: eles são a moeda das conquistas
-        // (cassino, objetivo semanal, troca de 50 cartas) e vender apagaria isso.
-        // As nove Edições são as únicas com preço — e com teto de uma por semana.
+        // O Nacional continua fora do balcão: ele é a moeda de recompensa do cassino e
+        // o pacote inicial, então vendê-lo apagaria as duas coisas. O Especial também
+        // não entra — ele é preso a uma espécie-alvo e não cabe num item de catálogo.
         new("cardgame:booster", "Booster Nacional", "cards", ItemType: "booster",
             Rarity: "rare", Price: 0, Purchasable: false),
         new("cardgame:booster-generation-1", "Edição Kanto", "cards", ItemType: "booster",
@@ -144,7 +159,9 @@ public static class GameInventorySeed
         new("cardgame:booster-generation-9", "Edição Paldea", "cards", ItemType: "booster",
             Rarity: "rare", Price: GenerationBoosterPrice, WeeklyLimit: GenerationBoosterWeeklyLimit),
         new("cardgame:booster-rare", "Booster Raro", "cards", ItemType: "booster",
-            Rarity: "epic", Price: 0, Purchasable: false),
+            Rarity: "epic", Price: RareBoosterPrice, WeeklyLimit: RareBoosterWeeklyLimit),
+        new("cardgame:booster-ultra-rare", "Booster Ultrarraro", "cards", ItemType: "booster",
+            Rarity: "legendary", Price: UltraRareBoosterPrice, WeeklyLimit: UltraRareBoosterWeeklyLimit),
     ];
 
     /// <summary>
