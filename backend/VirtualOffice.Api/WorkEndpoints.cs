@@ -244,14 +244,14 @@ public static class WorkEndpoints
             WorkItemPriority.Low => 0.8,
             _ => 1.0,
         };
-        var reward = new Reward((int)Math.Round(xp * multiplier), (int)Math.Round(gold * multiplier));
+        var reward = new Reward((int)Math.Round(gold * multiplier));
         var result = await Game.AwardAsync(db, user, reward, $"concluiu {item.Code}", "workitem");
         var completions = await ObjectiveEngine.RecalculateAsync(db, beneficiary);
         await db.SaveChangesAsync();
 
-        await Notify.SendRewardAsync(hub, beneficiary, result, $"{item.Code} concluída! +{reward.Xp} XP · +{reward.Gold} 🪙");
+        await Notify.SendRewardAsync(hub, beneficiary, result, $"{item.Code} concluída! +{reward.Gold} 🪙");
         await Notify.SendObjectivesAsync(hub, beneficiary, completions);
-        return new { xp = result.Amount, gold = result.Gold, result.LeveledUp, result.Level };
+        return new { gold = result.Gold, coins = result.Coins };
     }
 
     private static void MapWorkItemDetail(RouteGroupBuilder api)
@@ -399,7 +399,7 @@ public static class WorkEndpoints
             return await db.ActivityTypes.Where(a => a.IsActive).OrderBy(a => a.SortOrder)
                 .Select(a => new
                 {
-                    a.Key, a.Name, a.Icon, a.Color, a.XpPerHour, a.GoldPerHour,
+                    a.Key, a.Name, a.Icon, a.Color, a.GoldPerHour,
                     a.RequiresWorkItem, a.DefaultMinutes, a.DailyTargetMinutes, a.CountsAsWork, a.AllowsPair,
                 }).ToListAsync();
         });
@@ -450,7 +450,6 @@ public static class WorkEndpoints
                             .ToDictionary(d => d.Key.ToString("yyyy-MM-dd"), d => d.Sum(Mins)),
                     }),
                 totalMinutes = closed.Sum(Mins),
-                xpEarned = closed.Sum(e => e.XpAwarded),
                 goldEarned = closed.Sum(e => e.GoldAwarded),
                 running = open is null ? null : new
                 {
@@ -461,7 +460,7 @@ public static class WorkEndpoints
                 entries = closed.Select(e => new
                 {
                     e.Id, e.Category, e.Note, e.StartUtc, e.EndUtc, e.Source,
-                    e.XpAwarded, e.GoldAwarded,
+                    e.GoldAwarded,
                     minutes = Mins(e),
                     date = Periods.LocalDate(e.StartUtc).ToString("yyyy-MM-dd"),
                     workItem = e.WorkItemId is int w && wis.TryGetValue(w, out var wi)
@@ -527,7 +526,7 @@ public static class WorkEndpoints
             var completions = await ObjectiveEngine.RecalculateAsync(db, uid);
             await db.SaveChangesAsync();
             await Notify.SendObjectivesAsync(hub, uid, completions);
-            return Results.Ok(new { entry.Id, entry.XpAwarded, entry.GoldAwarded });
+            return Results.Ok(new { entry.Id, entry.GoldAwarded });
         });
 
         api.MapDelete("/timeentries/{id:int}", async (
@@ -595,18 +594,14 @@ public static class WorkEndpoints
         {
             entry.Id, entry.Category, entry.StartUtc, entry.EndUtc,
             minutes = dto.Minutes,
-            xp = entry.XpAwarded,
             gold = entry.GoldAwarded,
             coins = user.Coins,
-            leveledUp = result?.LeveledUp ?? false,
-            level = result?.Level ?? Game.LevelForXp(user.Xp),
         });
     }
 
-    private static async Task<XpResult?> ApplyRewardAsync(
+    private static async Task<CoinResult?> ApplyRewardAsync(
         AppDb db, IHubContext<OfficeHub> hub, int uid, TimeEntry entry, ActivityType? activity)
     {
-        entry.XpAwarded = 0;
         entry.GoldAwarded = 0;
         if (activity is null || entry.EndUtc is null) return null;
         var user = await db.Users.FindAsync(uid);
@@ -617,26 +612,32 @@ public static class WorkEndpoints
         if (reward.IsEmpty) return null;
 
         var result = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
-        entry.XpAwarded = reward.Xp;
         entry.GoldAwarded = reward.Gold;
+        // Horas lançadas alimentam o marco de Baú Lendário (Game.cs).
+        await Game.AwardWorkHourChestsAsync(db, user);
         await Notify.SendRewardAsync(hub, uid, result,
-            $"{activity.Icon} {minutes}min de {activity.Name} · +{reward.Xp} XP · +{reward.Gold} 🪙");
+            $"{activity.Icon} {minutes}min de {activity.Name} · +{reward.Gold} 🪙");
         return result;
     }
 
     private static async Task RevertRewardAsync(AppDb db, TimeEntry entry)
     {
-        if (entry.XpAwarded == 0 && entry.GoldAwarded == 0) return;
+        if (entry.GoldAwarded == 0) return;
         var user = await db.Users.FindAsync(entry.UserId);
         if (user is null) return;
-        user.Xp = Math.Max(0, user.Xp - entry.XpAwarded);
         user.Coins = Math.Max(0, user.Coins - entry.GoldAwarded);
-        db.XpEvents.Add(new XpEvent
+        db.CoinEvents.Add(new CoinEvent
         {
-            UserId = entry.UserId, Amount = -entry.XpAwarded, Gold = -entry.GoldAwarded,
-            Reason = "estorno de lançamento", Source = "time", CreatedUtc = DateTime.UtcNow,
+            UserId = entry.UserId, Gold = -entry.GoldAwarded,
+            Reason = "estorno de lançamento", Source = "time",
+            // Datado no DIA DO LANÇAMENTO, não no instante do clique.
+            //
+            // O teto diário soma os eventos `time` do dia. Com o estorno datado em
+            // "agora", apagar um lançamento de ontem lançava −400 em hoje e o teto de
+            // hoje virava 800 — dava para dobrar a renda diária apagando lançamento
+            // antigo. Era o furo documentado no ECONOMIA.md §2.4.
+            CreatedUtc = Periods.Utc(entry.StartUtc),
         });
-        entry.XpAwarded = 0;
         entry.GoldAwarded = 0;
     }
 

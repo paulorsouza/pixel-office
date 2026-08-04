@@ -78,6 +78,9 @@ export function createGameItemsClient(options = {}) {
     }
     connection.on('InventoryChanged', () => refreshInventory().catch(() => {}));
     connection.on('ChestChanged', (payload) => emit('ChestChanged', payload));
+    // Trocar de equipamento em outra aba precisa chegar aqui: o loadout é do servidor,
+    // então duas janelas abertas não podem discordar sobre o que está vestido.
+    connection.on('EquipmentChanged', () => emit('EquipmentChanged'));
     connection.on('WorkSessionChanged', (payload) => emit('WorkSessionChanged', payload));
     // Economia e metas: o backend avisa quem lançou horas ou concluiu um objetivo,
     // venha o lançamento do jogo ou do app web.
@@ -115,14 +118,9 @@ export function createGameItemsClient(options = {}) {
     inventory: () => clone(inventory),
     personalRooms: () => clone(personalDirectory),
     currentPersonalRoom: () => clone(personalDirectory?.current || null),
-    ownedEquipmentIds() {
-      return [...new Set(inventory
-        .filter((item) => item.definition.itemType === 'vehicle' || item.definition.itemType === 'equipment')
-        .map((item) => item.definition.catalogKey.replace(/^equipment:/, '')))];
-    },
-    ownsEquipment(equipmentId) {
-      return this.ownedEquipmentIds().includes(equipmentId);
-    },
+    // A posse de equipamento saiu daqui: quem responde "o que é meu, o que está
+    // vestido e o que isso faz" é `equipment()` abaixo, numa chamada só. Derivar
+    // posse do inventário genérico dava a lista de ids, nunca o loadout nem o efeito.
     available(catalogKey) {
       return inventory.filter((item) => (
         item.location === 'inventory' && item.definition.catalogKey === catalogKey
@@ -137,6 +135,20 @@ export function createGameItemsClient(options = {}) {
     async refreshPersonalRooms() {
       personalDirectory = await request('/api/game/personal-rooms');
       return clone(personalDirectory);
+    },
+    /** Loadout, itens possuídos e o efeito agregado do conjunto. O servidor é dono disto. */
+    async equipment() {
+      return request('/api/game/equipment');
+    },
+    /** Equipa (`instanceId`) ou guarda (`null`). Devolve o snapshot já atualizado. */
+    async setEquipmentSlot(slot, instanceId) {
+      return request(`/api/game/equipment/${encodeURIComponent(slot)}`, {
+        method: 'PUT', body: JSON.stringify({ instanceId: instanceId ?? null }),
+      });
+    },
+    /** Abre um baú. Devolve o prêmio e o snapshot de equipamento já atualizado. */
+    async openLootbox(instanceId) {
+      return request(`/api/game/lootboxes/${instanceId}/open`, { method: 'POST', body: '{}' });
     },
     async purchase(catalogKey) {
       const result = await request(`/api/game/catalog/${encodeURIComponent(catalogKey)}/purchase`, {
@@ -231,26 +243,30 @@ export function createGameItemsClient(options = {}) {
         method: 'POST', body: JSON.stringify({ cardId, evolutionCardId }),
       });
     },
-    async saveCardGameDeck(cardIds) {
-      return request('/api/cardgame/deck', {
+    async saveCardGameDeck(leagueId, cardIds) {
+      return request(`/api/cardgame/deck/${encodeURIComponent(leagueId)}`, {
         method: 'PUT', body: JSON.stringify({ cardIds }),
       });
     },
-    async pokemonCasinoTable() {
+    /** O salão: as quatro mesas, uma por liga. */
+    async pokemonCasinoTables() {
       return request('/api/cardgame/casino-table');
     },
-    async startPokemonCasinoBattle(idempotencyKey = crypto.randomUUID()) {
-      return request('/api/cardgame/casino-table/start', {
-        method: 'POST', body: JSON.stringify({ idempotencyKey }),
+    async pokemonCasinoTable(leagueId) {
+      return request(`/api/cardgame/casino-table/${encodeURIComponent(leagueId)}`);
+    },
+    async startPokemonCasinoBattle(leagueId, difficulty, idempotencyKey = crypto.randomUUID()) {
+      return request(`/api/cardgame/casino-table/${encodeURIComponent(leagueId)}/start`, {
+        method: 'POST', body: JSON.stringify({ difficulty, idempotencyKey }),
       });
     },
-    async playPokemonCasinoCard(roundId, cardId, cellIndex, idempotencyKey = crypto.randomUUID()) {
-      return request('/api/cardgame/casino-table/move', {
+    async playPokemonCasinoCard(leagueId, roundId, cardId, cellIndex, idempotencyKey = crypto.randomUUID()) {
+      return request(`/api/cardgame/casino-table/${encodeURIComponent(leagueId)}/move`, {
         method: 'POST', body: JSON.stringify({ roundId, cardId, cellIndex, idempotencyKey }),
       });
     },
-    async leavePokemonCasinoTable(roundId, idempotencyKey = crypto.randomUUID()) {
-      return request('/api/cardgame/casino-table/leave', {
+    async leavePokemonCasinoTable(leagueId, roundId, idempotencyKey = crypto.randomUUID()) {
+      return request(`/api/cardgame/casino-table/${encodeURIComponent(leagueId)}/leave`, {
         method: 'POST', body: JSON.stringify({ roundId, idempotencyKey }),
       });
     },

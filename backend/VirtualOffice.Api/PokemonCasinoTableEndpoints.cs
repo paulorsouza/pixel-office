@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VirtualOffice.Api;
 
-public sealed record PokemonCasinoStartRequest(string IdempotencyKey);
+public sealed record PokemonCasinoStartRequest(string Difficulty, string IdempotencyKey);
 public sealed record PokemonCasinoLeaveRequest(long RoundId, string IdempotencyKey);
 public sealed record PokemonCasinoMoveRequest(
     long RoundId,
@@ -21,7 +21,12 @@ public sealed class PokemonCasinoCell
 
 public sealed class PokemonCasinoState
 {
-    public int Level { get; set; } = 1;
+    /// <summary>Liga da mesa. Fica no estado para a rodada saber a própria régua.</summary>
+    public string LeagueId { get; set; } = CardGameLeagues.Master;
+    /// <summary>easy | normal | hard — o modo pago ao sentar.</summary>
+    public string Difficulty { get; set; } = CasinoLeagueTables.Normal;
+    /// <summary>Qual das quatro partidas do modo está em jogo.</summary>
+    public int Match { get; set; } = 1;
     public string Status { get; set; } = "ongoing";
     public int CurrentPlayer { get; set; }
     public int Turn { get; set; }
@@ -32,32 +37,24 @@ public sealed class PokemonCasinoState
     public PokemonCasinoCell?[] Board { get; set; } = new PokemonCasinoCell?[9];
     public List<string> ActionKeys { get; set; } = [];
     public bool RewardGranted { get; set; }
-    public int RewardLevelAwarded { get; set; }
+    /// <summary>A faixa travada: a última partida vencida nesta escada.</summary>
+    public int MatchesWon { get; set; }
     public int NormalBoostersAwarded { get; set; }
     public int RareBoostersAwarded { get; set; }
     public int LegendaryBoostersAwarded { get; set; }
+    public bool ExoticChestAwarded { get; set; }
 }
 
 public static class PokemonCasinoTableEndpoints
 {
-    private const string GameId = "pokemon-card-table";
-    private const string RulesVersion = "2026-07-30.3";
+    // Uma mesa por liga, e cada mesa é um jogo próprio no histórico do cassino:
+    // assim "qual foi minha última rodada" continua sendo uma pergunta por mesa.
+    private static string GameIdFor(string leagueId) => $"pokemon-card-table-{leagueId}";
+    private const string RulesVersion = "2026-08-03.1";
     private const string MewtwoKingId = "special-casino-mewtwo";
     private const int DeckSize = 15;
     private const int OpeningHand = 6;
-    private const int MaxLevel = 6;
-    private const int EntryCost = 100;
     private static readonly string[] PowerUpSides = ["top", "right", "bottom", "left"];
-
-    private static readonly (int Normal, int Rare, int Legendary)[] Rewards =
-    [
-        (1, 0, 0),
-        (3, 0, 0),
-        (1, 1, 0),
-        (3, 3, 0),
-        (0, 5, 0),
-        (0, 1, 1),
-    ];
 
     private static readonly IReadOnlyDictionary<string, string[]> TypeAdvantages =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
@@ -84,38 +81,81 @@ public static class PokemonCasinoTableEndpoints
 
     public static void Map(RouteGroupBuilder api)
     {
-        api.MapGet("/cardgame/casino-table", Snapshot);
-        api.MapPost("/cardgame/casino-table/start", Start);
-        api.MapPost("/cardgame/casino-table/move", Move);
-        api.MapPost("/cardgame/casino-table/leave", Leave);
+        api.MapGet("/cardgame/casino-table", Tables);
+        api.MapGet("/cardgame/casino-table/{leagueId}", Snapshot);
+        api.MapPost("/cardgame/casino-table/{leagueId}/start", Start);
+        api.MapPost("/cardgame/casino-table/{leagueId}/move", Move);
+        api.MapPost("/cardgame/casino-table/{leagueId}/leave", Leave);
     }
 
-    private static async Task<IResult> Snapshot(HttpRequest req, IDbContextFactory<AppDb> factory)
+    /// <summary>O salão: as quatro mesas com preço, prêmio e situação de cada uma.</summary>
+    private static async Task<IResult> Tables(HttpRequest req, IDbContextFactory<AppDb> factory)
     {
         if (Identity.UserId(req) is not int userId) return Results.Unauthorized();
         await using var db = await factory.CreateDbContextAsync();
-        var latest = await LatestRoundAsync(db, userId);
         var coins = await db.Users.Where(row => row.Id == userId)
             .Select(row => (int?)row.Coins).SingleOrDefaultAsync();
         if (coins is null) return Results.NotFound(new { error = "Jogador não encontrado." });
+
+        var tables = new List<object>();
+        foreach (var league in CardGameLeagues.All)
+        {
+            var (deck, deckError) = await CardGameEndpoints.LoadPlayableDeckAsync(db, userId, league.Id);
+            var latest = await LatestRoundAsync(db, userId, league.Id);
+            tables.Add(new
+            {
+                leagueId = league.Id,
+                name = league.Name,
+                maxPower = league.MaxPower,
+                difficulties = DifficultyTable(league.Id),
+                deckReady = deck.Length > 0,
+                deckError,
+                round = latest is null ? null : RoundPayload(latest, Deserialize(latest)),
+            });
+        }
+        return Results.Ok(new { name = "Liga Pokémon da Casa", coins, tables });
+    }
+
+    private static async Task<IResult> Snapshot(
+        HttpRequest req,
+        string leagueId,
+        IDbContextFactory<AppDb> factory)
+    {
+        if (Identity.UserId(req) is not int userId) return Results.Unauthorized();
+        if (!CasinoLeagueTables.IsKnownTable(leagueId))
+            return Results.NotFound(new { error = "Mesa desconhecida." });
+        await using var db = await factory.CreateDbContextAsync();
+        var latest = await LatestRoundAsync(db, userId, leagueId);
+        var coins = await db.Users.Where(row => row.Id == userId)
+            .Select(row => (int?)row.Coins).SingleOrDefaultAsync();
+        if (coins is null) return Results.NotFound(new { error = "Jogador não encontrado." });
+        var league = CardGameLeagues.Find(leagueId)!;
+        var (deck, deckError) = await CardGameEndpoints.LoadPlayableDeckAsync(db, userId, leagueId);
         return Results.Ok(new
         {
-            gameId = GameId,
-            name = "Liga Pokémon da Casa",
-            maxLevel = MaxLevel,
-            entryCost = EntryCost,
+            gameId = GameIdFor(leagueId),
+            leagueId,
+            name = $"Liga Pokémon da Casa · {league.Name}",
+            maxPower = league.MaxPower,
             coins,
-            rewards = RewardTable(),
+            deckReady = deck.Length > 0,
+            deckError,
+            difficulties = DifficultyTable(leagueId),
             round = latest is null ? null : RoundPayload(latest, Deserialize(latest)),
         });
     }
 
     private static async Task<IResult> Start(
         HttpRequest req,
+        string leagueId,
         PokemonCasinoStartRequest body,
         IDbContextFactory<AppDb> factory)
     {
         if (Identity.UserId(req) is not int userId) return Results.Unauthorized();
+        if (!CasinoLeagueTables.IsKnownTable(leagueId))
+            return Results.NotFound(new { error = "Mesa desconhecida." });
+        if (!CasinoLeagueTables.IsKnownDifficulty(body.Difficulty))
+            return Results.BadRequest(new { error = "Dificuldade desconhecida." });
         if (!Guid.TryParse(body.IdempotencyKey, out _))
             return Results.BadRequest(new { error = "Chave de idempotência inválida." });
 
@@ -129,7 +169,7 @@ public static class PokemonCasinoTableEndpoints
             return Results.Ok(RoundPayload(repeated, Deserialize(repeated)));
         }
 
-        var latest = await LatestRoundAsync(db, userId);
+        var latest = await LatestRoundAsync(db, userId, leagueId);
         if (latest is not null)
         {
             var previous = Deserialize(latest);
@@ -140,44 +180,44 @@ public static class PokemonCasinoTableEndpoints
             }
         }
 
-        var profile = await db.CardGameProfiles.SingleOrDefaultAsync(row => row.UserId == userId);
-        string[] deck;
-        try { deck = JsonSerializer.Deserialize<string[]>(profile?.DeckJson ?? "[]") ?? []; }
-        catch { deck = []; }
-        if (!CardGameCatalog.TryValidateDeck(deck, out deck, out var error)
-            || !await CardGameEndpoints.OwnsDeckAsync(db, userId, deck))
-            return Results.BadRequest(new { error = error.Length > 0
-                ? error
-                : "Monte um baralho válido de 15 cartas antes de enfrentar a casa." });
+        // A mesa é da liga: quem senta joga com o baralho DAQUELA liga, e o teto de
+        // poder vale para o jogador nas três dificuldades. Quem passa dele é a casa.
+        var (deck, deckError) = await CardGameEndpoints.LoadPlayableDeckAsync(db, userId, leagueId);
+        if (deck.Length == 0) return Results.BadRequest(new { error = deckError });
 
-        var level = 1;
-        if (latest is not null)
-        {
-            var previous = Deserialize(latest);
-            if (previous.Status == "won" && previous.Level < MaxLevel) level = previous.Level + 1;
-        }
+        // Continuar a escada é de graça: o preço do modo foi pago na primeira
+        // partida. Só uma sequência NOVA cobra de novo.
+        var previousRun = latest is null ? null : Deserialize(latest);
+        var continuing = previousRun is not null
+            && previousRun.Status == "won"
+            && previousRun.Difficulty == body.Difficulty
+            && previousRun.Match < CasinoLeagueTables.MatchesPerRun
+            && !previousRun.RewardGranted;
+        var match = continuing ? previousRun!.Match + 1 : 1;
+        var difficulty = CasinoLeagueTables.Find(leagueId, body.Difficulty);
         var user = await db.Users.SingleOrDefaultAsync(row => row.Id == userId);
         if (user is null) return Results.NotFound(new { error = "Jogador não encontrado." });
-        var isNewSequence = level == 1;
-        if (isNewSequence && user.Coins < EntryCost)
+        var price = continuing ? 0 : difficulty.Price;
+        if (user.Coins < price)
             return Results.Conflict(new
             {
-                error = $"São necessárias {EntryCost} moedas para iniciar a sequência.",
+                error = $"O modo {difficulty.Name} custa {difficulty.Price} moedas.",
                 coins = user.Coins,
-                entryCost = EntryCost,
+                price = difficulty.Price,
             });
 
-        var state = CreateBattle(level, deck);
+        var state = CreateBattle(leagueId, difficulty, match, deck);
+        state.MatchesWon = continuing ? previousRun!.MatchesWon : 0;
         if (state.CurrentPlayer == 1) PlayHouseTurn(state);
         var balanceBefore = user.Coins;
-        if (isNewSequence) user.Coins = checked(user.Coins - EntryCost);
+        user.Coins = checked(user.Coins - price);
         var round = new CasinoRound
         {
             UserId = userId,
-            GameId = GameId,
+            GameId = GameIdFor(leagueId),
             RulesVersion = RulesVersion,
             IdempotencyKey = body.IdempotencyKey,
-            Bet = isNewSequence ? EntryCost : 0,
+            Bet = price,
             Payout = 0,
             BalanceBefore = balanceBefore,
             BalanceAfter = user.Coins,
@@ -191,6 +231,7 @@ public static class PokemonCasinoTableEndpoints
 
     private static async Task<IResult> Move(
         HttpRequest req,
+        string leagueId,
         PokemonCasinoMoveRequest body,
         IDbContextFactory<AppDb> factory)
     {
@@ -200,8 +241,9 @@ public static class PokemonCasinoTableEndpoints
 
         await using var db = await factory.CreateDbContextAsync();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var gameId = GameIdFor(leagueId);
         var round = await db.CasinoRounds.SingleOrDefaultAsync(row =>
-            row.Id == body.RoundId && row.UserId == userId && row.GameId == GameId);
+            row.Id == body.RoundId && row.UserId == userId && row.GameId == gameId);
         if (round is null) return Results.NotFound(new { error = "Partida da mesa não encontrada." });
         var state = Deserialize(round);
         if (state.ActionKeys.Contains(body.IdempotencyKey))
@@ -218,10 +260,15 @@ public static class PokemonCasinoTableEndpoints
         if (error is not null) return Results.BadRequest(new { error });
         state.ActionKeys.Add(body.IdempotencyKey);
         if (state.Status == "ongoing") PlayHouseTurn(state);
-        if (state.Status == "lost")
-            await GrantRewardAsync(db, userId, state, state.Level - 1);
-        else if (state.Status == "won" && state.Level == MaxLevel)
-            await GrantRewardAsync(db, userId, state, MaxLevel);
+        if (state.Status == "won")
+        {
+            state.MatchesWon = state.Match;
+            // Vencer a quarta fecha a escada: paga na hora, não há o que subir.
+            if (state.Match == CasinoLeagueTables.MatchesPerRun)
+                await GrantRewardAsync(db, userId, state);
+        }
+        // Perder entrega a faixa que já estava travada — e nada se ainda não havia.
+        else if (state.Status == "lost") await GrantRewardAsync(db, userId, state);
         round.OutcomeJson = JsonSerializer.Serialize(state);
         await db.SaveChangesAsync();
         await transaction.CommitAsync();
@@ -230,6 +277,7 @@ public static class PokemonCasinoTableEndpoints
 
     private static async Task<IResult> Leave(
         HttpRequest req,
+        string leagueId,
         PokemonCasinoLeaveRequest body,
         IDbContextFactory<AppDb> factory)
     {
@@ -239,8 +287,9 @@ public static class PokemonCasinoTableEndpoints
 
         await using var db = await factory.CreateDbContextAsync();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        var gameId = GameIdFor(leagueId);
         var round = await db.CasinoRounds.SingleOrDefaultAsync(row =>
-            row.Id == body.RoundId && row.UserId == userId && row.GameId == GameId);
+            row.Id == body.RoundId && row.UserId == userId && row.GameId == gameId);
         if (round is null) return Results.NotFound(new { error = "Partida da mesa não encontrada." });
         var state = Deserialize(round);
         if (state.ActionKeys.Contains(body.IdempotencyKey) || state.RewardGranted)
@@ -249,24 +298,30 @@ public static class PokemonCasinoTableEndpoints
             return Results.Ok(RoundPayload(round, state));
         }
 
-        var achievedLevel = state.Status == "won" ? state.Level : Math.Max(0, state.Level - 1);
-        if (state.Status is "ongoing" or "won")
-            state.Status = "left";
+        // Sacar: leva a faixa travada. No meio de uma partida em andamento, a
+        // partida corrente é abandonada — a faixa dela não conta.
+        if (state.Status is "ongoing" or "won") state.Status = "left";
         state.ActionKeys.Add(body.IdempotencyKey);
-        await GrantRewardAsync(db, userId, state, achievedLevel);
+        await GrantRewardAsync(db, userId, state);
         round.OutcomeJson = JsonSerializer.Serialize(state);
         await db.SaveChangesAsync();
         await transaction.CommitAsync();
         return Results.Ok(RoundPayload(round, state));
     }
 
-    private static PokemonCasinoState CreateBattle(int level, string[] playerDeck)
+    private static PokemonCasinoState CreateBattle(
+        string leagueId,
+        CasinoTableDifficulty difficulty,
+        int match,
+        string[] playerDeck)
     {
         var player = Shuffle(playerDeck);
-        var house = HouseDeck(level);
+        var house = HouseDeck(difficulty.Levels[match - 1]);
         return new PokemonCasinoState
         {
-            Level = level,
+            LeagueId = leagueId,
+            Difficulty = difficulty.Id,
+            Match = match,
             CurrentPlayer = RandomNumberGenerator.GetInt32(2),
             PlayerHand = player.Take(OpeningHand).ToList(),
             PlayerDrawPile = player.Skip(OpeningHand).ToList(),
@@ -275,39 +330,37 @@ public static class PokemonCasinoTableEndpoints
         };
     }
 
-    private static string[] HouseDeck(int level)
+    /// <summary>
+    /// O baralho da casa. É AQUI que a dificuldade mora.
+    /// </summary>
+    /// <remarks>
+    /// No Fácil e no Normal a casa respeita o mesmo teto que você — o que muda é de
+    /// onde ela tira as cartas dentro dele, e isso sobe a cada partida da escada.
+    /// No Hard ela passa do seu teto (ver CasinoLeagueTables) e ganha cartas
+    /// energizadas em número crescente, com o Mewtwo Rei na quarta.
+    ///
+    /// O jogador nunca escapa do teto da própria liga — é essa assimetria que
+    /// impede a última faixa de sair toda vez.
+    /// </remarks>
+    private static string[] HouseDeck(CasinoTableLevel level)
     {
         var ordered = CardGameCatalog.All.Values
             .Where(card => string.IsNullOrEmpty(card.Variant))
+            .Where(card => level.HouseMaxPower is not int cap || card.PowerRating <= cap)
             .OrderBy(card => card.PowerRating)
             .ThenBy(card => card.Id, StringComparer.Ordinal)
             .ToList();
         var bandSize = Math.Max(DeckSize, ordered.Count / 4);
-        var startRatio = level switch
-        {
-            1 => 0.00,
-            2 => 0.15,
-            3 => 0.32,
-            4 => 0.50,
-            5 => 0.68,
-            _ => 0.82,
-        };
-        var start = Math.Min(ordered.Count - bandSize, (int)(ordered.Count * startRatio));
+        var start = Math.Min(ordered.Count - bandSize, (int)(ordered.Count * level.HouseBandStart));
         var selected = Shuffle(ordered.Skip(Math.Max(0, start)).Take(bandSize).Select(card => card.Id))
-            .Take(level == MaxLevel ? DeckSize - 1 : DeckSize)
+            .Take(level.HouseBoss ? DeckSize - 1 : DeckSize)
             .ToArray();
-        var powerUps = level switch
-        {
-            4 => 1,
-            5 => 3,
-            6 => 5,
-            _ => 0,
-        };
+        var powerUps = level.HousePowerUps;
         for (var index = 0; index < Math.Min(powerUps, selected.Length); index++)
             selected[index] = CardGameEndpoints.FormatCardToken(
                 selected[index],
                 PowerUpSides[RandomNumberGenerator.GetInt32(PowerUpSides.Length)]);
-        return level == MaxLevel ? [MewtwoKingId, .. selected] : selected;
+        return level.HouseBoss ? [MewtwoKingId, .. selected] : selected;
     }
 
     private static void PlayHouseTurn(PokemonCasinoState state)
@@ -321,7 +374,8 @@ public static class PokemonCasinoTableEndpoints
             Score = HouseMoveScore(state, cardId, cell),
             Tie = RandomNumberGenerator.GetInt32(int.MaxValue),
         }));
-        var choice = state.Level == 1
+        // No Fácil a casa joga ao acaso; do Normal para cima ela joga para ganhar.
+        var choice = state.Difficulty == CasinoLeagueTables.Easy
             ? options.OrderBy(_ => RandomNumberGenerator.GetInt32(int.MaxValue)).First()
             : options.OrderByDescending(option => option.Score).ThenBy(option => option.Tie).First();
         _ = Play(state, 1, choice.CardId, choice.Cell);
@@ -335,7 +389,15 @@ public static class PokemonCasinoTableEndpoints
         var printedPower = card.Edges.Values.Sum()
             + (string.IsNullOrEmpty(reference.ShinyBonusSide) ? 0 : 1);
         var centerBonus = cell == 4 ? 5 : cell is 0 or 2 or 6 or 8 ? 2 : 0;
-        return captures * 1_000 + printedPower * state.Level + centerBonus;
+        // O peso do poder cresce com a dificuldade: no Fácil a casa quase ignora a
+        // força da carta, no Hard ela guarda as melhores para o momento certo.
+        var weight = state.Difficulty switch
+        {
+            CasinoLeagueTables.Easy => 1,
+            CasinoLeagueTables.Normal => 3,
+            _ => 6,
+        };
+        return captures * 1_000 + printedPower * weight + centerBonus;
     }
 
     private static string? Play(PokemonCasinoState state, int player, string cardId, int cellIndex)
@@ -409,39 +471,40 @@ public static class PokemonCasinoTableEndpoints
         attacker.Types.Any(type => TypeAdvantages.TryGetValue(type, out var targets)
             && defender.Types.Any(targets.Contains));
 
-    private static async Task GrantRewardAsync(
-        AppDb db,
-        int userId,
-        PokemonCasinoState state,
-        int achievedLevel)
+    private static async Task GrantRewardAsync(AppDb db, int userId, PokemonCasinoState state)
     {
         if (state.RewardGranted) return;
-        if (achievedLevel <= 0)
+        if (state.MatchesWon <= 0)
         {
-            state.RewardLevelAwarded = 0;
+            // Perdeu a primeira: pagou o modo e não travou faixa nenhuma.
             state.RewardGranted = true;
             return;
         }
-        var reward = Rewards[Math.Min(achievedLevel, MaxLevel) - 1];
+        var reward = CasinoLeagueTables.PrizeAt(state.LeagueId, state.Difficulty, state.MatchesWon);
         if (reward.Normal > 0)
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Normal, "standard");
         if (reward.Rare > 0)
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Rare, "rare");
-        // O topo da Liga paga o Lendário, que NÃO está à venda: a Banca só chega ao
-        // Ultrarraro, um degrau abaixo. Seis vitórias seguidas continuam valendo
-        // algo que moeda nenhuma compra.
+        // O Lendário continua sendo o que moeda nenhuma compra — e sai de um lugar
+        // só: o Hard da MASTER. Ver CasinoLeagueTables e ECONOMIA.md §6.
         if (reward.Legendary > 0)
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Legendary, "legendary");
+        // Mesma ideia do lado do equipamento: fonte única de Baú Exótico no jogo.
+        if (reward.ExoticChest)
+            await Lootboxes.GrantAsync(db, userId, LootboxCatalog.Exotic);
         state.NormalBoostersAwarded = reward.Normal;
         state.RareBoostersAwarded = reward.Rare;
         state.LegendaryBoostersAwarded = reward.Legendary;
-        state.RewardLevelAwarded = achievedLevel;
+        state.ExoticChestAwarded = reward.ExoticChest;
         state.RewardGranted = true;
     }
 
-    private static async Task<CasinoRound?> LatestRoundAsync(AppDb db, int userId) =>
-        await db.CasinoRounds.Where(row => row.UserId == userId && row.GameId == GameId)
+    private static async Task<CasinoRound?> LatestRoundAsync(AppDb db, int userId, string leagueId)
+    {
+        var gameId = GameIdFor(leagueId);
+        return await db.CasinoRounds.Where(row => row.UserId == userId && row.GameId == gameId)
             .OrderByDescending(row => row.Id).FirstOrDefaultAsync();
+    }
 
     private static PokemonCasinoState Deserialize(CasinoRound round) =>
         JsonSerializer.Deserialize<PokemonCasinoState>(round.OutcomeJson)
@@ -454,11 +517,23 @@ public static class PokemonCasinoTableEndpoints
             state.Board.Count(cell => cell?.Controller == 0),
             state.Board.Count(cell => cell?.Controller == 1),
         };
+        var difficulty = CasinoLeagueTables.Find(state.LeagueId, state.Difficulty);
+        var level = difficulty.Levels[Math.Clamp(state.Match, 1, CasinoLeagueTables.MatchesPerRun) - 1];
+        var locked = state.MatchesWon > 0
+            ? CasinoLeagueTables.PrizeAt(state.LeagueId, state.Difficulty, state.MatchesWon)
+            : null;
         return new
         {
             roundId = round.Id,
             round.RulesVersion,
-            state.Level,
+            state.LeagueId,
+            state.Difficulty,
+            difficultyName = difficulty.Name,
+            state.Match,
+            matches = CasinoLeagueTables.MatchesPerRun,
+            state.MatchesWon,
+            houseMaxPower = level.HouseMaxPower,
+            houseCopy = difficulty.HouseCopy,
             state.Status,
             state.CurrentPlayer,
             state.Turn,
@@ -466,34 +541,41 @@ public static class PokemonCasinoTableEndpoints
             playerDrawCount = state.PlayerDrawPile.Count,
             houseHandCount = state.HouseHand.Count,
             houseDrawCount = state.HouseDrawPile.Count,
-            housePowerUps = state.Level switch { 4 => 1, 5 => 3, 6 => 5, _ => 0 },
-            houseBoss = state.Level == MaxLevel ? new
+            housePowerUps = level.HousePowerUps,
+            houseBoss = level.HouseBoss ? new
             {
                 cardId = MewtwoKingId,
                 name = CardGameCatalog.All[MewtwoKingId].Name,
             } : null,
             board = state.Board,
             score,
-            reward = new
-            {
-                normal = state.NormalBoostersAwarded,
-                rare = state.RareBoostersAwarded,
-                legendary = state.LegendaryBoostersAwarded,
-            },
-            rewardLevel = state.RewardLevelAwarded,
-            entryCost = round.Bet,
+            // `prize` é a faixa que esta partida coloca em jogo; `lockedPrize` é a
+            // que já está garantida e sai se a pessoa sacar agora.
+            prize = level.Prize,
+            lockedPrize = locked,
+            prizeTaken = state.RewardGranted && state.MatchesWon > 0,
+            price = round.Bet,
             coins = round.BalanceAfter,
-            nextLevel = state.Status == "won" && state.Level < MaxLevel ? state.Level + 1 : 1,
         };
     }
 
-    private static object[] RewardTable() => Rewards.Select((reward, index) => (object)new
-    {
-        level = index + 1,
-        normal = reward.Normal,
-        rare = reward.Rare,
-        legendary = reward.Legendary,
-    }).ToArray();
+    private static object[] DifficultyTable(string leagueId) => CasinoLeagueTables.Difficulties(leagueId)
+        .Select(entry => (object)new
+        {
+            entry.Id,
+            entry.Name,
+            entry.Price,
+            entry.HouseMaxPower,
+            entry.HouseCopy,
+            matches = CasinoLeagueTables.MatchesPerRun,
+            levels = entry.Levels.Select(level => new
+            {
+                level.Level,
+                prize = level.Prize,
+                level.HouseBoss,
+                level.HousePowerUps,
+            }).ToArray(),
+        }).ToArray();
 
     private static string[] Shuffle(IEnumerable<string> cards) =>
         cards.OrderBy(_ => RandomNumberGenerator.GetInt32(int.MaxValue)).ToArray();

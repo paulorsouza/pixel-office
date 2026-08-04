@@ -52,13 +52,13 @@ export function mountObjectives(host, ctx) {
           h("i", { style: { width: `${pct}%`, background: o.done ? "var(--wq-green)" : "var(--wq-accent)" } })),
         h("div", { class: "foot" },
           h("span", {}, shown),
-          h("span", { class: "reward" }, `+${o.xpReward} XP · +${o.goldReward} 🪙`))));
+          h("span", { class: "reward" }, `+${o.goldReward} 🪙`))));
   }
 
   /** Toast de objetivo concluído — chamado pelo SignalR dos dois clientes. */
   function celebrate(completions) {
     for (const c of completions ?? []) {
-      feedback?.toast(`${c.icon} ${c.name} · +${c.xp} XP · +${c.gold} 🪙`, "ok");
+      feedback?.toast(`${c.icon} ${c.name} · +${c.gold} 🪙`, "ok");
     }
     refresh();
   }

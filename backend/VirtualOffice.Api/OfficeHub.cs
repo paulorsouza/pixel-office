@@ -519,24 +519,25 @@ public partial class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<O
             entry.EndUtc = entry.StartUtc.AddMinutes(minutes);
             var user = await db.Users.FindAsync(p.UserId);
             var activity = await db.ActivityTypes.FirstOrDefaultAsync(a => a.Key == entry.Category);
-            XpResult? xp = null;
+            CoinResult? paid = null;
             if (user is not null && activity is not null)
             {
                 var reward = await Game.CapDailyAsync(db, user.Id, Game.RewardFor(activity, minutes), entry.StartUtc);
                 if (!reward.IsEmpty)
                 {
-                    xp = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
-                    entry.XpAwarded = reward.Xp;
+                    paid = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
                     entry.GoldAwarded = reward.Gold;
+                    // Horas lançadas alimentam o marco de Baú Lendário (Game.cs).
+                    await Game.AwardWorkHourChestsAsync(db, user);
                 }
             }
             await db.SaveChangesAsync();
             var completions = await ObjectiveEngine.RecalculateAsync(db, p.UserId);
             await db.SaveChangesAsync();
-            if (xp is not null)
+            if (paid is not null)
             {
                 var label = kind == "meeting" ? $"Reunião registrada: {minutes}min" : $"Foco na mesa: {minutes}min";
-                await Notify.SendRewardAsync(hubContext, p.UserId, xp, $"{label} (+{xp.Amount} XP · +{xp.Gold} 🪙)");
+                await Notify.SendRewardAsync(hubContext, p.UserId, paid, $"{label} (+{paid.Gold} 🪙)");
             }
             await Notify.SendObjectivesAsync(hubContext, p.UserId, completions);
         }
@@ -548,38 +549,32 @@ public partial class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<O
 
 public static class Notify
 {
-    /// <summary>Envia toast de XP/level-up/drop para todas as conexões do usuário.</summary>
-    public static async Task SendXpAsync(IHubContext<OfficeHub> hub, int userId, XpResult xp, string message)
+    /// <summary>Toast de moeda (e drop, quando houver) para as conexões do usuário.</summary>
+    public static async Task SendCoinsAsync(IHubContext<OfficeHub> hub, int userId, CoinResult paid, string message)
     {
         var keys = Presence.Players.Values.Where(p => p.UserId == userId && !p.IsBot).Select(p => p.Key).ToList();
         if (keys.Count == 0) return;
         await hub.Clients.Clients(keys).SendAsync("Notify", new
         {
             message,
-            xp = xp.Amount,
-            level = xp.Level,
-            leveledUp = xp.LeveledUp,
-            drop = xp.Drop is null ? null : new { name = xp.Drop.Item.Name, icon = xp.Drop.Item.Icon, rarity = xp.Drop.Rarity.ToString() },
+            gold = paid.Gold,
+            drop = paid.Drop is null ? null : new { name = paid.Drop.Item.Name, icon = paid.Drop.Item.Icon, rarity = paid.Drop.Rarity.ToString() },
         });
     }
 
     /// <summary>
-    /// Recompensa (XP + gold) para todas as sessões do usuário. Vai pelo grupo do
+    /// Recompensa em moeda para todas as sessões do usuário. Vai pelo grupo do
     /// usuário — que o jogo e o app web assinam — e não só pelas conexões com avatar,
     /// senão quem está apenas no painel nunca via a moeda entrar.
     /// </summary>
-    public static async Task SendRewardAsync(IHubContext<OfficeHub> hub, int userId, XpResult xp, string message)
+    public static async Task SendRewardAsync(IHubContext<OfficeHub> hub, int userId, CoinResult paid, string message)
     {
-        await SendXpAsync(hub, userId, xp, message);
+        await SendCoinsAsync(hub, userId, paid, message);
         await hub.Clients.Group(OfficeHub.UserGroup(userId)).SendAsync("RewardGranted", new
         {
             message,
-            xp = xp.Amount,
-            gold = xp.Gold,
-            totalXp = xp.TotalXp,
-            coins = xp.Coins,
-            level = xp.Level,
-            leveledUp = xp.LeveledUp,
+            gold = paid.Gold,
+            coins = paid.Coins,
         });
     }
 
@@ -592,11 +587,9 @@ public static class Notify
             c.Objective.Key,
             c.Objective.Name,
             c.Objective.Icon,
-            xp = c.Objective.XpReward,
             gold = c.Objective.GoldReward,
             boosterId = c.BoosterId,
             coins = c.Reward.Coins,
-            totalXp = c.Reward.TotalXp,
         }));
         var keys = Presence.Players.Values.Where(p => p.UserId == userId && !p.IsBot).Select(p => p.Key).ToList();
         if (keys.Count == 0) return;
@@ -605,10 +598,8 @@ public static class Notify
             {
                 message = c.BoosterId == "rare"
                     ? $"{c.Objective.Icon} Objetivos semanais concluídos · +1 Booster Raro"
-                    : $"{c.Objective.Icon} Objetivo concluído: {c.Objective.Name} · +{c.Objective.XpReward} XP · +{c.Objective.GoldReward} 🪙",
-                xp = c.Objective.XpReward,
-                level = c.Reward.Level,
-                leveledUp = c.Reward.LeveledUp,
+                    : $"{c.Objective.Icon} Objetivo concluído: {c.Objective.Name} · +{c.Objective.GoldReward} 🪙",
+                gold = c.Objective.GoldReward,
                 drop = (object?)null,
             });
     }

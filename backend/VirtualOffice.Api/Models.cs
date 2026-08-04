@@ -18,7 +18,6 @@ public class User
     public string Name { get; set; } = "";
     public string Role { get; set; } = "";
     public string Color { get; set; } = "#7c5cff";
-    public int Xp { get; set; }
     public int Coins { get; set; } = 250;
     public bool IsBot { get; set; }
     // task que o dev escolheu como "ativa" — o timer da mesa conta horas nela
@@ -169,7 +168,7 @@ public class WorkItemEvent
 }
 
 /// <summary>
-/// Catálogo de tipos de lançamento. É dado, não enum: a economia (XP/gold por hora),
+/// Catálogo de tipos de lançamento. É dado, não enum: a economia (gold por hora),
 /// o atalho de lançamento rápido e a meta diária saem daqui, então dá para ajustar
 /// balanceamento sem recompilar.
 /// </summary>
@@ -180,7 +179,6 @@ public class ActivityType
     public string Name { get; set; } = "";
     public string Icon { get; set; } = "";
     public string Color { get; set; } = "#7c5cff";
-    public int XpPerHour { get; set; }
     public int GoldPerHour { get; set; }
     /// <summary>Lançamento exige um card do kanban (ex.: desenvolvimento sim, estudo não).</summary>
     public bool RequiresWorkItem { get; set; }
@@ -211,18 +209,23 @@ public class TimeEntry
     /// <summary>Dupla do pair programming — rende o lançamento espelhado para os dois.</summary>
     public int? PairUserId { get; set; }
     // Recompensa concedida por este lançamento: apagar o lançamento devolve exatamente isto.
-    public int XpAwarded { get; set; }
     public int GoldAwarded { get; set; }
 }
 
-public class XpEvent
+/// <summary>
+/// Livro-caixa de tudo que o jogo dá de moeda. Toda concessão passa por aqui com um
+/// `Source` (time | workitem | objective | presence | grant | chest), e é por ele que
+/// o teto diário sabe o que limitar e que a auditoria sabe de onde veio o dinheiro.
+///
+/// Linhas de valor zero são MARCADORES de idempotência ("já dei este baú?"), não
+/// renda — ver <see cref="Lootboxes.GrantOnceAsync"/>.
+/// </summary>
+public class CoinEvent
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public int Amount { get; set; }
     public int Gold { get; set; }
     public string Reason { get; set; } = "";
-    // time | workitem | objective | grant | drop
     public string Source { get; set; } = "";
     public DateTime CreatedUtc { get; set; }
 }
@@ -241,7 +244,6 @@ public class Objective
     /// <summary>Restringe a métrica a um tipo de lançamento; vazio = todos os que contam como trabalho.</summary>
     public string ActivityKey { get; set; } = "";
     public int Target { get; set; }
-    public int XpReward { get; set; }
     public int GoldReward { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
@@ -355,8 +357,15 @@ public class GameItemInstance
     public string InstanceKey { get; set; } = Guid.NewGuid().ToString("N");
     public int UserId { get; set; }
     public int DefinitionId { get; set; }
-    // inventory | placed | chest
+    // inventory | placed | chest | equipped
     public string Location { get; set; } = "inventory";
+    /// <summary>
+    /// Slot em que a unidade está vestida (<see cref="EquipmentCatalog.Slots"/>), ou
+    /// vazio. O loadout vive AQUI, e não no localStorage do cliente, porque a partir
+    /// da v2 o que está equipado muda quanto o jogo paga — e efeito que o cliente
+    /// declara sozinho é efeito que o cliente inventa.
+    /// </summary>
+    public string EquippedSlot { get; set; } = "";
     public int? ContainerPlacementId { get; set; }
     public DateTime AcquiredUtc { get; set; } = DateTime.UtcNow;
     public string StateJson { get; set; } = "{}";
@@ -396,8 +405,23 @@ public class CardGameProfile
     public int Id { get; set; }
     public int UserId { get; set; }
     public int BoosterCount { get; set; } = 3;
-    public string DeckJson { get; set; } = "[]";
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+}
+
+/// <summary>
+/// O baralho de uma liga. Cada jogador tem até um por liga de
+/// <see cref="CardGameLeagues"/>, e é uma LINHA por liga em vez de quatro colunas
+/// no perfil justamente porque liga é dado do catálogo de regras: criar a quinta
+/// liga não pode custar uma migration.
+/// </summary>
+public class CardGameDeck
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string LeagueId { get; set; } = "";
+    /// <summary>Os quinze tokens (`cardId` ou `cardId~lado` para shiny).</summary>
+    public string CardsJson { get; set; } = "[]";
+    public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>

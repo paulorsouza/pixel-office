@@ -70,9 +70,6 @@ namespace VirtualOffice.Api.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
-                    b.Property<int>("XpPerHour")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Key")
@@ -178,6 +175,36 @@ namespace VirtualOffice.Api.Migrations
                     b.ToTable("CardGameCollection");
                 });
 
+            modelBuilder.Entity("VirtualOffice.Api.CardGameDeck", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CardsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LeagueId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LeagueId")
+                        .IsUnique();
+
+                    b.ToTable("CardGameDecks");
+                });
+
             modelBuilder.Entity("VirtualOffice.Api.CardGameProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -191,10 +218,6 @@ namespace VirtualOffice.Api.Migrations
 
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeckJson")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -285,6 +308,38 @@ namespace VirtualOffice.Api.Migrations
                     b.HasIndex("WorkItemId");
 
                     b.ToTable("ChecklistItems");
+                });
+
+            modelBuilder.Entity("VirtualOffice.Api.CoinEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Gold")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedUtc");
+
+                    b.ToTable("CoinEvents");
                 });
 
             modelBuilder.Entity("VirtualOffice.Api.Epic", b =>
@@ -430,6 +485,10 @@ namespace VirtualOffice.Api.Migrations
                     b.Property<int>("DefinitionId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("EquippedSlot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("InstanceKey")
                         .IsRequired()
                         .HasColumnType("text");
@@ -449,6 +508,10 @@ namespace VirtualOffice.Api.Migrations
 
                     b.HasIndex("InstanceKey")
                         .IsUnique();
+
+                    b.HasIndex("UserId", "EquippedSlot")
+                        .IsUnique()
+                        .HasFilter("\"EquippedSlot\" <> ''");
 
                     b.ToTable("GameItemInstances");
                 });
@@ -608,9 +671,6 @@ namespace VirtualOffice.Api.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("Target")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("XpReward")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -848,9 +908,6 @@ namespace VirtualOffice.Api.Migrations
                     b.Property<int?>("WorkItemId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("XpAwarded")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserId", "StartUtc");
@@ -904,9 +961,6 @@ namespace VirtualOffice.Api.Migrations
 
                     b.Property<string>("Username")
                         .HasColumnType("text");
-
-                    b.Property<int>("Xp")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1075,41 +1129,6 @@ namespace VirtualOffice.Api.Migrations
                     b.HasKey("WorkItemId", "LabelId");
 
                     b.ToTable("WorkItemLabels");
-                });
-
-            modelBuilder.Entity("VirtualOffice.Api.XpEvent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Amount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Gold")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "CreatedUtc");
-
-                    b.ToTable("XpEvents");
                 });
 #pragma warning restore 612, 618
         }

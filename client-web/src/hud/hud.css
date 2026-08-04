@@ -117,31 +117,55 @@ button{font:inherit}
 .menu-view-tab:hover{filter:brightness(1.13)}
 .menu-view-tab.active{position:relative;top:3px;color:#ffe4b8;background:#533339;box-shadow:inset 0 0 0 2px #a76d50}
 
-.equipment-rpg-layout{display:grid;grid-template-columns:370px 1fr;gap:12px;padding:12px;background:#1b1217}
+/* `relative` é o que ancora a revelação do baú, que cobre a área inteira. */
+.equipment-rpg-layout{position:relative;display:grid;grid-template-columns:370px 1fr;gap:12px;padding:12px;background:#1b1217}
 .equipment-panel{min-width:0;border:3px solid #38242a;background:#2e1f25;box-shadow:inset 0 0 0 2px #805246}
 .equipment-panel-title{display:flex;align-items:center;justify-content:space-between;gap:8px;height:39px;
   padding:0 11px;border-bottom:3px solid #38242a;color:#ffe5bc;background:#533339;
   font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
 .equipment-panel-title small{color:#cf9e77;font-size:9px;letter-spacing:.02em;text-transform:none}
 
-.loadout-board{position:relative;width:100%;height:362px;overflow:hidden;
+/* Coluna: tabuleiro em cima, comparação e bônus embaixo ocupando o que sobra.
+   Sem isso a coluna esquerda terminava no meio da altura e deixava um vazio do
+   tamanho de um painel inteiro embaixo dela. */
+.loadout-panel{display:flex;min-height:0;flex-direction:column}
+/* O que sobra da coluna fica com a lista de bônus: ela tem fundo próprio, então
+   esticá-la lê como painel, enquanto sobra vazia lia como espaço esquecido. */
+.loadout-panel .equipment-effects{flex:1 1 auto}
+/* O tabuleiro CRESCE com a coluna, em vez de sobrar um vazio embaixo dele: os
+   encaixes estão ancorados no topo e na base, então mais altura vira mais respiro
+   entre eles. Comparação e bônus ficam no tamanho natural, colados no rodapé. */
+/* Altura LIMITADA, não elástica. `flex:1` fazia o tabuleiro acompanhar a coluna da
+   bag — que é longa — e ele chegou a 1058px numa janela de 1270px, empurrando a
+   fileira de baixo (celular e automóvel) para fora da área visível do menu.
+   `clamp` acompanha a viewport sem nunca virar um tabuleiro de tela inteira. */
+.loadout-board{position:relative;width:100%;height:clamp(272px,42vh,420px);flex:0 0 auto;overflow:hidden;
   background:radial-gradient(circle at 50% 44%,#68413e 0 14%,#432b31 15% 34%,transparent 35%),
     linear-gradient(45deg,#ffffff05 25%,transparent 25% 75%,#ffffff05 75%) 0 0/16px 16px,#2c1d23}
 .loadout-board::before{content:"";position:absolute;left:50%;top:46%;width:160px;height:245px;
   transform:translate(-50%,-50%);border:2px dashed #b1785c55;border-radius:50%;box-shadow:0 0 0 8px #160e1340}
-#equipment-slots{position:absolute;inset:0;z-index:2}
-.equipment-slot{position:absolute;display:grid;grid-template-columns:38px 1fr;grid-template-rows:17px 1fr;
-  align-items:center;column-gap:6px;width:110px;height:78px;padding:5px;border:3px solid #27191e;color:#e4cbb5;
+/* Grade de tres linhas em vez de coordenadas fixas: o tabuleiro cresce com a
+   coluna, e com `top`/`bottom` cravados em pixel a fileira do meio ficava colada
+   no topo, abrindo um buraco embaixo. Grade distribui a altura sozinha. */
+#equipment-slots{position:absolute;inset:0;z-index:2;display:grid;
+  grid-template-columns:1fr 132px 1fr;grid-template-rows:repeat(3,1fr);gap:7px;padding:9px}
+/* Altura própria + `align-self:center`: a linha da grade estica, o encaixe não.
+   Deixar o botão preencher 1fr fazia um encaixe de 78px virar um de 180. */
+.equipment-slot{display:grid;grid-template-columns:38px 1fr;grid-template-rows:17px 1fr;
+  position:relative;align-self:center;align-items:center;column-gap:6px;min-width:0;height:78px;
+  padding:5px;border:3px solid #27191e;border-left:4px solid var(--rarity,#27191e);color:#e4cbb5;
   background:#3a282d;box-shadow:inset 0 0 0 2px #725049,3px 4px #171015;cursor:pointer;text-align:left}
 .equipment-slot:hover{filter:brightness(1.15);transform:translateY(-1px)}
-.equipment-slot.filled{box-shadow:inset 0 0 0 2px var(--item-accent),3px 4px #171015}
+.equipment-slot.filled{box-shadow:inset 0 0 0 2px var(--rarity,var(--item-accent)),3px 4px #171015}
+.equipment-slot[data-rarity="legendary"],.equipment-slot[data-rarity="exotic"]{
+  box-shadow:inset 0 0 0 2px var(--rarity),0 0 10px -2px var(--rarity),3px 4px #171015}
 .equipment-slot-label{grid-column:1/-1;color:#d8aa80;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
 .equipment-slot-value{overflow:hidden;color:#fff2dd;font-size:8px;line-height:1.15;text-overflow:ellipsis}
 .equipment-slot-remove{position:absolute;right:3px;top:2px;color:#ffd7b6;font:900 11px Arial}
 .empty-slot-mark{display:grid;place-items:center;width:36px;height:36px;border:2px dashed #8a625a;color:#9f7366;background:#24181d;font-size:10px;font-weight:900}
-.slot-earrings{left:9px;top:14px}.slot-necklace{right:9px;top:14px}
-.slot-bracelet{left:9px;top:130px}.slot-mouse{right:9px;top:130px}
-.slot-keyboard{left:9px;bottom:15px}.slot-vehicle{right:9px;bottom:15px}
+.slot-mouse{grid-area:1/1}.slot-amulet{grid-area:1/3}
+.slot-keyboard{grid-area:2/1}.slot-wallet{grid-area:2/3}
+.slot-phone{grid-area:3/1}.slot-vehicle{grid-area:3/3}
 .equipment-avatar-card{position:absolute;left:50%;top:52%;z-index:1;display:flex;width:118px;height:190px;
   transform:translate(-50%,-50%);align-items:center;justify-content:flex-end;flex-direction:column;padding-bottom:13px;
   border:3px solid #2a1a20;background:linear-gradient(#6e4641,#412930 72%);box-shadow:inset 0 0 0 2px #9a6652,4px 5px #171015}
@@ -152,6 +176,18 @@ button{font:inherit}
 .equipment-avatar-card strong{z-index:1;color:#ffe8c5;font-size:11px;text-transform:uppercase}
 .equipment-avatar-card small{z-index:1;color:#cf9870;font:8px Inter,system-ui,sans-serif}
 
+/* ---- raridade ----
+   Uma variável só, ligada por [data-rarity], serve card, baú, chip e revelação.
+   A COR não carrega o significado sozinha: todo lugar que colore também escreve
+   o nome da raridade, senão quem não distingue verde de azul perde a informação. */
+[data-rarity="common"]{--rarity:#9aa4b2}
+[data-rarity="uncommon"]{--rarity:#78bf8a}
+[data-rarity="rare"]{--rarity:#65a9e9}
+[data-rarity="legendary"]{--rarity:#f0b849}
+[data-rarity="exotic"]{--rarity:#ff6ad5}
+.rarity-chip{align-self:center;padding:1px 6px;border:1px solid var(--rarity,#9aa4b2);
+  color:var(--rarity,#9aa4b2);font-size:7.5px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+
 .inventory-panel{display:flex;min-height:0;flex-direction:column}
 .inventory-title-copy{display:flex;align-items:center;gap:9px}
 .chest-glyph{position:relative;width:31px;height:24px;border:3px solid #25171b;background:#a96434;
@@ -159,19 +195,110 @@ button{font:inherit}
 .chest-glyph::before{content:"";position:absolute;left:-3px;top:-9px;width:31px;height:10px;
   border:3px solid #25171b;border-bottom:0;border-radius:7px 7px 0 0;background:#bd7540;box-shadow:inset 0 3px #e4a45b}
 .chest-glyph::after{content:"";position:absolute;left:10px;top:4px;width:6px;height:9px;background:#f0bd5e;box-shadow:inset -2px -2px #9b5b31}
-#equipment-list{display:grid;grid-template-columns:repeat(3,minmax(104px,1fr));gap:8px;align-content:start;
-  min-height:0;padding:10px}
-.inventory-item{position:relative;display:flex;min-width:0;min-height:118px;align-items:center;flex-direction:column;
-  padding:7px 5px 6px;border:3px solid #2b1b20;color:#f5e8d8;background:#3a292e;
-  box-shadow:inset 0 0 0 2px #695049,2px 3px #171015;cursor:pointer;text-align:center}
-.inventory-item:hover,.inventory-item:focus-visible{z-index:2;filter:brightness(1.14);transform:translateY(-2px);outline:2px solid #e9ad6c;outline-offset:1px}
-.inventory-item.equipped{background:#4a3333;box-shadow:inset 0 0 0 2px var(--item-accent),2px 3px #171015}
-.inventory-item.rarity-uncommon{border-top-color:#78bf8a}.inventory-item.rarity-rare{border-top-color:#65a9e9}
-.inventory-item.rarity-epic{border-top-color:#c080ef}
-.inventory-item-art{position:relative;display:grid;place-items:center;width:54px;height:54px;margin-bottom:5px}
+#equipment-list{display:flex;gap:11px;flex-direction:column;overflow-y:auto;min-height:0;padding:10px}
+/* A bag e agrupada por slot: com dezesseis itens soltos, achar "o que serve no
+   mouse" obrigava a ler todos os cards. O cabecalho tambem diz o que ja esta
+   equipado ali, que e a referencia da comparacao. */
+.inventory-group-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  margin-bottom:5px;padding-bottom:3px;border-bottom:2px solid #4a3138}
+.inventory-group-title b{color:#e9ad6c;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.inventory-group-title span{overflow:hidden;color:#9c7a68;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.inventory-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.inventory-item{position:relative;display:flex;min-width:0;min-height:124px;align-items:center;flex-direction:column;
+  gap:2px;padding:7px 5px 6px;border:3px solid #2b1b20;border-top:4px solid var(--rarity,#9aa4b2);
+  color:#f5e8d8;background:#3a292e;box-shadow:inset 0 0 0 2px #695049,2px 3px #171015;
+  cursor:pointer;text-align:center}
+.inventory-item:hover,.inventory-item:focus-visible{z-index:2;filter:brightness(1.14);transform:translateY(-2px);
+  outline:2px solid var(--rarity,#e9ad6c);outline-offset:1px}
+.inventory-item.equipped{background:#4a3333;box-shadow:inset 0 0 0 2px var(--rarity,#e9ad6c),2px 3px #171015}
+/* Lendaria e Exotica ganham brilho: sao o topo, e o topo precisa se anunciar de
+   longe -- a borda sozinha some numa grade cheia. */
+.inventory-item[data-rarity="legendary"],.inventory-item[data-rarity="exotic"]{
+  box-shadow:inset 0 0 0 2px #695049,0 0 11px -2px var(--rarity),2px 3px #171015}
+.inventory-empty{grid-column:1/-1;margin:0;padding:24px 12px;color:#c69b7b;font:11px/1.5 Inter,system-ui,sans-serif;text-align:center}
+/* Baús ficam ACIMA da grade de itens: são a ação com prazo — o item já é seu e
+   espera; o baú fechado é o único card da bag que ainda esconde alguma coisa. */
+/* Quebra em vez de rolar: são cinco tipos de baú no máximo, e uma barra de
+   rolagem horizontal escondia o último — o mais raro, justamente. */
+.lootbox-row{display:flex;gap:8px;flex-wrap:wrap;padding:10px 10px 0}
+.lootbox-card{position:relative;display:flex;min-width:118px;flex:1 1 118px;align-items:center;flex-direction:column;gap:2px;
+  padding:8px 7px 7px;border:3px solid #2b1b20;border-top-width:4px;color:#f5e8d8;background:#3f2b26;
+  box-shadow:inset 0 0 0 2px #7d5a44,2px 3px #171015;cursor:pointer;text-align:center}
+.lootbox-card:hover,.lootbox-card:focus-visible{filter:brightness(1.14);transform:translateY(-2px);
+  outline:2px solid #e9ad6c;outline-offset:1px}
+.lootbox-card{border-top-color:var(--rarity,#9aa4b2)}
+.lootbox-card[data-rarity="legendary"],.lootbox-card[data-rarity="exotic"]{
+  box-shadow:inset 0 0 0 2px #7d5a44,0 0 12px -2px var(--rarity),2px 3px #171015}
+.lootbox-card strong{color:#fff0db;font-size:10px}
+/* As chances viram pastilhas coloridas por raridade: "5% lendária" some numa
+   linha de texto miúdo, e a chance é o produto que o baú vende. */
+.lootbox-card small{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
+.lootbox-card small i{padding:1px 4px;border:1px solid var(--rarity);color:var(--rarity);
+  font:900 7px Inter,system-ui,sans-serif;font-style:normal}
+.lootbox-count{position:absolute;right:-3px;top:-6px;min-width:19px;padding:2px 4px;border:2px solid #2b1b20;
+  color:#2a1b20;background:#f0bd67;box-shadow:1px 1px #1b1115;font-size:9px;font-weight:900}
+/* O baú da bag é o mesmo desenho do ícone do título — a peça já existe, reaproveitada. */
+.lootbox-art{position:relative;width:34px;height:26px;margin-bottom:3px;border:3px solid #25171b;background:#a96434;
+  box-shadow:inset 0 3px #dc9b56,inset 0 -4px #6f392c,2px 2px #211419}
+.lootbox-art::before{content:"";position:absolute;left:-3px;top:-10px;width:34px;height:11px;
+  border:3px solid #25171b;border-bottom:0;border-radius:8px 8px 0 0;background:#bd7540;box-shadow:inset 0 3px #e4a45b}
+.lootbox-art i{position:absolute;left:12px;top:4px;width:7px;height:10px;background:#f0bd5e;box-shadow:inset -2px -2px #9b5b31}
+
+/* ---- revelação do prêmio ----
+   Cobre o painel por alguns segundos. Um item novo aparecendo calado numa grade
+   de vinte cards passa despercebido, e abrir o baú é o momento da feature. */
+.equipment-reveal{position:absolute;z-index:3;inset:0;display:grid;place-items:center;
+  background:#140d1199;cursor:pointer}
+.reveal-card{display:flex;gap:5px;align-items:center;flex-direction:column;min-width:210px;
+  padding:18px 22px;border:3px solid #2a1a20;border-top:5px solid var(--rarity,#9aa4b2);
+  background:linear-gradient(#4a3138,#2c1d23);
+  box-shadow:inset 0 0 0 2px #7d5a44,0 0 26px -4px var(--rarity,#9aa4b2),4px 5px #171015;text-align:center}
+.equipment-reveal.on .reveal-card{animation:reveal-pop .42s cubic-bezier(.18,1.4,.5,1) both}
+@keyframes reveal-pop{from{transform:scale(.72) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.reveal-tier{color:#c69b7b;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+.reveal-card strong{color:#fff0db;font-size:15px;text-shadow:2px 2px #2c1a1f}
+.reveal-card ul{margin:6px 0 0;padding:0;color:#8fbfdc;font:9px/1.45 Inter,system-ui,sans-serif;list-style:none}
+.reveal-note{margin:6px 0 0;max-width:190px;color:#9c7a68;font:9px/1.4 Inter,system-ui,sans-serif}
+/* Quem desligou movimento continua vendo o cartão — só não vê ele saltar. */
+@media(prefers-reduced-motion:reduce){.equipment-reveal.on .reveal-card{animation:none}}
+/* ---- comparação ----
+   Aparece enquanto o jogador aponta um item da bag, respondendo "vale a troca?"
+   com os dois lados lado a lado. Sem delta calculado: as frases vêm prontas do
+   servidor, e refazer a conta aqui criaria uma segunda régua para os mesmos números. */
+.equipment-compare{display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  border-top:3px solid #38242a;background:#4a3138}
+.equipment-compare .compare-side.only{grid-column:1/-1}
+.compare-side{display:flex;gap:2px;flex-direction:column;padding:8px 10px;background:#2a1c22}
+.compare-side.next{background:#33222a;box-shadow:inset 3px 0 0 var(--rarity,#e9ad6c)}
+.compare-role{color:#9c7a68;font-size:7.5px;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.compare-side b{overflow:hidden;color:var(--rarity,#fff0db);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.compare-side ul{margin:2px 0 0;padding:0;color:#cbb49c;font:8px/1.35 Inter,system-ui,sans-serif;list-style:none}
+.compare-none{color:#7d6154;font-style:italic}
+.compare-hint{grid-column:1/-1;margin:0;padding:5px 10px;color:#9c7a68;
+  background:#2a1c22;font:8px Inter,system-ui,sans-serif}
+
+.equipment-effects{display:flex;gap:4px;flex-direction:column;margin:0;padding:9px 11px;
+  border-top:3px solid #38242a;color:#f2d9b6;background:#241820;font:10px/1.35 Inter,system-ui,sans-serif;list-style:none}
+.equipment-effects li{padding-left:12px;text-indent:-12px}
+.equipment-effects li::before{content:"◆ ";color:#e9ad6c}
+.equipment-effects-empty{color:#9b7a68}
+.equipment-effects-empty::before{content:"" !important}
+/* Escrita em voo: o painel inteiro fica inerte enquanto o PUT não volta, senão
+   dois cliques rápidos disputam o mesmo slot e a UI mostra o resultado do perdedor. */
+.equipment-pending #equipment-list,.equipment-pending #equipment-slots{pointer-events:none;opacity:.62}
+.inventory-item-art{position:relative;display:grid;place-items:center;width:54px;height:54px;margin-bottom:3px}
 .inventory-item strong{width:100%;overflow:hidden;color:#fff0db;font-size:9px;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
-.inventory-item>span:not(.inventory-item-art){color:#c69b7b;font-size:8px}
-.inventory-item small{margin-top:2px;color:#8fbfdc;font-size:7px}
+.inventory-item small{display:flex;gap:1px;flex-direction:column;margin-top:1px;color:#8fbfdc;font-size:7px;line-height:1.3}
+.inventory-item small i{font-style:normal}
+/* Relógio de baú: barra + quanto falta. Fica no card porque o relógio é DO ITEM —
+   um contador no painel do jogador esconderia que cada celular tem o seu. */
+.chest-clock{display:flex;gap:2px;width:100%;flex-direction:column;margin-top:4px}
+.chest-clock-bar{height:4px;overflow:hidden;border:1px solid #24171c;background:#241820}
+.chest-clock-bar i{display:block;height:100%;background:#e9ad6c;transition:width .3s}
+.chest-clock b{color:#e9ad6c;font-size:7px;font-weight:700}
+/* Pausado é ESTADO, não defeito: o item guarda o que contou e volta de onde parou. */
+.chest-clock.paused .chest-clock-bar i{background:#6f5a4a}
+.chest-clock.paused b{color:#8a7263;font-weight:400;font-style:italic}
 .inventory-equipped-mark{position:absolute;right:-2px;bottom:1px;display:none;width:16px;height:16px;place-items:center;
   border:2px solid #2b1b20;color:#2a1b20;background:#f0bd67;box-shadow:1px 1px #1b1115;font-size:9px;font-weight:900}
 .inventory-item.equipped .inventory-equipped-mark{display:grid}
@@ -183,14 +310,23 @@ button{font:inherit}
   font:900 10px monospace;text-shadow:1px 1px #fff5}
 .item-glyph i,.item-glyph i::before,.item-glyph i::after{position:absolute;display:block;content:""}
 .slot-item-glyph{width:36px;height:36px}.slot-item-glyph b{font-size:8px}
-.icon-chain b,.icon-earrings b,.icon-bracelet b,.icon-keyboard b,.icon-mouse b,
+.icon-amulet b,.icon-phone b,.icon-wallet b,.icon-keyboard b,.icon-mouse b,
 .icon-skate b,.icon-roller b,.icon-scooter b,.icon-motorcycle b{display:none}
-.icon-chain i{left:11px;top:7px;width:20px;height:25px;border:4px solid var(--item-accent);border-top-color:#f8e7b8;border-radius:45%}
-.icon-chain i::after{left:5px;top:19px;width:5px;height:7px;background:#f5c968;box-shadow:2px 2px #7d4934}
-.icon-earrings i{left:10px;top:12px;width:6px;height:16px;border-top:5px solid #f7ddb1;border-bottom:8px solid var(--item-accent);box-shadow:17px 0 var(--item-secondary)}
-.icon-earrings i::after{left:17px;top:-5px;width:6px;height:5px;background:#f7ddb1}
-.icon-bracelet i{left:10px;top:10px;width:23px;height:23px;border:6px solid var(--item-accent);border-radius:50%;box-shadow:2px 2px #23171c}
-.icon-bracelet i::after{left:3px;top:-5px;width:6px;height:5px;background:#fff2bd}
+/* Amuleto: pingente losango pendurado no cordão. */
+.icon-amulet i{left:14px;top:13px;width:16px;height:16px;transform:rotate(45deg);
+  border:3px solid #24171c;background:var(--item-accent);box-shadow:2px 2px #1c1115}
+.icon-amulet i::before{left:5px;top:-11px;width:4px;height:9px;transform:rotate(-45deg);background:#f7ddb1}
+.icon-amulet i::after{left:4px;top:4px;width:6px;height:6px;background:var(--item-secondary)}
+/* Celular: corpo, tela e botão. */
+.icon-phone i{left:15px;top:6px;width:16px;height:32px;border:3px solid #24171c;border-radius:4px;
+  background:var(--item-secondary);box-shadow:2px 2px #1c1115}
+.icon-phone i::before{left:2px;top:3px;width:10px;height:19px;background:var(--item-accent)}
+.icon-phone i::after{left:4px;top:25px;width:6px;height:2px;border-radius:2px;background:#f7ddb1}
+/* Carteira: dobra com fecho e uma nota espiando. */
+.icon-wallet i{left:8px;top:14px;width:30px;height:20px;border:3px solid #24171c;border-radius:3px;
+  background:var(--item-secondary);box-shadow:2px 2px #1c1115}
+.icon-wallet i::before{left:4px;top:-6px;width:18px;height:6px;background:var(--item-accent);box-shadow:inset 0 2px #ffffff40}
+.icon-wallet i::after{right:3px;top:6px;width:8px;height:7px;border-radius:2px;background:#f0bd5e;box-shadow:inset -2px -2px #9b5b31}
 .icon-keyboard i{left:6px;top:13px;width:31px;height:20px;border:3px solid #22171b;background:var(--item-accent);box-shadow:2px 2px #1d1216}
 .icon-keyboard i::after{left:4px;top:4px;width:3px;height:3px;background:#493238;box-shadow:6px 0 #493238,12px 0 #493238,18px 0 #493238,0 6px #493238,6px 6px #493238,12px 6px #493238,18px 6px #493238}
 .icon-mouse i{left:14px;top:7px;width:15px;height:29px;border:3px solid #24171c;border-radius:9px 9px 7px 7px;background:var(--item-accent);box-shadow:2px 2px #1c1115}
@@ -351,6 +487,9 @@ button{font:inherit}
 .hud-item-copy small{color:var(--cg-muted);font-size:9.5px}
 .hud-item-action{flex:0 0 auto;padding:5px 9px;border-radius:8px;color:#dfe5f6;
   background:#ffffff12;font-size:10px;font-weight:700;white-space:nowrap}
+/* Preço com desconto da carteira: o cheio fica riscado e discreto ao lado do novo. */
+.hud-item-action.discounted{color:#8ef0c6;background:#8ef0c61f}
+.hud-item-action s{margin-right:4px;color:var(--cg-muted);font-weight:600;text-decoration-thickness:1px}
 /* Esgotado não é o mesmo que caro: a etiqueta deixa de parecer preço. */
 .hud-item-row[data-soldout] .hud-item-action{border:1px dashed #ffffff33;color:var(--cg-muted);
   background:none;font-weight:600}
@@ -382,9 +521,12 @@ button{font:inherit}
   #scene-card{max-width:calc(100vw - 32px)}
   .equipment-menu-header{padding:9px}.equipment-title-emblem{display:none}.equipment-menu-header h2{font-size:15px}
   .equipment-menu-header p{font-size:9px}.equipment-rpg-layout{padding:6px;gap:8px}
-  .loadout-board{height:334px}.equipment-slot{width:91px;height:72px;grid-template-columns:32px 1fr;column-gap:3px}
-  .equipment-avatar-card{width:108px}.slot-item-glyph{width:31px;height:31px}.empty-slot-mark{width:30px;height:30px}
-  #equipment-list{grid-template-columns:repeat(3,minmax(82px,1fr));padding:7px;gap:6px}
+  .loadout-board{height:318px}.equipment-slot{grid-template-columns:30px 1fr;column-gap:3px;padding:4px}
+  #equipment-slots{grid-template-columns:1fr 96px 1fr;gap:5px;padding:6px}
+  .equipment-avatar-card{width:92px}.slot-item-glyph{width:28px;height:28px}.empty-slot-mark{width:27px;height:27px}
+  .equipment-slot-label{font-size:7px}.equipment-slot-value{font-size:7px}
+  #equipment-list{padding:7px;gap:9px}
+  .inventory-group-grid{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
   .inventory-item{min-height:110px}.equipment-menu-footer span{font-size:8px}
   .menu-view-tab{min-width:0;flex:1}.character-options{grid-template-columns:repeat(3,minmax(76px,1fr))}
 }
@@ -427,6 +569,19 @@ button{font:inherit}
   #time-dock{left:calc(12px + env(safe-area-inset-left));top:calc(70px + env(safe-area-inset-top));
     width:min(62vw,210px)}
   #time-dock .td-main{padding:9px 11px}
+}
+
+/* Celular DEITADO tem ~390px de altura (AGENTS.md §2). O tabuleiro de encaixes é a
+   parte mais alta do painel: sem encolher, ele sozinho ocupa a tela inteira e a bag
+   fica fora de alcance. */
+@media(max-height:560px) and (orientation:landscape){
+  .loadout-board{height:198px}
+  .equipment-slot{height:58px;grid-template-rows:14px 1fr}
+  .equipment-avatar-card{width:92px;height:140px}
+  .equipment-avatar-sprite{bottom:40px;width:38px;height:76px}
+  #equipment-slots{grid-template-columns:1fr 100px 1fr;gap:5px;padding:6px}
+  .lootbox-card{min-height:0;padding:6px 6px 5px}
+  .equipment-effects{padding:6px 10px;font-size:9px}
 }
 
 /* Alvo de toque. Gatilho duplo: (pointer:coarse) pega o aparelho real e

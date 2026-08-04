@@ -25,23 +25,41 @@ public static class PresenceRewards
 
     /// <summary>
     /// Soma minutos online e paga o gold correspondente, respeitando o teto do dia.
-    /// Devolve o XpResult quando pagou algo (para notificar), senão null.
+    /// Devolve o CoinResult quando pagou algo (para notificar), senão null.
+    ///
+    /// Mouse, teclado, celular e alguns veículos aumentam esse ganho. O bônus mexe na
+    /// taxa E no teto: só na taxa ele seria invisível, porque 1 moeda/min × 1,1 = 1,1
+    /// arredonda para 1, e o que passasse do arredondamento morreria no teto de 180
+    /// em três horas. Ver docs/PLANO_EQUIPAMENTOS.md §4.1.
     /// </summary>
-    public static async Task<XpResult?> AccrueAsync(AppDb db, User user, int minutes, DateTime nowUtc)
+    public static async Task<CoinResult?> AccrueAsync(AppDb db, User user, int minutes, DateTime nowUtc)
     {
         if (minutes <= 0) return null;
         var (row, _) = await EnsureDayAsync(db, user.Id, nowUtc);
         row.MinutesOnline += minutes;
         row.UpdatedUtc = nowUtc;
 
-        var remaining = Math.Max(0, GameOptions.PresenceGoldDailyCap - row.GoldAwarded);
-        var gold = Math.Min(remaining, minutes * GameOptions.PresenceGoldPerMinute);
+        var effects = await EquipmentState.EffectsForAsync(db, user.Id);
+        // O celular conta o tempo pelos MESMOS minutos da presença: ficar deslogado não
+        // enche o baú. É o que separa "premiar estar no escritório" de "premiar o
+        // relógio de parede".
+        await Lootboxes.AccrueChestTimerAsync(db, user.Id, minutes, effects, nowUtc);
+
+        var multiplier = 1 + Math.Max(0, effects.PassiveCoinPercent) / 100.0;
+        var cap = (int)Math.Floor(GameOptions.PresenceGoldDailyCap * multiplier);
+
+        // Pagamento por DIREITO ACUMULADO, não por incremento: `floor` sobre o total do
+        // dia é o que faz a moeda quebrada do bônus fechar e ser paga, em vez de sumir
+        // no arredondamento de cada minuto. Sem coluna nova — `MinutesOnline` e
+        // `GoldAwarded` já contam a história inteira do dia.
+        var entitled = Math.Min(cap, (int)Math.Floor(row.MinutesOnline * GameOptions.PresenceGoldPerMinute * multiplier));
+        var gold = entitled - row.GoldAwarded;
+        // Negativo acontece quando o jogador tira o equipamento no meio do dia: o teto
+        // cai abaixo do que ele já recebeu. Não se estorna moeda paga — só se para.
         if (gold <= 0) return null;
 
         row.GoldAwarded += gold;
-        // XP zero: presença dá moeda, não progressão de nível — senão ficar de
-        // janela aberta subiria de nível sem jogar.
-        return await Game.AwardAsync(db, user, new Reward(0, gold), "tempo online", "presence", dropOnLevelUp: false);
+        return await Game.AwardAsync(db, user, new Reward(gold), "tempo online", "presence");
     }
 }
 

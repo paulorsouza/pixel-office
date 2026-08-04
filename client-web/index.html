@@ -56,7 +56,7 @@
   <header class="equipment-menu-header">
     <div class="equipment-menu-title">
       <span class="equipment-title-emblem" aria-hidden="true"><i></i></span>
-      <div><h2 id="menu-title">Equipamentos</h2><p id="menu-subtitle">Monte seu conjunto e escolha no baú o que vai usar.</p></div>
+      <div><h2 id="menu-title">Equipamentos</h2><p id="menu-subtitle">Monte seu conjunto — cada item dá um bônus de verdade.</p></div>
     </div>
     <button id="equipment-close" type="button" aria-label="Fechar menu">×</button>
   </header>
@@ -74,14 +74,20 @@
           <strong>Seu avatar</strong><small>Explorador</small>
         </div>
       </div>
+      <div id="equipment-compare" class="equipment-compare" aria-live="polite" hidden></div>
+      <ul id="equipment-effects" class="equipment-effects" aria-label="Bônus do conjunto"></ul>
     </section>
     <section class="equipment-panel inventory-panel" aria-labelledby="inventory-title">
       <header class="equipment-panel-title">
-        <span class="inventory-title-copy"><i class="chest-glyph" aria-hidden="true"></i><span id="inventory-title">Baú</span></span>
+        <span class="inventory-title-copy"><i class="chest-glyph" aria-hidden="true"></i><span id="inventory-title">Sua bag</span></span>
         <small id="equipment-inventory-count">0 itens</small>
       </header>
-      <div id="equipment-list" aria-label="Itens disponíveis no baú"></div>
+      <div id="equipment-chests" class="lootbox-row" aria-label="Baús para abrir" hidden></div>
+      <div id="equipment-list" aria-label="Seus equipamentos"></div>
     </section>
+    <!-- Dentro da VIEW, não da moldura: o menu do jogo move esta view para dentro
+         da própria janela, e o que ficasse na moldura seria deixado no esconderijo. -->
+    <div id="equipment-reveal" class="equipment-reveal" role="status" hidden></div>
   </div>
   <section id="character-panel-view" hidden>
     <section class="equipment-panel character-preview-panel" aria-labelledby="character-preview-title">
@@ -106,7 +112,7 @@
     </section>
   </section>
   <footer class="equipment-menu-footer">
-    <span id="equipment-footer-copy">Clique no baú para equipar · clique no slot para guardar · <kbd>Tab</kbd> abrir/fechar · <kbd>1–4</kbd> veículo · <kbd>0</kbd> guardar veículo · <kbd>Esc</kbd> fechar</span>
+    <span id="equipment-footer-copy">Clique no item para equipar ou guardar · <kbd>Tab</kbd> abrir/fechar · <kbd>1–9</kbd> automóvel · <kbd>0</kbd> guardar automóvel · <kbd>Esc</kbd> fechar</span>
     <span id="character-footer-copy" hidden>Escolha uma opção por camada · a alteração aparece no mundo imediatamente · <kbd>Tab</kbd> fechar · <kbd>Esc</kbd> fechar</span>
     <button id="equipment-clear" type="button">Guardar tudo</button>
   </footer>

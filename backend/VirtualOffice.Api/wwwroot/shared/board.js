@@ -1,7 +1,7 @@
 // Quadro kanban compartilhado (app web + painel do jogo).
 // Formulário e detalhe do card vivem em `card-dialogs.js` — aqui é só o quadro.
 import {
-  h, hm, avatar, placeholder, relativeDay,
+  h, hm, avatar, keepFocus, placeholder, relativeDay,
   STATUS_LABEL, STATUS_ORDER, STATUS_COLOR,
   PRIORITY_ORDER, PRIORITY_LABEL, PRIORITY_COLOR, TYPE_ORDER,
 } from "./work-core.js";
@@ -118,8 +118,10 @@ export function mountBoard(host, ctx) {
   // ----------------------------------------------------------- quadro
 
   function draw() {
-    drawToolbar();
-    board.replaceChildren(...STATUS_ORDER.map(column));
+    keepFocus(host, ".wq-search", () => {
+      drawToolbar();
+      board.replaceChildren(...STATUS_ORDER.map(column));
+    });
   }
 
   function column(status) {
@@ -247,7 +249,6 @@ export function mountBoard(host, ctx) {
 
   function rewardToast(reward, code) {
     const parts = [`${code} concluída!`];
-    if (reward.xp) parts.push(`+${reward.xp} XP`);
     if (reward.gold) parts.push(`+${reward.gold} 🪙`);
     feedback.toast(parts.join(" · ") + (reward.leveledUp ? ` · nível ${reward.level}! 🎉` : ""), "ok");
     ctx.onReward?.(reward);

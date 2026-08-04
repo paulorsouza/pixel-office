@@ -108,28 +108,17 @@ if (!AuthOptions.DevBypass) api.RequireAuthorization();
 api.MapWorkEndpoints();
 api.MapCardGameEndpoints();
 api.MapCasinoEndpoints();
+api.MapEquipmentEndpoints();
 
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
 static int? UserId(HttpRequest req) => Identity.UserId(req);
-
-static object LevelInfo(int xp)
-{
-    var level = Game.LevelForXp(xp);
-    return new
-    {
-        level,
-        xp,
-        levelFloor = Game.CumulativeXpForLevel(level),
-        nextLevelXp = Game.CumulativeXpForLevel(level + 1),
-    };
-}
 
 // ---------- usuários ----------
 api.MapGet("/users", async (IDbContextFactory<AppDb> f) =>
 {
     await using var db = await f.CreateDbContextAsync();
     return await db.Users.Where(u => !u.IsBot)
-        .Select(u => new { u.Id, u.Name, u.Role, u.Color, u.Xp })
+        .Select(u => new { u.Id, u.Name, u.Role, u.Color, u.Coins })
         .ToListAsync();
 });
 
@@ -141,12 +130,19 @@ api.MapGet("/me/presence", async (HttpRequest req, IDbContextFactory<AppDb> f) =
     await using var db = await f.CreateDbContextAsync();
     var day = Periods.DayStart(DateTime.UtcNow);
     var row = await db.PresenceDays.FirstOrDefaultAsync(p => p.UserId == uid && p.PeriodDay == day);
+    // Taxa e teto JÁ com o bônus do equipamento: um card de horas que mostrasse
+    // "180" enquanto o servidor paga 261 estaria mentindo sobre o próprio jogo, e o
+    // jogador só descobriria contando moeda na mão.
+    var effects = await EquipmentState.EffectsForAsync(db, uid);
+    var multiplier = 1 + Math.Max(0, effects.PassiveCoinPercent) / 100.0;
     return Results.Ok(new
     {
         minutesOnline = row?.MinutesOnline ?? 0,
         goldToday = row?.GoldAwarded ?? 0,
-        goldCap = GameOptions.PresenceGoldDailyCap,
-        goldPerMinute = GameOptions.PresenceGoldPerMinute,
+        goldCap = (int)Math.Floor(GameOptions.PresenceGoldDailyCap * multiplier),
+        goldPerMinute = GameOptions.PresenceGoldPerMinute * multiplier,
+        baseGoldCap = GameOptions.PresenceGoldDailyCap,
+        equipmentBonusPercent = effects.PassiveCoinPercent,
     });
 });
 
@@ -170,8 +166,6 @@ api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContex
     var tasksDone = await db.WorkItems.CountAsync(w => w.AssigneeId == uid && w.Status == WorkItemStatus.Done && w.Type == WorkItemType.Task);
     var bugsDone = await db.WorkItems.CountAsync(w => w.AssigneeId == uid && w.Status == WorkItemStatus.Done && w.Type == WorkItemType.Bug);
     var ticketsDone = await db.WorkItems.CountAsync(w => w.AssigneeId == uid && w.Status == WorkItemStatus.Done && w.Type == WorkItemType.Atendimento);
-    var level = Game.LevelForXp(user.Xp);
-
     int Progress(string metric) => metric switch
     {
         "minutes_total" => minutesTotal,
@@ -179,7 +173,6 @@ api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContex
         "tasks_done" => tasksDone,
         "bugs_done" => bugsDone,
         "tickets_done" => ticketsDone,
-        "level" => level,
         _ => 0,
     };
 
@@ -216,7 +209,6 @@ api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContex
     return Results.Ok(new
     {
         user = new { user.Id, user.Name, user.Role, user.Color, user.Coins },
-        levelInfo = LevelInfo(user.Xp),
         coins = user.Coins,
         minutesToday = (int)minutesToday,
         activeTask = activeTask is null ? null : new { activeTask.Id, activeTask.Code, activeTask.Title, activeTask.Type },
@@ -239,8 +231,10 @@ api.MapGet("/me", async (HttpRequest req, IDbContextFactory<AppDb> f, IHubContex
 api.MapGet("/leaderboard", async (IDbContextFactory<AppDb> f) =>
 {
     await using var db = await f.CreateDbContextAsync();
-    var users = await db.Users.Where(u => !u.IsBot).OrderByDescending(u => u.Xp).ToListAsync();
-    return users.Select(u => new { u.Id, u.Name, u.Color, u.Xp, level = Game.LevelForXp(u.Xp) });
+    // O ranking passou a ser de MOEDA: o XP saiu do jogo, e ordenar por um placar que
+    // não existe mais deixaria a tela vazia.
+    var users = await db.Users.Where(u => !u.IsBot).OrderByDescending(u => u.Coins).ToListAsync();
+    return users.Select(u => new { u.Id, u.Name, u.Color, u.Coins });
 });
 
 // escolhe a task ativa (o timer da mesa conta horas nela)
@@ -320,21 +314,22 @@ async Task<object?> StopOpenTimerAsync(AppDb db, int uid, IHubContext<OfficeHub>
 
     var activity = await db.ActivityTypes.FirstOrDefaultAsync(a => a.Key == open.Category);
     var user = await db.Users.FindAsync(uid);
-    XpResult? xp = null;
+    CoinResult? paid = null;
     if (user is not null && activity is not null)
     {
         var reward = await Game.CapDailyAsync(db, uid, Game.RewardFor(activity, minutes), open.StartUtc);
         if (!reward.IsEmpty)
         {
-            xp = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
-            open.XpAwarded = reward.Xp;
+            paid = await Game.AwardAsync(db, user, reward, $"tempo: {activity.Name} ({minutes}min)", "time");
             open.GoldAwarded = reward.Gold;
+            // Horas lançadas alimentam o marco de Baú Lendário (Game.cs).
+            await Game.AwardWorkHourChestsAsync(db, user);
         }
         // drop de foco: sessões de 25min+ têm chance de drop
-        if (xp is { Drop: null } && minutes >= 25 && Random.Shared.NextDouble() < 0.25)
+        if (paid is { Drop: null } && minutes >= 25 && Random.Shared.NextDouble() < 0.25)
         {
             var drop = await Game.RollDropAsync(db, uid);
-            if (drop is not null) xp = xp with { Drop = drop };
+            if (drop is not null) paid = paid with { Drop = drop };
         }
     }
     await db.SaveChangesAsync();
@@ -343,11 +338,11 @@ async Task<object?> StopOpenTimerAsync(AppDb db, int uid, IHubContext<OfficeHub>
 
     foreach (var p in Presence.Players.Values.Where(p => p.UserId == uid)) p.Status = "";
     await hub.Clients.All.SendAsync("Status", new { userId = uid, status = "" });
-    if (xp is not null)
-        await Notify.SendRewardAsync(hub, uid, xp, $"Contador parado: {minutes}min (+{xp.Amount} XP · +{xp.Gold} 🪙)");
+    if (paid is not null)
+        await Notify.SendRewardAsync(hub, uid, paid, $"Contador parado: {minutes}min (+{paid.Gold} 🪙)");
     await Notify.SendObjectivesAsync(hub, uid, completions);
     await Notify.TimeChangedAsync(hub, uid);
-    return new { minutes, xp = xp?.Amount ?? 0, gold = xp?.Gold ?? 0 };
+    return new { minutes, gold = paid?.Gold ?? 0 };
 }
 
 api.MapPost("/timer/start", async (TimerStart dto, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
@@ -622,24 +617,61 @@ api.MapGet("/game/catalog", async (HttpRequest req, IDbContextFactory<AppDb> f) 
     // servidor para o jogo não precisar conhecer a regra — e para uma banca nunca
     // mostrar, mesmo por engano, o estoque da loja vizinha.
     var kind = req.Query["kind"].ToString();
+    // A carteira equipada muda preço e cota. O balcão precisa mostrar o preço JÁ com
+    // desconto — mostrar o cheio e cobrar o barato deixaria o bônus invisível para
+    // quem o comprou, que é o mesmo que não existir.
+    var effects = await EquipmentState.EffectsForAsync(db, uid);
+    // Equipamento é único por jogador (o slot é um só). O balcão precisa DIZER isso,
+    // senão o jogador compra o segundo mouse e descobre depois que não serve para nada.
+    // O filtro por catálogo roda em memória: `IsEquipmentKey` é um dicionário do
+    // processo, e o EF não tem como traduzir isso para SQL.
+    var ownedKeys = await db.GameItemInstances
+        .Where(x => x.UserId == uid)
+        .Join(db.GameItemDefinitions, x => x.DefinitionId, d => d.Id, (x, d) => d.CatalogKey)
+        .Distinct()
+        .ToListAsync();
+    var owned = ownedKeys.Where(EquipmentCatalog.IsEquipmentKey).ToHashSet();
     var definitions = rows
         .Select(x => new
         {
             x.Id, x.CatalogKey, x.Name, x.Category, x.IconPath, x.InteractionType,
-            x.ItemType, x.Rarity, x.Price, x.IsPurchasable,
+            x.ItemType, x.Rarity,
+            // `isPurchasable` continua sendo "este item tem balcão" — é o que decide se
+            // ele aparece. `canBuy` é "clicável agora". Fundir os dois faria a prateleira
+            // trancada sumir da loja, e o jogador nunca saberia que a carteira abre algo.
+            x.IsPurchasable,
+            canBuy = x.IsPurchasable
+                && !owned.Contains(x.CatalogKey)
+                && EquipmentState.MeetsWalletGate(x.CatalogKey, effects),
             x.StarterQuantity, x.CapabilitiesJson,
+            alreadyOwned = owned.Contains(x.CatalogKey),
+            // Prateleira trancada não some do balcão: sumir esconderia que a carteira
+            // certa abre alguma coisa, que é justamente o que dá vontade de ter uma.
+            requiresWallet = LootboxCatalog.FindByCatalogKey(x.CatalogKey)?.RequiresWallet == true,
+            walletLocked = !EquipmentState.MeetsWalletGate(x.CatalogKey, effects),
+            odds = LootboxCatalog.FindByCatalogKey(x.CatalogKey) is { } tier
+                ? LootboxCatalog.Odds(tier)
+                : null,
+            price = EquipmentState.PriceFor(x.ItemType, x.Price, effects),
+            basePrice = x.Price,
             storeKind = GameInventorySeed.StoreKindFor(x.ItemType),
-            weeklyLimit = x.WeeklyPurchaseLimit,
+            weeklyLimit = EquipmentState.WeeklyLimitFor(x.WeeklyPurchaseLimit, effects),
             weeklyPurchased = usedThisWeek.GetValueOrDefault(x.Id),
             weeklyRemaining = x.WeeklyPurchaseLimit <= 0
                 ? (int?)null
-                : Math.Max(0, x.WeeklyPurchaseLimit - usedThisWeek.GetValueOrDefault(x.Id)),
+                : Math.Max(0, EquipmentState.WeeklyLimitFor(x.WeeklyPurchaseLimit, effects)
+                    - usedThisWeek.GetValueOrDefault(x.Id)),
         })
         .Where(x => string.IsNullOrEmpty(kind) || x.storeKind == kind)
         .ToList();
     return Results.Ok(new
     {
         user.Coins, kind, definitions,
+        wallet = new
+        {
+            discountPercent = effects.StoreDiscountPercent,
+            weeklyBonus = effects.StoreWeeklyBonus,
+        },
         weekStart, weekEnd = weekStart.AddDays(7),
     });
 });
@@ -657,6 +689,24 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
     if (user is null || definition is null) return Results.NotFound();
     if (!definition.IsPurchasable) return Results.BadRequest(new { error = "Este item não está à venda" });
 
+    // Preço e teto são RECALCULADOS aqui, dentro da transação: o balcão já mostrou os
+    // dois, mas quem mostra não cobra. Confiar no que o cliente viu deixaria o desconto
+    // da carteira a um POST de distância de virar preço escolhido pelo comprador.
+    var effects = await EquipmentState.EffectsForAsync(db, uid);
+    var price = EquipmentState.PriceFor(definition, effects);
+    var weeklyLimit = EquipmentState.WeeklyLimitFor(definition, effects);
+
+    if (!EquipmentState.MeetsWalletGate(definition.CatalogKey, effects))
+        return Results.Conflict(new
+        {
+            error = "Esta prateleira só abre para quem carrega uma Carteira Black ou melhor.",
+        });
+    // Segunda unidade do mesmo equipamento é dinheiro jogado fora: o slot é um só, e a
+    // bag mostraria duas cópias em que só uma pode ser usada.
+    if (EquipmentCatalog.IsEquipmentKey(definition.CatalogKey)
+        && await db.GameItemInstances.AnyAsync(x => x.UserId == uid && x.DefinitionId == definition.Id))
+        return Results.Conflict(new { error = $"Você já tem {definition.Name}." });
+
     StorePurchaseQuota? quota = null;
     if (definition.WeeklyPurchaseLimit > 0)
     {
@@ -668,20 +718,20 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
             quota = new StorePurchaseQuota { UserId = uid, DefinitionId = definition.Id, PeriodStart = weekStart };
             db.StorePurchaseQuotas.Add(quota);
         }
-        if (quota.Quantity >= definition.WeeklyPurchaseLimit)
+        if (quota.Quantity >= weeklyLimit)
             return Results.Conflict(new
             {
-                error = $"Limite semanal atingido: {definition.WeeklyPurchaseLimit} por semana. "
+                error = $"Limite semanal atingido: {weeklyLimit} por semana. "
                     + "O estoque volta na segunda.",
-                weeklyLimit = definition.WeeklyPurchaseLimit,
+                weeklyLimit,
                 weeklyPurchased = quota.Quantity,
                 weekEnd = weekStart.AddDays(7),
             });
     }
 
-    if (user.Coins < definition.Price)
-        return Results.Conflict(new { error = "Moedas insuficientes", coins = user.Coins, price = definition.Price });
-    user.Coins -= definition.Price;
+    if (user.Coins < price)
+        return Results.Conflict(new { error = "Moedas insuficientes", coins = user.Coins, price });
+    user.Coins -= price;
     if (quota is not null) quota.Quantity++;
 
     // Booster não é objeto: não vira instância no inventário nem se coloca numa
@@ -699,9 +749,7 @@ api.MapPost("/game/catalog/{catalogKey}/purchase", async (
         {
             coins = user.Coins,
             boosters = balance,
-            weeklyRemaining = quota is null
-                ? (int?)null
-                : definition.WeeklyPurchaseLimit - quota.Quantity,
+            weeklyRemaining = quota is null ? (int?)null : weeklyLimit - quota.Quantity,
             definition = new { definition.CatalogKey, definition.Name, definition.ItemType, boosterId },
         });
     }
@@ -729,7 +777,8 @@ api.MapGet("/game/inventory", async (HttpRequest req, IDbContextFactory<AppDb> f
         .ToListAsync();
     return Results.Ok(items.Select(row => new
     {
-        row.x.Id, row.x.InstanceKey, row.x.Location, row.x.ContainerPlacementId, row.x.AcquiredUtc,
+        row.x.Id, row.x.InstanceKey, row.x.Location, row.x.EquippedSlot,
+        row.x.ContainerPlacementId, row.x.AcquiredUtc,
         definition = new
         {
             row.d.Id, row.d.CatalogKey, row.d.Name, row.d.Category,

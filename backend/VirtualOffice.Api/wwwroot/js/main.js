@@ -98,7 +98,7 @@ export const App = {
         h("div", { class: "cards" }, users.map((u) =>
           h("div", { class: "ucard", onclick: () => App.login(u.id) },
             avatar(u, "lg"), h("b", {}, u.name), h("span", {}, u.role),
-            h("div", { class: "lvl" }, `⭐ ${u.xp} XP`)))));
+            h("div", { class: "lvl" }, `${u.coins ?? 0} 🪙`)))));
     }
   },
 
@@ -199,13 +199,13 @@ export const App = {
 
   renderMe() {
     const u = App.me.user;
-    const lvl = App.me.levelInfo;
     document.getElementById("me-card").replaceChildren(
       avatar(u),
       h("div", { class: "info" },
+        // Moeda é a única economia do jogo desde que o XP saiu: ele não desbloqueava
+        // nada e ocupava metade do card dizendo "Nv 3".
         h("b", {}, u.name),
-        // Nível e moedas ficam à vista: é a mesma economia que o jogo mostra.
-        h("span", {}, `Nv ${lvl?.level ?? 1} · ${App.me.coins ?? 0} 🪙`)),
+        h("span", {}, `${App.me.coins ?? 0} 🪙`)),
       h("div", { class: "spacer" }),
       h("button", { class: "btn icon ghost sm", title: "Sair", onclick: () => App.logout() }, "⎋"));
   },

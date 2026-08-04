@@ -6,8 +6,6 @@ export async function renderProfile(view) {
   const [me, inv, lb] = await Promise.all([
     API.get("/api/me"), API.get("/api/inventory"), API.get("/api/leaderboard")]);
   App.me = me;
-  const li = me.levelInfo;
-  const pct = Math.min(100, Math.round(100 * (li.xp - li.levelFloor) / Math.max(1, li.nextLevelXp - li.levelFloor)));
   const skins = inv.filter((i) => i.def.kind === "Skin");
   const medals = inv.filter((i) => i.def.kind === "Medal");
   const rarityColor = { Common: "#8b929d", Rare: "#2f6bff", Epic: "#a855f7", Legendary: "#d98a00" };
@@ -23,10 +21,8 @@ export async function renderProfile(view) {
             h("div", { class: "muted" }, me.user.role)),
           h("div", { class: "spacer" }),
           h("div", { style: { textAlign: "right" } },
-            h("div", { style: { fontSize: "22px", fontWeight: "800" } }, `Nível ${li.level}`),
-            h("div", { class: "faint" }, `${li.xp} / ${li.nextLevelXp} XP`))),
-        h("div", { style: { height: "10px", background: "var(--surface-2)", borderRadius: "6px", marginTop: "14px", overflow: "hidden" } },
-          h("div", { style: { width: pct + "%", height: "100%", background: "linear-gradient(90deg,#7c5cff,#a98bff)" } })),
+            h("div", { style: { fontSize: "22px", fontWeight: "800" } }, `${me.coins ?? 0} 🪙`),
+            h("div", { class: "faint" }, "moedas"))),
         h("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "14px" } },
           chip(`⏱ ${hm(me.stats.minutesTotal)} lançadas`),
           chip(`🎧 ${hm(me.stats.minutesMeeting)} reuniões`),
@@ -45,14 +41,14 @@ export async function renderProfile(view) {
             h("span", { class: "faint", style: { fontSize: "12px" } }, `${a.progress}/${a.target}`)))))),
     h("div", { class: "grid" },
       // ranking
-      h("div", { class: "panel" }, h("div", { class: "panel-head" }, "🏆 Ranking de XP"),
+      h("div", { class: "panel" }, h("div", { class: "panel-head" }, "🏆 Ranking de moedas"),
         h("div", { class: "panel-pad", style: { paddingTop: "8px" } },
           lb.map((u, i) => h("div", { style: { display: "flex", alignItems: "center", gap: "10px", padding: "7px 0" } },
             h("span", { class: "faint", style: { width: "20px" } }, `${i + 1}º`),
             avatar(u, "sm"),
             h("span", {}, u.name, u.id === me.user.id ? " (você)" : ""),
             h("span", { class: "spacer", style: { flex: "1" } }),
-            h("span", { class: "faint", style: { fontSize: "12.5px" } }, `nv ${u.level} · ${u.xp} XP`))))),
+            h("span", { class: "faint", style: { fontSize: "12.5px" } }, `${u.coins} 🪙`))))),
       // skins
       h("div", { class: "panel" }, h("div", { class: "panel-head" }, "👕 Skins & medalhas"),
         h("div", { class: "panel-pad", style: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(84px,1fr))", gap: "8px" } },

@@ -4,6 +4,7 @@ import {
   createEquipmentMenu,
   createEquipmentVisual,
   movementProfile,
+  prepareEquipmentCatalog,
   riderAnimationSpec,
 } from './EquipmentSystem.js';
 import {
@@ -78,7 +79,9 @@ await ensureSession();
 
 const manifest = await fetchJson('maps/scenes.json');
 const animatedAssets = await fetchJson('assets/animations/catalog.json');
-const equipmentCatalog = await fetchJson('assets/equipment/catalog.json');
+// `prepare` resolve os presets de piloto uma vez; quem lê o catálogo depois
+// (RemoteAvatar, prévia de veículo) já encontra `riderDirections` pronto.
+const equipmentCatalog = prepareEquipmentCatalog(await fetchJson('assets/equipment/catalog.json'));
 const characterCatalog = await fetchJson('assets/character/catalog.json');
 const furnitureCatalog = await fetchJson('assets/furniture/catalog.json');
 const cardGameCatalog = await fetchJson('assets/cardgame/catalog.json');
@@ -234,11 +237,17 @@ function materializeScene(sceneRef) {
 let roomDecorationEditor = null;
 let furnitureInteractions = null;
 let decorateRoom = null;   // sala decorável sob o avatar, ou null
+// O loadout é do servidor: este menu lê e escreve pela API, não guarda estado próprio.
 const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
-  isOwned: (equipmentId) => gameItems.ownsEquipment(equipmentId),
+  loadEquipment: () => gameItems.equipment(),
+  setSlot: (slot, instanceId) => gameItems.setEquipmentSlot(slot, instanceId),
+  openLootbox: (instanceId) => gameItems.openLootbox(instanceId),
+  onToast: (message) => proximityVoice.toast(message),
 });
-gameItems.events.addEventListener('inventory', () => equipmentMenu.refreshOwnership());
+for (const event of ['inventory', 'EquipmentChanged']) {
+  gameItems.events.addEventListener(event, () => equipmentMenu.refresh());
+}
 // porta trancada é estado com dono (a automática, não): o claim vem do hub
 const doorLock = (doorKey) => Boolean(doorKey && presence.claimOf(doorKey));
 

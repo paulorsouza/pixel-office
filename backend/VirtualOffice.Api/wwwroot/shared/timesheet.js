@@ -70,7 +70,7 @@ export function mountTimesheet(host, ctx) {
         stat("Hoje", hm(todayMinutes), devTarget ? `meta ${hm(devTarget)} · ${Math.min(100, Math.round((todayMinutes / devTarget) * 100))}%` : ""),
         stat("Semana", hm(totalWeek), `${hoursDecimal(totalWeek)} h decimais`),
         stat("Média/dia útil", hm(totalWeek / 5), `${data.entries.length} lançamentos`),
-        stat("Ganho na semana", `${data.xpEarned} XP`, `+${data.goldEarned} 🪙`)),
+        stat("Ganho na semana", `${data.goldEarned} 🪙`, "em moedas")),
       gridPanel(days, today),
       entriesPanel());
 
@@ -106,7 +106,7 @@ export function mountTimesheet(host, ctx) {
           try {
             const result = await client.post("/api/timer/stop");
             feedback.toast(result?.minutes
-              ? `${hm(result.minutes)} registrados · +${result.xp} XP · +${result.gold} 🪙`
+              ? `${hm(result.minutes)} registrados · +${result.gold} 🪙`
               : "Contador parado", "ok");
             ctx.onReward?.(result);
           } catch (error) {
@@ -139,13 +139,13 @@ export function mountTimesheet(host, ctx) {
         "Lançamento rápido · hoje"),
       h("div", { class: "wq-quick" },
         activities.map((a) => h("button", {
-          title: `${a.xpPerHour} XP e ${a.goldPerHour} 🪙 por hora`,
+          title: `${a.goldPerHour} 🪙 por hora`,
           onclick: (event) => quickLog(a, event.currentTarget),
         },
           h("span", { class: "ico" }, a.icon),
           h("span", { class: "txt" },
             h("b", {}, `${hm(a.defaultMinutes)} · ${a.name}`),
-            h("small", {}, `+${Math.round(a.xpPerHour * a.defaultMinutes / 60)} XP · +${Math.round(a.goldPerHour * a.defaultMinutes / 60)} 🪙`)))),
+            h("small", {}, `+${Math.round(a.goldPerHour * a.defaultMinutes / 60)} 🪙`)))),
         h("button", { onclick: () => openEntry() },
           h("span", { class: "ico" }, "⚙"),
           h("span", { class: "txt" }, h("b", {}, "Outro valor"), h("small", {}, "data, duração e nota")))));
@@ -155,7 +155,7 @@ export function mountTimesheet(host, ctx) {
     button.disabled = true;
     try {
       const result = await client.post("/api/timeentries/quick", { activityKey: activity.key, minutes: 0 });
-      feedback.toast(`${activity.icon} ${hm(activity.defaultMinutes)} de ${activity.name} · +${result.xp} XP · +${result.gold} 🪙`, "ok");
+      feedback.toast(`${activity.icon} ${hm(activity.defaultMinutes)} de ${activity.name} · +${result.gold} 🪙`, "ok");
       ctx.onReward?.(result);
       await refresh();
     } catch (error) {
@@ -204,13 +204,13 @@ export function mountTimesheet(host, ctx) {
             h("td", {}, e.workItem ? `${e.workItem.code} · ${e.workItem.title}` : (e.note || h("span", { class: "wq-faint" }, "—"))),
             h("td", { style: { width: "40px" } }, e.pair ? avatar(e.pair, "sm") : ""),
             h("td", { class: "num wq-faint", style: { width: "104px", whiteSpace: "nowrap" } },
-              `+${e.xpAwarded} XP · +${e.goldAwarded}🪙`),
+              `+${e.goldAwarded} 🪙`),
             h("td", { class: "num", style: { width: "70px", fontWeight: "650" } }, hm(e.minutes)),
             h("td", { style: { width: "38px" } },
               h("button", {
                 class: "wq-icon-btn", title: "apagar lançamento",
                 onclick: async () => {
-                  if (!confirm("Apagar este lançamento? O XP e as moedas dele são estornados.")) return;
+                  if (!confirm("Apagar este lançamento? As moedas dele são estornadas.")) return;
                   try {
                     await client.del(`/api/timeentries/${e.id}`);
                     feedback.toast("Lançamento apagado", "ok");
@@ -237,7 +237,7 @@ export function mountTimesheet(host, ctx) {
       f.workItem.disabled = false;
       f.workItem.parentElement.style.opacity = activity.requiresWorkItem ? "1" : ".65";
       pairWrap.hidden = !activity.allowsPair;
-      f.hint.textContent = `+${activity.xpPerHour} XP e +${activity.goldPerHour} 🪙 por hora`
+      f.hint.textContent = `+${activity.goldPerHour} 🪙 por hora`
         + (activity.requiresWorkItem ? " · exige uma atividade do quadro" : "");
     };
 
@@ -287,7 +287,7 @@ export function mountTimesheet(host, ctx) {
           source: "manual",
         });
         dialog.close();
-        feedback.toast(`Lançado · +${result.xp} XP · +${result.gold} 🪙`, "ok");
+        feedback.toast(`Lançado · +${result.gold} 🪙`, "ok");
         ctx.onReward?.(result);
         await refresh();
       } catch (error) {

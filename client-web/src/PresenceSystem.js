@@ -262,11 +262,12 @@ export function createPresence(options = {}) {
     chessLeave(boardId) { connection?.invoke('LeaveChess', boardId).catch(() => {}); },
 
     // ---- cardgame PvP por proximidade ----
-    cardGameChallenge(targetConnectionId, deckIds) {
-      connection?.invoke('ChallengeCardGame', targetConnectionId, deckIds).catch(() => {});
+    // O baralho não vai mais pelo socket: o servidor carrega o da liga escolhida.
+    cardGameChallenge(targetConnectionId, leagueId) {
+      connection?.invoke('ChallengeCardGame', targetConnectionId, leagueId).catch(() => {});
     },
-    cardGameAccept(challengeId, deckIds) {
-      connection?.invoke('AcceptCardGameChallenge', challengeId, deckIds).catch(() => {});
+    cardGameAccept(challengeId) {
+      connection?.invoke('AcceptCardGameChallenge', challengeId).catch(() => {});
     },
     cardGameDecline(challengeId) {
       connection?.invoke('DeclineCardGameChallenge', challengeId).catch(() => {});

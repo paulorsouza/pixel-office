@@ -1,4 +1,10 @@
-import { albumEntries, collectionProgress } from './CardCollection.js';
+import {
+  albumEntries, collectionProgress, filterCardEntries, sortCardEntries,
+  CARD_SORTS, RARITY_LABEL, RARITY_ORDER,
+} from './CardCollection.js';
+import {
+  LEAGUES, MASTER_LEAGUE, illegalForLeague, leagueAllows, leagueById, leagueOf, leaguePower,
+} from './Leagues.js';
 
 const TYPES = {
   normal: 'Normal', fire: 'Fogo', water: 'Água', electric: 'Elétrico', grass: 'Planta',
@@ -35,7 +41,15 @@ function injectStyles() {
       background:linear-gradient(135deg,#7b68ff,#43b9d0);font-weight:900}
     .cg-player-head strong{display:block;font-size:13px}
     .cg-player-head small{color:#aeb9d8;font-size:10px}
-    .cg-player-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .cg-player-actions{display:grid;grid-template-columns:1fr;gap:7px}
+    .cg-player-hint{margin:0 0 7px;color:#aeb9d8;font-size:10px}
+    .cg-league-picker{display:grid;gap:5px;margin-bottom:9px}
+    .cg-league-pick{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+      padding:8px 10px;font-size:11px;text-align:left}
+    .cg-league-pick small{color:#ffffffb0;font-size:9px;font-weight:400}
+    .cg-invite-missing{margin:0 0 9px;color:#ffc9d8;font-size:10px}
+    .cg-match-league{padding:4px 8px;border-radius:7px;
+      background:#ffffff12;color:#c3b9ff;font-size:10px;font-weight:700}
     #cardgame-invite{position:fixed;left:50%;top:18px;z-index:145;width:min(390px,calc(100vw - 28px));
       transform:translateX(-50%);padding:14px;border:2px solid #8e7dff;border-radius:15px;color:#fff;
       background:#171d38f5;box-shadow:0 20px 60px #000b;font-family:Inter,system-ui,sans-serif}
@@ -43,6 +57,33 @@ function injectStyles() {
     #cardgame-invite p{margin:0 0 11px;color:#b9c3df;font-size:11px}
     .cg-invite-actions{display:flex;justify-content:flex-end;gap:7px}
     .cg-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:10px}
+    /* Cinco controles não cabem numa linha só nem no desktop; deixar quebrar é
+       mais honesto do que espremer cada seletor até o rótulo virar reticências. */
+    .cg-filters{flex-wrap:wrap}
+    .cg-filters select{flex:1 1 150px}
+    .cg-rarity-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px}
+    .cg-rarity{--cg-rarity:#8f9bbd;border:1px solid var(--cg-rarity);border-radius:999px;padding:5px 12px;
+      color:var(--cg-rarity);background:transparent;cursor:pointer;font:700 11px Inter,system-ui,sans-serif}
+    .cg-rarity[aria-pressed="true"]{color:#0b1022;background:var(--cg-rarity)}
+    .cg-rarity[data-rarity="Uncommon"]{--cg-rarity:#57bc83}
+    .cg-rarity[data-rarity="Rare"]{--cg-rarity:#4ca8ed}
+    .cg-rarity[data-rarity="Epic"]{--cg-rarity:#b96af1}
+    .cg-rarity[data-rarity="Legendary"]{--cg-rarity:#f4c54f}
+    .cg-rarity[data-rarity="Special"]{--cg-rarity:#ff77d7}
+    /* Quem espreme é o resumo (que tem reticências), não a contagem: o número de
+       cartas é o retorno de todo filtro e some por último. */
+    .cg-filter-count{margin-left:auto;flex:none;color:#9aa6c6;font-size:11px;font-weight:400;white-space:nowrap}
+    .cg-filter-drawer{margin-bottom:10px}
+    .cg-filter-drawer>summary{display:flex;flex-wrap:nowrap;align-items:center;gap:7px;
+      border:1px solid #ffffff20;border-radius:8px;padding:8px 10px;color:#dfe5f6;background:#11172c;
+      cursor:pointer;list-style:none;font:700 12px Inter,system-ui,sans-serif}
+    .cg-filter-drawer>summary::-webkit-details-marker{display:none}
+    .cg-filter-drawer>summary:before{content:"▸";color:#8b97b8}
+    .cg-filter-drawer[open]>summary{margin-bottom:10px}
+    .cg-filter-drawer[open]>summary:before{content:"▾"}
+    .cg-filter-drawer>summary em{min-width:0;overflow:hidden;flex:1;
+      color:#9aa6c6;font-style:normal;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
+    .cg-empty-filter{margin:0 0 12px;color:#94a0bf;font-size:12px;line-height:1.6}
     .cg-card{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-width:0;aspect-ratio:3/4;overflow:hidden;
       border:3px solid #536184;border-radius:12px;color:#fff;background:radial-gradient(circle at 50% 38%,#ffffff18,transparent 42%),
       linear-gradient(160deg,#28345d,#12182d);box-shadow:inset 0 0 0 1px #ffffff1c,0 7px 15px #0006;user-select:none}
@@ -95,14 +136,31 @@ function injectStyles() {
     .cg-edge.right{right:3px;top:50%;transform:translateY(-50%)}
     .cg-edge.bottom{left:50%;bottom:20px;transform:translateX(-50%)}
     .cg-edge.left{left:3px;top:50%;transform:translateY(-50%)}
-    .cg-hub-content.cg-deck-host{display:flex;overflow:hidden}
-    .cg-deck-body{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;width:100%;height:100%;min-height:0}
+    /* Empilhado, não lado a lado: o construtor deixou de ter UM filho quando as
+       abas de liga entraram. Na direção padrão do flex elas viravam uma coluna
+       lateral esticada até o infinito, com o baralho jogado ao lado. */
+    .cg-hub-content.cg-deck-host{display:flex;flex-direction:column;overflow:hidden}
+    .cg-deck-body{display:grid;flex:1;grid-template-columns:250px minmax(0,1fr);gap:14px;width:100%;min-height:0}
     .cg-deck-slots,.cg-deck-choices{min-height:0;overflow-y:auto;overscroll-behavior:contain;
       scrollbar-width:thin;-webkit-overflow-scrolling:touch}
     .cg-deck-slots{padding:12px;border:1px solid #ffffff16;
       border-radius:14px;background:#0c1122aa}
     .cg-deck-choices{padding-right:4px}.cg-deck-choices .cg-filters{position:sticky;z-index:6;top:0;
       padding-bottom:8px;background:#141a31}
+    /* As quatro ligas ficam SEMPRE visíveis no topo do construtor: é a única
+       pista de que existem quatro baralhos e não um. */
+    .cg-league-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:10px}
+    .cg-league-tab{min-width:0;padding:7px 9px;border:1px solid #ffffff20;border-radius:10px;
+      color:#c7d0e6;background:#11172c;cursor:pointer;text-align:left;font-family:Inter,system-ui,sans-serif}
+    .cg-league-tab strong{display:block;overflow:hidden;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+    .cg-league-tab small{display:block;margin-top:2px;color:#8b97b8;font-size:9px}
+    .cg-league-tab.active{border-color:#8e7dff;color:#fff;background:#2b2560}
+    .cg-league-tab.active small{color:#c3b9ff}
+    .cg-deck-warning{margin:0 0 8px;padding:8px;border:1px solid #ff9db855;border-radius:9px;
+      color:#ffd7e1;background:#3a1a26;font-size:10px;line-height:1.55}
+    .cg-deck-pool{margin:0 0 8px;color:#8b97b8;font-size:10px}
+    .cg-deck-slot.over{border-color:#ff9db8;background:#3a1a26}
+    .cg-deck-slot strong small{color:#8b97b8;font-size:9px;font-weight:400}
     .cg-deck-slot{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:6px;
       border:1px solid #ffffff18;border-radius:9px;background:#202947}
     .cg-deck-slot img{width:38px;height:38px;image-rendering:pixelated}
@@ -170,6 +228,10 @@ function injectStyles() {
     .cg-result{padding:9px;text-align:center;border-radius:10px;background:#ffffff10;font-weight:900}
 @media(max-width:760px){
 .cg-deck-body{grid-template-columns:1fr;grid-template-rows:minmax(150px,.8fr) minmax(220px,1.2fr)}
+/* Duas colunas de ~170px não seguram "Common League" numa linha; deixar quebrar
+   é melhor do que entregar quatro abas com reticências no mesmo lugar. */
+.cg-league-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cg-league-tab strong{white-space:normal}
 .cg-reveal{grid-template-columns:repeat(3,1fr)}
 .cg-arena{grid-template-columns:1fr}
 .cg-board{width:min(46vh,100%)}
@@ -181,6 +243,10 @@ function injectStyles() {
     html[data-touch="on"] .cg-stat,
     html[data-touch="on"] .cg-cell{min-height:44px}
     html[data-touch="on"] .cg-deck-slot button{min-width:44px;min-height:44px}
+    html[data-touch="on"] .cg-league-tab{min-height:44px}
+    html[data-touch="on"] .cg-rarity{min-height:44px;padding:5px 15px}
+    html[data-touch="on"] .cg-filters select{min-height:44px}
+    html[data-touch="on"] .cg-filter-drawer>summary{min-height:44px}
     html[data-touch="on"] .cg-info,html[data-touch="on"] .cg-exchange-btn,
     html[data-touch="on"] .cg-evolution-btn{min-width:44px;min-height:44px}
     .cg-type-dialog{width:min(480px,calc(100vw - 24px));padding:18px;border:1px solid #ffffff30;border-radius:16px;
@@ -240,6 +306,42 @@ function cardMarkup(card, options = {}) {
 }
 
 /**
+ * Raridade é seleção MÚLTIPLA: "Épica + Lendária" é uma pergunta comum e um
+ * `<select>` só responderia uma de cada vez. Lista vazia = "Todas", então o chip
+ * "Todas" não é um valor, é o botão que limpa.
+ */
+function rarityChipsMarkup(selected = []) {
+  const chip = (value, label, on) => `<button class="cg-rarity" type="button" id="cg-rarity-${value}"
+    data-rarity-filter="${value}" data-rarity="${value}" aria-pressed="${on}">${label}</button>`;
+  return chip('all', 'Todas', selected.length === 0)
+    + RARITY_ORDER.map((rarity) => chip(rarity, RARITY_LABEL[rarity], selected.includes(rarity))).join('');
+}
+
+const toggleRarity = (selected, rarity) => (selected.includes(rarity)
+  ? selected.filter((entry) => entry !== rarity)
+  : [...selected, rarity]);
+
+/**
+ * O que a gaveta de filtros esconde quando está fechada. Uma gaveta fechada sem
+ * resumo é uma caixa-preta: a lista aparece cortada e não dá para saber por quê.
+ */
+function albumSummary({ type = '', finish = '', owned = '', league = '', rarities = [], sort = 'dex' } = {}) {
+  const parts = [];
+  if (league) parts.push(leagueById(league)?.name || league);
+  if (type) parts.push(TYPES[type] || type);
+  if (finish) parts.push(finish === 'shiny' ? 'só shinies' : 'só normais');
+  if (owned) parts.push(owned === 'mine' ? 'que eu tenho' : 'que faltam');
+  if (rarities.length) parts.push(rarities.map((rarity) => RARITY_LABEL[rarity]).join(' + '));
+  if (sort !== 'dex') parts.push(`por ${CARD_SORTS.find((option) => option.id === sort)?.label}`);
+  return parts.length ? `· ${parts.join(' · ')}` : '· tudo, na ordem da Pokédex';
+}
+
+/** Seletor de ordenação — o mesmo no Álbum e no Baralho. */
+const sortSelectMarkup = (id, active) => `<select id="${id}" aria-label="Ordenar por">${CARD_SORTS
+  .map(({ id: value, label }) => `<option value="${value}"${value === active ? ' selected' : ''}>${label}</option>`)
+  .join('')}</select>`;
+
+/**
  * @param options.openMenu    abre uma seção do menu do jogo (o duelo precisa
  *                            mandar a pessoa para o Baralho quando faltam cartas)
  * @param options.closeMenu   fecha o menu (a partida começou; a tela é dela)
@@ -261,19 +363,33 @@ export function createCardGamePanel({
   // cabeçalho e se navega entre seções.
   let host = document.createElement('div');
   let menuApi = { setHeader: () => {}, open: () => {}, close: () => {} };
+  const emptyDecks = () => Object.fromEntries(LEAGUES.map((league) => [league.id, []]));
   let profile = {
-    boosters: 0, boosterInventory: [], boosterDefinitions: [], deck: [], collection: [],
+    boosters: 0, boosterInventory: [], boosterDefinitions: [], decks: emptyDecks(), collection: [],
     uniqueCards: 0, shinyCards: 0, baseTotal: catalog.baseCount || 1025,
     specialExchangeCost: 10, evolutionExchangeCost: 5,
   };
-  let deck = [];
-  let deckDraft = [];
+  // Um baralho por liga: `decks` é o que está salvo no servidor e `deckDrafts` é
+  // o que está sendo mexido na tela. `deckLeague` é a aba aberta.
+  let decks = emptyDecks();
+  let deckDrafts = emptyDecks();
+  let deckLeague = MASTER_LEAGUE;
   let activeTab = 'home';
   let matchState = null;
   let selectedCardId = null;
   let pendingMove = false;
   let opening = false;
   let albumLimit = 120;
+  // Como a pessoa está olhando a coleção. Fica fora do render porque o painel é
+  // redesenhado inteiro a cada tecla: passar isso por parâmetro fazia a lista de
+  // argumentos crescer a cada filtro novo, e voltar do Baralho para o Álbum
+  // zerava o que a pessoa tinha escolhido.
+  const albumView = { query: '', type: '', finish: '', owned: '', league: '', sort: 'dex', rarities: [] };
+  const deckView = { query: '', sort: 'dex' };
+  // No celular a barra inteira come 250px ANTES da primeira carta — mais do que
+  // a área visível do menu. Lá ela nasce fechada (a busca fica sempre à mão); no
+  // desktop, onde sobra largura, nasce aberta.
+  let filtersOpen = !window.matchMedia('(max-width:760px)').matches;
 
   const collectionMap = () => {
     const result = new Map();
@@ -290,8 +406,13 @@ export function createCardGamePanel({
   const ownedTokens = () => new Set((profile.collection || []).map((item) => (
     item.cardToken || (item.isShiny ? `${item.cardId}~${item.shinyBonusSide}` : item.cardId)
   )));
-  const validDeck = (candidate) => Array.isArray(candidate) && candidate.length === 15
-    && new Set(candidate.map(tokenCardId)).size === 15 && candidate.every((token) => ownedTokens().has(token));
+  const deckCards = (tokens = []) => tokens.map((token) => byId.get(tokenCardId(token))).filter(Boolean);
+  /** Quinze espécies distintas, todas no álbum e todas dentro do teto da liga. */
+  const validDeck = (candidate, leagueId = MASTER_LEAGUE) => Array.isArray(candidate)
+    && candidate.length === 15
+    && new Set(candidate.map(tokenCardId)).size === 15
+    && candidate.every((token) => ownedTokens().has(token))
+    && illegalForLeague(leagueId, deckCards(candidate)).length === 0;
 
   function bindCardInfo(container) {
     container.querySelectorAll('.cg-info').forEach((info) => {
@@ -318,6 +439,8 @@ export function createCardGamePanel({
     typeOverlay.innerHTML = `<section class="cg-type-dialog" role="dialog" aria-modal="true">
       <header><img src="${card.art}" alt=""><div><h3>${escapeHtml(card.name)}</h3>
         <div class="cg-type-chips">${chips(card.types)}</div></div><button data-close aria-label="Fechar">✕</button></header>
+      <p><b>${escapeHtml(leagueOf(card).name)}</b> · poder impresso ${leaguePower(card)}
+        — é a liga mais baixa em que esta carta pode jogar. O +1 do shiny não muda isso.</p>
       <p>Durante um confronto, vantagem de tipo acrescenta <b>+1 TIPO</b> ao valor comparado.</p>
       <div class="cg-type-groups"><div class="cg-type-group"><strong>Vantagem contra</strong>
         <div class="cg-type-chips">${chips(strong)}</div></div><div class="cg-type-group"><strong>Desvantagem contra</strong>
@@ -331,38 +454,75 @@ export function createCardGamePanel({
 
   async function refreshProfile() {
     profile = await gameItems.cardGameProfile();
-    deck = validDeck(profile.deck) ? [...profile.deck] : [];
-    deckDraft = [...deck];
+    decks = emptyDecks();
+    deckDrafts = emptyDecks();
+    for (const league of LEAGUES) {
+      const stored = profile.decks?.[league.id] || [];
+      // Um baralho pode ficar inválido por fora: a carta saiu do álbum numa troca.
+      // Nesse caso ele não vale para duelar, mas continua no rascunho para a
+      // pessoa consertar em vez de recomeçar do zero.
+      decks[league.id] = validDeck(stored, league.id) ? [...stored] : [];
+      deckDrafts[league.id] = [...stored];
+    }
     return profile;
   }
 
   /** Desenha uma seção do cardgame na janela do menu. */
-  function shell(title, subtitle, body) {
+  function shell(title, subtitle, body, { deckLayout = false } = {}) {
     menuApi.setHeader(title, subtitle);
-    host.classList.toggle('cg-deck-host', title === 'Baralho de batalha');
+    // O construtor de baralho é a única seção com duas colunas que rolam sozinhas;
+    // era comparação de título e quebrava calado quando o título mudava.
+    host.classList.toggle('cg-deck-host', deckLayout);
+    // O campo de busca mora DENTRO do que é redesenhado: trocar o innerHTML
+    // destrói justamente o nó em que a pessoa está digitando, e o foco (mais o
+    // cursor) ia embora a cada letra. Guarda quem estava focado aqui e devolve
+    // para o campo de mesmo id no desenho novo.
+    const active = document.activeElement;
+    const focusedId = active && active.id && host.contains(active) ? active.id : null;
+    const start = focusedId ? active.selectionStart : null;
+    const end = focusedId ? active.selectionEnd : null;
     host.innerHTML = body;
+    if (!focusedId) return;
+    const restored = host.querySelector(`#${CSS.escape(focusedId)}`);
+    if (!restored) return;
+    restored.focus();
+    // `select` não tem seleção de texto; só input/textarea entram aqui.
+    if (start != null) restored.setSelectionRange(start, end);
   }
 
-  function renderAlbum(filter = '', type = '', finish = '') {
+  function renderAlbum() {
     const owned = collectionMap();
     const specialCost = Number(profile.specialExchangeCost) || 10;
     const evolutionCost = Number(profile.evolutionExchangeCost) || 5;
     const progress = collectionProgress(cards, profile.collection);
-    const normalized = filter.trim().toLowerCase();
-    const filtered = albumEntries(cards, profile.collection).filter(({ card, isShiny }) => (!normalized
-      || card.name.toLowerCase().includes(normalized)
-      || String(card.dex).includes(normalized)) && (!type || card.types.includes(type))
-      && (!finish || (finish === 'shiny') === isShiny));
+    const entries = albumEntries(cards, profile.collection);
+    const filtered = sortCardEntries(filterCardEntries(entries, albumView), albumView.sort);
     const visible = filtered.slice(0, albumLimit);
     const specialCopy = progress.specialOwned ? ` · ${progress.specialOwned} especiais` : '';
     shell('Álbum Pokémon', `${progress.baseOwned} de ${profile.baseTotal} descobertos${specialCopy} · ${profile.shinyCards} shiny`, `
-      <div class="cg-filters"><input id="cg-search" placeholder="Buscar nome ou número" value="${escapeHtml(filter)}">
-        <select id="cg-type"><option value="">Todos os tipos</option>${Object.entries(TYPES).map(([key, label]) =>
-          `<option value="${key}"${key === type ? ' selected' : ''}>${label}</option>`).join('')}</select>
-        <select id="cg-finish"><option value="">Normais e shinies</option>
-          <option value="normal"${finish === 'normal' ? ' selected' : ''}>Somente normais</option>
-          <option value="shiny"${finish === 'shiny' ? ' selected' : ''}>Somente shinies</option>
-        </select></div>
+      <div class="cg-filters"><input id="cg-search" placeholder="Buscar nome ou número" value="${escapeHtml(albumView.query)}"></div>
+      <details class="cg-filter-drawer" id="cg-filter-drawer"${filtersOpen ? ' open' : ''}>
+        <summary>Filtros e ordem <em>${escapeHtml(albumSummary(albumView))}</em>
+          <span class="cg-filter-count">${filtered.length} ${filtered.length === 1 ? 'carta' : 'cartas'}</span></summary>
+        <div class="cg-filters">
+          <select id="cg-type" aria-label="Tipo"><option value="">Todos os tipos</option>${Object.entries(TYPES).map(([key, label]) =>
+            `<option value="${key}"${key === albumView.type ? ' selected' : ''}>${label}</option>`).join('')}</select>
+          <select id="cg-finish" aria-label="Acabamento"><option value="">Normais e shinies</option>
+            <option value="normal"${albumView.finish === 'normal' ? ' selected' : ''}>Somente normais</option>
+            <option value="shiny"${albumView.finish === 'shiny' ? ' selected' : ''}>Somente shinies</option>
+          </select>
+          <select id="cg-owned" aria-label="Coleção"><option value="">Todo o álbum</option>
+            <option value="mine"${albumView.owned === 'mine' ? ' selected' : ''}>Só as que eu tenho</option>
+            <option value="missing"${albumView.owned === 'missing' ? ' selected' : ''}>Só as que faltam</option>
+          </select>
+          <select id="cg-league" aria-label="Liga"><option value="">Todas as ligas</option>${LEAGUES.map((league) =>
+            `<option value="${league.id}"${league.id === albumView.league ? ' selected' : ''}>${league.name}${
+              league.maxPower == null ? '' : ` (até ${league.maxPower})`}</option>`).join('')}</select>
+          ${sortSelectMarkup('cg-sort', albumView.sort)}</div>
+        <div class="cg-rarity-row" id="cg-rarities">${rarityChipsMarkup(albumView.rarities)}</div>
+      </details>
+      ${filtered.length ? '' : `<p class="cg-empty-filter">Nenhuma carta com esses filtros.
+        Toque em <strong>Todas</strong> nas raridades ou limpe a busca.</p>`}
       <div class="cg-card-grid">${visible.map((entry) => {
         const { card } = entry;
         const count = owned.get(card.id);
@@ -386,19 +546,34 @@ export function createCardGamePanel({
       }).join('')}</div>
       ${filtered.length > visible.length ? `<button class="cg-btn" data-more style="width:100%;margin-top:12px">
         Mostrar mais (${visible.length}/${filtered.length})</button>` : ''}`);
-    const search = host.querySelector('#cg-search');
-    const typeSelect = host.querySelector('#cg-type');
-    const finishSelect = host.querySelector('#cg-finish');
-    const rerenderFiltered = () => {
+    // Mexeu em qualquer filtro, a lista volta para o começo: manter 600 cartas
+    // carregadas depois de escolher "Lendária" só faz o desenho demorar.
+    const applyFilter = (change) => {
+      Object.assign(albumView, change);
       albumLimit = 120;
-      renderAlbum(search.value, typeSelect.value, finishSelect.value);
+      renderAlbum();
     };
-    search.oninput = rerenderFiltered;
-    typeSelect.onchange = rerenderFiltered;
-    finishSelect.onchange = rerenderFiltered;
+    const bind = (id, field, event = 'onchange') => {
+      const element = host.querySelector(id);
+      element[event] = () => applyFilter({ [field]: element.value });
+    };
+    const drawer = host.querySelector('#cg-filter-drawer');
+    drawer.ontoggle = () => { filtersOpen = drawer.open; };
+    bind('#cg-search', 'query', 'oninput');
+    bind('#cg-type', 'type');
+    bind('#cg-finish', 'finish');
+    bind('#cg-owned', 'owned');
+    bind('#cg-league', 'league');
+    bind('#cg-sort', 'sort');
+    host.querySelector('#cg-rarities').onclick = (event) => {
+      const chip = event.target.closest('[data-rarity-filter]');
+      if (!chip) return;
+      const picked = chip.dataset.rarityFilter;
+      applyFilter({ rarities: picked === 'all' ? [] : toggleRarity(albumView.rarities, picked) });
+    };
     host.querySelector('[data-more]')?.addEventListener('click', () => {
       albumLimit += 120;
-      renderAlbum(filter, type, finish);
+      renderAlbum();
     });
     host.querySelectorAll('[data-exchange]').forEach((button) => {
       button.onclick = async () => {
@@ -406,7 +581,7 @@ export function createCardGamePanel({
           const result = await gameItems.exchangeCardGameDuplicates(button.dataset.exchange);
           profile = result.profile;
           onToast(result.message);
-          renderAlbum(filter, type, finish);
+          renderAlbum();
         } catch (error) { onToast(error.message); }
       };
     });
@@ -419,65 +594,122 @@ export function createCardGamePanel({
           );
           profile = result.profile;
           onToast(result.message);
-          renderAlbum(filter, type, finish);
+          renderAlbum();
         } catch (error) { onToast(error.message); }
       };
     });
     bindCardInfo(host);
   }
 
-  function renderDeck(filter = '') {
-    const normalized = filter.trim().toLowerCase();
-    const choices = (profile.collection || []).map((item) => {
-      const card = byId.get(item.cardId);
+  function renderDeck() {
+    // As mesmas entradas do álbum, no formato que `filterCardEntries`/`sortCardEntries`
+    // esperam — é aqui que "maior poder à direita" vale mais, porque é escolhendo
+    // as 15 que a pessoa compara borda por borda.
+    const owned = (profile.collection || []).map((item) => {
       const token = item.cardToken || (item.isShiny ? `${item.cardId}~${item.shinyBonusSide}` : item.cardId);
-      return { card, token, item };
-    }).filter(({ card }) => card && (!normalized
-      || card.name.toLowerCase().includes(normalized) || String(card.dex).includes(normalized)));
-    shell('Baralho de batalha', 'Escolha 15 espécies únicas; shinies usam o atributo bonificado', `<div class="cg-deck-body">
-      <aside class="cg-deck-slots"><div class="cg-section-head"><h3>Baralho ativo</h3><span>${deckDraft.length}/15</span></div>
-        ${deckDraft.length ? deckDraft.map((token, index) => {
+      return {
+        card: byId.get(item.cardId),
+        token,
+        item,
+        isShiny: Boolean(item.isShiny),
+        shinyBonusSide: item.isShiny ? (item.shinyBonusSide || tokenSide(token)) : '',
+        quantity: item.quantity,
+      };
+    });
+    const league = leagueById(deckLeague);
+    const draft = deckDrafts[deckLeague];
+    // As cartas fora do teto NÃO aparecem na escolha: com mil cartas no álbum,
+    // uma grade cheia de opções proibidas é ruído. Quem explica a regra é o
+    // cabeçalho da liga e o aviso das cartas que já estavam no rascunho.
+    const choices = sortCardEntries(
+      filterCardEntries(owned, { query: deckView.query, league: deckLeague }),
+      deckView.sort,
+    );
+    const eligible = owned.filter((entry) => leagueAllows(deckLeague, entry.card)).length;
+    const over = illegalForLeague(deckLeague, deckCards(draft));
+    const complete = draft.length === 15;
+    const saved = decks[deckLeague];
+    const unchanged = saved.length === draft.length && saved.every((token, index) => token === draft[index]);
+    shell('Baralhos por liga', `${league.name} · ${league.maxPower == null
+      ? 'sem teto de poder' : `até ${league.maxPower} de poder impresso`} · ${league.hint}`, `
+      <div class="cg-league-tabs" id="cg-league-tabs">${LEAGUES.map((entry) => {
+        const count = deckDrafts[entry.id].length;
+        // "15/15" sozinho mentia quando o baralho estava cheio mas ilegal — o que
+        // a aba precisa dizer é se dá para DUELAR com ele, não se tem quinze.
+        const state = decks[entry.id].length === 15 ? 'pronto'
+          : count === 15 ? 'revisar' : `${count}/15`;
+        return `<button class="cg-league-tab${entry.id === deckLeague ? ' active' : ''}" type="button"
+          id="cg-league-tab-${entry.id}" data-league="${entry.id}" aria-pressed="${entry.id === deckLeague}">
+          <strong>${entry.name}</strong>
+          <small>${entry.maxPower == null ? 'sem teto' : `até ${entry.maxPower}`} · ${state}</small></button>`;
+      }).join('')}</div>
+      <div class="cg-deck-body">
+      <aside class="cg-deck-slots"><div class="cg-section-head"><h3>${escapeHtml(league.name)}</h3><span>${draft.length}/15</span></div>
+        ${over.length ? `<p class="cg-deck-warning">${over.length === 1 ? 'Uma carta estoura' : `${over.length} cartas estouram`}
+          o teto de ${league.maxPower}: ${over.slice(0, 3).map((card) =>
+            `${escapeHtml(card.name)} (${leaguePower(card)})`).join(', ')}${over.length > 3 ? '…' : ''}.
+          Tire ${over.length === 1 ? 'ela' : 'elas'} para salvar nesta liga.</p>` : ''}
+        ${draft.length ? draft.map((token, index) => {
           const card = byId.get(tokenCardId(token));
-          return `<div class="cg-deck-slot"><img src="${card.art}" alt=""><strong>${index + 1}. ${escapeHtml(card.name)}
-            ${tokenSide(token) ? ` <span class="cg-shiny-label">✦ ${tokenSide(token)}</span>` : ''}</strong>
+          const fits = leagueAllows(deckLeague, card);
+          return `<div class="cg-deck-slot${fits ? '' : ' over'}"><img src="${card.art}" alt=""><strong>${index + 1}. ${escapeHtml(card.name)}
+            ${tokenSide(token) ? ` <span class="cg-shiny-label">✦ ${tokenSide(token)}</span>` : ''}
+            <small>${leaguePower(card)}</small></strong>
             <button data-remove="${escapeHtml(token)}">✕</button></div>`;
         }).join('')
-          : '<p style="color:#94a0bf;font-size:11px;line-height:1.6">Seu baralho está vazio. Abra boosters e escolha quinze cartas.</p>'}
-        <button class="cg-btn primary" data-action="save" ${deckDraft.length === 15 ? '' : 'disabled'} style="width:100%;margin-top:8px">Salvar baralho</button>
-      </aside><main class="cg-deck-choices"><div class="cg-filters"><input id="cg-search" placeholder="Buscar no álbum" value="${escapeHtml(filter)}"></div>
+          : '<p style="color:#94a0bf;font-size:11px;line-height:1.6">Este baralho está vazio. Escolha quinze espécies que caibam no teto da liga.</p>'}
+        <button class="cg-btn primary" data-action="save" ${complete && !over.length && !unchanged ? '' : 'disabled'}
+          style="width:100%;margin-top:8px">${unchanged && complete ? 'Baralho salvo' : `Salvar ${escapeHtml(league.name)}`}</button>
+      </aside><main class="cg-deck-choices"><div class="cg-filters">
+          <input id="cg-search" placeholder="Buscar no álbum" value="${escapeHtml(deckView.query)}">
+          ${sortSelectMarkup('cg-sort', deckView.sort)}</div>
+        <p class="cg-deck-pool">${eligible} ${eligible === 1 ? 'carta elegível' : 'cartas elegíveis'} nesta liga${
+          league.maxPower == null ? '' : ' — as acima do teto ficam de fora da lista'}.</p>
         <div class="cg-card-grid">${choices.map(({ card, token, item }) => cardMarkup(card, {
           button: true,
-          selected: deckDraft.includes(token),
-          disabled: deckDraft.length >= 15 && !deckDraft.some((entry) => tokenCardId(entry) === card.id),
+          selected: draft.includes(token),
+          disabled: draft.length >= 15 && !draft.some((entry) => tokenCardId(entry) === card.id),
           shiny: item.isShiny,
           shinyBonusSide: item.shinyBonusSide,
           cardToken: token,
           quantity: item.quantity,
           showInfo: true,
-        })).join('')}</div></main></div>`);
+        })).join('')}</div></main></div>`, { deckLayout: true });
+    host.querySelector('#cg-league-tabs').onclick = (event) => {
+      const tab = event.target.closest('[data-league]');
+      if (!tab || tab.dataset.league === deckLeague) return;
+      deckLeague = tab.dataset.league;
+      renderDeck();
+    };
     host.querySelector('[data-action="save"]').onclick = async () => {
       try {
-        profile = await gameItems.saveCardGameDeck(deckDraft);
-        deck = [...deckDraft];
-        onToast('Baralho de 15 cartas salvo');
-        renderDeck(filter);
+        profile = await gameItems.saveCardGameDeck(deckLeague, deckDrafts[deckLeague]);
+        decks[deckLeague] = [...deckDrafts[deckLeague]];
+        onToast(`${league.name}: baralho de 15 cartas salvo`);
+        renderDeck();
       } catch (error) { onToast(error.message); }
     };
     host.querySelectorAll('[data-remove]').forEach((button) => {
-      button.onclick = () => { deckDraft = deckDraft.filter((id) => id !== button.dataset.remove); renderDeck(filter); };
+      button.onclick = () => {
+        deckDrafts[deckLeague] = draft.filter((id) => id !== button.dataset.remove);
+        renderDeck();
+      };
     });
     host.querySelectorAll('button.cg-card[data-card-token]').forEach((button) => {
       button.onclick = () => {
         const token = button.dataset.cardToken;
         const cardId = tokenCardId(token);
-        if (deckDraft.includes(token)) deckDraft = deckDraft.filter((entry) => entry !== token);
-        else if (deckDraft.some((entry) => tokenCardId(entry) === cardId)) {
-          deckDraft = deckDraft.map((entry) => tokenCardId(entry) === cardId ? token : entry);
-        } else if (deckDraft.length < 15) deckDraft.push(token);
-        renderDeck(filter);
+        if (draft.includes(token)) deckDrafts[deckLeague] = draft.filter((entry) => entry !== token);
+        else if (draft.some((entry) => tokenCardId(entry) === cardId)) {
+          deckDrafts[deckLeague] = draft.map((entry) => tokenCardId(entry) === cardId ? token : entry);
+        } else if (draft.length < 15) deckDrafts[deckLeague] = [...draft, token];
+        renderDeck();
       };
     });
-    host.querySelector('#cg-search').oninput = (event) => renderDeck(event.target.value);
+    const deckSearch = host.querySelector('#cg-search');
+    const deckSort = host.querySelector('#cg-sort');
+    deckSearch.oninput = () => { deckView.query = deckSearch.value; renderDeck(); };
+    deckSort.onchange = () => { deckView.sort = deckSort.value; renderDeck(); };
     bindCardInfo(host);
   }
 
@@ -587,37 +819,75 @@ export function createCardGamePanel({
     try { await refreshProfile(); }
     catch (error) { onToast(`Não foi possível atualizar a coleção: ${error.message}`); }
     if (tab === 'album') renderAlbum();
-    else if (tab === 'deck') { deckDraft = [...deck]; renderDeck(); }
+    else if (tab === 'deck') renderDeck();
     else renderBoosters();
   }
 
+  /** Ligas em que este jogador tem baralho pronto para duelar. */
+  const readyLeagues = () => LEAGUES.filter((league) => validDeck(decks[league.id], league.id));
+
   function openPlayerMenu(peer, pointer) {
+    // A liga é escolhida AQUI, no ato do desafio: é a única decisão que o
+    // convite carrega, e quem aceita joga com o baralho da mesma liga.
+    const ready = readyLeagues();
     menu.innerHTML = `<div class="cg-player-head"><span class="cg-player-avatar">${escapeHtml(peer.name.slice(0, 1).toUpperCase())}</span>
       <div><strong>${escapeHtml(peer.name)}</strong><small>Jogador próximo</small></div></div>
-      <div class="cg-player-actions"><button class="cg-btn primary" data-action="challenge">⚔ Desafiar</button>
-      <button class="cg-btn" data-action="menu">▦ Meu menu</button></div>`;
-    menu.style.left = `${Math.min(pointer.x + 12, innerWidth - 230)}px`;
-    menu.style.top = `${Math.min(pointer.y + 12, innerHeight - 120)}px`;
+      ${ready.length ? `<p class="cg-player-hint">Desafiar em qual liga?</p>
+        <div class="cg-league-picker">${LEAGUES.map((league) => {
+          const can = ready.includes(league);
+          return `<button class="cg-btn cg-league-pick${can ? ' primary' : ''}" data-challenge="${league.id}"
+            ${can ? '' : 'disabled'} title="${can ? '' : 'Monte o baralho desta liga primeiro'}">
+            ${escapeHtml(league.name)}<small>${league.maxPower == null ? 'sem teto' : `até ${league.maxPower}`}${
+              can ? '' : ' · sem baralho'}</small></button>`;
+        }).join('')}</div>`
+        : `<p class="cg-player-hint">Você ainda não tem baralho pronto em nenhuma liga.</p>`}
+      <div class="cg-player-actions"><button class="cg-btn" data-action="menu">▦ Meus baralhos</button></div>`;
+    // Posiciona MEDINDO: a altura do menu depende de quantas ligas existem e de
+    // quanto texto cabe na largura da tela. A constante que havia aqui era um
+    // chute do tamanho antigo, e o menu passou a ser bem mais alto.
+    menu.style.left = '0px';
+    menu.style.top = '0px';
     menu.classList.remove('cg-hidden');
-    menu.querySelector('[data-action="challenge"]').onclick = () => {
-      if (!validDeck(deck)) { onToast('Abra boosters e monte um baralho de 15 cartas primeiro'); openMenu('deck'); return; }
-      presence.cardGameChallenge(peer.key, deck);
-      onToast(`Desafio enviado para ${peer.name}`);
-      closePlayerMenu();
-    };
-    menu.querySelector('[data-action="menu"]').onclick = () => openMenu('album');
+    const size = menu.getBoundingClientRect();
+    const margin = 8;
+    menu.style.left = `${Math.max(margin, Math.min(pointer.x + 12, innerWidth - size.width - margin))}px`;
+    menu.style.top = `${Math.max(margin, Math.min(pointer.y + 12, innerHeight - size.height - margin))}px`;
+    menu.querySelectorAll('[data-challenge]').forEach((button) => {
+      button.onclick = () => {
+        const leagueId = button.dataset.challenge;
+        presence.cardGameChallenge(peer.key, leagueId);
+        onToast(`Desafio enviado para ${peer.name} · ${leagueById(leagueId).name}`);
+        closePlayerMenu();
+      };
+    });
+    menu.querySelector('[data-action="menu"]').onclick = () => openMenu('deck');
   }
   function closePlayerMenu() { menu.classList.add('cg-hidden'); }
 
   function showInvite(data) {
+    // Quem desafia escolhe a liga; quem aceita joga com o baralho DAQUELA liga.
+    // Por isso o convite diz qual é, e o botão só aceita se esse baralho existir.
+    const leagueId = data.leagueId || MASTER_LEAGUE;
+    const league = leagueById(leagueId);
+    const ready = validDeck(decks[leagueId], leagueId);
     invite.innerHTML = `<strong>⚔ ${escapeHtml(data.fromName)} desafiou você!</strong>
-      <p>Cardgame 3×3 · baralho de 15 · mão de 6</p><div class="cg-invite-actions">
-      <button class="cg-btn" data-action="decline">Agora não</button><button class="cg-btn primary" data-action="accept">Aceitar duelo</button></div>`;
+      <p>${escapeHtml(data.leagueName || league?.name || 'Duelo')} · ${league?.maxPower == null
+        ? 'sem teto de poder' : `até ${league.maxPower} de poder`} · baralho de 15 · mão de 6</p>
+      ${ready ? '' : `<p class="cg-invite-missing">Você ainda não tem baralho pronto nesta liga.</p>`}
+      <div class="cg-invite-actions">
+      <button class="cg-btn" data-action="decline">Agora não</button>
+      <button class="cg-btn primary" data-action="accept">${ready ? 'Aceitar duelo' : 'Montar baralho'}</button></div>`;
     invite.classList.remove('cg-hidden');
     invite.querySelector('[data-action="decline"]').onclick = () => { presence.cardGameDecline(data.challengeId); invite.classList.add('cg-hidden'); };
     invite.querySelector('[data-action="accept"]').onclick = () => {
-      if (!validDeck(deck)) { invite.classList.add('cg-hidden'); onToast('Monte um baralho de 15 cartas primeiro'); openMenu('deck'); return; }
-      presence.cardGameAccept(data.challengeId, deck); invite.classList.add('cg-hidden');
+      invite.classList.add('cg-hidden');
+      if (!ready) {
+        deckLeague = leagueId;
+        onToast(`Monte o baralho da ${league?.name || 'liga'} para aceitar`);
+        openMenu('deck');
+        return;
+      }
+      presence.cardGameAccept(data.challengeId);
     };
     setTimeout(() => invite.classList.add('cg-hidden'), 45000);
   }
@@ -630,6 +900,7 @@ export function createCardGamePanel({
     const result = matchState.status === 'finished' ? (matchState.winner === mine ? '🏆 Vitória!' : 'Fim de jogo') : null;
     matchOverlay.innerHTML = `<section class="cg-window cg-match-window"><div class="cg-match">
       <header class="cg-match-top"><strong>${escapeHtml(matchState.players[mine].name)}</strong>
+        ${matchState.leagueName ? `<span class="cg-match-league">${escapeHtml(matchState.leagueName)}</span>` : ''}
         <div class="cg-score"><b class="p1">${matchState.score[mine]}</b><span>×</span><b class="p2">${matchState.score[opponent]}</b></div>
         <div class="cg-turn">${result || (myTurn ? 'Sua vez' : `Vez de ${escapeHtml(matchState.players[opponent].name)}`)}</div>
         <button class="cg-btn ${matchState.status === 'ongoing' ? 'danger' : ''}" data-action="exit">${matchState.status === 'ongoing' ? 'Desistir' : 'Fechar'}</button>
@@ -692,7 +963,6 @@ export function createCardGamePanel({
     openDeck: () => openMenu('deck'),
     /** `home | album | boosters | deck | hours | goals | board | backlog` */
     renderSection,
-    getDeck: () => [...deck],
     closePlayerMenu,
   };
 }

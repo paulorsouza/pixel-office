@@ -64,6 +64,33 @@ export function h(tag, attrs = {}, ...kids) {
 export const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/**
+ * Redesenha sem roubar o teclado de quem está digitando.
+ *
+ * As toolbars são reconstruídas inteiras a cada `refresh()`, e o campo de busca
+ * mora dentro delas — ou seja, o `replaceChildren` joga fora exatamente o nó que
+ * está com o foco, e a busca morria no meio da palavra. Aqui o foco e o cursor
+ * são anotados antes e devolvidos ao campo equivalente do desenho novo.
+ *
+ * @param root      contêiner redesenhado (limita a busca a esta tela)
+ * @param selector  como reencontrar o campo depois, ex. ".wq-search"
+ */
+export function keepFocus(root, selector, redraw) {
+  const active = document.activeElement;
+  const wasTyping = Boolean(active) && root.contains(active) && active.matches(selector);
+  if (!wasTyping) { redraw(); return; }
+  // O redesenho vem de um `refresh()` assíncrono: entre o pedido e a resposta a
+  // pessoa pode ter digitado mais. Quem manda no campo é o que está na tela, não
+  // o valor que o filtro tinha quando a busca saiu.
+  const { value, selectionStart, selectionEnd } = active;
+  redraw();
+  const restored = root.querySelector(selector);
+  if (!restored || restored === active) return;
+  restored.focus();
+  if (restored.value !== value) restored.value = value;
+  if (selectionStart != null) restored.setSelectionRange(selectionStart, selectionEnd);
+}
+
 // ---------- formatação ----------
 
 export function hm(minutes) {

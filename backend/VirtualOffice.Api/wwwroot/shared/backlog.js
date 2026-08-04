@@ -1,7 +1,7 @@
 // Lista plana de atividades — a mesma base do quadro, vista como tabela.
 // Usa os diálogos compartilhados, então editar aqui é idêntico a editar no kanban.
 import {
-  h, hm, avatar, placeholder, relativeDay,
+  h, hm, avatar, keepFocus, placeholder, relativeDay,
   STATUS_LABEL, STATUS_COLOR, PRIORITY_LABEL, PRIORITY_COLOR, TYPE_ORDER,
 } from "./work-core.js";
 import { createCardDialogs, TYPE_COLOR } from "./card-dialogs.js";
@@ -50,6 +50,10 @@ export function mountBacklog(host, ctx) {
   }
 
   function draw() {
+    keepFocus(host, ".wq-search", drawNow);
+  }
+
+  function drawNow() {
     toolbar.replaceChildren(
       h("div", { class: "wq-seg" },
         ["", ...TYPE_ORDER].map((t) => h("button", {

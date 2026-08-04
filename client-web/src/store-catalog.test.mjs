@@ -83,6 +83,74 @@ test('só a banca de cartas explica de onde vêm os boosters não vendidos', () 
   assert.doesNotMatch(storeCatalogHtml(catalog([booster()]), 'furniture'), /não são vendidos/);
 });
 
+test('desconto da carteira mostra o preço cheio riscado ao lado do novo', () => {
+  const html = storeCatalogHtml({
+    coins: 5000,
+    wallet: { discountPercent: 10, weeklyBonus: 3 },
+    definitions: [booster({
+      catalogKey: 'equipment:mouse-office', name: 'Mouse de escritório', itemType: 'equipment',
+      rarity: 'common', basePrice: 180, price: 162, weeklyLimit: 0, weeklyRemaining: null,
+    })],
+  }, 'equipment');
+  assert.match(html, /<s>180<\/s> 162 🪙/);
+  assert.match(html, /class="hud-item-action discounted"/);
+  // O jogador precisa saber POR QUE o preço mudou, senão parece defeito.
+  assert.match(html, /carteira: −10% no preço · \+3 no limite semanal/);
+});
+
+test('sem carteira o preço sai limpo, sem risco nem etiqueta de bônus', () => {
+  const html = storeCatalogHtml(catalog([booster()]), 'cards');
+  assert.doesNotMatch(html, /<s>/);
+  assert.doesNotMatch(html, /discounted/);
+  assert.match(html, /saldo da carteira/);
+});
+
+const chest = (overrides = {}) => ({
+  catalogKey: 'lootbox:rare',
+  name: 'Baú Raro',
+  itemType: 'lootbox',
+  rarity: 'legendary',
+  price: 1400,
+  basePrice: 1400,
+  isPurchasable: true,
+  canBuy: true,
+  weeklyLimit: 2,
+  weeklyRemaining: 2,
+  odds: [
+    { rarity: 'uncommon', name: 'Incomum', percent: 50 },
+    { rarity: 'rare', name: 'Rara', percent: 45 },
+    { rarity: 'legendary', name: 'Lendária', percent: 5 },
+  ],
+  ...overrides,
+});
+
+test('baú mostra a chance de cada raridade — a chance é o produto', () => {
+  const html = storeCatalogHtml(catalog([chest()]), 'equipment');
+  assert.match(html, /50% incomum · 45% rara · 5% lendária/);
+  assert.match(html, /2\/semana/);
+});
+
+test('prateleira trancada continua à vista, dizendo o que a destranca', () => {
+  const html = storeCatalogHtml(catalog([chest({
+    catalogKey: 'lootbox:premium', name: 'Baú Selecionado', canBuy: false, walletLocked: true,
+  })]), 'equipment');
+  // Sumir esconderia que existe uma prateleira — e é justamente ela que dá vontade
+  // de perseguir uma carteira melhor.
+  assert.match(html, /Baú Selecionado/);
+  assert.match(html, /Exige Carteira Black/);
+  assert.match(html, /disabled/);
+});
+
+test('equipamento que já é seu não é vendido de novo', () => {
+  const html = storeCatalogHtml(catalog([chest({
+    catalogKey: 'equipment:mouse-rgb', name: 'Mouse RGB', itemType: 'equipment',
+    canBuy: false, alreadyOwned: true, odds: null, weeklyLimit: 0, weeklyRemaining: null,
+  })]), 'equipment');
+  assert.match(html, /Você já tem/);
+  assert.match(html, /disabled/);
+  assert.doesNotMatch(html, /1400 🪙/, 'preço some: comprar de novo não é uma opção');
+});
+
 test('o balcão de cartas é reconhecido pela interactionKey do móvel', () => {
   assert.equal(storeKindOf({ item: { interactionKey: 'store:cards' } }), 'cards');
   assert.equal(storeKindOf({ item: { interactionKey: 'store:furniture' } }), 'furniture');

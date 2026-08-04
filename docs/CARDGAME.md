@@ -218,10 +218,16 @@ Checagens automatizadas:
 
 ```powershell
 node --test client-web/src/cardgame/engine.test.mjs
+node --test client-web/src/cardgame/CardCollection.test.mjs
 node --test client-web/src/store-catalog.test.mjs
 node --test client-web/tools/tiled-converter.test.mjs
 dotnet build backend/VirtualOffice.Api/VirtualOffice.Api.csproj --no-restore
 ```
+
+Para mexer no Álbum ou no Baralho sem subir a API nem esperar o Phaser, abra
+`client-web/cardgame-test.html` com o servidor de desenvolvimento: ele monta o painel de
+verdade (CSS e catálogo reais) sobre uma coleção falsa, com buracos, repetidas e shinies de
+lados diferentes — que é o que dá o que filtrar e o que ordenar.
 
 Para conferir a Banca à mão: abra a Galeria Tooq, vá ao balcão de cartas e compre uma edição
 duas vezes. A segunda precisa recusar com o aviso de limite semanal, e a linha do item passa a

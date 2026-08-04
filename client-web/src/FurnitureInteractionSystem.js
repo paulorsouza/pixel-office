@@ -52,18 +52,43 @@ function weeklyLabel(item) {
   return `${rate} · resta${item.weeklyRemaining > 1 ? 'm' : ''} ${item.weeklyRemaining}`;
 }
 
+/**
+ * Por que o item não pode ser comprado. Vazio quando pode.
+ *
+ * As três recusas são diferentes e não podem virar um "indisponível" só: já ter o
+ * item é bom, faltar carteira é um objetivo, e esgotado é questão de esperar.
+ */
+function blockedLabel(item) {
+  if (item.alreadyOwned) return 'Você já tem';
+  if (item.walletLocked) return 'Exige Carteira Black';
+  return '';
+}
+
 function storeRowHtml(item, coins) {
   // Duas formas de não poder comprar, e elas não se confundem: sem moeda o preço
   // continua à vista, porque juntar moeda é o que resolve; esgotado, o que importa
   // é quando volta, então o preço sai da frente.
   const soldOut = item.weeklyLimit > 0 && !item.weeklyRemaining;
-  const disabled = soldOut || coins < item.price;
+  const blocked = blockedLabel(item);
+  const disabled = soldOut || Boolean(blocked) || coins < item.price;
+  // Desconto de carteira: o preço cheio riscado ao lado do novo é o que faz o
+  // jogador VER o item que ele equipou trabalhando. Só um número menor não conta
+  // essa história — ninguém decora a tabela de preços.
+  const discounted = item.basePrice > item.price;
+  const price = discounted
+    ? `<s>${item.basePrice}</s> ${item.price} 🪙`
+    : `${item.price} 🪙`;
+  // Odds do baú entram na linha de baixo: comprar caixa sem ver a chance é apostar
+  // no escuro, e a chance é o produto.
+  const odds = (item.odds || []).map((row) => `${row.percent}% ${row.name.toLowerCase()}`).join(' · ');
+  const subtitle = odds || (item.rarity + weeklyLabel(item));
   return `<button class="hud-item-row" type="button" data-buy-item="${escapeHtml(item.catalogKey)}"
     data-rarity="${escapeHtml(item.rarity)}"${disabled ? ' disabled' : ''}${soldOut ? ' data-soldout' : ''}>
     ${itemThumbHtml(item)}
     <span class="hud-item-copy"><b>${escapeHtml(item.name)}</b>
-      <small>${escapeHtml(item.rarity + weeklyLabel(item))}</small></span>
-    <span class="hud-item-action">${soldOut ? 'Esgotado' : `${item.price} 🪙`}</span>
+      <small>${escapeHtml(odds ? `${subtitle}${weeklyLabel(item)}` : subtitle)}</small></span>
+    <span class="hud-item-action${discounted ? ' discounted' : ''}">${
+      soldOut ? 'Esgotado' : blocked || price}</span>
   </button>`;
 }
 
@@ -80,9 +105,16 @@ export function storeCatalogHtml(catalog, kind = '') {
   const columns = items.some((item) => item.weeklyLimit > 0) ? 'two' : 'three';
   const rows = items.map((item) => storeRowHtml(item, coins)).join('');
   const note = STORE_NOTES[kind];
+  // O que a carteira equipada está fazendo, em uma linha. Sem isso o desconto é um
+  // preço diferente sem explicação — e preço que muda sozinho parece bug.
+  const wallet = catalog?.wallet || {};
+  const perks = [
+    wallet.discountPercent > 0 ? `−${wallet.discountPercent}% no preço` : '',
+    wallet.weeklyBonus > 0 ? `+${wallet.weeklyBonus} no limite semanal` : '',
+  ].filter(Boolean).join(' · ');
   return `<div class="hud-stack">
     <div class="hud-banner"><span class="hud-banner-icon">🪙</span>
-      <b>${coins} moedas</b><small>saldo da carteira</small></div>
+      <b>${coins} moedas</b><small>${perks ? `carteira: ${escapeHtml(perks)}` : 'saldo da carteira'}</small></div>
     <div class="hud-item-list ${columns}">${rows || '<p class="hud-empty">Este balcão está sem estoque</p>'}</div>
     ${note ? `<p class="hud-note">${escapeHtml(note)}</p>` : ''}
   </div>`;

@@ -146,7 +146,13 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
     renderSequence();
     renderPool();
     const wildcard = Boolean(round?.wildcardPending);
-    turns.textContent = active() ? `${round.rollsRemaining} restantes${wildcard ? ' · CORINGA' : ''}` : '5 iniciais';
+    // O amuleto muda quantos lançamentos a rodada tem. O número precisa vir do
+    // servidor: fixar "5 iniciais" aqui faria a mesa mentir para quem equipou o item.
+    const initial = game?.initialRolls ?? 5;
+    const bonus = initial - (game?.baseInitialRolls ?? 5);
+    turns.textContent = active()
+      ? `${round.rollsRemaining} restantes${wildcard ? ' · CORINGA' : ''}`
+      : `${initial} iniciais${bonus > 0 ? ` (+${bonus} amuleto)` : ''}`;
     betSelect.disabled = busy || active();
     playButton.disabled = busy || wildcard || (!active() && arrangement.length !== 7);
     if (busy) playButton.textContent = 'LANÇANDO…';
@@ -163,11 +169,14 @@ export function createArrangeDicePanel({ gameItems, hud, onToast = () => {} }) {
   const finish = () => {
     balance.textContent = `${round.coins} 🪙`;
     root.classList.toggle('won', round.payout > 0);
+    // Os multiplicadores viraram fracionários (a sequência de 3 paga 0,5×), então
+    // formatar é obrigatório: `×0.5` cru vira "×0.5000000001" em ponto flutuante.
+    const mult = (value) => Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
     const repeatCopy = round.repeatMultiplier > 1
-      ? ` · carta ${round.sequenceRepeatCard} repetida ${round.sequenceRepeatCount}×: bônus ×${round.repeatMultiplier}`
+      ? ` · carta ${round.sequenceRepeatCard} repetida ${round.sequenceRepeatCount}×: bônus ×${mult(round.repeatMultiplier)}`
       : '';
     result.textContent = round.payout > 0
-      ? `${round.winningRun.length} cartas vizinhas${repeatCopy} · prêmio total ×${round.multiplier}: ${round.payout} moedas${rewardText(round.rewards)}!`
+      ? `${round.winningRun.length} cartas vizinhas${repeatCopy} · prêmio total ×${mult(round.multiplier)}: ${round.payout} moedas${rewardText(round.rewards)}!`
       : round.rewards?.cards?.length
         ? `Sem sequência de moedas, mas você ganhou ${round.rewards.cards.map((card) => card.name).join(' + ')}!`
         : 'Nenhuma sequência de três cartas vizinhas.';

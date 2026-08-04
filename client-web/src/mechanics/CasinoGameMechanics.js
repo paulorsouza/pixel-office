@@ -13,6 +13,8 @@ function casinoMechanic({
   tint,
   baseTint = 0xffffff,
   badge = '',
+  /** Propriedades do objeto do mapa repassadas ao painel (ex.: a liga da mesa). */
+  extras = [],
 }) {
   registerMechanic(type, {
     preload({ scene }) {
@@ -35,6 +37,11 @@ function casinoMechanic({
       const label = property(entity, 'label', defaultLabel);
       const radius = Number(property(entity, 'interactionRadius', 3.5)) * tile;
       const claimId = `${claimKind}:${tableId}`;
+      // A mesa física decide o que o painel abre — a de Master League não pode
+      // cair no salão perguntando qual liga é.
+      const extraOptions = Object.fromEntries(extras
+        .map((key) => [key, property(entity, key)])
+        .filter(([, value]) => value != null && value !== ''));
 
       const display = scene.add.image(x, bottom, texture)
         .setOrigin(0.5, 1)
@@ -76,6 +83,7 @@ function casinoMechanic({
           }
           await panel.open(gameId, {
             tableId,
+            ...extraOptions,
             onClose: () => context.presence?.releaseEntity(claimId),
           });
           return true;
@@ -134,6 +142,8 @@ casinoMechanic({
   tint: 0xd4fff4,
 });
 
+// Quatro mesas no salão, uma por liga: a mesa em que você senta É a divisão em
+// que vai jogar, e o baralho cobrado é o daquela liga.
 casinoMechanic({
   type: 'pokemonCardTable',
   texture: 'casino_pokemon_card_table',
@@ -144,4 +154,5 @@ casinoMechanic({
   tint: 0xffe27a,
   baseTint: 0xd7c7ff,
   badge: 'PKMN',
+  extras: ['leagueId'],
 });

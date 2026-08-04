@@ -33,10 +33,15 @@ const rendererSource = readFileSync(resolve(CLIENT_ROOT, 'src/MapRenderer.js'), 
 const rendererModule = await import(
   `${pathToFileURL(resolve(CLIENT_ROOT, 'src/MapRenderer.js')).href}?test=${Date.now()}`
 );
+const mainSource = readFileSync(resolve(CLIENT_ROOT, 'src/main.js'), 'utf8');
 const equipmentSource = readFileSync(resolve(CLIENT_ROOT, 'src/EquipmentSystem.js'), 'utf8');
 const equipmentModule = await import(
   `data:text/javascript;base64,${Buffer.from(equipmentSource).toString('base64')}`
 );
+// O catálogo do cliente guarda presets de piloto; quem os expande é `prepare`, e o
+// runtime chama isso no boot. Sem repetir aqui, os testes de animação testariam um
+// catálogo que nunca existe em produção.
+equipmentModule.prepareEquipmentCatalog(equipmentCatalog);
 const characterSource = readFileSync(resolve(CLIENT_ROOT, 'src/CharacterSystem.js'), 'utf8');
 const characterModule = await import(
   `data:text/javascript;base64,${Buffer.from(characterSource).toString('base64')}`
@@ -472,32 +477,88 @@ test('catálogo oferece vários modelos por meio de locomoção e os slots do lo
   assert.equal(equipmentCatalog.defaultEquipment, 'skate');
   assert.deepEqual(
     equipmentCatalog.slots.map((slot) => slot.id),
-    ['earrings', 'necklace', 'bracelet', 'mouse', 'keyboard', 'vehicle'],
+    ['mouse', 'keyboard', 'amulet', 'vehicle', 'phone', 'wallet'],
   );
   assert.ok(existsSync(resolve(CLIENT_ROOT, 'assets/chars/Adam_sit.png')));
   for (const item of equipmentCatalog.items) {
     assert.ok(equipmentCatalog.slots.some((slot) => slot.id === item.slot), `${item.id}: slot válido`);
   }
+  // Todo slot precisa ter o que vestir, senão o tabuleiro nasce com um encaixe morto.
+  for (const slot of equipmentCatalog.slots) {
+    assert.ok(
+      equipmentCatalog.items.some((item) => item.slot === slot.id),
+      `${slot.id}: nenhum item visual`,
+    );
+  }
 });
 
-test('loadout valida o slot de cada item e não trata acessórios como veículos', () => {
-  const loadout = equipmentModule.normalizeLoadout(equipmentCatalog, {
-    vehicle: 'motorcycle',
-    necklace: 'silver-chain',
-    mouse: 'gold-chain',
-  });
-  assert.equal(loadout.vehicle, 'motorcycle');
-  assert.equal(loadout.necklace, 'silver-chain');
-  assert.equal(loadout.mouse, null);
+test('o catálogo do cliente é só visual — efeito e preço são do servidor', () => {
+  // Duas verdades sobre quanto um item paga é como o balanceamento se perde. O
+  // servidor é dono disso (docs/PLANO_EQUIPAMENTOS.md §7); aqui, só sprite e cor.
+  for (const item of equipmentCatalog.items) {
+    for (const forbidden of ['price', 'rarity', 'effects', 'name', 'description']) {
+      assert.ok(!Object.hasOwn(item, forbidden), `${item.id}: ${forbidden} não mora no cliente`);
+    }
+    assert.ok(item.accent && item.secondary, `${item.id}: cores`);
+  }
+});
 
-  const accessory = equipmentModule.movementProfile(equipmentCatalog, 'silver-chain', true);
-  assert.equal(accessory.active, false);
-  assert.equal(accessory.equipment, null);
-  assert.equal(accessory.speed, equipmentCatalog.walkSpeed);
+test('acessório não vira veículo e loadout do servidor vira mapa de slot', () => {
+  const amulet = equipmentModule.movementProfile(equipmentCatalog, 'amulet-clover', true);
+  assert.equal(amulet.active, false);
+  assert.equal(amulet.equipment, null);
+  assert.equal(amulet.speed, equipmentCatalog.walkSpeed);
+
+  const snapshot = {
+    slots: [{ id: 'vehicle' }, { id: 'mouse' }, { id: 'amulet' }],
+    loadout: {
+      vehicle: { id: 'motorcycle', instanceId: 7 },
+      mouse: { id: 'mouse-rgb', instanceId: 9 },
+      amulet: null,
+    },
+  };
+  assert.deepEqual(
+    equipmentModule.loadoutIds(snapshot),
+    { vehicle: 'motorcycle', mouse: 'mouse-rgb', amulet: null },
+  );
+
+  // O merge junta as duas metades do item sem deixar o servidor apagar o visual.
+  const merged = equipmentModule.mergeEquipmentItem(equipmentCatalog, {
+    id: 'motorcycle', name: 'Moto', rarity: 'legendary', instanceId: 7,
+  });
+  assert.equal(merged.speed, 232);
+  assert.equal(merged.visual, 'motorcycle');
+  assert.equal(merged.rarity, 'legendary');
+});
+
+test('as cinco raridades têm cor, e a cor nunca é o único sinal', () => {
+  const hudCss = readFileSync(resolve(CLIENT_ROOT, 'src/hud/hud.css'), 'utf8');
+  for (const rarity of ['common', 'uncommon', 'rare', 'legendary', 'exotic']) {
+    assert.match(hudCss, new RegExp(`\\[data-rarity="${rarity}"\\]\\{--rarity:`), rarity);
+  }
+  // Quem colore também escreve o nome: só a cor deixaria de fora quem não
+  // distingue verde de azul. O chip é o texto ao lado da borda.
+  assert.match(equipmentSource, /class="rarity-chip"/);
+  assert.match(hudCss, /\.rarity-chip\{/);
+  // `title` não abre no toque, e mobile é obrigatório (AGENTS.md §2): o efeito do
+  // item precisa estar no card, não escondido atrás do ponteiro.
+  assert.doesNotMatch(equipmentSource, /title="\$\{escapeHtml\(\[item\.description/);
+});
+
+test('a bag agrupa por slot e compara com o que já está equipado', () => {
+  assert.match(equipmentSource, /inventory-group-title/);
+  assert.match(equipmentSource, /const renderCompare/);
+  // A comparação mostra os dois lados em vez de calcular delta: as frases de efeito
+  // vêm prontas do servidor, e refazer a conta aqui criaria uma segunda régua.
+  assert.match(equipmentSource, /Trocando por/);
+  assert.doesNotMatch(equipmentSource, /passiveCoinPercent|storeDiscountPercent/);
 });
 
 test('loadout abre com Tab e não mantém HUD fixo de veículo', () => {
-  assert.match(equipmentSource, /event\.code === 'Tab'/);
+  // Tab é do menu do jogo (`main.js`), não deste módulo: com dois donos, a mesma
+  // tecla abria uma janela e fechava a outra. A asserção seguia apontando para o
+  // EquipmentSystem, onde o atalho não mora desde que o menu único nasceu.
+  assert.match(mainSource, /event\.code === 'Tab'/);
   assert.doesNotMatch(equipmentSource, /KeyQ|equipment-toggle|equipment-current/);
   assert.doesNotMatch(clientIndexSource, /id="equipment-toggle"|id="equipment-current"/);
   assert.match(clientIndexSource, /<kbd>Tab<\/kbd> abrir\/fechar/);

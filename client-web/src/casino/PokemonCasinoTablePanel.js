@@ -27,7 +27,44 @@ function injectStyles() {
       border-radius:9px;color:#8792b2;background:#ffffff05}
     .pct-step i{display:grid;flex:0 0 22px;width:22px;height:22px;place-items:center;border-radius:50%;
       background:#252d4b;font-size:10px;font-style:normal;font-weight:900}
-    .pct-step small{min-width:0;overflow:hidden;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+    .pct-step small{display:flex;min-width:0;overflow:hidden;align-items:baseline;justify-content:space-between;
+      gap:5px;font-size:8px;white-space:nowrap}
+    .pct-step small b{flex:none;color:#f6d768;font-size:8px}
+    /* --- salão: as quatro mesas --- */
+    .pct-tables{padding:18px 16px;text-align:center}
+    .pct-tables h3{margin:0 0 6px;font-size:18px}
+    .pct-tables-copy{max-width:560px;margin:0 auto 16px;color:#aab4d0;font-size:11px;line-height:1.65}
+    /* Como item de grid, esta lista nascia com largura mínima igual ao min-content
+       (as três colunas somadas) e vazava a tela do celular pela ESQUERDA, com o
+       primeiro cartão fora do viewport. Daí a mínima zerada e o teto de coluna
+       que encolhe junto com o contêiner. */
+    .pct-table-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:10px;
+      width:100%;min-width:0;max-width:900px;margin:0 auto;text-align:left}
+    .pct-table{display:grid;gap:3px;padding:13px;border:1px solid #ffffff20;border-radius:13px;color:#fff;
+      background:linear-gradient(145deg,#2b2560,#141a33);cursor:pointer;font-family:Inter,system-ui,sans-serif}
+    .pct-table:hover:not(:disabled){border-color:#8e7dff;filter:brightness(1.12)}
+    .pct-table:disabled{cursor:not-allowed;filter:grayscale(.8);opacity:.55}
+    .pct-table strong{font-size:13px}
+    .pct-table small{color:#aab4d0;font-size:10px}
+    .pct-table-prize{margin-top:6px;color:#ffe079;font-size:10px;font-weight:700}
+    .pct-table-cost{color:#8792b2;font-size:9px}
+    .pct-table-blocked{margin-top:5px;color:#ffc9d8;font-size:9px;line-height:1.5}
+    .pct-back{margin-top:14px}
+    /* --- os três desafios de uma mesa --- */
+    .pct-difficulties{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:10px;
+      width:100%;min-width:0;max-width:780px;margin:4px auto 0;text-align:left}
+    .pct-difficulty{display:grid;gap:5px;padding:13px;border:1px solid #ffffff20;border-radius:13px;
+      color:#fff;background:#1a2140;cursor:pointer;font-family:Inter,system-ui,sans-serif}
+    .pct-difficulty:hover:not(:disabled){filter:brightness(1.15)}
+    .pct-difficulty:disabled{cursor:not-allowed;opacity:.5}
+    .pct-difficulty.easy{border-color:#57bc8355}
+    .pct-difficulty.normal{border-color:#4ca8ed66}
+    .pct-difficulty.hard{border-color:#ff8aa8;background:linear-gradient(145deg,#3d1b2a,#1a1225)}
+    .pct-difficulty-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+    .pct-difficulty-head strong{font-size:14px}
+    .pct-difficulty-head b{color:#ffe079;font-size:11px}
+    .pct-difficulty-prize{color:#bfffd8;font-size:11px;font-weight:700}
+    .pct-difficulty-house{color:#9aa6c6;font-size:9px;line-height:1.55}
     .pct-step.done{border-color:#4bd68a55;color:#bfffd8;background:#143123}
     .pct-step.done i{background:#2ca567;color:#fff}
     .pct-step.active{border-color:#f6d76888;color:#fff1b0;background:#3b3012}
@@ -78,9 +115,11 @@ const rewardCopy = (reward) => [
   reward?.normal ? `${reward.normal} Nacional` : '',
   reward?.rare ? `${reward.rare} Raro` : '',
   reward?.legendary ? `${reward.legendary} Lendário` : '',
+  reward?.exoticChest ? 'Baú Exótico' : '',
 ].filter(Boolean).join(' + ');
 
-const winsCopy = (count) => `${count} ${count === 1 ? 'vitória' : 'vitórias'}`;
+const coins = (value) => Number(value || 0).toLocaleString('pt-BR');
+
 
 export function createPokemonCasinoTablePanel({
   gameItems,
@@ -110,6 +149,10 @@ export function createPokemonCasinoTablePanel({
   const turnLabel = root.querySelector('.cg-turn');
   const playerScore = root.querySelector('.cg-score .p1');
   const houseScore = root.querySelector('.cg-score .p2');
+  // `tables` é o salão (as quatro mesas); `league` é a mesa em que estou sentado.
+  // Com `league` nulo o painel mostra a escolha de mesa, não uma partida.
+  let tables = [];
+  let league = '';
   let game = null;
   let round = null;
   let selected = '';
@@ -139,27 +182,28 @@ export function createPokemonCasinoTablePanel({
     </${close}>`;
   };
 
-  const achievedLevel = () => round?.rewardLevel
-    || (round?.status === 'won' ? round.level : Math.max(0, (round?.level || 1) - 1));
 
-  const protectedReward = () => {
-    const achieved = achievedLevel();
-    return achieved > 0 ? rewardCopy(game?.rewards?.[achieved - 1]) : 'nenhum';
-  };
+  const difficultyAt = (id) => game?.difficulties?.find((entry) => entry.id === id);
 
-  const threatCopy = (level) => {
-    if (level === 4) return 'A casa terá 1 carta energizada com +1.';
-    if (level === 5) return 'A casa terá 3 cartas energizadas com +1.';
-    if (level === 6) return 'Mewtwo Rei 15/15/15/15 e 5 cartas energizadas estarão na mão inicial.';
-    return '';
-  };
-
+  /**
+   * Durante uma escada a trilha mostra as QUATRO partidas do modo, com a faixa de
+   * prêmio de cada uma. Fora dela, os três modos.
+   */
   function renderProgress() {
-    const current = round?.level || 1;
-    const achieved = achievedLevel();
-    progress.innerHTML = (game?.rewards || []).map((reward) => `<span class="pct-step
-      ${reward.level <= achieved ? 'done' : reward.level === current ? 'active' : ''}">
-      <i>${reward.level <= achieved ? '✓' : reward.level}</i><small>${escapeHtml(rewardCopy(reward))}</small>
+    if (round && round.status !== 'left') {
+      const modo = difficultyAt(round.difficulty);
+      progress.innerHTML = (modo?.levels || []).map((entry) => `<span class="pct-step
+        ${entry.level <= round.matchesWon ? 'done' : entry.level === round.match ? 'active' : ''}"
+        title="Partida ${entry.level} de ${round.matches} · vale ${escapeHtml(rewardCopy(entry.prize))}">
+        <i>${entry.level <= round.matchesWon ? '✓' : entry.level}</i>
+        <small>${escapeHtml(rewardCopy(entry.prize))}</small>
+      </span>`).join('');
+      return;
+    }
+    progress.innerHTML = (game?.difficulties || []).map((entry) => `<span class="pct-step"
+      title="${escapeHtml(entry.houseCopy)}">
+      <i>${entry.id === 'hard' ? '🔥' : entry.id === 'normal' ? '◆' : '○'}</i>
+      <small>${escapeHtml(entry.name)}<b>${coins(entry.price)}⨮</b></small>
     </span>`).join('');
   }
 
@@ -198,45 +242,94 @@ export function createPokemonCasinoTablePanel({
     });
   }
 
+  /** O salão: quatro mesas, cada uma pedindo o baralho da sua liga. */
+  function renderTables() {
+    content.innerHTML = `<section class="pct-tables">
+      <h3>Escolha a mesa</h3>
+      <p class="pct-tables-copy">Cada mesa joga na sua liga, com o seu baralho daquela liga. As três
+        dificuldades custam o mesmo em qualquer mesa — <strong>50 · 100 · 200</strong> — e o que muda
+        de mesa para mesa é o prêmio. Os melhores estão na Master.</p>
+      <div class="pct-table-list">${tables.map((table) => {
+        const hard = table.difficulties[table.difficulties.length - 1];
+        return `<button class="pct-table" type="button" data-table="${table.leagueId}"
+          ${table.deckReady ? '' : 'disabled'}>
+          <strong>${escapeHtml(table.name)}</strong>
+          <small>${table.maxPower == null ? 'sem teto de poder' : `até ${table.maxPower} de poder`}</small>
+          <span class="pct-table-prize">Topo do Hard: ${escapeHtml(rewardCopy(hard.levels[hard.levels.length - 1].prize))}</span>
+          <span class="pct-table-cost">${table.difficulties.map((entry) =>
+            `${entry.name} ${coins(entry.price)}`).join(' · ')}</span>
+          ${table.deckReady ? '' : `<span class="pct-table-blocked">${escapeHtml(table.deckError)}</span>`}
+        </button>`;
+      }).join('')}</div>
+    </section>`;
+    content.querySelectorAll('[data-table]').forEach((button) => {
+      button.onclick = () => enterTable(button.dataset.table);
+    });
+  }
+
+  /** A escada continua? (venceu, ainda tem partida e o prêmio não foi pago) */
+  const canContinue = () => Boolean(round && round.status === 'won'
+    && round.match < round.matches && !round.prizeTaken);
+
+  const lockedCopy = () => (round?.lockedPrize ? rewardCopy(round.lockedPrize) : 'nenhum');
+
   const resultCopy = () => {
-    if (!round) return `A entrada custa ${game?.entryCost || 100} moedas. Vença, avance e decida quando sacar.`;
-    if (round.status === 'won') return round.level === 6
-      ? `Liga vencida! ${rewardCopy(round.reward)} recebido.`
-      : `Vitória! ${rewardCopy(game.rewards[round.level - 1])} agora está protegido. ${
-        threatCopy(round.nextLevel)}`;
-    if (round.status === 'lost') return round.rewardLevel > 0
-      ? `A casa venceu. Prêmio de ${winsCopy(round.rewardLevel)} recebido: ${rewardCopy(round.reward)}.`
-      : 'A casa venceu antes da primeira vitória. A sequência terminou sem prêmio.';
-    if (round.status === 'left') return round.rewardLevel > 0
-      ? `Você saiu com o prêmio de ${winsCopy(round.rewardLevel)}: ${rewardCopy(round.reward)}.`
-      : 'Você saiu sem vitórias e sem prêmio.';
+    if (!round) return 'Escolha o modo. Você paga uma vez e enfrenta quatro partidas, cada uma valendo mais.';
+    const modo = difficultyAt(round.difficulty)?.name || '';
+    if (round.status === 'won') {
+      return round.match === round.matches
+        ? `Escada do ${modo} fechada! ${rewardCopy(round.prize)} recebido.`
+        : `Vitória ${round.match} de ${round.matches}. ${rewardCopy(round.prize)} travado — a próxima vale mais.`;
+    }
+    if (round.status === 'lost') {
+      return round.matchesWon > 0
+        ? `A casa venceu a partida ${round.match}. Você leva o que já tinha travado: ${lockedCopy()}.`
+        : `A casa venceu a primeira. As ${coins(round.price)} moedas do ${modo} ficaram com ela.`;
+    }
+    if (round.status === 'left') {
+      return round.matchesWon > 0 ? `Você sacou ${lockedCopy()}.` : 'Você saiu sem travar faixa nenhuma.';
+    }
     return '';
   };
 
   function renderLobby() {
     const status = round?.status || '';
-    const canContinue = status === 'won' && round.level < 6;
-    const primary = !round ? `COMEÇAR · ${game?.entryCost || 100} MOEDAS`
-      : canContinue ? 'CONTINUAR A SEQUÊNCIA'
-        : `NOVA SEQUÊNCIA · ${game?.entryCost || 100} MOEDAS`;
+    const seguir = canContinue();
     content.innerHTML = `<section class="pct-lobby">
       <div class="pct-lobby-mark">${status === 'won' ? '🏆' : status === 'lost' ? '♠' : '⚔'}</div>
-      <h3>${status === 'won' ? 'Vitória contra a casa' : status === 'lost' ? 'Sequência encerrada' : 'Liga Pokémon da Casa'}</h3>
+      <h3>${escapeHtml(game?.name || 'Liga Pokémon da Casa')}</h3>
       <div class="pct-result ${status}">${resultCopy()}</div>
-      <p>Você paga somente ao iniciar uma sequência. Cada vitória melhora o prêmio protegido;
-        perder ou sair encerra a tentativa e entrega apenas o maior prêmio alcançado.</p>
-      <div class="pct-actions"><button class="cg-btn primary pct-action${canContinue ? '' : ' only'}"
-        type="button" data-action="start" ${busy ? 'disabled' : ''}>${primary}</button>
-        ${canContinue ? `<button class="cg-btn pct-exit pct-action" type="button" data-action="cashout"
-          ${busy ? 'disabled' : ''}>SAIR COM ${escapeHtml(protectedReward())}</button>` : ''}</div>
+      ${seguir ? `<div class="pct-actions">
+          <button class="cg-btn primary pct-action" type="button" data-action="next" ${busy ? 'disabled' : ''}>
+            PARTIDA ${round.match + 1} DE ${round.matches} (de graça)</button>
+          <button class="cg-btn pct-exit pct-action" type="button" data-action="cashout" ${busy ? 'disabled' : ''}>
+            SACAR ${escapeHtml(lockedCopy())}</button>
+        </div>`
+      : `<p>Você paga o modo <strong>uma vez</strong> e enfrenta quatro partidas seguidas. Cada vitória
+        trava uma faixa melhor; perder entrega a faixa já travada. Seu baralho respeita o teto da liga
+        nos três modos — quem passa dele é a casa, no Hard.</p>
+      <div class="pct-difficulties">${(game?.difficulties || []).map((entry) => `
+        <button class="pct-difficulty ${entry.id}" type="button" data-difficulty="${entry.id}"
+          title="${escapeHtml(entry.houseCopy)}" ${busy ? 'disabled' : ''}>
+          <span class="pct-difficulty-head"><strong>${escapeHtml(entry.name)}</strong>
+            <b>${coins(entry.price)} moedas</b></span>
+          <span class="pct-difficulty-prize">${entry.levels.map((nivel) =>
+            escapeHtml(rewardCopy(nivel.prize))).join(' → ')}</span>
+        </button>`).join('')}</div>`}
+      ${game?.fromSalon ? '<button class="cg-btn pct-back" type="button" data-action="tables">↩ Ver as quatro mesas</button>' : ''}
     </section>`;
-    content.querySelector('[data-action="start"]').onclick = start;
+    content.querySelectorAll('[data-difficulty]').forEach((button) => {
+      button.onclick = () => start(button.dataset.difficulty);
+    });
+    content.querySelector('[data-action="next"]')?.addEventListener('click', () => start(round.difficulty));
     content.querySelector('[data-action="cashout"]')?.addEventListener('click', () => cashOut(false));
+    content.querySelector('[data-action="tables"]')?.addEventListener('click', () => {
+      league = ''; game = null; round = null; render();
+    });
   }
 
   function renderBattle() {
     const myTurn = round.currentPlayer === 0 && !busy;
-    const nextReward = game?.rewards?.[round.level - 1];
     content.innerHTML = `<div class="cg-arena"><div class="cg-board">${round.board.map((cell, index) =>
       `<button class="cg-cell${cell ? ` controller-${cell.controller}` : ''}" data-cell="${index}"
         ${cell || !myTurn || !selected ? 'disabled' : ''}>${cell ? cardMarkup(cell.cardId) : ''}</button>`).join('')}</div>
@@ -244,10 +337,14 @@ export function createPokemonCasinoTablePanel({
         <div class="pct-house-copy"><strong>Casa</strong>
           <small>${round.houseHandCount} na mão · ${round.houseDrawCount} no monte</small></div>
         <div class="cg-card-backs">${Array.from({ length: round.houseHandCount }, () => '<i class="cg-back"></i>').join('')}</div>
-        <div class="pct-stake"><span class="protected">Protegido: ${escapeHtml(protectedReward())}</span>
-          <span>Ao vencer: ${escapeHtml(rewardCopy(nextReward))}</span>
+        <div class="pct-stake" title="${escapeHtml(round.houseCopy)}">
+          <span class="protected">Travado: ${escapeHtml(lockedCopy())}</span>
+          <span>Ao vencer: ${escapeHtml(rewardCopy(round.prize))}</span>
+          <span>${escapeHtml(round.difficultyName)} ${round.match}/${round.matches}</span>
           ${round.housePowerUps ? `<span>⚡ ${round.housePowerUps} ${round.housePowerUps === 1
     ? 'carta energizada' : 'cartas energizadas'}</span>` : ''}
+          ${game?.maxPower != null && round.houseMaxPower !== game.maxPower
+    ? `<span class="danger">⚠ Casa até ${round.houseMaxPower ?? '∞'} — você segue preso a ${game.maxPower}</span>` : ''}
           ${round.houseBoss ? `<span class="danger">♛ ${escapeHtml(round.houseBoss.name)} garantido</span>` : ''}
         </div></div>
         <div class="cg-hand-title"><strong>Sua mão</strong><span>${round.playerDrawCount} no monte</span></div>
@@ -255,7 +352,7 @@ export function createPokemonCasinoTablePanel({
     button: true, disabled: !myTurn, showInfo: true,
   })).join('')}</div>
         <button class="cg-btn pct-exit pct-action" type="button" data-action="cashout" ${busy ? 'disabled' : ''}>
-          ${round.level > 1 ? `SAIR COM ${escapeHtml(protectedReward())}` : 'SAIR SEM PRÊMIO'}</button>
+          ${round.matchesWon > 0 ? `SAIR COM ${escapeHtml(lockedCopy())}` : 'DESISTIR (sem prêmio)'}</button>
       </aside></div>`;
     content.querySelectorAll('.cg-hand > .cg-card').forEach((button) => {
       button.onclick = () => {
@@ -277,18 +374,37 @@ export function createPokemonCasinoTablePanel({
     houseScore.textContent = score[1];
     turnLabel.textContent = round?.status === 'ongoing'
       ? busy || round.currentPlayer === 1 ? 'Vez da casa' : 'Sua vez'
-      : 'Liga Pokémon da Casa';
-    renderProgress();
-    if (!round || round.status !== 'ongoing') renderLobby();
+      : game?.name || 'Liga Pokémon da Casa';
+    progress.hidden = !league;
+    if (league) renderProgress();
+    if (!league) renderTables();
+    else if (!round || round.status !== 'ongoing') renderLobby();
     else renderBattle();
   }
 
-  async function start() {
+  async function enterTable(leagueId) {
     if (busy) return;
     busy = true;
     render();
     try {
-      round = await gameItems.startPokemonCasinoBattle();
+      game = { ...await gameItems.pokemonCasinoTable(leagueId), fromSalon: tables.length > 0 };
+      league = leagueId;
+      round = game.round;
+      selected = '';
+    } catch (error) {
+      onToast(error.message);
+    } finally {
+      busy = false;
+      render();
+    }
+  }
+
+  async function start(difficulty) {
+    if (busy) return;
+    busy = true;
+    render();
+    try {
+      round = await gameItems.startPokemonCasinoBattle(league, difficulty);
       selected = '';
     } catch (error) {
       onToast(error.message);
@@ -303,16 +419,17 @@ export function createPokemonCasinoTablePanel({
     busy = true;
     render();
     try {
-      round = await gameItems.playPokemonCasinoCard(round.roundId, selected, cellIndex);
+      round = await gameItems.playPokemonCasinoCard(league, round.roundId, selected, cellIndex);
       selected = '';
-      if (round.status === 'won' && round.level < 6)
-        onToast(`Vitória! ${rewardCopy(game.rewards[round.level - 1])} protegido.`);
-      else if (round.status === 'won')
-        onToast(`Liga vencida! ${rewardCopy(round.reward)} recebido.`);
-      else if (round.status === 'lost')
-        onToast(round.rewardLevel > 0
-          ? `${rewardCopy(round.reward)} recebido. A sequência terminou.`
-          : 'A casa venceu. A sequência terminou sem prêmio.');
+      if (round.status === 'won') {
+        onToast(round.match === round.matches
+          ? `Escada fechada! ${rewardCopy(round.prize)} recebido.`
+          : `Vitória ${round.match}/${round.matches}. ${rewardCopy(round.prize)} travado.`);
+      } else if (round.status === 'lost') {
+        onToast(round.matchesWon > 0
+          ? `A casa venceu. Você leva ${rewardCopy(round.lockedPrize)}.`
+          : 'A casa venceu a primeira. Sem prêmio desta vez.');
+      }
     } catch (error) {
       onToast(error.message);
     } finally {
@@ -322,16 +439,17 @@ export function createPokemonCasinoTablePanel({
   }
 
   async function cashOut(closeAfter) {
-    if (busy || !round || !['ongoing', 'won'].includes(round.status)) {
+    if (busy || !round || !['ongoing', 'won'].includes(round.status) || round.prizeTaken) {
       if (closeAfter) finishClose();
       return;
     }
     busy = true;
     render();
     try {
-      round = await gameItems.leavePokemonCasinoTable(round.roundId);
-      if (round.rewardLevel > 0) onToast(`${rewardCopy(round.reward)} recebido.`);
-      else onToast('Sequência encerrada sem prêmio.');
+      round = await gameItems.leavePokemonCasinoTable(league, round.roundId);
+      onToast(round.matchesWon > 0
+        ? `${rewardCopy(round.lockedPrize)} recebido.`
+        : 'Você saiu sem travar faixa nenhuma.');
     } catch (error) {
       onToast(error.message);
     } finally {
@@ -355,11 +473,20 @@ export function createPokemonCasinoTablePanel({
 
   async function open(_gameId, options = {}) {
     hud.closeSheets();
-    game = await gameItems.pokemonCasinoTable();
-    round = game.round;
     closeHook = options.onClose || null;
     selected = '';
-    render();
+    league = '';
+    game = null;
+    round = null;
+    // A mesa física manda: cada uma das quatro é uma liga, então o painel abre
+    // direto nela. O salão só aparece se alguém abrir o painel sem mesa (o menu
+    // do jogo, um atalho antigo), e aí serve de índice.
+    if (options.leagueId) await enterTable(options.leagueId);
+    else {
+      const salon = await gameItems.pokemonCasinoTables();
+      tables = salon.tables || [];
+      render();
+    }
     root.hidden = false;
   }
 

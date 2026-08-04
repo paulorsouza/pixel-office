@@ -334,19 +334,77 @@
         },
         {
           "id": 19,
-          "name": "Liga Pokémon · Casa",
+          "name": "Liga Pokémon · Common League",
           "type": "pokemonCardTable",
-          "x": 352,
+          "x": 128,
           "y": 272,
           "width": 96,
           "height": 48,
           "rotation": 0,
           "visible": true,
           "properties": [
-            { "name": "id", "type": "string", "value": "pokemon-card-table-01" },
-            { "name": "tableId", "type": "string", "value": "pokemon-card-table-01" },
+            { "name": "id", "type": "string", "value": "pokemon-card-table-common" },
+            { "name": "tableId", "type": "string", "value": "pokemon-card-table-common" },
             { "name": "gameId", "type": "string", "value": "pokemon-card-table" },
-            { "name": "label", "type": "string", "value": "Desafiar Liga Pokémon da Casa" },
+            { "name": "leagueId", "type": "string", "value": "common" },
+            { "name": "label", "type": "string", "value": "Desafiar a casa · Common League" },
+            { "name": "interactionRadius", "type": "float", "value": 4.5 }
+          ]
+        },
+        {
+          "id": 21,
+          "name": "Liga Pokémon · Great League",
+          "type": "pokemonCardTable",
+          "x": 288,
+          "y": 272,
+          "width": 96,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "pokemon-card-table-great" },
+            { "name": "tableId", "type": "string", "value": "pokemon-card-table-great" },
+            { "name": "gameId", "type": "string", "value": "pokemon-card-table" },
+            { "name": "leagueId", "type": "string", "value": "great" },
+            { "name": "label", "type": "string", "value": "Desafiar a casa · Great League" },
+            { "name": "interactionRadius", "type": "float", "value": 4.5 }
+          ]
+        },
+        {
+          "id": 22,
+          "name": "Liga Pokémon · Ultra League",
+          "type": "pokemonCardTable",
+          "x": 448,
+          "y": 272,
+          "width": 96,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "pokemon-card-table-ultra" },
+            { "name": "tableId", "type": "string", "value": "pokemon-card-table-ultra" },
+            { "name": "gameId", "type": "string", "value": "pokemon-card-table" },
+            { "name": "leagueId", "type": "string", "value": "ultra" },
+            { "name": "label", "type": "string", "value": "Desafiar a casa · Ultra League" },
+            { "name": "interactionRadius", "type": "float", "value": 4.5 }
+          ]
+        },
+        {
+          "id": 23,
+          "name": "Liga Pokémon · Master League",
+          "type": "pokemonCardTable",
+          "x": 608,
+          "y": 272,
+          "width": 96,
+          "height": 48,
+          "rotation": 0,
+          "visible": true,
+          "properties": [
+            { "name": "id", "type": "string", "value": "pokemon-card-table-master" },
+            { "name": "tableId", "type": "string", "value": "pokemon-card-table-master" },
+            { "name": "gameId", "type": "string", "value": "pokemon-card-table" },
+            { "name": "leagueId", "type": "string", "value": "master" },
+            { "name": "label", "type": "string", "value": "Desafiar a casa · Master League" },
             { "name": "interactionRadius", "type": "float", "value": 4.5 }
           ]
         }
@@ -382,7 +440,7 @@
     }
   ],
   "nextlayerid": 6,
-  "nextobjectid": 21,
+  "nextobjectid": 24,
   "orientation": "orthogonal",
   "renderorder": "right-down",
   "tiledversion": "1.12.2",

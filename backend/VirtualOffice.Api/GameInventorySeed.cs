@@ -98,42 +98,9 @@ public static class GameInventorySeed
         new("of_172", "Quadro de métricas", "decor", "timeclock", Price: 190,
             Capabilities: """["hours-report"]"""),
 
-        new("equipment:skate", "Skate básico", "vehicles", ItemType: "vehicle", Price: 0,
-            Purchasable: false, StarterQuantity: 1, Capabilities: """["movement"]"""),
-        new("equipment:skate-neon", "Skate Neon", "vehicles", ItemType: "vehicle", Rarity: "rare",
-            Price: 620, Capabilities: """["movement"]"""),
-        new("equipment:roller-skates", "Patins", "vehicles", ItemType: "vehicle", Rarity: "uncommon",
-            Price: 450, Capabilities: """["movement"]"""),
-        new("equipment:roller-skates-pro", "Patins Pro", "vehicles", ItemType: "vehicle", Rarity: "rare",
-            Price: 720, Capabilities: """["movement"]"""),
-        new("equipment:electric-scooter", "Patinete elétrico", "vehicles", ItemType: "vehicle",
-            Rarity: "rare", Price: 900, Capabilities: """["movement"]"""),
-        new("equipment:electric-scooter-city", "Patinete City", "vehicles", ItemType: "vehicle",
-            Rarity: "epic", Price: 1250, Capabilities: """["movement"]"""),
-        new("equipment:motorcycle", "Moto", "vehicles", ItemType: "vehicle", Rarity: "epic",
-            Price: 1800, Capabilities: """["movement"]"""),
-        new("equipment:motorcycle-retro", "Moto Retrô", "vehicles", ItemType: "vehicle",
-            Rarity: "epic", Price: 2100, Capabilities: """["movement"]"""),
-        new("equipment:silver-chain", "Corrente de prata", "wearables", ItemType: "equipment",
-            Rarity: "uncommon", Price: 260),
-        new("equipment:gold-chain", "Corrente dourada", "wearables", ItemType: "equipment",
-            Rarity: "epic", Price: 820),
-        new("equipment:pixel-earrings", "Brincos Pixel", "wearables", ItemType: "equipment",
-            Rarity: "rare", Price: 480),
-        new("equipment:ruby-earrings", "Brincos Rubi", "wearables", ItemType: "equipment",
-            Rarity: "epic", Price: 850),
-        new("equipment:focus-bracelet", "Pulseira Foco", "wearables", ItemType: "equipment",
-            Rarity: "uncommon", Price: 300),
-        new("equipment:pulse-bracelet", "Pulseira Pulse", "wearables", ItemType: "equipment",
-            Rarity: "rare", Price: 520),
-        new("equipment:mechanical-keyboard", "Teclado mecânico", "peripherals", ItemType: "equipment",
-            Rarity: "rare", Price: 600),
-        new("equipment:compact-keyboard", "Teclado compacto", "peripherals", ItemType: "equipment",
-            Rarity: "uncommon", Price: 340),
-        new("equipment:precision-mouse", "Mouse Precision", "peripherals", ItemType: "equipment",
-            Rarity: "uncommon", Price: 280),
-        new("equipment:rgb-mouse", "Mouse RGB", "peripherals", ItemType: "equipment",
-            Rarity: "epic", Price: 760),
+        // Equipamento NÃO fica aqui: ele é gerado de `EquipmentCatalog`, que é dono do
+        // efeito, do preço e da raridade (ver docs/PLANO_EQUIPAMENTOS.md §7). Duas listas
+        // seria duas verdades — e a que tem efeito precisa ser a única.
 
         // O Nacional continua fora do balcão: ele é a moeda de recompensa do cassino e
         // o pacote inicial, então vendê-lo apagaria as duas coisas. O Especial também
@@ -171,15 +138,53 @@ public static class GameInventorySeed
     public static string StoreKindFor(string itemType) => itemType switch
     {
         "furniture" => "furniture",
-        "equipment" or "vehicle" => "equipment",
+        // Baú divide balcão com equipamento: é o que ele solta, e é onde o jogador
+        // procura. Um terceiro balcão exigiria um móvel novo em cada mapa por um
+        // catálogo de cinco linhas.
+        "equipment" or "vehicle" or LootboxCatalog.ItemType => "equipment",
         "booster" => "cards",
         _ => "",
     };
 
+    /// <summary>
+    /// Projeta o catálogo de equipamento no formato do seed. O tipo do item vem do
+    /// slot: só o automóvel é `vehicle` (é o que o cliente usa para mover), o resto é
+    /// `equipment`. Os dois caem no mesmo balcão via <see cref="StoreKindFor"/>.
+    /// </summary>
+    private static IEnumerable<CatalogItem> EquipmentCatalogItems() =>
+        EquipmentCatalog.Items.Select(item => new CatalogItem(
+            Key: item.CatalogKey,
+            Name: item.Name,
+            Category: item.Slot,
+            ItemType: item.Slot == EquipmentCatalog.SlotVehicle ? "vehicle" : "equipment",
+            Rarity: item.Rarity,
+            Price: item.Price,
+            Purchasable: item.IsPurchasable,
+            StarterQuantity: item.Starter ? 1 : 0,
+            Capabilities: item.Slot == EquipmentCatalog.SlotVehicle ? """["movement"]""" : "[]"));
+
+    /// <summary>
+    /// Baús no formato do seed. Eles são item de inventário como qualquer outro — é isso
+    /// que faz comprar, guardar e receber de recompensa já funcionarem sem código novo.
+    /// </summary>
+    private static IEnumerable<CatalogItem> LootboxCatalogItems() =>
+        LootboxCatalog.Tiers.Select(tier => new CatalogItem(
+            Key: tier.CatalogKey,
+            Name: tier.Name,
+            Category: "lootbox",
+            ItemType: LootboxCatalog.ItemType,
+            // A raridade do baú é a MELHOR coisa que ele pode soltar: é o que o jogador
+            // quer saber de relance, e é o que colore a borda na loja e na bag.
+            Rarity: tier.Table.MaxBy(row => EquipmentCatalog.RarityRank(row.Rarity))!.Rarity,
+            Price: tier.Price,
+            Purchasable: tier.IsPurchasable,
+            WeeklyLimit: tier.WeeklyLimit));
+
     public static async Task RunAsync(AppDb db)
     {
+        await RetireObsoleteEquipmentAsync(db);
         var existing = await db.GameItemDefinitions.ToDictionaryAsync(d => d.CatalogKey);
-        foreach (var item in Catalog)
+        foreach (var item in Catalog.Concat(EquipmentCatalogItems()).Concat(LootboxCatalogItems()))
         {
             if (!existing.TryGetValue(item.Key, out var definition))
             {
@@ -207,6 +212,28 @@ public static class GameInventorySeed
         await RealignPersonalFurnitureAsync(db);
         var users = await db.Users.Where(x => !x.IsBot).Select(x => x.Id).ToListAsync();
         foreach (var userId in users) await EnsureUserStockAsync(db, userId);
+    }
+
+    /// <summary>
+    /// Apaga os equipamentos que saíram do jogo — definição, instâncias e cota de loja.
+    ///
+    /// O jogo está em beta e os vestíveis antigos (brincos, corrente, pulseira) não têm
+    /// slot para onde ir na v2; os periféricos velhos foram substituídos por ids que
+    /// carregam efeito. Deixar a definição de pé só criaria item órfão: sem slot, ele
+    /// não aparece na bag nem pode ser equipado, mas continua ocupando o inventário e
+    /// aparecendo em qualquer consulta que junte instância com definição.
+    /// </summary>
+    public static async Task RetireObsoleteEquipmentAsync(AppDb db)
+    {
+        var retired = await db.GameItemDefinitions
+            .Where(x => EquipmentCatalog.RetiredCatalogKeys.Contains(x.CatalogKey))
+            .ToListAsync();
+        if (retired.Count == 0) return;
+        var ids = retired.Select(x => x.Id).ToList();
+        await db.GameItemInstances.Where(x => ids.Contains(x.DefinitionId)).ExecuteDeleteAsync();
+        await db.StorePurchaseQuotas.Where(x => ids.Contains(x.DefinitionId)).ExecuteDeleteAsync();
+        db.GameItemDefinitions.RemoveRange(retired);
+        await db.SaveChangesAsync();
     }
 
     /// <summary>Salas por andar. O mapa `personal-wing` tem exatamente estes slots físicos.</summary>

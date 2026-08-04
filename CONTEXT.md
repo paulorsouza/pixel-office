@@ -168,15 +168,40 @@ fica acessível do lado de fora. No `scene.restart()`, o renderer limpa móveis,
 cena anterior para não vazar ações como sentar ou pegar café para o mundo. Cenas fechadas podem
 manter limites de câmera explícitos; no hub a câmera usa toda a dimensão do mapa.
 
-**Equipamentos implementados:** `Tab` abre um loadout RPG persistente com seis slots (veículo,
-corrente, brincos, pulseira, teclado e mouse) e um baú com os itens disponíveis. Clicar no baú equipa
-o item no slot correto; clicar no slot o devolve. O slot de veículo oferece skate, patins, patinete
-elétrico e moto: segurar `Shift` ativa o escolhido, troca pose/visual e aplica a velocidade definida
-em `assets/equipment/catalog.json`; soltar volta imediatamente à caminhada. Os outros slots já têm
-itens e persistência, mas ainda não aplicam efeitos ao avatar. `src/EquipmentSystem.js` concentra o
-loadout, o perfil de movimento e a pixel art procedural. A moto reutiliza a pose sentada oficial do
-Adam; os packs comprados não possuem sprites pessoais adequados para os quatro veículos. Não há HUD
-fixo de veículo: o loadout aparece somente enquanto o menu está aberto.
+**Equipamentos (v2, em fases — ver [`docs/PLANO_EQUIPAMENTOS.md`](docs/PLANO_EQUIPAMENTOS.md)):**
+`Tab` abre um loadout RPG de seis slots — **mouse, teclado, amuleto, automóvel, celular e carteira** —
+ao lado da bag, que agora lista **só o que é do jogador** (antes era o catálogo inteiro com os não
+comprados apagados). Clicar no item equipa ou guarda; clicar no slot devolve.
+
+O loadout **mora no servidor** (`GameItemInstance.EquippedSlot`), não mais no `localStorage`: da v2
+em diante o que está equipado muda quanto o jogo paga, e efeito que o cliente guardasse sozinho seria
+efeito que o cliente escolhe. `GET /api/game/equipment` devolve loadout, itens e o efeito agregado
+já formatado; `PUT /api/game/equipment/{slot}` troca um slot.
+
+A divisão de donos é a regra que mantém o balanceamento em um lugar só:
+**`EquipmentCatalog.cs` é dono de efeito, raridade e preço; `assets/equipment/catalog.json` é dono do
+visual** (sprite, cor, velocidade, pose do piloto). O cliente junta os dois por `id` e não calcula
+efeito nenhum. Cinco raridades — Comum, Incomum, Rara, Lendária e Exótica — e uma regra dura de loja:
+**só Comum e Incomum se compram; o resto sai de baú** (Fase 3).
+
+Os atributos valem de verdade: `EquipmentState.EffectsForAsync` é a porta única que presença
+(moeda por minuto), cassino (amuleto nos dados e no caça-níqueis) e loja (desconto e cota da
+carteira) consultam. **Baús** (`ItemType = "lootbox"`) são item de inventário como qualquer outro —
+compram-se no balcão de equipamento, caem de objetivo, nível, cassino, Liga e do timer do celular,
+e abrem sorteando por raridade. Equipamento é **único por jogador**; quando a raridade sorteada já
+está completa, o baú paga moeda em vez de abrir vazio.
+
+Na UI, a raridade é um sistema: uma variável `--rarity` ligada por `[data-rarity]` colore card,
+encaixe, baú, chip e a revelação do prêmio — e **todo lugar que colore também escreve o nome da
+raridade**, porque só a cor deixaria de fora quem não distingue verde de azul. A bag é agrupada por
+slot, e apontar um item mostra "Agora / Trocando por" com os dois lados de efeito. Os efeitos ficam
+no próprio card, nunca em `title`: tooltip de atributo não abre no toque.
+
+Segurar `Shift` ativa o automóvel escolhido, troca pose/visual e aplica a velocidade do JSON; soltar
+volta à caminhada. A moto reutiliza a pose sentada oficial do Adam; os packs comprados não possuem
+sprites pessoais adequados para os veículos. Não há HUD fixo: o loadout aparece só com o menu aberto.
+QA do painel sem subir o Phaser: [`client-web/equipment-test.html`](client-web/equipment-test.html)
+(`?touch=1` liga a afordância de toque, como no jogo).
 Skate e patins usam uma base corporal estável em vez da corrida; as botas dos patins são renderizadas
 sobre os sapatos para permanecerem visualmente presas aos pés.
 
@@ -184,7 +209,8 @@ sobre os sapatos para permanecerem visualmente presas aos pés.
 prévia nas quatro direções e seleção persistente de pele, olhos, roupa, cabelo e acessório. O avatar
 é composto em tempo real por cinco folhas modulares LimeZu alinhadas, tanto no mundo quanto na ficha
 RPG. `assets/character/catalog.json` é a fonte de opções e frames; `src/CharacterSystem.js` concentra
-validação, `localStorage`, UI e sprites sobrepostos. Caminhada, idle, moto e os outros equipamentos
+validação, `localStorage` (aparência é cosmética, então aqui o navegador ainda serve), UI e sprites
+sobrepostos. Caminhada, idle, moto e os outros equipamentos
 continuam usando o mesmo corpo físico invisível para não duplicar colisão ou câmera.
 
 **Inventário e decoração persistentes:** cada unidade de mobília é uma instância única no backend,

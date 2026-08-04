@@ -51,11 +51,12 @@ public static class CardGameEndpoints
         new("generation-7", "Edição Alola", "Pokémon da Geração VII.", 7, 250),
         new("generation-8", "Edição Galar/Hisui", "Pokémon da Geração VIII.", 8, 250),
         new("generation-9", "Edição Paldea", "Pokémon da Geração IX.", 9, 250),
-        new("rare", "Booster Raro", "Cartas raras com chance shiny aumentada.", null, 2_500),
+        new("rare", "Booster Raro",
+            "Uma Rare+ garantida e 12,5% de shiny nas Comuns que vierem.", null, 2_500),
         new("ultra-rare", "Booster Ultrarraro",
-            "Cinco cartas Rare+, uma Epic garantida e 5% de shiny por carta.", null, 5_000),
+            "Uma Epic garantida, 5% de shiny por carta e 25% nas Comuns.", null, 5_000),
         new("legendary", "Booster Lendário",
-            "Cinco cartas Rare+, uma Legendary garantida e 10% de shiny por carta.", null, 10_000),
+            "Uma Legendary garantida, 10% de shiny por carta e 50% nas Comuns.", null, 10_000),
         new("special", "Booster Especial", "Cinco cartas dos tipos do alvo e 10% de shiny do alvo.", null,
             SpecialOtherShinyChance, true),
     ];
@@ -68,7 +69,7 @@ public static class CardGameEndpoints
         api.MapPost("/cardgame/boosters/exchange", ExchangeDuplicates);
         api.MapPost("/cardgame/boosters/rare/exchange", ExchangeRareBooster);
         api.MapPost("/cardgame/evolutions/exchange", ExchangeEvolution);
-        api.MapPut("/cardgame/deck", SaveDeck);
+        api.MapPut("/cardgame/deck/{leagueId}", SaveDeck);
         PokemonCasinoTableEndpoints.Map(api);
     }
 
@@ -84,21 +85,79 @@ public static class CardGameEndpoints
 
     private static async Task<IResult> SaveDeck(
         HttpRequest req,
+        string leagueId,
         CardGameDeckRequest body,
         IDbContextFactory<AppDb> factory)
     {
         if (Identity.UserId(req) is not int userId) return Results.Unauthorized();
+        if (CardGameLeagues.Find(leagueId) is null)
+            return Results.NotFound(new { error = "Liga desconhecida." });
         if (!CardGameCatalog.TryValidateDeck(body.CardIds, out var deck, out var error))
             return Results.BadRequest(new { error });
+        // O teto da liga é conferido AQUI, não só no cliente: o servidor é a
+        // autoridade da partida e a mesa da casa também confia nesta linha.
+        if (!CardGameLeagues.TryValidateForLeague(leagueId, deck, out var leagueError))
+            return Results.BadRequest(new { error = leagueError });
 
         await using var db = await factory.CreateDbContextAsync();
         if (!await OwnsDeckAsync(db, userId, deck))
             return Results.BadRequest(new { error = "Seu baralho contém uma carta que ainda não está no álbum." });
 
         var profile = await EnsureProfileAsync(db, userId);
-        profile.DeckJson = JsonSerializer.Serialize(deck);
+        var row = await db.CardGameDecks
+            .SingleOrDefaultAsync(item => item.UserId == userId && item.LeagueId == leagueId);
+        if (row is null)
+        {
+            row = new CardGameDeck { UserId = userId, LeagueId = leagueId };
+            db.CardGameDecks.Add(row);
+        }
+        row.CardsJson = JsonSerializer.Serialize(deck);
+        row.UpdatedUtc = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return Results.Ok(await SnapshotAsync(db, profile));
+    }
+
+    /// <summary>
+    /// Os baralhos do jogador, uma entrada por liga (vazia quando ainda não montou).
+    /// É o formato que o perfil publica e o que a mesa da casa consulta.
+    /// </summary>
+    public static async Task<Dictionary<string, string[]>> LoadDecksAsync(AppDb db, int userId)
+    {
+        var rows = await db.CardGameDecks.Where(item => item.UserId == userId).ToListAsync();
+        var decks = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        foreach (var league in CardGameLeagues.All)
+        {
+            var row = rows.SingleOrDefault(item => item.LeagueId == league.Id);
+            string[] cards;
+            try { cards = row is null ? [] : JsonSerializer.Deserialize<string[]>(row.CardsJson) ?? []; }
+            catch { cards = []; }
+            decks[league.Id] = cards;
+        }
+        return decks;
+    }
+
+    /// <summary>
+    /// O baralho de uma liga, já conferido contra as regras e contra o álbum.
+    /// Devolve vazio (com o motivo) quando não dá para jogar com ele.
+    /// </summary>
+    public static async Task<(string[] Deck, string Error)> LoadPlayableDeckAsync(
+        AppDb db,
+        int userId,
+        string leagueId)
+    {
+        var decks = await LoadDecksAsync(db, userId);
+        var stored = decks.TryGetValue(leagueId, out var found) ? found : [];
+        var league = CardGameLeagues.Find(leagueId);
+        var name = league?.Name ?? "liga";
+        if (stored.Length == 0)
+            return ([], $"Monte um baralho de 15 cartas para a {name} antes de jogar.");
+        if (!CardGameCatalog.TryValidateDeck(stored, out var deck, out var error))
+            return ([], error);
+        if (!CardGameLeagues.TryValidateForLeague(leagueId, deck, out var leagueError))
+            return ([], leagueError);
+        if (!await OwnsDeckAsync(db, userId, deck))
+            return ([], $"O baralho da {name} tem uma carta que saiu do seu álbum.");
+        return (deck, "");
     }
 
     private static async Task<IResult> OpenBooster(
@@ -124,9 +183,10 @@ public static class CardGameEndpoints
         if (balance is null || balance.Quantity <= 0)
             return Results.BadRequest(new { error = "Você não tem esse booster para abrir." });
 
+        var shinyBonus = ShinyBonusFrom(await EquipmentState.EffectsForAsync(db, userId));
         var cards = definition.IsSpecial
-            ? await OpenSpecialBoosterAsync(db, userId, CardGameCatalog.All[targetCardId])
-            : await OpenRegularBoosterAsync(db, userId, definition);
+            ? await OpenSpecialBoosterAsync(db, userId, CardGameCatalog.All[targetCardId], shinyBonus)
+            : await OpenRegularBoosterAsync(db, userId, definition, shinyBonus);
         balance.Quantity--;
         await db.SaveChangesAsync();
         await transaction.CommitAsync();
@@ -154,6 +214,7 @@ public static class CardGameEndpoints
         if (balances.Count == 0)
             return Results.BadRequest(new { error = "Você não tem boosters para abrir." });
 
+        var shinyBonus = ShinyBonusFrom(await EquipmentState.EffectsForAsync(db, userId));
         var cards = new List<object>();
         var openedBoosters = 0;
         foreach (var balance in balances)
@@ -170,8 +231,8 @@ public static class CardGameEndpoints
             for (var index = 0; index < quantity; index++)
             {
                 var opened = definition.IsSpecial
-                    ? await OpenSpecialBoosterAsync(db, userId, target!)
-                    : await OpenRegularBoosterAsync(db, userId, definition);
+                    ? await OpenSpecialBoosterAsync(db, userId, target!, shinyBonus)
+                    : await OpenRegularBoosterAsync(db, userId, definition, shinyBonus);
                 cards.AddRange(opened);
             }
             balance.Quantity = 0;
@@ -347,16 +408,28 @@ public static class CardGameEndpoints
         });
     }
 
+    /// <summary>
+    /// Bônus de shiny do amuleto, convertido para a resolução de 1/100.000 que o
+    /// sorteio usa. 1% vira 1.000. Ver docs/PLANO_EQUIPAMENTOS.md §4.
+    /// </summary>
+    private static int ShinyBonusFrom(EquipmentEffects effects) =>
+        (int)Math.Round(Math.Max(0, effects.BoosterShinyPercent) * 1_000);
+
     private static async Task<List<object>> OpenRegularBoosterAsync(
         AppDb db,
         int userId,
-        CardGameBoosterDefinition definition)
+        CardGameBoosterDefinition definition,
+        int shinyBonus)
     {
+        // TODO booster dá carta Comum e Incomum, inclusive os Rare+. Antes eles
+        // filtravam o pool para Rare/Epic/Legendary, e o efeito colateral era duro:
+        // quem progredia e passava a abrir só booster Raro NUNCA MAIS via carta
+        // fraca, e as ligas de baixo (Common ≤24, Great ≤34) secavam justo para
+        // quem tinha moeda para jogar nelas. O que separa os boosters continua
+        // sendo a garantia da última carta — e o shiny de Comum, abaixo.
         var pool = CardGameCatalog.All.Values
             .Where(IsBoosterEligible)
             .Where(card => definition.Generation is null || card.Generation == definition.Generation)
-            .Where(card => !IsRarePlusBooster(definition.Id)
-                || card.Rarity is "Rare" or "Epic" or "Legendary")
             .ToList();
         if (pool.Count == 0) throw new InvalidOperationException($"Booster {definition.Id} sem cartas.");
 
@@ -365,19 +438,21 @@ public static class CardGameEndpoints
         {
             // A garantia da última carta é o que separa os três degraus do topo: o
             // Lendário crava `Legendary`, o Ultrarraro (comprável) só chega a `Epic`
-            // e o Raro não promete nada além do próprio pool Rare+.
+            // e o Raro promete pelo menos `Rare`.
             var candidates = slot == CardsPerBooster - 1
                 ? definition.Id switch
                 {
                     "legendary" => pool.Where(card => card.Rarity == "Legendary").ToList(),
                     "ultra-rare" => pool.Where(card => card.Rarity is "Epic" or "Legendary").ToList(),
-                    "rare" => pool,
+                    "rare" => pool.Where(card => card.Rarity is "Rare" or "Epic" or "Legendary").ToList(),
                     _ => pool.Where(card => card.Rarity != "Common").ToList(),
                 }
                 : pool;
             if (candidates.Count == 0) candidates = pool;
             var card = WeightedPick(candidates);
-            var shiny = RandomNumberGenerator.GetInt32(100_000) < definition.ShinyChancePerHundredThousand;
+            var shiny = RandomNumberGenerator.GetInt32(100_000)
+                < definition.ShinyChancePerHundredThousand + shinyBonus
+                    + CommonShinyBonus(definition.Id, card.Rarity);
             var side = shiny ? RandomSide() : "";
             await AddCardAsync(db, userId, card.Id, side);
             opened.Add(CardPayload(card.Id, side));
@@ -385,10 +460,30 @@ public static class CardGameEndpoints
         return opened;
     }
 
+    /// <summary>
+    /// A compensação por Comum num booster caro: quanto mais raro o envelope,
+    /// maior a chance de a carta fraca vir SHINY.
+    /// </summary>
+    /// <remarks>
+    /// É o que faz o Raro continuar valendo o preço mesmo agora que ele solta
+    /// Comum. Um Bulbasaur no Booster Lendário não é lixo — é a melhor chance de
+    /// Bulbasaur shiny do jogo, e shiny de carta fraca é exatamente o que serve
+    /// para a Common League, onde o +1 não conta no teto.
+    /// </remarks>
+    private static int CommonShinyBonus(string boosterId, string rarity) =>
+        rarity is not ("Common" or "Uncommon") ? 0 : boosterId switch
+        {
+            "rare" => 12_500,        // 12,5%
+            "ultra-rare" => 25_000,  // 25%
+            "legendary" => 50_000,   // 50%
+            _ => 0,
+        };
+
     private static async Task<List<object>> OpenSpecialBoosterAsync(
         AppDb db,
         int userId,
-        CardGameDefinition target)
+        CardGameDefinition target,
+        int shinyBonus)
     {
         var pool = CardGameCatalog.All.Values
             .Where(IsBaseCard)
@@ -410,9 +505,10 @@ public static class CardGameEndpoints
             }
 
             var card = WeightedPick(pool);
-            // O shiny da carta-alvo pertence exclusivamente ao roll de 10%.
+            // O shiny da carta-alvo pertence exclusivamente ao roll de 10%; o amuleto
+            // ajuda só as outras, senão ele daria duas chances para a mesma carta.
             var shiny = card.Id != target.Id
-                && RandomNumberGenerator.GetInt32(100_000) < SpecialOtherShinyChance;
+                && RandomNumberGenerator.GetInt32(100_000) < SpecialOtherShinyChance + shinyBonus;
             var shinySide = shiny ? RandomSide() : "";
             await AddCardAsync(db, userId, card.Id, shinySide);
             opened.Add(CardPayload(card.Id, shinySide));
@@ -587,15 +683,14 @@ public static class CardGameEndpoints
             .SelectMany(item => CardGameCatalog.All[item.cardId].Types)
             .Distinct(StringComparer.Ordinal)
             .Count();
-        string[] deck;
-        try { deck = JsonSerializer.Deserialize<string[]>(profile.DeckJson) ?? []; }
-        catch { deck = []; }
+        var decks = await LoadDecksAsync(db, profile.UserId);
         return new
         {
             boosters = balances.Sum(item => item.quantity),
             boosterInventory = balances,
             boosterDefinitions = BoosterDefinitions,
-            deck,
+            decks,
+            leagues = CardGameLeagues.All,
             collection,
             uniqueCards = collection.Select(item => item.cardId).Distinct().Count(),
             shinyCards = collection.Where(item => item.isShiny).Sum(item => item.quantity),
@@ -650,10 +745,6 @@ public static class CardGameEndpoints
     };
 
     private static bool IsBaseCard(CardGameDefinition card) => string.IsNullOrEmpty(card.Variant);
-
-    /// <summary>Boosters do topo: sorteiam só de `Rare`, `Epic` e `Legendary`.</summary>
-    private static bool IsRarePlusBooster(string boosterId) =>
-        boosterId is "rare" or "ultra-rare" or "legendary";
 
     private static bool IsRareExchangeRarity(string rarity) =>
         rarity is "Rare" or "Epic" or "Legendary";

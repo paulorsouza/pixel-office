@@ -13,19 +13,47 @@ public sealed record ArrangeDiceRun(
     int Length,
     int[] Cards,
     int Multiplier);
+/// <summary>
+/// Bônus de amuleto congelado no início da rodada.
+///
+/// Fica gravado no estado, e não é lido do inventário a cada lance, porque a rodada é
+/// um contrato fechado na hora da aposta: trocar de amuleto no meio não pode mudar as
+/// regras do que já está em jogo. De quebra, o `OutcomeJson` passa a registrar sob
+/// quais regras a rodada correu — que é o que torna a auditoria possível.
+/// </summary>
+public sealed class ArrangeDiceBonus
+{
+    public int StartRolls { get; set; }
+    public int TwoExtraRolls { get; set; }
+    public bool TwelveKeepsRoll { get; set; }
+    public int DoublesBonusRoll { get; set; }
+
+    public static ArrangeDiceBonus From(EquipmentEffects effects) => new()
+    {
+        StartRolls = Math.Max(0, effects.DiceStartRolls),
+        TwoExtraRolls = Math.Max(0, effects.DiceTwoExtraRolls),
+        TwelveKeepsRoll = effects.DiceTwelveKeepsRoll,
+        DoublesBonusRoll = Math.Max(0, effects.DiceDoublesBonusRoll),
+    };
+}
+
 public sealed class ArrangeDiceState
 {
     public int[] Cards { get; set; } = [];
     public List<ArrangeDiceRoll> Rolls { get; set; } = [];
     public List<int> LiftedCards { get; set; } = [];
     public List<string> ActionKeys { get; set; } = [];
-    public int RollsRemaining { get; set; } = 5;
+    public int RollsRemaining { get; set; } = ArrangeDiceMath.BaseRolls;
+    public ArrangeDiceBonus Bonus { get; set; } = new();
+    /// <summary>Duplas seguidas até agora. Zera quando sai um lance que não é dupla.</summary>
+    public int ConsecutiveDoubles { get; set; }
     public bool WildcardPending { get; set; }
     public string Status { get; set; } = "rolling";
     public ArrangeDiceRun? WinningRun { get; set; }
     public int SequenceRepeatCard { get; set; }
     public int SequenceRepeatCount { get; set; }
-    public int RepeatMultiplier { get; set; } = 1;
+    /// <summary>Pontos percentuais (100 = sem bônus). Ver ArrangeDiceMath.RepeatPercent.</summary>
+    public int RepeatMultiplier { get; set; } = 100;
     public int BestRepeatedSum { get; set; }
     public int BestRepeatedCount { get; set; }
     public int Multiplier { get; set; }
@@ -33,6 +61,8 @@ public sealed class ArrangeDiceState
     public int BoostersAwarded { get; set; }
     public string BoosterIdAwarded { get; set; } = "";
     public int? BoosterBalance { get; set; }
+    /// <summary>Baú concedido pela jogada perfeita (sequência de 7). Vazio quando não houve.</summary>
+    public string ChestAwarded { get; set; } = "";
     public List<CardGameReward> CardsAwarded { get; set; } = [];
 }
 public sealed record BlackjackCard(string Rank, string Suit);
@@ -58,7 +88,10 @@ public static class CasinoEndpoints
     // Mantido somente para desserializar rodadas históricas da máquina removida.
     private const string PokemonSlotsId = "pokemon-slots";
     private const string BlackjackId = "blackjack";
-    private const string ArrangeDiceRules = "2026-07-30.1";
+    // 2026-07-31: tabela de pagamento em pontos percentuais e curva refeita. Rodada
+    // antiga não pode ser lida com a régua nova — o `RepeatMultiplier = 1` de antes
+    // viraria 1% aqui.
+    private const string ArrangeDiceRules = "2026-07-31.1";
     private const string NerdSlotsRules = "2026-07-29.5";
     private const string BlackjackRules = "2026-07-30.1";
     private const string PikachuPlayerId = "special-casino-pikachu";
@@ -112,7 +145,10 @@ public static class CasinoEndpoints
             var pending = recent.FirstOrDefault(row => DeserializeArrange(row).Status != "complete");
             if (pending is not null) activeRound = ToArrangeDiceResult(pending);
         }
-        return Results.Ok(GameSnapshot(gameId, coins.Value, activeRound));
+        // O amuleto entra na ficha do jogo, não só na rodada: o jogador precisa ver
+        // "6 lançamentos" ANTES de apostar, senão ele decide a aposta com o número errado.
+        var effects = await EquipmentState.EffectsForAsync(db, userId);
+        return Results.Ok(GameSnapshot(gameId, coins.Value, activeRound, effects));
     }
 
     private static async Task<IResult> Play(
@@ -167,10 +203,13 @@ public static class CasinoEndpoints
         if (user.Coins < body.Bet)
             return Results.Conflict(new { error = "Moedas insuficientes.", coins = user.Coins, bet = body.Bet });
 
+        // Amuleto (e alguns veículos) mudam as regras da mesa. O efeito é lido UMA vez,
+        // aqui, e viaja com a rodada — ver ArrangeDiceBonus.
+        var effects = await EquipmentState.EffectsForAsync(db, userId);
         CasinoRound round = gameId.ToLowerInvariant() switch
         {
-            ArrangeDiceId => CreateArrangeDiceRound(user, body),
-            NerdSlotsId => await CreateSlotRoundAsync(db, user, body),
+            ArrangeDiceId => CreateArrangeDiceRound(user, body, effects),
+            NerdSlotsId => await CreateSlotRoundAsync(db, user, body, effects),
             BlackjackId => await CreateBlackjackRoundAsync(db, user, body),
             _ => throw new InvalidOperationException("Jogo sem implementação."),
         };
@@ -237,20 +276,7 @@ public static class CasinoEndpoints
         {
             if (state.RollsRemaining <= 0)
                 return Results.Conflict(new { error = "Não restam lançamentos." });
-            var roll = ArrangeDiceMath.Roll();
-            state.Rolls.Add(roll);
-            state.RollsRemaining--;
-            if (roll.Sum == 2)
-                state.RollsRemaining = Math.Min(
-                    state.RollsRemaining + 2,
-                    ArrangeDiceMath.MaxRolls - state.Rolls.Count);
-            else if (roll.Sum == 12)
-            {
-                state.RollsRemaining = Math.Max(0, state.RollsRemaining - 1);
-                state.WildcardPending = state.LiftedCards.Count < state.Cards.Length;
-            }
-            else if (state.Cards.Contains(roll.Sum) && !state.LiftedCards.Contains(roll.Sum))
-                state.LiftedCards.Add(roll.Sum);
+            ArrangeDiceMath.ApplyRoll(state, ArrangeDiceMath.Roll());
         }
 
         state.ActionKeys.Add(body.IdempotencyKey);
@@ -276,6 +302,11 @@ public static class CasinoEndpoints
                 state.BoosterBalance = await CardGameEndpoints.GrantBoostersAsync(db, userId, 1, "rare");
             }
             else state.BoosterBalance = grant.BoosterBalance;
+            // A sequência de sete é a jogada perfeita da mesa (200×). Ela paga um Baú
+            // Lendário além da carta — sem teto, porque a raridade da jogada já é o teto.
+            if (state.WinningRun?.Length >= 7
+                && await Lootboxes.GrantAsync(db, userId, LootboxCatalog.Legendary) is not null)
+                state.ChestAwarded = LootboxCatalog.Legendary;
             var user = await db.Users.SingleAsync(x => x.Id == userId);
             user.Coins = checked(user.Coins + state.Payout);
             round.Payout = state.Payout;
@@ -347,11 +378,23 @@ public static class CasinoEndpoints
         return Results.Ok(rows.Select(ToGameResult));
     }
 
-    private static CasinoRound CreateArrangeDiceRound(User user, CasinoRoundRequest body)
+    private static CasinoRound CreateArrangeDiceRound(
+        User user,
+        CasinoRoundRequest body,
+        EquipmentEffects effects)
     {
         var before = user.Coins;
         user.Coins = checked(user.Coins - body.Bet);
-        var state = new ArrangeDiceState { Cards = body.Cards! };
+        var bonus = ArrangeDiceBonus.From(effects);
+        var state = new ArrangeDiceState
+        {
+            Cards = body.Cards!,
+            Bonus = bonus,
+            // O lançamento inicial extra cabe DENTRO do teto: começar com um a mais é
+            // começar em 6 de 15, não em 16. Do contrário o amuleto abriria uma rodada
+            // que nunca fecha.
+            RollsRemaining = Math.Min(ArrangeDiceMath.BaseRolls + bonus.StartRolls, ArrangeDiceMath.MaxRolls),
+        };
         return new CasinoRound
         {
             UserId = user.Id,
@@ -369,7 +412,8 @@ public static class CasinoEndpoints
     private static async Task<CasinoRound> CreateSlotRoundAsync(
         AppDb db,
         User user,
-        CasinoRoundRequest body)
+        CasinoRoundRequest body,
+        EquipmentEffects effects)
     {
         var symbols = Enumerable.Range(0, 3)
             .Select(_ => NerdSlotsMath.Spin())
@@ -384,8 +428,19 @@ public static class CasinoEndpoints
             "porygon" => new[] { PorygonJackpotId },
             _ => [],
         };
+        // O amuleto não mexe nos rolos — mexer no peso do símbolo mudaria também o RTP
+        // em moeda, de carona. Ele dá um sorteio SEPARADO, e só quando a trinca de
+        // booster não saiu, para nunca virar booster em dobro na mesma jogada.
+        var bonusBooster = (special?.Boosters ?? 0) == 0
+            && NerdSlotsMath.RollBonusBooster(effects.SlotsBoosterChancePercent);
         var grant = await CardGameEndpoints.GrantCasinoRewardsAsync(
-            db, user.Id, special?.Boosters ?? 0, cardIds);
+            db, user.Id, (special?.Boosters ?? 0) + (bonusBooster ? 1 : 0), cardIds);
+        // Trinca de foguete é a combinação mais rara em moeda do rolo (0,0125%). Ela
+        // passa a pagar também um Baú Lendário — sem teto, porque 1 em 8.000 é o teto.
+        var chest = symbols.All(symbol => symbol == "rocket")
+            && await Lootboxes.GrantAsync(db, user.Id, LootboxCatalog.Legendary) is not null
+                ? LootboxCatalog.Legendary
+                : "";
         var before = user.Coins;
         user.Coins = checked(user.Coins - body.Bet + payout);
         return new CasinoRound
@@ -400,6 +455,10 @@ public static class CasinoEndpoints
                 symbols,
                 multiplier,
                 boostersAwarded = grant.Boosters,
+                // Registrado para a auditoria distinguir booster de trinca de booster
+                // de amuleto — sem isso, o RTP medido depois misturaria os dois.
+                bonusBooster,
+                chestAwarded = chest,
                 boosterBalance = grant.BoosterBalance,
                 cardsAwarded = grant.Cards,
             }),
@@ -457,7 +516,11 @@ public static class CasinoEndpoints
         _ => [],
     };
 
-    private static object GameSnapshot(string gameId, int coins, object? activeRound = null) =>
+    private static object GameSnapshot(
+        string gameId,
+        int coins,
+        object? activeRound = null,
+        EquipmentEffects? effects = null) =>
         gameId.ToLowerInvariant() switch
     {
         ArrangeDiceId => new
@@ -467,24 +530,32 @@ public static class CasinoEndpoints
             rulesVersion = ArrangeDiceRules,
             cards = ArrangeDiceMath.AvailableCards,
             cardsToChoose = 7,
-            initialRolls = 5,
+            initialRolls = Math.Min(
+                ArrangeDiceMath.BaseRolls + Math.Max(0, effects?.DiceStartRolls ?? 0),
+                ArrangeDiceMath.MaxRolls),
+            baseInitialRolls = ArrangeDiceMath.BaseRolls,
+            amulet = ArrangeDiceBonus.From(effects ?? EquipmentEffects.None),
             maxRolls = ArrangeDiceMath.MaxRolls,
             bets = ArrangeDiceBets,
             coins,
+            // `multiplier` continua sendo a escala que o jogador lê (0,5× / 1× / …); o
+            // servidor guarda em pontos percentuais para caber meio multiplicador.
             payouts = new[]
             {
-                new { run = 3, multiplier = 4, card = (string?)null, booster = (string?)null },
-                new { run = 4, multiplier = 12, card = (string?)null, booster = (string?)null },
-                new { run = 5, multiplier = 40, card = (string?)null, booster = (string?)"rare" },
-                new { run = 6, multiplier = 80, card = (string?)PikachuPlayerId, booster = (string?)"rare" },
-                new { run = 7, multiplier = 200, card = (string?)MewtwoKingId, booster = (string?)"rare" },
+                new { run = 3, multiplier = ArrangeDiceMath.PayoutPercent(3) / 100.0, card = (string?)null, booster = (string?)null },
+                new { run = 4, multiplier = ArrangeDiceMath.PayoutPercent(4) / 100.0, card = (string?)null, booster = (string?)null },
+                new { run = 5, multiplier = ArrangeDiceMath.PayoutPercent(5) / 100.0, card = (string?)null, booster = (string?)"rare" },
+                new { run = 6, multiplier = ArrangeDiceMath.PayoutPercent(6) / 100.0, card = (string?)PikachuPlayerId, booster = (string?)"rare" },
+                new { run = 7, multiplier = ArrangeDiceMath.PayoutPercent(7) / 100.0, card = (string?)MewtwoKingId, booster = (string?)"rare" },
             },
             deuce = "Repete o lançamento e concede uma rodada extra.",
             boxcars = "Remove uma rodada futura e permite levantar qualquer carta.",
+            // Derivado da mesma função que paga, e não repetido à mão: era literal, e por
+            // isso a ficha continuou anunciando 3× e 20× depois do rebalanceamento.
             repeatedSequence = new[]
             {
-                new { repeats = 2, multiplier = 3 },
-                new { repeats = 3, multiplier = 20 },
+                new { repeats = 2, multiplier = ArrangeDiceMath.RepeatPercent(2) / 100.0 },
+                new { repeats = 3, multiplier = ArrangeDiceMath.RepeatPercent(3) / 100.0 },
             },
             repeatedRewards = new[]
             {
@@ -552,14 +623,19 @@ public static class CasinoEndpoints
             state.LiftedCards,
             state.RollsRemaining,
             state.WildcardPending,
+            // O amuleto vai junto para a mesa poder DIZER que está ajudando. Bônus que
+            // só aparece na aritmética do saldo é bônus que o jogador não credita ao
+            // item que comprou.
+            state.Bonus,
+            state.ConsecutiveDoubles,
             state.Status,
             state.WinningRun,
             state.SequenceRepeatCard,
             state.SequenceRepeatCount,
-            state.RepeatMultiplier,
+            repeatMultiplier = state.RepeatMultiplier / 100.0,
             state.BestRepeatedSum,
             state.BestRepeatedCount,
-            state.Multiplier,
+            multiplier = state.Multiplier / 100.0,
             payout = state.Payout,
             net = state.Status == "complete" ? state.Payout - round.Bet : -round.Bet,
             coins = round.BalanceAfter,
@@ -568,6 +644,8 @@ public static class CasinoEndpoints
                 boosters = state.BoostersAwarded,
                 boosterId = state.BoosterIdAwarded,
                 boosterBalance = state.BoosterBalance,
+                chest = state.ChestAwarded,
+                chestName = LootboxCatalog.Find(state.ChestAwarded)?.Name ?? "",
                 cards = state.CardsAwarded,
             },
             round.CreatedUtc,
@@ -586,6 +664,12 @@ public static class CasinoEndpoints
             ? balanceNode.GetInt32() : (int?)null;
         var cards = root.TryGetProperty("cardsAwarded", out var cardsNode)
             ? cardsNode.Deserialize<CardGameReward[]>() ?? [] : [];
+        // `TryGetProperty` em tudo que é novo: rodadas antigas não têm estes campos, e
+        // o histórico precisa continuar desserializando.
+        var chest = root.TryGetProperty("chestAwarded", out var chestNode)
+            ? chestNode.GetString() ?? "" : "";
+        var bonusBooster = root.TryGetProperty("bonusBooster", out var bonusNode)
+            && bonusNode.GetBoolean();
         return new
         {
             roundId = round.Id,
@@ -597,7 +681,12 @@ public static class CasinoEndpoints
             round.Payout,
             net = round.Payout - round.Bet,
             coins = round.BalanceAfter,
-            rewards = new { boosters, boosterBalance, cards },
+            rewards = new
+            {
+                boosters, boosterBalance, cards, bonusBooster,
+                chest,
+                chestName = LootboxCatalog.Find(chest)?.Name ?? "",
+            },
             round.CreatedUtc,
         };
     }
@@ -685,6 +774,16 @@ public static class NerdSlotsMath
                 ? multiplier
                 : 0;
     }
+
+    /// <summary>
+    /// Sorteio extra de booster que o amuleto concede, em pontos percentuais por giro.
+    /// É independente dos rolos: a trinca de booster continua valendo 0,8%, e isto soma
+    /// por fora. Resolução de 1/100.000 para aguentar meio ponto percentual (o Skate
+    /// Neon dá 0,5).
+    /// </summary>
+    public static bool RollBonusBooster(double chancePercent) =>
+        chancePercent > 0
+        && RandomNumberGenerator.GetInt32(100_000) < (int)Math.Round(chancePercent * 1_000);
 
     public static SpecialCombination? SpecialReward(IReadOnlyList<string> symbols)
     {
@@ -792,6 +891,55 @@ public static class ArrangeDiceMath
     public static readonly int[] AvailableCards = [3, 4, 5, 6, 7, 8, 9, 10, 11];
     public const int MaxRolls = 15;
 
+    /// <summary>Lançamentos de quem não usa amuleto. A regra base não mudou na v2.</summary>
+    public const int BaseRolls = 5;
+
+    /// <summary>Lançamentos extras que o 2 dá por regra base — o amuleto SOMA a isto.</summary>
+    public const int TwoRollBonus = 2;
+
+    /// <summary>Duplas seguidas que acionam o bônus do amuleto.</summary>
+    public const int DoublesStreak = 2;
+
+    /// <summary>
+    /// Pagamento por tamanho de sequência, em **pontos percentuais da aposta** (100 = 1×).
+    ///
+    /// A escala virou percentual porque a tabela nova precisa de meio multiplicador: a
+    /// sequência de 3, que sai em ~26% das rodadas, paga 0,5× — com inteiro só dava para
+    /// escolher entre 0 (nunca paga) e 1 (paga demais).
+    ///
+    /// ⚠️ **Estes números foram MEDIDOS, não estimados.** A tabela antiga
+    /// (4/12/40/80/200 × repetição de até 20×) pagava um RTP de **820% sem amuleto** e
+    /// 9.105% com amuleto exótico — a mesa imprimia dinheiro. Ver ECONOMIA.md §4.2.
+    /// </summary>
+    public static int PayoutPercent(int runLength) => runLength switch
+    {
+        3 => 50,
+        4 => 100,
+        5 => 200,
+        6 => 300,
+        _ => 600,
+    };
+
+    /// <summary>
+    /// Bônus por carta repetida, também em pontos percentuais (100 = sem bônus).
+    ///
+    /// Era 3× e 20×. O de 20× sozinho respondia pela maior parte do furo: ele multiplica
+    /// justamente as rodadas que já ganharam, e ninguém o via chegar.
+    /// </summary>
+    public static int RepeatPercent(int repeatCount) => repeatCount switch
+    {
+        >= 3 => 160,
+        2 => 125,
+        _ => 100,
+    };
+
+    /// <summary>
+    /// Teto vivo de lançamentos: o que sobra até <see cref="MaxRolls"/> contando o que já
+    /// foi lançado. Todo bônus passa por aqui, senão um amuleto exótico faria a rodada
+    /// nunca acabar.
+    /// </summary>
+    public static int Ceiling(ArrangeDiceState state) => MaxRolls - state.Rolls.Count;
+
     public static bool IsValidArrangement(IReadOnlyList<int>? cards) =>
         cards is { Count: 7 }
         && cards.Distinct().Count() == 7
@@ -802,6 +950,43 @@ public static class ArrangeDiceMath
         var die1 = RandomNumberGenerator.GetInt32(1, 7);
         var die2 = RandomNumberGenerator.GetInt32(1, 7);
         return new(die1, die2, die1 + die2);
+    }
+
+    /// <summary>
+    /// Aplica um lance ao estado: consome o lançamento, resolve 2/12/carta e paga os
+    /// bônus do amuleto.
+    ///
+    /// Função pura de propósito — ela é a regra da mesa, e regra que só existe dentro
+    /// de um endpoint com transação e idempotência em volta não dá para conferir sem
+    /// jogar. Aqui, um estado e um lance entram; um estado sai.
+    /// </summary>
+    public static void ApplyRoll(ArrangeDiceState state, ArrangeDiceRoll roll)
+    {
+        state.Rolls.Add(roll);
+        state.RollsRemaining--;
+        var ceiling = Ceiling(state);
+        if (roll.Sum == 2)
+            state.RollsRemaining = Math.Min(
+                state.RollsRemaining + TwoRollBonus + state.Bonus.TwoExtraRolls,
+                ceiling);
+        else if (roll.Sum == 12)
+        {
+            // O amuleto não apaga o coringa — ele só perdoa o lançamento cobrado.
+            if (!state.Bonus.TwelveKeepsRoll)
+                state.RollsRemaining = Math.Max(0, state.RollsRemaining - 1);
+            state.WildcardPending = state.LiftedCards.Count < state.Cards.Length;
+        }
+        else if (state.Cards.Contains(roll.Sum) && !state.LiftedCards.Contains(roll.Sum))
+            state.LiftedCards.Add(roll.Sum);
+
+        // Duplas seguidas contam independentemente do que a soma fez acima: o 2 é
+        // sempre dupla e o 12 também, então quem tem os dois bônus recebe os dois.
+        state.ConsecutiveDoubles = roll.Die1 == roll.Die2 ? state.ConsecutiveDoubles + 1 : 0;
+        if (state.Bonus.DoublesBonusRoll > 0 && state.ConsecutiveDoubles >= DoublesStreak)
+        {
+            state.ConsecutiveDoubles = 0;
+            state.RollsRemaining = Math.Min(state.RollsRemaining + state.Bonus.DoublesBonusRoll, ceiling);
+        }
     }
 
     public static void Finish(ArrangeDiceState state, int bet)
@@ -823,14 +1008,7 @@ public static class ArrangeDiceMath
             var length = end - start + 1;
             if (length >= 3)
             {
-                var multiplier = length switch
-                {
-                    3 => 4,
-                    4 => 12,
-                    5 => 40,
-                    6 => 80,
-                    _ => 200,
-                };
+                var multiplier = PayoutPercent(length);
                 if (winningRun is null || length > winningRun.Length)
                     winningRun = new(start, length, state.Cards.Skip(start).Take(length).ToArray(), multiplier);
             }
@@ -858,12 +1036,11 @@ public static class ArrangeDiceMath
                 .First();
             state.SequenceRepeatCard = sequenceRepeat.Card;
             state.SequenceRepeatCount = sequenceRepeat.Count;
-            state.RepeatMultiplier = sequenceRepeat.Count >= 3 ? 20
-                : sequenceRepeat.Count == 2 ? 3
-                : 1;
+            state.RepeatMultiplier = RepeatPercent(sequenceRepeat.Count);
         }
-        state.Multiplier = checked((winningRun?.Multiplier ?? 0) * state.RepeatMultiplier);
-        state.Payout = checked(bet * state.Multiplier);
+        // Percentual × percentual dá 10.000 como "1×"; dividir por 100 devolve a escala.
+        state.Multiplier = checked((winningRun?.Multiplier ?? 0) * state.RepeatMultiplier / 100);
+        state.Payout = checked(bet * state.Multiplier / 100);
         state.Status = "complete";
     }
 }

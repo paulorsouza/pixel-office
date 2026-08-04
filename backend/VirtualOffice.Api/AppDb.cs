@@ -9,7 +9,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<WorkItem> WorkItems => Set<WorkItem>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
-    public DbSet<XpEvent> XpEvents => Set<XpEvent>();
+    public DbSet<CoinEvent> CoinEvents => Set<CoinEvent>();
     public DbSet<ItemDefinition> ItemDefinitions => Set<ItemDefinition>();
     public DbSet<InventoryItem> Inventory => Set<InventoryItem>();
     public DbSet<RoomItem> RoomItems => Set<RoomItem>();
@@ -29,6 +29,7 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<ObjectiveProgress> ObjectiveProgress => Set<ObjectiveProgress>();
     public DbSet<CardGameProfile> CardGameProfiles => Set<CardGameProfile>();
     public DbSet<CardGameCollectionItem> CardGameCollection => Set<CardGameCollectionItem>();
+    public DbSet<CardGameDeck> CardGameDecks => Set<CardGameDeck>();
     public DbSet<CardGameBoosterBalance> CardGameBoosterBalances => Set<CardGameBoosterBalance>();
     public DbSet<CasinoRound> CasinoRounds => Set<CasinoRound>();
     public DbSet<PresenceDay> PresenceDays => Set<PresenceDay>();
@@ -53,6 +54,10 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
             .HasIndex(x => new { x.UserId, x.CardId, x.IsShiny, x.ShinyBonusSide }).IsUnique();
         modelBuilder.Entity<CardGameBoosterBalance>()
             .HasIndex(x => new { x.UserId, x.BoosterId, x.TargetCardId }).IsUnique();
+        // Um baralho por liga: a unicidade é o que deixa o "salvar" ser um upsert
+        // sem risco de o mesmo jogador acabar com dois baralhos da mesma liga.
+        modelBuilder.Entity<CardGameDeck>()
+            .HasIndex(x => new { x.UserId, x.LeagueId }).IsUnique();
         // Mesma forma do ObjectiveProgress: a unicidade por período é o que impede
         // dois cliques simultâneos de abrirem duas cotas e furarem o teto.
         modelBuilder.Entity<StorePurchaseQuota>()
@@ -62,9 +67,15 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<CasinoRound>()
             .HasIndex(x => new { x.UserId, x.CreatedUtc });
         modelBuilder.Entity<TimeEntry>().HasIndex(x => new { x.UserId, x.StartUtc });
-        modelBuilder.Entity<XpEvent>().HasIndex(x => new { x.UserId, x.CreatedUtc });
+        modelBuilder.Entity<CoinEvent>().HasIndex(x => new { x.UserId, x.CreatedUtc });
         modelBuilder.Entity<GameItemDefinition>().HasIndex(x => x.CatalogKey).IsUnique();
         modelBuilder.Entity<GameItemInstance>().HasIndex(x => x.InstanceKey).IsUnique();
+        // Um item por slot é INVARIANTE, não regra de aplicação: sem o índice parcial,
+        // dois PUT simultâneos no mesmo slot deixam o loadout com dois mouses.
+        modelBuilder.Entity<GameItemInstance>()
+            .HasIndex(x => new { x.UserId, x.EquippedSlot })
+            .IsUnique()
+            .HasFilter("\"EquippedSlot\" <> ''");
         modelBuilder.Entity<FurniturePlacement>().HasIndex(x => x.ItemInstanceId).IsUnique();
         modelBuilder.Entity<FurniturePlacement>()
             .HasIndex(x => new { x.SceneId, x.RoomId });

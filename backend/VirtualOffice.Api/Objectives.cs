@@ -51,7 +51,7 @@ public static class Periods
     public static DateOnly LocalDate(DateTime utc) => DateOnly.FromDateTime(ToLocal(utc));
 }
 
-public record ObjectiveCompletion(Objective Objective, XpResult Reward, string BoosterId = "");
+public record ObjectiveCompletion(Objective Objective, CoinResult Reward, string BoosterId = "");
 
 /// <summary>
 /// Motor de objetivos. O progresso é sempre <b>recalculado a partir dos lançamentos</b>,
@@ -140,16 +140,31 @@ public static class ObjectiveEngine
                 {
                     progress.CompletedUtc = DateTime.UtcNow;
                     var reward = await Game.AwardAsync(
-                        db, user, new Reward(objective.XpReward, objective.GoldReward),
+                        db, user, new Reward(objective.GoldReward),
                         $"objetivo: {objective.Name}", "objective");
                     var boosterId = "";
                     if (objective.Metric == "weekly_objectives")
                     {
                         await CardGameEndpoints.GrantBoostersAsync(db, userId, 1, "rare");
                         boosterId = "rare";
+                        // Fechar a semana inteira paga um Baú Raro além do booster: é o
+                        // teto de 1/semana que o plano pede para essa fonte.
+                        await Lootboxes.GrantOnceAsync(db, user, LootboxCatalog.Rare,
+                            $"weekly-objectives:{periodStart:yyyy-MM-dd}");
                     }
                     completions.Add(new ObjectiveCompletion(objective, reward, boosterId));
                 }
+            }
+
+            // Fechar TODOS os objetivos do dia vale um Baú Comum, uma vez por dia. O
+            // gatilho é o conjunto, não um objetivo específico: qualquer diário novo
+            // entra na conta sozinho, sem alguém precisar lembrar de cadastrar o baú.
+            if (scope == ObjectiveScope.Daily
+                && scoped.Count > 0
+                && scoped.All(o => existing.Any(p => p.ObjectiveId == o.Id && p.CompletedUtc is not null)))
+            {
+                await Lootboxes.GrantOnceAsync(db, user, LootboxCatalog.Common,
+                    $"daily-objectives:{periodStart:yyyy-MM-dd}");
             }
         }
 
@@ -179,7 +194,7 @@ public static class ObjectiveEngine
                 return new
                 {
                     o.Id, o.Key, o.Name, o.Description, o.Icon, o.Scope, o.Metric,
-                    o.ActivityKey, o.Target, o.XpReward, o.GoldReward,
+                    o.ActivityKey, o.Target, o.GoldReward,
                     value = p?.Value ?? 0,
                     done = p?.CompletedUtc != null,
                     completedUtc = p?.CompletedUtc,

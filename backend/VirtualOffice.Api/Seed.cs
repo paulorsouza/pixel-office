@@ -37,13 +37,13 @@ public static class Seed
 
     private static async Task DemoAsync(AppDb db)
     {
-        var paulo = new User { Name = "Paulo", Role = "Tech Lead", Color = "#7c5cff", Xp = 2650 };
-        var marina = new User { Name = "Marina", Role = "Dev Backend", Color = "#f472b6", Xp = 1900 };
-        var diego = new User { Name = "Diego", Role = "Dev Frontend", Color = "#22d3ee", Xp = 1450 };
-        var aline = new User { Name = "Aline", Role = "QA / Suporte", Color = "#f59e0b", Xp = 2100 };
-        var nina = new User { Name = "Nina", Role = "Bot", Color = "#94a3b8", IsBot = true, Xp = 300 };
-        var tico = new User { Name = "Tico", Role = "Bot", Color = "#84cc16", IsBot = true, Xp = 500 };
-        var bento = new User { Name = "Bento", Role = "Bot", Color = "#fb7185", IsBot = true, Xp = 420 };
+        var paulo = new User { Name = "Paulo", Role = "Tech Lead", Color = "#7c5cff" };
+        var marina = new User { Name = "Marina", Role = "Dev Backend", Color = "#f472b6" };
+        var diego = new User { Name = "Diego", Role = "Dev Frontend", Color = "#22d3ee" };
+        var aline = new User { Name = "Aline", Role = "QA / Suporte", Color = "#f59e0b" };
+        var nina = new User { Name = "Nina", Role = "Bot", Color = "#94a3b8", IsBot = true };
+        var tico = new User { Name = "Tico", Role = "Bot", Color = "#84cc16", IsBot = true };
+        var bento = new User { Name = "Bento", Role = "Bot", Color = "#fb7185", IsBot = true };
         db.Users.AddRange(paulo, marina, diego, aline, nina, tico, bento);
 
         var epicWeb = new Epic { Name = "Plataforma Web", Color = "#7c5cff" };

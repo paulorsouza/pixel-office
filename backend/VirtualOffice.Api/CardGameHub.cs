@@ -87,6 +87,8 @@ public sealed class CardGameChallenge
     public string ChallengerName { get; init; } = "";
     public string TargetName { get; init; } = "";
     public string[] ChallengerDeck { get; init; } = [];
+    /// <summary>Em qual liga o duelo acontece — quem escolhe é quem desafia.</summary>
+    public string LeagueId { get; init; } = CardGameLeagues.Master;
     public DateTime ExpiresUtc { get; init; } = DateTime.UtcNow.AddSeconds(45);
 }
 
@@ -110,6 +112,7 @@ public sealed class CardGameMatch
     public string Status { get; set; } = "ongoing";
     public int? Winner { get; set; }
     public int Version { get; set; } = 1;
+    public string LeagueId { get; init; } = CardGameLeagues.Master;
 }
 
 public partial class OfficeHub
@@ -142,9 +145,20 @@ public partial class OfficeHub
             ["fairy"] = ["fighting", "dragon", "dark"],
         };
 
-    public async Task ChallengeCardGame(string targetConnectionId, string[] deckIds)
+    /// <remarks>
+    /// O baralho não vem mais do cliente: com um baralho salvo por liga, o servidor
+    /// carrega o da liga escolhida e confere teto, posse e as quinze cartas. Antes
+    /// dava para mandar qualquer lista pelo socket e só a posse era checada.
+    /// </remarks>
+    public async Task ChallengeCardGame(string targetConnectionId, string leagueId)
     {
         ClearExpiredCardChallenges();
+        var league = CardGameLeagues.Find(leagueId);
+        if (league is null)
+        {
+            await CardGameErrorAsync("Liga desconhecida.");
+            return;
+        }
         if (!Presence.Players.TryGetValue(Context.ConnectionId, out var challenger)
             || !Presence.Players.TryGetValue(targetConnectionId, out var target)
             || challenger.IsBot || target.IsBot)
@@ -162,16 +176,14 @@ public partial class OfficeHub
             await CardGameErrorAsync("Um dos jogadores já está em uma partida.");
             return;
         }
-        if (!CardGameCatalog.TryValidateDeck(deckIds, out var deck, out var error))
-        {
-            await CardGameErrorAsync(error);
-            return;
-        }
+        string[] deck;
         await using (var db = await dbFactory.CreateDbContextAsync())
         {
-            if (!await CardGameEndpoints.OwnsDeckAsync(db, challenger.UserId, deck))
+            string deckError;
+            (deck, deckError) = await CardGameEndpoints.LoadPlayableDeckAsync(db, challenger.UserId, leagueId);
+            if (deck.Length == 0)
             {
-                await CardGameErrorAsync("Monte um baralho usando apenas cartas do seu álbum.");
+                await CardGameErrorAsync(deckError);
                 return;
             }
         }
@@ -189,6 +201,7 @@ public partial class OfficeHub
             ChallengerName = challenger.Name,
             TargetName = target.Name,
             ChallengerDeck = deck,
+            LeagueId = league.Id,
         };
         CardChallenges[pending.Id] = pending;
         await Clients.Client(target.Key).SendAsync("CardChallengeReceived", new
@@ -197,16 +210,22 @@ public partial class OfficeHub
             fromKey = challenger.Key,
             fromUserId = challenger.UserId,
             fromName = challenger.Name,
+            leagueId = league.Id,
+            leagueName = league.Name,
+            leagueMaxPower = league.MaxPower,
             expiresUtc = pending.ExpiresUtc,
         });
         await Clients.Caller.SendAsync("CardChallengeSent", new
         {
             challengeId = pending.Id,
             targetName = target.Name,
+            leagueId = league.Id,
+            leagueName = league.Name,
         });
     }
 
-    public async Task AcceptCardGameChallenge(string challengeId, string[] deckIds)
+    /// <remarks>A liga é a do desafio: quem aceita joga com o baralho DAQUELA liga.</remarks>
+    public async Task AcceptCardGameChallenge(string challengeId)
     {
         ClearExpiredCardChallenges();
         if (!CardChallenges.TryRemove(challengeId, out var pending)
@@ -227,16 +246,15 @@ public partial class OfficeHub
             await CardGameErrorAsync("Um dos jogadores já está em uma partida.");
             return;
         }
-        if (!CardGameCatalog.TryValidateDeck(deckIds, out var targetDeck, out var error))
-        {
-            await CardGameErrorAsync(error);
-            return;
-        }
+        string[] targetDeck;
         await using (var db = await dbFactory.CreateDbContextAsync())
         {
-            if (!await CardGameEndpoints.OwnsDeckAsync(db, target.UserId, targetDeck))
+            string deckError;
+            (targetDeck, deckError) = await CardGameEndpoints.LoadPlayableDeckAsync(
+                db, target.UserId, pending.LeagueId);
+            if (targetDeck.Length == 0)
             {
-                await CardGameErrorAsync("Monte um baralho usando apenas cartas do seu álbum.");
+                await CardGameErrorAsync(deckError);
                 return;
             }
         }
@@ -304,6 +322,7 @@ public partial class OfficeHub
         {
             PlayerConnections = [pending.ChallengerConnection, pending.TargetConnection],
             PlayerNames = [pending.ChallengerName, pending.TargetName],
+            LeagueId = pending.LeagueId,
             Hands =
             [
                 decks[0].Take(6).ToList(),
@@ -416,6 +435,8 @@ public partial class OfficeHub
         {
             matchId = match.Id,
             playerIndex = viewer,
+            leagueId = match.LeagueId,
+            leagueName = CardGameLeagues.Find(match.LeagueId)?.Name ?? "",
             players = new[]
             {
                 new { name = match.PlayerNames[0], handCount = match.Hands[0].Count, drawPileCount = match.DrawPiles[0].Count },

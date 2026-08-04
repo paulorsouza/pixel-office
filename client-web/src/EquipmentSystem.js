@@ -1,5 +1,18 @@
 export const DEFAULT_WALK_SPEED = 112;
 
+/// Presets de piloto viram `riderDirections` de verdade uma vez só, no carregamento.
+/// Sem isso, o bloco de seis motos repetiria o mesmo mapa de animação seis vezes no
+/// JSON — e `riderAnimationSpec` precisaria receber o catálogo inteiro só para
+/// resolver a indireção.
+export function prepareEquipmentCatalog(catalog) {
+  for (const item of catalog.items || []) {
+    if (item.riderDirections || !item.riderPreset) continue;
+    const preset = catalog.riderPresets?.[item.riderPreset];
+    if (preset) item.riderDirections = preset;
+  }
+  return catalog;
+}
+
 export function equipmentById(catalog, equipmentId) {
   return (catalog.items || []).find((item) => item.id === equipmentId) || null;
 }
@@ -32,63 +45,22 @@ export function riderAnimationSpec(equipment, direction, fallbackStart) {
   };
 }
 
-function storageGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
+/**
+ * Junta o item do servidor (nome, raridade, efeito) com o visual do `catalog.json`
+ * (sprite, cor, velocidade). São duas metades do mesmo item, e cada lado é dono da
+ * sua — ver docs/PLANO_EQUIPAMENTOS.md §7.
+ */
+export function mergeEquipmentItem(catalog, serverItem) {
+  return { ...equipmentById(catalog, serverItem.id), ...serverItem };
 }
 
-function storageSet(key, value) {
-  try {
-    if (value == null) localStorage.removeItem(key);
-    else localStorage.setItem(key, value);
-  } catch {
-    // O jogo continua funcional quando o navegador bloqueia storage.
-  }
-}
-
-const RARITY_LABELS = {
-  common: 'Comum',
-  uncommon: 'Incomum',
-  rare: 'Raro',
-  epic: 'Épico',
-};
-
-function slotDefinitions(catalog) {
-  if (catalog.slots?.length) return catalog.slots;
-  return [{ id: 'vehicle', name: 'Veículo', shortLabel: 'VC', description: 'Segure Shift para usar' }];
-}
-
-function emptyLoadout(catalog) {
-  return Object.fromEntries(slotDefinitions(catalog).map((slot) => [slot.id, null]));
-}
-
-export function normalizeLoadout(catalog, candidate = {}) {
-  const loadout = emptyLoadout(catalog);
-  for (const slot of slotDefinitions(catalog)) {
-    const item = equipmentById(catalog, candidate?.[slot.id]);
-    if (item?.slot === slot.id) loadout[slot.id] = item.id;
+/** Loadout no formato antigo (slot → id do item), para quem só quer saber o que está vestido. */
+export function loadoutIds(snapshot) {
+  const loadout = {};
+  for (const slot of snapshot?.slots || []) {
+    loadout[slot.id] = snapshot.loadout?.[slot.id]?.id ?? null;
   }
   return loadout;
-}
-
-function initialLoadout(catalog, rawStored) {
-  if (rawStored) {
-    try {
-      const parsed = JSON.parse(rawStored);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        return normalizeLoadout(catalog, parsed);
-      }
-    } catch {
-      const legacyVehicle = equipmentById(catalog, rawStored);
-      if (legacyVehicle?.slot === 'vehicle') {
-        return normalizeLoadout(catalog, { vehicle: legacyVehicle.id });
-      }
-    }
-  }
-  return normalizeLoadout(catalog, { vehicle: catalog.defaultEquipment });
 }
 
 function itemIcon(item, className = '') {
@@ -97,89 +69,337 @@ function itemIcon(item, className = '') {
   return `<span class="item-glyph icon-${icon} ${className}" aria-hidden="true"><b>${label}</b><i></i></span>`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[char]));
+}
+
+/**
+ * A área "Itens" do menu do jogo.
+ *
+ * O loadout mora no SERVIDOR desde a v2: equipar mudou de "escolher um sprite" para
+ * "mudar quanto o jogo paga", e efeito que o cliente guardasse sozinho seria efeito
+ * que o cliente escolhe. Este módulo, então, não decide nada — ele mostra o que
+ * `GET /api/game/equipment` devolveu e manda `PUT` quando o jogador clica.
+ *
+ * A bag também mudou de sentido: antes listava o catálogo inteiro com os itens não
+ * comprados apagados, o que era uma vitrine. Agora lista o que é do jogador.
+ */
 export function createEquipmentMenu(catalog, options = {}) {
-  const storageKey = options.storageKey || 'office-quest-equipment-v1';
+  // Lixo da v1: o loadout morava aqui. A chave já não é lida por ninguém, mas
+  // deixá-la no navegador de quem jogou o beta rende confusão no próximo debug —
+  // alguém acharia um loadout com slots que não existem mais e acreditaria nele.
+  try { localStorage.removeItem('office-quest-equipment-v1'); } catch { /* storage bloqueado */ }
   const root = document.querySelector('#equipment-menu');
   const list = document.querySelector('#equipment-list');
   const slotsRoot = document.querySelector('#equipment-slots');
+  const effectsRoot = document.querySelector('#equipment-effects');
+  const chestsRoot = document.querySelector('#equipment-chests');
+  const compareRoot = document.querySelector('#equipment-compare');
+  const revealRoot = document.querySelector('#equipment-reveal');
   const clear = document.querySelector('#equipment-clear');
   const close = document.querySelector('#equipment-close');
   const loadoutCount = document.querySelector('#equipment-loadout-count');
   const inventoryCount = document.querySelector('#equipment-inventory-count');
-  const slots = slotDefinitions(catalog);
-  const vehicles = (catalog.items || []).filter((item) => item.slot === 'vehicle');
-  let loadout = initialLoadout(catalog, storageGet(storageKey));
-  let open = false;
-  const isOwned = (item) => item && (options.isOwned?.(item.id) ?? true);
-  for (const slot of slots) {
-    if (!isOwned(equipmentById(catalog, loadout[slot.id]))) loadout[slot.id] = null;
-  }
 
-  list.innerHTML = (catalog.items || []).map((item, index) => `
-    <button class="inventory-item rarity-${item.rarity || 'common'}${isOwned(item) ? '' : ' locked'}" type="button"
-      data-equipment-id="${item.id}" style="--item-accent:${item.accent};--item-secondary:${item.secondary}">
-      <span class="inventory-item-art">
-        ${itemIcon(item)}
-        <span class="inventory-equipped-mark" aria-hidden="true">E</span>
-      </span>
-      <strong>${item.name}</strong>
-      <span>${slots.find((slot) => slot.id === item.slot)?.name || 'Item'}</span>
-      <small>${item.slot === 'vehicle' ? `${item.speed} px/s · ${vehicles.indexOf(item) + 1}` : RARITY_LABELS[item.rarity] || 'Comum'}</small>
-    </button>
-  `).join('');
-  inventoryCount.textContent = `${(catalog.items || []).filter(isOwned).length} itens`;
+  // Fallback de slot para quando o servidor ainda não respondeu: sem ele, abrir o
+  // menu offline mostraria um tabuleiro sem nenhum encaixe, o que parece defeito.
+  const fallbackSlots = (catalog.slots || []).map((slot) => ({
+    id: slot.id,
+    name: slot.name || slot.id,
+    shortLabel: slot.shortLabel || '',
+    description: slot.description || '',
+  }));
+
+  let snapshot = null;
+  let open = false;
+  let pending = false;
+
+  const slots = () => snapshot?.slots?.length ? snapshot.slots : fallbackSlots;
+  const items = () => (snapshot?.items || []).map((item) => mergeEquipmentItem(catalog, item));
+  const equippedOf = (slotId) => {
+    const raw = snapshot?.loadout?.[slotId];
+    return raw ? mergeEquipmentItem(catalog, raw) : null;
+  };
+  const vehicles = () => items().filter((item) => item.slot === 'vehicle');
 
   const renderSlots = () => {
-    slotsRoot.innerHTML = slots.map((slot) => {
-      const item = equipmentById(catalog, loadout[slot.id]);
+    slotsRoot.innerHTML = slots().map((slot) => {
+      const item = equippedOf(slot.id);
       const style = item
         ? `--item-accent:${item.accent};--item-secondary:${item.secondary}`
         : '';
       return `
         <button class="equipment-slot slot-${slot.id}${item ? ' filled' : ''}" type="button"
-          data-slot-id="${slot.id}" style="${style}"
-          aria-label="${item ? `${slot.name}: ${item.name}. Clique para guardar no baú.` : `${slot.name}: vazio`}">
-          <span class="equipment-slot-label">${slot.name}</span>
+          data-slot-id="${slot.id}"${item ? ` data-rarity="${item.rarity}"` : ''} style="${style}"
+          aria-label="${item ? `${slot.name}: ${escapeHtml(item.name)}. Clique para guardar.` : `${slot.name}: vazio`}">
+          <span class="equipment-slot-label">${escapeHtml(slot.name)}</span>
           ${item ? itemIcon(item, 'slot-item-glyph') : `<span class="empty-slot-mark">${slot.shortLabel}</span>`}
-          <span class="equipment-slot-value">${item?.name || 'Vazio'}</span>
+          <span class="equipment-slot-value">${escapeHtml(item?.name || 'Vazio')}</span>
           ${item ? '<span class="equipment-slot-remove" aria-hidden="true">×</span>' : ''}
         </button>
       `;
     }).join('');
   };
 
-  const syncSelection = () => {
-    const vehicle = equipmentById(catalog, loadout.vehicle);
-    for (const slot of slots) {
-      if (!isOwned(equipmentById(catalog, loadout[slot.id]))) loadout[slot.id] = null;
-    }
-    const equippedIds = new Set(Object.values(loadout).filter(Boolean));
-    const equippedTotal = equippedIds.size;
-    for (const card of list.querySelectorAll('.inventory-item')) {
-      const equipped = equippedIds.has(card.dataset.equipmentId);
-      const owned = isOwned(equipmentById(catalog, card.dataset.equipmentId));
-      card.classList.toggle('equipped', equipped);
-      card.classList.toggle('locked', !owned);
-      card.disabled = !owned;
-      card.setAttribute('aria-pressed', String(equipped));
-    }
-    renderSlots();
-    loadoutCount.textContent = `${equippedTotal}/${slots.length} equipados`;
-    clear.disabled = equippedTotal === 0;
-    storageSet(storageKey, JSON.stringify(loadout));
-    options.onChange?.(vehicle, { ...loadout });
+  /**
+   * Relógio de baú do item.
+   *
+   * O contador é do ITEM, não do jogador: cada celular acumula o seu. Desequipar
+   * pausa e não zera, então a barra some do lugar só quando o baú cai — e o rótulo
+   * diz "pausado" em vez de simplesmente parar sem explicação.
+   */
+  const chestClockHtml = (chest) => {
+    if (!chest) return '';
+    const pct = Math.min(100, Math.round((chest.minutes / chest.intervalMinutes) * 100));
+    const falta = Math.max(0, chest.intervalMinutes - chest.minutes);
+    const horas = Math.floor(falta / 60);
+    const restante = horas >= 1 ? `${horas} h` : `${falta} min`;
+    return `
+      <span class="chest-clock${chest.running ? '' : ' paused'}"
+        title="${escapeHtml(`${chest.tierName} a cada ${chest.intervalMinutes / 60} h equipado`)}">
+        <span class="chest-clock-bar"><i style="width:${pct}%"></i></span>
+        <b>${chest.running ? `faltam ${restante}` : 'pausado'}</b>
+      </span>`;
   };
 
-  // Quem mostra a tela agora é o menu do jogo (`hud/MainMenu.js`): esta janela
-  // deixou de existir como painel próprio e virou a área "Itens" de lá. O que
-  // sobrou aqui é o ESTADO do loadout — `open` só diz se a área está à vista,
-  // para as teclas de veículo (1-4, 0) não agirem com o menu fechado.
+  const itemCardHtml = (item) => `
+    <button class="inventory-item${item.equipped ? ' equipped' : ''}" type="button"
+      data-instance-id="${item.instanceId}" data-rarity="${item.rarity || 'common'}"
+      aria-pressed="${item.equipped}"
+      style="--item-accent:${item.accent};--item-secondary:${item.secondary}">
+      <span class="inventory-item-art">
+        ${itemIcon(item)}
+        <span class="inventory-equipped-mark" aria-hidden="true">E</span>
+      </span>
+      <strong>${escapeHtml(item.name)}</strong>
+      <span class="rarity-chip">${escapeHtml(item.rarityName || '')}</span>
+      <small>${(item.effectLabels?.length
+    ? item.effectLabels
+    : [item.slot === 'vehicle' ? `${item.speed} px/s` : '—'])
+    .map((label) => `<i>${escapeHtml(label)}</i>`).join('')}</small>
+      ${chestClockHtml(item.chest)}
+    </button>`;
+
+  /**
+   * A bag é agrupada por slot, não é uma grade solta.
+   *
+   * Com dezesseis itens misturados, escolher exige ler todos os cards para achar os
+   * três que servem naquele encaixe. Agrupado, a pergunta que o jogador tem ("o que
+   * posso pôr no mouse?") tem uma seção com a resposta.
+   */
+  const renderList = () => {
+    const owned = items();
+    if (!owned.length) {
+      list.innerHTML = `<p class="inventory-empty">${snapshot
+        ? 'Sua bag está vazia. Compre na loja ou abra um baú para começar.'
+        : 'Carregando seus itens…'}</p>`;
+      return;
+    }
+    list.innerHTML = slots().map((slot) => {
+      const group = owned.filter((item) => item.slot === slot.id);
+      if (!group.length) return '';
+      const equipped = equippedOf(slot.id);
+      return `
+        <section class="inventory-group" aria-label="${escapeHtml(slot.name)}">
+          <header class="inventory-group-title">
+            <b>${escapeHtml(slot.name)}</b>
+            <span>${equipped ? escapeHtml(equipped.name) : 'nada equipado'}</span>
+          </header>
+          <div class="inventory-group-grid">${group.map(itemCardHtml).join('')}</div>
+        </section>`;
+    }).join('');
+  };
+
+  /**
+   * Comparação com o que já está no slot, mostrada enquanto o jogador aponta o item.
+   *
+   * Não calcula delta nenhum de propósito: as frases de efeito vêm formatadas do
+   * servidor, e refazer a aritmética aqui criaria uma segunda régua para os mesmos
+   * números. Mostrar os dois lados responde à pergunta ("vale a troca?") sem isso.
+   */
+  const renderCompare = (item) => {
+    if (!compareRoot) return;
+    if (!item) {
+      compareRoot.hidden = true;
+      compareRoot.innerHTML = '';
+      return;
+    }
+    const current = equippedOf(item.slot);
+    const side = (label, entry, extra = '') => `
+      <div class="compare-side ${extra}" ${entry ? `data-rarity="${entry.rarity}"` : ''}>
+        <span class="compare-role">${label}</span>
+        <b>${entry ? escapeHtml(entry.name) : 'Slot vazio'}</b>
+        <ul>${(entry?.effectLabels || []).map((line) => `<li>${escapeHtml(line)}</li>`).join('')
+    || '<li class="compare-none">sem bônus</li>'}</ul>
+      </div>`;
+    compareRoot.hidden = false;
+    compareRoot.innerHTML = current?.instanceId === item.instanceId
+      ? `${side('Equipado agora', item, 'only')}
+         <p class="compare-hint">Clique de novo para guardar.</p>`
+      : `${side('Agora', current)}${side('Trocando por', item, 'next')}`;
+  };
+
+  const chests = () => snapshot?.chests || [];
+
+  const renderChests = () => {
+    if (!chestsRoot) return;
+    const list = chests();
+    // A fileira some quando não há baú: uma prateleira vazia permanente ensina o
+    // jogador a ignorar aquele canto da tela.
+    chestsRoot.hidden = list.length === 0;
+    if (!list.length) return;
+    chestsRoot.innerHTML = list.map((chest) => `
+      <button class="lootbox-card" type="button" data-chest-id="${chest.instanceIds[0]}"
+        data-rarity="${chest.odds?.at(-1)?.rarity || 'common'}"
+        aria-label="${escapeHtml(`${chest.name}: ${chest.description}`)}">
+        <span class="lootbox-art" aria-hidden="true"><i></i></span>
+        <strong>${escapeHtml(chest.name)}</strong>
+        <small>${chest.odds.map((o) => `<i data-rarity="${o.rarity}">${o.percent}%</i>`).join('')}</small>
+        <span class="lootbox-count">${chest.count}</span>
+      </button>
+    `).join('');
+  };
+
+  /**
+   * Revelação do prêmio. Um item novo aparecendo calado numa grade de vinte cards
+   * passa despercebido — e o prêmio é o momento inteiro do baú.
+   *
+   * Fecha no clique ou sozinho; `prefers-reduced-motion` corta a animação no CSS,
+   * não aqui, para o cartão continuar aparecendo para quem desligou movimento.
+   */
+  let revealTimer = 0;
+  const showReveal = (prize) => {
+    if (!revealRoot) return;
+    clearTimeout(revealTimer);
+    const rarity = prize.item ? prize.rarity : 'common';
+    revealRoot.dataset.rarity = rarity;
+    revealRoot.hidden = false;
+    revealRoot.innerHTML = `
+      <div class="reveal-card" data-rarity="${rarity}">
+        <span class="reveal-tier">${escapeHtml(prize.tierName)}</span>
+        ${prize.item ? `
+          <strong>${escapeHtml(prize.item.name)}</strong>
+          <span class="rarity-chip">${escapeHtml(prize.rarityName)}</span>
+          <ul>${(prize.item.effectLabels || []).map((l) => `<li>${escapeHtml(l)}</li>`).join('')}</ul>
+        ` : `
+          <strong>+${prize.coins} moedas</strong>
+          <span class="rarity-chip">${escapeHtml(prize.rarityName)}</span>
+          <p class="reveal-note">Você já tinha todos os itens dessa raridade.</p>
+        `}
+      </div>`;
+    // Reinicia a animação: sem o reflow, abrir dois baús seguidos deixaria o
+    // segundo cartão parado no estado final do primeiro.
+    revealRoot.classList.remove('on');
+    void revealRoot.offsetWidth;
+    revealRoot.classList.add('on');
+    revealTimer = setTimeout(() => { revealRoot.hidden = true; }, 4200);
+  };
+
+  const renderEffects = () => {
+    if (!effectsRoot) return;
+    const labels = snapshot?.effectLabels || [];
+    effectsRoot.innerHTML = labels.length
+      ? labels.map((label) => `<li>${escapeHtml(label)}</li>`).join('')
+      : '<li class="equipment-effects-empty">Nenhum bônus ativo — equipe algo.</li>';
+  };
+
+  const render = () => {
+    renderSlots();
+    renderList();
+    renderChests();
+    renderEffects();
+    // A grade é reconstruída a cada render, então o card comparado deixou de existir.
+    // Manter a tira mostraria um "agora / trocando por" que já não corresponde a nada.
+    renderCompare(null);
+    const equipped = slots().filter((slot) => equippedOf(slot.id)).length;
+    loadoutCount.textContent = `${equipped}/${slots().length} equipados`;
+    inventoryCount.textContent = `${items().length} ${items().length === 1 ? 'item' : 'itens'}`;
+    clear.disabled = pending || equipped === 0;
+    root?.classList.toggle('equipment-pending', pending);
+    options.onChange?.(equippedOf('vehicle'), loadoutIds(snapshot));
+  };
+
+  /** Toda escrita passa por aqui: manda ao servidor e adota a resposta como verdade. */
+  const apply = async (action) => {
+    if (pending) return;
+    pending = true;
+    render();
+    try {
+      snapshot = await action();
+    } catch (error) {
+      options.onToast?.(error.message || 'Não foi possível trocar o equipamento.');
+      console.warn('[equipamento] falha ao aplicar', error);
+    } finally {
+      pending = false;
+      render();
+    }
+  };
+
+  const refresh = async () => {
+    if (!options.loadEquipment) return;
+    try {
+      snapshot = await options.loadEquipment();
+    } catch (error) {
+      console.warn('[equipamento] inventário indisponível', error);
+    }
+    render();
+  };
+
+  const equip = (instanceId) => {
+    const item = items().find((row) => String(row.instanceId) === String(instanceId));
+    if (!item) return null;
+    // Clicar no que já está equipado guarda: é o mesmo gesto de tirar, sem obrigar
+    // o jogador a mirar no slot lá do outro lado do painel.
+    apply(() => options.setSlot(item.slot, item.equipped ? null : item.instanceId));
+    return item;
+  };
+
+  const unequip = (slotId) => {
+    if (!equippedOf(slotId)) return;
+    apply(() => options.setSlot(slotId, null));
+  };
+
+  const clearAll = async () => {
+    for (const slot of slots()) {
+      if (equippedOf(slot.id)) await apply(() => options.setSlot(slot.id, null));
+    }
+  };
+
+  /**
+   * Abrir baú tem um passo a mais que equipar: além de atualizar a bag, precisa
+   * ANUNCIAR o que saiu. Um item novo aparecendo calado no meio de uma grade de
+   * vinte cards passa despercebido — e o prêmio é o momento inteiro do baú.
+   */
+  const openChest = async (instanceId) => {
+    if (pending || !options.openLootbox) return null;
+    pending = true;
+    render();
+    try {
+      const result = await options.openLootbox(instanceId);
+      snapshot = result.equipment;
+      const prize = result.opened;
+      showReveal(prize);
+      options.onPrize?.(prize);
+      return prize;
+    } catch (error) {
+      options.onToast?.(error.message || 'Não foi possível abrir o baú.');
+      console.warn('[equipamento] falha ao abrir baú', error);
+      return null;
+    } finally {
+      pending = false;
+      render();
+    }
+  };
+
+  // Quem mostra a tela é o menu do jogo (`hud/GearSections.js`): `open` só diz se a
+  // área está à vista, para as teclas de veículo não agirem com o menu fechado.
   const setOpen = (nextOpen) => {
     if (nextOpen && options.isBlocked?.()) return false;
     open = Boolean(nextOpen);
-    // As views são movidas para dentro do menu, então a busca é no documento —
-    // procurar dentro de `root` não acha mais nada.
     if (open) {
+      refresh();
       document.querySelector(
         '#character-panel-view:not([hidden]) .character-option.selected, '
         + '#character-panel-view:not([hidden]) .character-option, '
@@ -190,71 +410,72 @@ export function createEquipmentMenu(catalog, options = {}) {
     return open;
   };
 
-  const select = (equipmentId) => {
-    if (!equipmentId) {
-      loadout.vehicle = null;
-      syncSelection();
-      return null;
-    }
-    const item = equipmentById(catalog, equipmentId);
-    if (!item?.slot || !Object.hasOwn(loadout, item.slot) || !isOwned(item)) return null;
-    loadout[item.slot] = item.id;
-    syncSelection();
-    return item;
-  };
-
-  const unequip = (slotId) => {
-    if (!Object.hasOwn(loadout, slotId)) return;
-    loadout[slotId] = null;
-    syncSelection();
-  };
-
-  const clearAll = () => {
-    loadout = emptyLoadout(catalog);
-    syncSelection();
-  };
-
   close.addEventListener('click', () => setOpen(false));
-  clear.addEventListener('click', clearAll);
+  clear.addEventListener('click', () => clearAll());
   list.addEventListener('click', (event) => {
     const card = event.target.closest('.inventory-item');
-    if (!card) return;
-    select(card.dataset.equipmentId);
+    if (card) equip(card.dataset.instanceId);
   });
+  // A comparação segue o ponteiro no desktop e o foco no teclado. No toque não há
+  // hover: lá o toque equipa direto e o resultado aparece no slot — um passo a menos,
+  // não um a mais.
+  const itemUnder = (target) => {
+    const card = target?.closest?.('.inventory-item');
+    return card
+      ? items().find((row) => String(row.instanceId) === String(card.dataset.instanceId))
+      : null;
+  };
+  list.addEventListener('pointerover', (event) => {
+    const item = itemUnder(event.target);
+    if (item) renderCompare(item);
+  });
+  list.addEventListener('focusin', (event) => renderCompare(itemUnder(event.target)));
+  for (const leave of ['pointerleave', 'focusout']) {
+    list.addEventListener(leave, () => renderCompare(null));
+  }
+  revealRoot?.addEventListener('click', () => { revealRoot.hidden = true; });
   slotsRoot.addEventListener('click', (event) => {
     const slot = event.target.closest('.equipment-slot');
-    if (!slot || !loadout[slot.dataset.slotId]) return;
-    unequip(slot.dataset.slotId);
+    if (slot) unequip(slot.dataset.slotId);
+  });
+  chestsRoot?.addEventListener('click', (event) => {
+    const chest = event.target.closest('.lootbox-card');
+    if (chest) openChest(Number(chest.dataset.chestId));
   });
 
-  // Tab e Esc são do menu do jogo, não deste módulo: com dois donos, uma tecla
-  // abria a janela e fechava a outra ao mesmo tempo. Aqui ficam só os atalhos
-  // que dependem de a área "Itens" estar à vista.
+  // Tab e Esc são do menu do jogo, não deste módulo: com dois donos, uma tecla abria
+  // a janela e fechava a outra ao mesmo tempo. Aqui ficam só os atalhos que dependem
+  // de a área "Itens" estar à vista.
   window.addEventListener('keydown', (event) => {
     const editing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
     if (editing || event.repeat || !open) return;
+    const owned = vehicles();
     const index = Number.parseInt(event.key, 10) - 1;
-    if (index >= 0 && index < vehicles.length) {
+    if (index >= 0 && index < owned.length) {
       event.preventDefault();
-      select(vehicles[index].id);
+      apply(() => options.setSlot('vehicle', owned[index].instanceId));
     } else if (event.key === '0') {
       event.preventDefault();
       unequip('vehicle');
     }
   });
 
-  syncSelection();
+  render();
+  refresh();
 
   return {
-    getEquippedId: () => loadout.vehicle,
-    getEquipment: () => equipmentById(catalog, loadout.vehicle),
-    getLoadout: () => ({ ...loadout }),
+    getEquippedId: () => equippedOf('vehicle')?.id ?? null,
+    getEquipment: () => equippedOf('vehicle'),
+    getLoadout: () => loadoutIds(snapshot),
+    getEffects: () => snapshot?.effects ?? null,
+    getChests: () => chests(),
     isOpen: () => open,
     setOpen,
-    select,
+    equip,
     unequip,
+    openChest,
     clearAll,
-    refreshOwnership: syncSelection,
+    refresh,
   };
 }
 
