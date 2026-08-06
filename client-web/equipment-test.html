@@ -66,7 +66,17 @@ const fakeServer = () => {
     effectLabels: ['+10% de moeda passiva'],
     chest: null,
   }));
-  const state = { slots, rarities: [], loadout: {}, items, chests: [], effects: {}, effectLabels: [] };
+  // Baús de mentira, um de cada tipo: é o único jeito de conferir a seção sem
+  // depender de o banco ter sorteado um Exótico para você.
+  const chests = [
+    { tier: 'common', name: 'Baú Comum', description: 'Ferramenta de todo dia. Sai da loja e dos objetivos diários.', count: 3, instanceIds: [901], odds: [{ rarity: 'common', percent: 65 }, { rarity: 'uncommon', percent: 35 }] },
+    { tier: 'rare', name: 'Baú Raro', description: 'O primeiro degrau em que a Lendária aparece.', count: 1, instanceIds: [902], odds: [{ rarity: 'uncommon', percent: 50 }, { rarity: 'rare', percent: 45 }, { rarity: 'legendary', percent: 5 }] },
+    { tier: 'premium', name: 'Baú Selecionado', description: 'Prateleira reservada: só quem carrega uma Carteira Black ou melhor enxerga.', count: 2, instanceIds: [903], odds: [{ rarity: 'rare', percent: 65 }, { rarity: 'legendary', percent: 33 }, { rarity: 'exotic', percent: 2 }] },
+    { tier: 'legendary', name: 'Baú Lendário', description: 'Prêmio de objetivo semanal, de marco de horas e das jogadas raras do cassino.', count: 1, instanceIds: [904], odds: [{ rarity: 'rare', percent: 62 }, { rarity: 'legendary', percent: 33 }, { rarity: 'exotic', percent: 5 }] },
+    { tier: 'exotic', name: 'Baú Exótico', description: 'Só a sexta vitória seguida na Liga entrega um. Moeda nenhuma compra.', count: 1, instanceIds: [905], odds: [{ rarity: 'legendary', percent: 75 }, { rarity: 'exotic', percent: 25 }] },
+    { tier: 'beta', name: 'Caixa do Beta Tester', description: 'Tudo que existe no jogo: 100 boosters de cada tipo, um de cada equipamento, veículo e baú, e 5 de cada móvel.', count: 1, instanceIds: [906], rarity: 'exotic', everything: true, odds: [] },
+  ];
+  const state = { slots, rarities: [], loadout: {}, items, chests, effects: {}, effectLabels: [] };
   const snapshot = () => ({
     ...state,
     loadout: Object.fromEntries(slots.map((slot) => [
@@ -88,7 +98,21 @@ const fakeServer = () => {
       write('[ordem]', instanceIds.slice(0, 8).join(','), '…');
       return snapshot();
     },
-    openLootbox: async () => { throw new Error('sem baús no modo offline'); },
+    // Prêmio de mentira, mas no formato exato do servidor: é o que permite conferir
+    // a revelação (a animação do prêmio) sem depender de sorte no banco.
+    openLootbox: async (instanceId) => {
+      const chest = state.chests.find((c) => c.instanceIds.includes(instanceId)) || state.chests[0];
+      chest.count = Math.max(0, chest.count - 1);
+      if (!chest.count) state.chests = state.chests.filter((c) => c !== chest);
+      const item = state.items[Math.floor(Math.random() * state.items.length)];
+      return {
+        opened: {
+          tier: chest.tier, tierName: chest.name, rarity: item.rarity, rarityName: item.rarityName,
+          item: { ...item, effectLabels: item.effectLabels }, coins: 0, duplicate: false,
+        },
+        equipment: snapshot(),
+      };
+    },
   };
 };
 
@@ -104,6 +128,27 @@ const menu = createEquipmentMenu(catalog, {
   onPrize: (prize) => write('[prêmio]', JSON.stringify(prize)),
 });
 window.__equipmentHarness = { menu, gameItems, catalog };
+
+// Quem liga as abas da janela no jogo é o `CharacterSystem`, que este harness não
+// sobe. Um seletor mínimo aqui evita subir o customizer inteiro só para conseguir
+// olhar a seção de baús — e deixa `?tab=chests` abrir direto nela.
+const VIEWS = { equipment: '#equipment-panel-view', chests: '#chest-panel-view', character: '#character-panel-view' };
+const FOOTERS = { equipment: '#equipment-footer-copy', chests: '#chest-footer-copy', character: '#character-footer-copy' };
+const showTab = (name) => {
+  for (const [id, selector] of Object.entries(VIEWS)) {
+    const view = document.querySelector(selector);
+    if (view) view.hidden = id !== name;
+    const footer = document.querySelector(FOOTERS[id]);
+    if (footer) footer.hidden = id !== name;
+    document.querySelector(`#menu-tab-${id}`)?.classList.toggle('active', id === name);
+  }
+  // "Guardar tudo" é ação do tabuleiro: fora dele promete mexer no que está à vista.
+  document.querySelector('#equipment-clear').hidden = name !== 'equipment';
+};
+for (const id of Object.keys(VIEWS)) {
+  document.querySelector(`#menu-tab-${id}`)?.addEventListener('click', () => showTab(id));
+}
+showTab(VIEWS[query.get('tab')] ? query.get('tab') : 'equipment');
 menu.setOpen(true);
 await menu.refresh();
 log.textContent = 'harness pronto — window.__equipmentHarness';

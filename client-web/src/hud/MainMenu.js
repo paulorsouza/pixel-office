@@ -109,6 +109,16 @@ export function createMainMenu(shell) {
         button.innerHTML = '<i aria-hidden="true"></i><span></span>';
         button.querySelector('i').textContent = section.icon;
         button.querySelector('span').textContent = section.label;
+        // Contador na etiqueta: é o que evita abrir a seção só para descobrir que
+        // não há nada lá — e o que faz um baú novo se anunciar sem toast.
+        const badge = section.badge?.();
+        if (badge) {
+          const mark = document.createElement('b');
+          mark.className = 'cg-nav-badge';
+          mark.textContent = String(badge);
+          button.append(mark);
+          button.setAttribute('aria-label', `${section.label}: ${badge}`);
+        }
         button.onclick = () => menu.open(section.id);
         els.nav.append(button);
       }
@@ -123,6 +133,7 @@ export function createMainMenu(shell) {
      * @param section.render  (host, api) => void — desenha o conteúdo da seção.
      *   `api.setHeader(titulo, subtitulo)` e `api.open(id)` para navegar.
      * @param section.visible seção contextual sai da lista quando devolve false
+     * @param section.badge   número mostrado na etiqueta da seção (0/null = sem etiqueta)
      */
     register(section) {
       sections.set(section.id, { group: 'player', icon: '•', ...section });

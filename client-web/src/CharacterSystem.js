@@ -129,12 +129,19 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => 
 export function createCharacterCustomizer(catalog, options = {}) {
   const controls = document.querySelector('#character-controls');
   const layerTabs = document.querySelector('#character-layers');
-  const equipmentTab = document.querySelector('#menu-tab-equipment');
-  const characterTab = document.querySelector('#menu-tab-character');
-  const equipmentView = document.querySelector('#equipment-panel-view');
-  const characterView = document.querySelector('#character-panel-view');
-  const equipmentFooter = document.querySelector('#equipment-footer-copy');
-  const characterFooter = document.querySelector('#character-footer-copy');
+  // As três telas da janela, cada uma com a sua aba, o seu rodapé e a sua view.
+  // Tabela em vez de três pares de variáveis: acrescentar "Baús" com `if` teria
+  // dobrado cada linha do `setTab`, e a quarta dobraria de novo.
+  const TABS = [
+    { id: 'equipment', view: '#equipment-panel-view', tab: '#menu-tab-equipment', footer: '#equipment-footer-copy', title: 'Equipamentos', subtitle: 'Monte seu conjunto e escolha no baú o que vai usar.' },
+    { id: 'chests', view: '#chest-panel-view', tab: '#menu-tab-chests', footer: '#chest-footer-copy', title: 'Baús', subtitle: 'O que ainda está fechado — e o que pode sair de dentro.' },
+    { id: 'character', view: '#character-panel-view', tab: '#menu-tab-character', footer: '#character-footer-copy', title: 'Personagem', subtitle: 'Combine as camadas e crie um avatar só seu.' },
+  ].map((entry) => ({
+    ...entry,
+    viewEl: document.querySelector(entry.view),
+    tabEl: document.querySelector(entry.tab),
+    footerEl: document.querySelector(entry.footer),
+  }));
   const clearEquipment = document.querySelector('#equipment-clear');
   const menuTitle = document.querySelector('#menu-title');
   const menuSubtitle = document.querySelector('#menu-subtitle');
@@ -327,31 +334,29 @@ export function createCharacterCustomizer(catalog, options = {}) {
   };
 
   const setTab = (tab) => {
-    activeTab = tab === 'character' ? 'character' : 'equipment';
-    const characterActive = activeTab === 'character';
-    equipmentView.hidden = characterActive;
-    characterView.hidden = !characterActive;
-    equipmentFooter.hidden = characterActive;
-    characterFooter.hidden = !characterActive;
-    clearEquipment.hidden = characterActive;
-    equipmentTab.classList.toggle('active', !characterActive);
-    characterTab.classList.toggle('active', characterActive);
-    equipmentTab.setAttribute('aria-selected', String(!characterActive));
-    characterTab.setAttribute('aria-selected', String(characterActive));
-    menuTitle.textContent = characterActive ? 'Personagem' : 'Equipamentos';
-    menuSubtitle.textContent = characterActive
-      ? 'Combine as camadas e crie um avatar só seu.'
-      : 'Monte seu conjunto e escolha no baú o que vai usar.';
-    const focusTarget = characterActive
+    const active = TABS.find((entry) => entry.id === tab) || TABS[0];
+    activeTab = active.id;
+    for (const entry of TABS) {
+      const on = entry === active;
+      if (entry.viewEl) entry.viewEl.hidden = !on;
+      if (entry.footerEl) entry.footerEl.hidden = !on;
+      entry.tabEl?.classList.toggle('active', on);
+      entry.tabEl?.setAttribute('aria-selected', String(on));
+    }
+    // "Guardar tudo" é ação do tabuleiro de encaixes: fora dele, é um botão que
+    // promete mexer no que está à vista e mexe em outra tela.
+    clearEquipment.hidden = activeTab !== 'equipment';
+    menuTitle.textContent = active.title;
+    menuSubtitle.textContent = active.subtitle;
+    const focusTarget = activeTab === 'character'
       ? controls.querySelector('.character-option.selected, .character-option')
-      : equipmentView.querySelector('.inventory-item.equipped, .inventory-item');
+      : active.viewEl?.querySelector('.inventory-item.equipped, .inventory-item, .lootbox-card');
     focusTarget?.focus();
   };
 
   // ---------------------------------------------------------------- eventos
 
-  equipmentTab.addEventListener('click', () => setTab('equipment'));
-  characterTab.addEventListener('click', () => setTab('character'));
+  for (const entry of TABS) entry.tabEl?.addEventListener('click', () => setTab(entry.id));
   layerTabs?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-character-layer]');
     if (button) setLayer(button.dataset.characterLayer);

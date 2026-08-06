@@ -496,6 +496,20 @@ test('catálogo oferece vários modelos por meio de locomoção e os slots do lo
   assert.ok(existsSync(resolve(CLIENT_ROOT, 'assets/chars/Adam_sit.png')));
   for (const item of equipmentCatalog.items) {
     assert.ok(equipmentCatalog.slots.some((slot) => slot.id === item.slot), `${item.id}: slot válido`);
+    // A arte é buscada por id (`assets/equipment/items/<id>.png`). Item sem PNG vira
+    // card com imagem quebrada, e só quem abre a bag descobre — daí o teste.
+    assert.ok(
+      existsSync(resolve(CLIENT_ROOT, `assets/equipment/items/${item.id}.png`)),
+      `${item.id}: arte gerada (rode tools/generate-equipment-icons.mjs)`,
+    );
+  }
+  // Os tipos de baú do servidor (LootboxCatalog.cs). A lista é curta e estável; o que
+  // o teste protege é a arte, buscada por tipo do mesmo jeito que a do item.
+  for (const tier of ['common', 'rare', 'premium', 'legendary', 'exotic', 'beta']) {
+    assert.ok(
+      existsSync(resolve(CLIENT_ROOT, `assets/equipment/chests/${tier}.png`)),
+      `baú ${tier}: arte gerada`,
+    );
   }
   // Todo slot precisa ter o que vestir, senão o tabuleiro nasce com um encaixe morto.
   for (const slot of equipmentCatalog.slots) {

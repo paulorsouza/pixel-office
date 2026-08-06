@@ -79,6 +79,25 @@ function itemIcon(item, className = '') {
     <img src="assets/equipment/items/${item.id}.png" alt="" draggable="false"></span>`;
 }
 
+// O item mais barato de cada slot serve de fantasma no encaixe vazio: dizer "MS" e
+// "TC" numa caixa tracejada obrigava a decorar a sigla, e a silhueta do mouse não.
+// São itens que todo mundo já viu na loja, então a arte já existe — nenhum asset novo.
+const SLOT_GHOSTS = {
+  mouse: 'mouse-office',
+  keyboard: 'keyboard-membrane',
+  amulet: 'amulet-clover',
+  phone: 'phone-basic',
+  wallet: 'wallet-canvas',
+  vehicle: 'skate',
+};
+
+function emptySlotMark(slot) {
+  const ghost = SLOT_GHOSTS[slot.id];
+  return `<span class="empty-slot-mark">${ghost
+    ? `<img src="assets/equipment/items/${ghost}.png" alt="" draggable="false">`
+    : escapeHtml(slot.shortLabel || '')}</span>`;
+}
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -106,6 +125,8 @@ export function createEquipmentMenu(catalog, options = {}) {
   const slotsRoot = document.querySelector('#equipment-slots');
   const effectsRoot = document.querySelector('#equipment-effects');
   const chestsRoot = document.querySelector('#equipment-chests');
+  const chestCount = document.querySelector('#chest-count');
+  const chestEmpty = document.querySelector('#chest-empty');
   const compareRoot = document.querySelector('#equipment-compare');
   const revealRoot = document.querySelector('#equipment-reveal');
   const clear = document.querySelector('#equipment-clear');
@@ -145,7 +166,7 @@ export function createEquipmentMenu(catalog, options = {}) {
           data-slot-id="${slot.id}"${item ? ` data-rarity="${item.rarity}"` : ''} style="${style}"
           aria-label="${item ? `${slot.name}: ${escapeHtml(item.name)}. Clique para guardar.` : `${slot.name}: vazio`}">
           <span class="equipment-slot-label">${escapeHtml(slot.name)}</span>
-          ${item ? itemIcon(item, 'slot-item-glyph') : `<span class="empty-slot-mark">${slot.shortLabel}</span>`}
+          ${item ? itemIcon(item, 'slot-item-glyph') : emptySlotMark(slot)}
           <span class="equipment-slot-value">${escapeHtml(item?.name || 'Vazio')}</span>
           ${item ? '<span class="equipment-slot-remove" aria-hidden="true">×</span>' : ''}
         </button>
@@ -179,10 +200,8 @@ export function createEquipmentMenu(catalog, options = {}) {
       data-instance-id="${item.instanceId}" data-rarity="${item.rarity || 'common'}"
       data-slot="${item.slot}" aria-pressed="${item.equipped}"
       style="--item-accent:${item.accent};--item-secondary:${item.secondary}">
-      <span class="inventory-item-art">
-        ${itemIcon(item)}
-        <span class="inventory-equipped-mark" aria-hidden="true">E</span>
-      </span>
+      <span class="inventory-equipped-mark" aria-hidden="true">Equipado</span>
+      <span class="inventory-item-art">${itemIcon(item)}</span>
       <strong>${escapeHtml(item.name)}</strong>
       <span class="rarity-chip">${escapeHtml(item.rarityName || '')}</span>
       <small>${(item.effectLabels?.length
@@ -253,27 +272,48 @@ export function createEquipmentMenu(catalog, options = {}) {
 
   const chests = () => snapshot?.chests || [];
 
+  /**
+   * A prateleira de baús — seção própria desde a v3.
+   *
+   * Era uma fileira de cards pequenos espremida no topo da bag, ao lado de vinte
+   * itens que já são do jogador. Com espaço, o card passa a dizer o que o baú é: a
+   * arte do TIPO (os cinco desenhavam a mesma caixa marrom), a descrição e a chance
+   * de cada raridade.
+   *
+   * As chances viram BARRA além de pastilha: a fatia é desenhada no tamanho da
+   * própria probabilidade, e é isso que mostra de relance que 5% de Lendária é uma
+   * lasquinha — o número sozinho não faz ninguém sentir isso.
+   */
   const renderChests = () => {
     if (!chestsRoot) return;
     const list = chests();
-    // A fileira some quando não há baú: uma prateleira vazia permanente ensina o
-    // jogador a ignorar aquele canto da tela.
-    chestsRoot.hidden = list.length === 0;
-    if (!list.length) return;
-    chestsRoot.innerHTML = list.map((chest) => `
+    const total = list.reduce((sum, chest) => sum + chest.count, 0);
+    if (chestEmpty) chestEmpty.hidden = total > 0;
+    if (chestCount) {
+      chestCount.textContent = total === 1 ? '1 baú fechado' : `${total} baús fechados`;
+    }
+    chestsRoot.innerHTML = list.map((chest) => {
+      const odds = chest.everything ? [] : (chest.odds || []);
+      return `
       <button class="lootbox-card" type="button" data-chest-id="${chest.instanceIds[0]}"
         data-rarity="${chest.rarity || chest.odds?.at(-1)?.rarity || 'common'}"
-        aria-label="${escapeHtml(`${chest.name}: ${chest.description}`)}">
-        <span class="lootbox-art" aria-hidden="true"><i></i></span>
+        aria-label="${escapeHtml(`Abrir ${chest.name}. ${chest.description}`)}">
+        <span class="lootbox-count">${chest.count}</span>
+        <span class="lootbox-art" aria-hidden="true">
+          <img src="assets/equipment/chests/${escapeHtml(chest.tier)}.png" alt="" draggable="false">
+        </span>
         <strong>${escapeHtml(chest.name)}</strong>
+        <span class="lootbox-note">${escapeHtml(chest.description || '')}</span>
+        ${odds.length ? `<span class="lootbox-odds" aria-hidden="true">${odds
+    .map((o) => `<i data-rarity="${o.rarity}" style="flex:${o.percent}"></i>`).join('')}</span>` : ''}
         <small>${chest.everything
           // A caixa do beta não sorteia: onde os outros mostram chances, ela diz o
           // que faz. Deixar o espaço vazio pareceria baú quebrado.
-          ? '<i data-rarity="exotic">tudo</i>'
-          : chest.odds.map((o) => `<i data-rarity="${o.rarity}">${o.percent}%</i>`).join('')}</small>
-        <span class="lootbox-count">${chest.count}</span>
-      </button>
-    `).join('');
+    ? '<i data-rarity="exotic">tudo</i>'
+    : odds.map((o) => `<i data-rarity="${o.rarity}">${o.percent}%</i>`).join('')}</small>
+        <span class="lootbox-open">Abrir</span>
+      </button>`;
+    }).join('');
   };
 
   /**
@@ -308,10 +348,13 @@ export function createEquipmentMenu(catalog, options = {}) {
       <div class="reveal-card" data-rarity="${rarity}">
         <span class="reveal-tier">${escapeHtml(prize.tierName)}</span>
         ${beta ? `
+          <span class="reveal-art" aria-hidden="true">
+            <img src="assets/equipment/chests/beta.png" alt="" draggable="false"></span>
           <strong>${beta.length ? 'Catálogo liberado' : 'Você já tinha tudo'}</strong>
           <span class="rarity-chip">Beta</span>
           <ul>${beta.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
         ` : prize.item ? `
+          <span class="reveal-art" aria-hidden="true">${itemIcon(prize.item)}</span>
           <strong>${escapeHtml(prize.item.name)}</strong>
           <span class="rarity-chip">${escapeHtml(prize.rarityName)}</span>
           <ul>${(prize.item.effectLabels || []).map((l) => `<li>${escapeHtml(l)}</li>`).join('')}</ul>

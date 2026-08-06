@@ -1,4 +1,4 @@
-// Desenha um PNG 32×32 para cada equipamento do catálogo.
+// Desenha a arte dos itens: um PNG 32×32 por equipamento e um 48×48 por tipo de baú.
 //
 // Antes o card da bag mostrava uma "caixa com um desenho dentro" montada em CSS
 // (`.item-glyph.icon-mouse` e companhia): um contorno por slot, repetido em todos os
@@ -12,6 +12,10 @@
 // saem no mesmo estilo e no mesmo pixel grid do resto do jogo, o que recortar de
 // pack nenhum garantia.
 //
+// Os BAÚS seguem a mesma regra e pela mesma razão: os cinco desenhavam a mesma caixa
+// marrom em CSS, e só a cor da borda dizia que um era Lendário. Agora cada tipo tem
+// silhueta própria — a tampa, as cintas, a fechadura e o que sai de dentro mudam.
+//
 //   node client-web/tools/generate-equipment-icons.mjs
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -22,6 +26,7 @@ const toolsDir = dirname(fileURLToPath(import.meta.url));
 const clientRoot = resolve(toolsDir, '..');
 const catalogPath = resolve(clientRoot, 'assets/equipment/catalog.json');
 const outDir = resolve(clientRoot, 'assets/equipment/items');
+const chestDir = resolve(clientRoot, 'assets/equipment/chests');
 
 const SIZE = 32;
 const OUTLINE = [26, 20, 28, 255];
@@ -215,6 +220,156 @@ const RECIPES = {
   mouse, keyboard, amulet, phone, wallet, skate, roller, scooter, motorcycle,
 };
 
+// ---------------------------------------------------------------- baús
+//
+// 48×48: o baú é o herói da própria seção, não uma miniatura numa grade. A silhueta
+// muda por tipo — não só a cor —, então dá para reconhecer um Lendário de longe,
+// que é o que a fileira antiga (cinco caixas marrons iguais) não permitia.
+
+const CHEST_SIZE = 48;
+
+/**
+ * Corpo, tampa, cintas e fechadura. Todo baú começa por aqui.
+ *
+ * `bands` e `lock` saem para a caixa do beta: presente tem laço, não cinta de ferro
+ * nem fechadura — e o laço desenhado POR CIMA das cintas lia como grade.
+ */
+function chestBase(canvas, { wood, woodLight, woodDark, band, bandLight, lock }, options = {}) {
+  // tampa (arco de três degraus, para não virar um retângulo)
+  fillRect(canvas, 9, 12, 30, 3, OUTLINE);
+  fillRect(canvas, 7, 15, 34, 3, OUTLINE);
+  fillRect(canvas, 10, 13, 28, 2, woodLight);
+  fillRect(canvas, 8, 15, 32, 4, wood);
+  fillRect(canvas, 8, 19, 32, 2, woodDark);
+  // corpo
+  fillRect(canvas, 6, 21, 36, 2, OUTLINE);
+  fillRect(canvas, 6, 21, 2, 15, OUTLINE);
+  fillRect(canvas, 40, 21, 2, 15, OUTLINE);
+  fillRect(canvas, 6, 34, 36, 2, OUTLINE);
+  fillRect(canvas, 8, 23, 32, 11, wood);
+  fillRect(canvas, 8, 23, 32, 2, woodLight);
+  fillRect(canvas, 8, 32, 32, 2, woodDark);
+  // cintas de metal
+  if (options.bands !== false) {
+    for (const x of [12, 34]) {
+      fillRect(canvas, x, 13, 3, 21, band);
+      fillRect(canvas, x, 13, 1, 21, bandLight);
+    }
+  }
+  // fechadura
+  if (options.lock !== false) {
+    fillRect(canvas, 21, 18, 6, 8, OUTLINE);
+    fillRect(canvas, 22, 19, 4, 6, lock);
+    fillRect(canvas, 23, 21, 2, 3, OUTLINE);
+  }
+  // pés
+  fillRect(canvas, 8, 36, 5, 2, OUTLINE);
+  fillRect(canvas, 35, 36, 5, 2, OUTLINE);
+}
+
+const CHEST_PALETTES = {
+  common: {
+    wood: [150, 96, 54, 255], woodLight: [186, 125, 74, 255], woodDark: [104, 64, 38, 255],
+    band: [120, 126, 140, 255], bandLight: [166, 172, 186, 255], lock: [214, 176, 96, 255],
+  },
+  rare: {
+    wood: [64, 104, 152, 255], woodLight: [92, 142, 196, 255], woodDark: [40, 68, 106, 255],
+    band: [176, 186, 202, 255], bandLight: [220, 228, 240, 255], lock: [232, 206, 120, 255],
+  },
+  premium: {
+    wood: [58, 56, 72, 255], woodLight: [86, 84, 106, 255], woodDark: [36, 34, 48, 255],
+    band: [206, 168, 88, 255], bandLight: [244, 214, 140, 255], lock: [244, 226, 160, 255],
+  },
+  legendary: {
+    wood: [198, 148, 52, 255], woodLight: [240, 198, 96, 255], woodDark: [140, 98, 32, 255],
+    band: [246, 226, 150, 255], bandLight: [255, 248, 208, 255], lock: [255, 240, 190, 255],
+  },
+  exotic: {
+    wood: [126, 62, 148, 255], woodLight: [176, 96, 202, 255], woodDark: [78, 36, 96, 255],
+    band: [255, 150, 226, 255], bandLight: [255, 210, 244, 255], lock: [190, 246, 255, 255],
+  },
+  // A caixa do beta não sorteia nada: entrega o catálogo inteiro. Então ela não é um
+  // baú melhor — é outra coisa, e a arte diz isso com laço de presente em vez de
+  // fechadura reforçada.
+  beta: {
+    wood: [196, 74, 92, 255], woodLight: [232, 112, 128, 255], woodDark: [140, 48, 66, 255],
+    band: [246, 216, 116, 255], bandLight: [255, 242, 186, 255], lock: [255, 250, 220, 255],
+  },
+};
+
+/** O que cada tipo acrescenta por cima da base. É isto que separa as silhuetas. */
+const CHEST_EXTRAS = {
+  // Comum: nada. Uma caixa de madeira honesta é o degrau de comparação dos outros.
+  common: () => {},
+  rare: (canvas, p) => {
+    // rebites nas cintas: o primeiro degrau "reforçado"
+    for (const y of [16, 24, 31]) {
+      fillRect(canvas, 12, y, 3, 1, p.bandLight);
+      fillRect(canvas, 34, y, 3, 1, p.bandLight);
+    }
+    fillRect(canvas, 22, 27, 4, 3, [120, 200, 255, 255]);   // gema na frente
+    fillRect(canvas, 22, 27, 4, 1, [206, 240, 255, 255]);
+  },
+  premium: (canvas, p) => {
+    // Moldura dourada + selo em cima da tampa. A fileira de pastilhas que estava aqui
+    // lia como teclado: quatro quadradinhos iguais em linha são um teclado, não um selo.
+    fillRect(canvas, 8, 23, 32, 1, p.band);
+    fillRect(canvas, 8, 33, 32, 1, p.band);
+    fillRect(canvas, 18, 27, 12, 4, p.wood);
+    fillRect(canvas, 19, 28, 10, 2, p.band);
+    fillRect(canvas, 22, 15, 4, 4, p.bandLight);
+    fillRect(canvas, 23, 16, 2, 2, p.woodDark);
+  },
+  legendary: (canvas, p) => {
+    // Cantoneiras + FAÍSCAS. As três barras verticais que estavam aqui liam como
+    // antenas: luz saindo de dentro precisa se espalhar, não subir em linha reta.
+    for (const [x, y] of [[6, 21], [38, 21], [6, 31], [38, 31]]) {
+      fillRect(canvas, x, y, 4, 4, p.bandLight);
+      fillRect(canvas, x + 1, y + 1, 2, 2, p.wood);
+    }
+    for (const [x, y, s] of [[13, 7, 2], [23, 4, 3], [33, 8, 2], [18, 9, 1], [29, 10, 1]]) {
+      fillRect(canvas, x, y, s, s, [255, 240, 170, 210]);
+      fillRect(canvas, x, y - 1, 1, 1, [255, 252, 226, 160]);
+    }
+    // Frincha de luz na juntura da tampa: é de lá que a luz sai.
+    fillRect(canvas, 10, 14, 28, 1, [255, 250, 214, 190]);
+    fillRect(canvas, 21, 15, 6, 2, [255, 250, 214, 255]);
+  },
+  exotic: (canvas, p) => {
+    // cristais flutuando e brilho: o topo do jogo se anuncia de longe
+    for (const [x, y, s] of [[8, 6, 3], [38, 9, 2], [4, 14, 2], [42, 17, 3], [24, 2, 2]]) {
+      fillRect(canvas, x, y, s, s, p.bandLight);
+      fillRect(canvas, x, y, 1, 1, [255, 255, 255, 220]);
+    }
+    for (const x of [14, 22, 30]) fillRect(canvas, x, 8, 2, 4, [255, 160, 236, 150]);
+    fillRect(canvas, 20, 26, 8, 4, [190, 246, 255, 255]);
+    fillRect(canvas, 20, 26, 8, 1, [255, 255, 255, 255]);
+  },
+  beta: (canvas, p) => {
+    // Fita em cruz + laço. As alças ficam DEITADAS ao lado do nó: em pé, elas
+    // continuavam as cintas do baú comum e a caixa lia como jaula.
+    fillRect(canvas, 21, 12, 6, 22, p.band);
+    fillRect(canvas, 21, 12, 2, 22, p.bandLight);
+    fillRect(canvas, 8, 26, 32, 4, p.band);
+    fillRect(canvas, 8, 26, 32, 1, p.bandLight);
+    for (const x of [14, 28]) {
+      fillRect(canvas, x, 8, 6, 4, p.band);
+      fillRect(canvas, x + 1, 9, 4, 2, p.woodDark);
+    }
+    fillRect(canvas, 21, 7, 6, 5, p.bandLight);
+    fillRect(canvas, 23, 9, 2, 2, p.wood);
+  },
+};
+
+function drawChest(tier) {
+  const canvas = createCanvas(CHEST_SIZE, CHEST_SIZE);
+  const palette = CHEST_PALETTES[tier];
+  if (!palette) return null;
+  chestBase(canvas, palette, tier === 'beta' ? { bands: false, lock: false } : {});
+  CHEST_EXTRAS[tier]?.(canvas, palette);
+  return canvas;
+}
+
 // ---------------------------------------------------------------- geração
 
 const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
@@ -248,3 +403,10 @@ for (const [slot, items] of bySlot) {
   }
 }
 console.log(`${written} ícones em assets/equipment/items/`);
+
+await mkdir(chestDir, { recursive: true });
+for (const tier of Object.keys(CHEST_PALETTES)) {
+  const canvas = drawChest(tier);
+  if (canvas) await writeFile(resolve(chestDir, `${tier}.png`), encodePng(canvas));
+}
+console.log(`${Object.keys(CHEST_PALETTES).length} baús em assets/equipment/chests/`);

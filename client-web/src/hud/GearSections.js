@@ -26,6 +26,19 @@ const SECTIONS = [
     view: '#equipment-panel-view',
     tab: 'equipment',
   },
+  // Baú é seção, não fileira. Era uma tira espremida no topo da bag, do lado de
+  // vinte cards de item que já são do jogador — e o baú fechado é a única coisa da
+  // mochila que ainda esconde alguma coisa. O contador na etiqueta existe para não
+  // ser preciso abrir a seção para saber se há algo lá.
+  {
+    id: 'chests',
+    icon: '🎁',
+    label: 'Baús',
+    title: 'Baús',
+    subtitle: 'O que ainda está fechado — e o que pode sair de dentro',
+    view: '#chest-panel-view',
+    tab: 'chests',
+  },
 ];
 
 export function createGearSections({ menu, equipmentMenu, characterCustomizer }) {
@@ -41,6 +54,9 @@ export function createGearSections({ menu, equipmentMenu, characterCustomizer })
       label: section.label,
       title: section.title,
       subtitle: section.subtitle,
+      badge: section.id === 'chests'
+        ? () => equipmentMenu.getChests().reduce((total, chest) => total + chest.count, 0)
+        : undefined,
       render(host) {
         const view = document.querySelector(section.view);
         // Rede de segurança: se alguém esvaziar a janela sem passar pelo

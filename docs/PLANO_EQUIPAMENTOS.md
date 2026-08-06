@@ -572,3 +572,42 @@ e, por ser o inicial, o primeiro card que a bag mostrava, vazio.
 
 **O relógio do celular caiu pela metade.** Ele conta minutos ONLINE, e a presença tem teto de nove
 horas por dia: 24 h de relógio eram quase três dias de escritório por baú. Ver §5.3.
+
+---
+
+## 14. Baú vira seção, e a arte sai da moldura (2026-08-06)
+
+**O baú tinha seção nenhuma.** Era uma fileira de cards de 118px espremida no topo da
+bag, ao lado de vinte itens que já são do jogador — e o baú fechado é a única coisa da
+mochila que ainda esconde alguma coisa. Agora é uma seção do menu, ao lado de
+Personagem e Itens, com etiqueta de contagem na lista (`badge` no `MainMenu`): dá para
+saber que há baú esperando sem abrir nada.
+
+**Os cinco baús eram a mesma caixa marrom** desenhada em CSS, com a cor da borda
+mudando por raridade. Agora cada tipo tem PNG de 48×48 com silhueta própria
+(`tools/generate-equipment-icons.mjs`): madeira e ferro no Comum, aço azul no Raro,
+grafite com moldura dourada no Selecionado, ouro com faíscas no Lendário, cristal
+flutuante no Exótico. A Caixa do Beta Tester não é um baú melhor — é outra coisa, e a
+arte diz isso com laço de presente no lugar da fechadura.
+
+**A chance virou barra.** As pastilhas de porcentagem continuam, mas acima delas a
+fatia de cada raridade é desenhada no tamanho da própria probabilidade: 5% de Lendária
+é uma lasquinha, e ver a lasquinha diz o que o número não diz.
+
+**A moldura do item saiu.** `.item-glyph` era uma caixa de 48px com borda, gradiente e
+sombra interna, e o sprite ficava pequeno lá dentro — a mesma "caixa com um desenho
+dentro" que o desenho em CSS já era. Agora o fundo é só um halo da cor da raridade, o
+sprite cresceu, e ele aparece também no cartão de revelação do prêmio, que anunciava o
+item só por escrito.
+
+**Encaixe vazio mostra silhueta, não sigla.** "MS" e "TC" numa caixa tracejada
+obrigavam a decorar a abreviação; agora é o item mais simples do slot, apagado. Nenhum
+asset novo — são PNGs que já existiam.
+
+Duas armadilhas de CSS que este trabalho encontrou, ambas da regra de alvo de toque
+(`@media(pointer:coarse)` põe `min-height:44px` em todo botão do menu):
+
+- ela vence `.lootbox-card{min-height:200px}` por especificidade (`#equipment-menu
+  button` é mais específico que uma classe), e o card encolhia para 122px no celular;
+- num card que é **coluna flex**, encolher o container espreme os filhos: a arte de
+  64px virava uma tira. `flex:0 0 auto` na arte é o que a protege.
