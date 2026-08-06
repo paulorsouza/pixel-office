@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness do Álbum e do Baralho (sem Phaser nem backend)</title>
+<!-- O CSS e o catálogo são os DE VERDADE; o que é falso aqui é só o backend
+     (`gameItems`), a presença e a janela do menu. Assim dá para conferir filtro,
+     ordenação e layout do cardgame sem subir a API nem esperar o Phaser. -->
+<link rel="stylesheet" href="src/hud/hud.css">
+<style>
+  body{margin:0;background:#0b1022;color:#fff;font-family:Inter,system-ui,sans-serif}
+  #harness-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;background:#151b34}
+  #harness-head h1{flex:1;margin:0;font-size:14px}
+  #harness-head small{color:#9aa6c6;font-size:11px}
+  #cg-title{margin:14px 14px 2px;font-size:16px}
+  #cg-subtitle{margin:0 14px 10px;color:#9aa6c6;font-size:12px}
+  #cg-host{padding:0 14px 40px}
+</style>
+</head>
+<body>
+<div id="harness-head">
+  <h1>Harness do cardgame</h1>
+  <button class="cg-btn" data-section="album">Álbum</button>
+  <button class="cg-btn" data-section="deck">Baralho</button>
+  <small id="harness-note"></small>
+</div>
+<h2 id="cg-title"></h2>
+<p id="cg-subtitle"></p>
+<div id="cg-host" class="cg-hub-content"></div>
+<script type="module">
+import { createCardGamePanel } from './src/cardgame/CardGamePanel.js';
+
+const catalog = await (await fetch('assets/cardgame/catalog.json')).json();
+const typeChart = await (await fetch('assets/cardgame/type-chart.json')).json();
+
+// Coleção de mentira, mas variada de propósito: cartas repetidas (para os botões
+// de troca), shinies de lados diferentes e buracos no álbum — é o que faz os
+// filtros "só as que tenho / só as que faltam" e a ordem por lado terem o que
+// mostrar.
+const collection = [];
+for (const card of catalog.cards) {
+  if (card.dex % 3 === 0) continue;                       // buraco no álbum
+  collection.push({ cardId: card.id, isShiny: false, quantity: (card.dex % 13) + 1 });
+  if (card.dex % 17 === 0) {
+    const side = ['top', 'right', 'bottom', 'left'][card.dex % 4];
+    collection.push({ cardId: card.id, isShiny: true, shinyBonusSide: side, quantity: 1 });
+  }
+}
+
+const profile = {
+  boosters: 3, boosterInventory: [], boosterDefinitions: [], collection,
+  decks: { common: [], great: [], ultra: [], master: [] },
+  uniqueCards: collection.length, shinyCards: collection.filter((c) => c.isShiny).length,
+  baseTotal: catalog.baseCount, specialExchangeCost: 10, evolutionExchangeCost: 5,
+};
+
+const gameItems = {
+  cardGameProfile: async () => profile,
+  exchangeCardGameDuplicates: async () => ({ profile, message: '(harness) troca simulada' }),
+  exchangeCardGameEvolution: async () => ({ profile, message: '(harness) evolução simulada' }),
+  saveCardGameDeck: async (leagueId, cardIds) => {
+    profile.decks = { ...profile.decks, [leagueId]: [...cardIds] };
+    return profile;
+  },
+};
+
+// Guarda o que foi mandado pelo socket para dar para conferir no teste.
+const enviado = [];
+const events = new EventTarget();
+const panel = createCardGamePanel({
+  presence: {
+    events,
+    remoteAt: () => window.__peer || null,
+    cardGameChallenge: (key, leagueId) => enviado.push({ tipo: 'challenge', key, leagueId }),
+    cardGameAccept: (challengeId) => enviado.push({ tipo: 'accept', challengeId }),
+    cardGameDecline: (challengeId) => enviado.push({ tipo: 'decline', challengeId }),
+  },
+  catalog,
+  typeChart,
+  gameItems,
+  onToast: (message) => { document.getElementById('harness-note').textContent = message; },
+  // No jogo quem abre a seção é o menu da HUD; aqui é o próprio harness.
+  openMenu: (section) => show(section),
+});
+
+const host = document.getElementById('cg-host');
+const menuApi = {
+  setHeader: (title, subtitle = '') => {
+    document.getElementById('cg-title').textContent = title;
+    document.getElementById('cg-subtitle').textContent = subtitle;
+  },
+  open: (id) => show(id),
+  close: () => {},
+};
+const show = (section) => panel.renderSection(section, host, menuApi);
+document.querySelectorAll('[data-section]').forEach((button) => {
+  button.onclick = () => show(button.dataset.section);
+});
+await show('album');
+
+window.cardgamePanel = panel;
+window.cardgameShow = show;
+window.cardgameEnviado = enviado;
+// O menu do jogador e o convite são camadas fora do menu; para exercitá-los sem
+// SignalR nem segundo navegador, o harness chama o mesmo caminho que a presença
+// chamaria: um toque no mundo em cima de um par, e o evento do desafio.
+window.cardgameTocaEm = (peer) => {
+  window.__peer = peer;
+  return panel.handleWorldTap({ worldX: 0, worldY: 0, x: 40, y: 40 });
+};
+window.cardgameRecebeDesafio = (detail) =>
+  events.dispatchEvent(new CustomEvent('CardChallengeReceived', { detail }));
+window.cardgameEstadoDaPartida = (detail) =>
+  events.dispatchEvent(new CustomEvent('CardMatchState', { detail }));
+// Para exercitar "o baralho salvo ficou ilegal" (regra mudou, carta saiu do
+// álbum) sem precisar de banco: injeta um baralho direto no perfil falso.
+window.cardgameSetDeck = async (leagueId, cardIds) => {
+  profile.decks = { ...profile.decks, [leagueId]: [...cardIds] };
+  await show('deck');
+};
+</script>
+</body>
+</html>

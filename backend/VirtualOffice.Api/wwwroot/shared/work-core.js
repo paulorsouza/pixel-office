@@ -72,6 +72,10 @@ export const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) =>
  * está com o foco, e a busca morria no meio da palavra. Aqui o foco e o cursor
  * são anotados antes e devolvidos ao campo equivalente do desenho novo.
  *
+ * Quando existe mais de um campo assim na tela (a busca e a captura rápida de
+ * cada coluna do kanban), `data-focus-key` diz qual é qual — sem ele o foco
+ * voltaria sempre para o primeiro que casasse com o seletor.
+ *
  * @param root      contêiner redesenhado (limita a busca a esta tela)
  * @param selector  como reencontrar o campo depois, ex. ".wq-search"
  */
@@ -83,10 +87,17 @@ export function keepFocus(root, selector, redraw) {
   // pessoa pode ter digitado mais. Quem manda no campo é o que está na tela, não
   // o valor que o filtro tinha quando a busca saiu.
   const { value, selectionStart, selectionEnd } = active;
+  const key = active.dataset?.focusKey;
   redraw();
-  const restored = root.querySelector(selector);
-  if (!restored || restored === active) return;
-  restored.focus();
+  const restored = key
+    ? root.querySelector(`[data-focus-key="${CSS.escape(key)}"]`)
+    : root.querySelector(selector);
+  if (!restored) return;
+  // Pode ser o MESMO nó e ainda assim ter perdido o foco: a captura rápida é
+  // reaproveitada entre desenhos, e `replaceChildren` desprende o elemento —
+  // desprender é o que apaga o foco. Por isso a comparação é com quem está
+  // focado agora, não com quem estava antes.
+  if (document.activeElement !== restored) restored.focus();
   if (restored.value !== value) restored.value = value;
   if (selectionStart != null) restored.setSelectionRange(selectionStart, selectionEnd);
 }

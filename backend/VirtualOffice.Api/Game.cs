@@ -41,21 +41,45 @@ public static class GameOptions
     /// </summary>
     public static string WelcomeGrantKey { get; private set; } = "beta-v1";
 
-    /// <summary>Teto diário de gold vindo de lançamento de horas (anti-farm).</summary>
-    public static int DailyGoldCapFromTime { get; private set; } = 400;
+    /// <summary>
+    /// Teto diário de gold vindo de lançamento de horas (anti-farm).
+    ///
+    /// Foram 400 por muito tempo, e a esse valor **uma hora e meia de estudo esgotava o
+    /// dia inteiro** enquanto a presença pagava 2.700 — ficar com a janela aberta rendia
+    /// quase 7× mais do que produzir. 6.000 devolve o teto ao papel de freio contra
+    /// lançamento inventado, em vez de teto sobre quem trabalha de verdade: oito horas
+    /// da atividade mais cara (estudo, 275/h) dão 2.200, bem abaixo dele.
+    /// </summary>
+    public static int DailyGoldCapFromTime { get; private set; } = 6_000;
 
     /// <summary>
-    /// Gold por minuto só de estar online, e o teto diário desse ganho.
+    /// Gold por HORA só de estar online, e o teto diário desse ganho.
     ///
-    /// 5/min = **300 moedas por hora**, com teto de 9 horas por dia (2.700). Com o
-    /// conjunto lendário completo o bônus dobra os dois: 600/h e 5.400/dia.
-    /// Ver docs/ECONOMIA.md §2.2-b.
+    /// Por hora, e não por minuto, porque a taxa por minuto obrigava o número a ser
+    /// inteiro — 500/h não tinha como ser escrito. O pagamento é por direito acumulado
+    /// (`floor` sobre o total do dia), então a fração fecha sozinha.
+    ///
+    /// 500/h com teto de 9 horas (4.500). Com o conjunto lendário completo o bônus
+    /// dobra os dois: 1.000/h e 9.000/dia. Ver docs/ECONOMIA.md §2.2-b.
     /// </summary>
-    public static int PresenceGoldPerMinute { get; private set; } = 5;
-    public static int PresenceGoldDailyCap { get; private set; } = 2_700;
+    public static int PresenceGoldPerHour { get; private set; } = 500;
+    public static int PresenceGoldDailyCap { get; private set; } = 4_500;
 
     /// <summary>Horas de presença que o teto diário cobre. Só documenta o número acima.</summary>
     public const int PresenceCappedHours = 9;
+
+    /// <summary>
+    /// Gold por hora de TRABALHO EM EQUIPE, pago por cima da presença enquanto a pessoa
+    /// está de fato com outra: em reunião com alguém, ou pareando ao lado de um colega.
+    ///
+    /// É fonte separada (`teamwork`), com teto próprio, e não passa pelo multiplicador de
+    /// equipamento de propósito: o conjunto paga o tempo online, a equipe paga a
+    /// companhia. Misturar os dois faria o jogador com o melhor mouse ganhar mais por
+    /// participar da mesma reunião. Ver docs/ECONOMIA.md §2.5.
+    /// </summary>
+    public static int TeamworkMeetingGoldPerHour { get; private set; } = 180;
+    public static int TeamworkPairGoldPerHour { get; private set; } = 240;
+    public static int TeamworkGoldDailyCap { get; private set; } = 1_200;
 
     /// <summary>
     /// Fuso do time, usado para saber onde o dia começa. Sem isso a meta diária
@@ -70,8 +94,11 @@ public static class GameOptions
         WelcomeGrantCoins = section.GetValue("WelcomeGrantCoins", WelcomeGrantCoins);
         WelcomeGrantKey = section.GetValue("WelcomeGrantKey", WelcomeGrantKey) ?? "beta-v1";
         DailyGoldCapFromTime = section.GetValue("DailyGoldCapFromTime", DailyGoldCapFromTime);
-        PresenceGoldPerMinute = section.GetValue("PresenceGoldPerMinute", PresenceGoldPerMinute);
+        PresenceGoldPerHour = section.GetValue("PresenceGoldPerHour", PresenceGoldPerHour);
         PresenceGoldDailyCap = section.GetValue("PresenceGoldDailyCap", PresenceGoldDailyCap);
+        TeamworkMeetingGoldPerHour = section.GetValue("TeamworkMeetingGoldPerHour", TeamworkMeetingGoldPerHour);
+        TeamworkPairGoldPerHour = section.GetValue("TeamworkPairGoldPerHour", TeamworkPairGoldPerHour);
+        TeamworkGoldDailyCap = section.GetValue("TeamworkGoldDailyCap", TeamworkGoldDailyCap);
         TimeZoneOffsetHours = Math.Clamp(section.GetValue("TimeZoneOffsetHours", TimeZoneOffsetHours), -12, 14);
     }
 }
@@ -95,8 +122,12 @@ public static class Game
     /// trabalho não é só achar outro gancho: é o contrapeso da presença, que virou a
     /// maior fonte do jogo. O baú mais valioso continua saindo de produzir, não de
     /// deixar a janela aberta.
+    ///
+    /// Caiu de 40 para 25 horas: a 40, um dev de seis horas por dia via um Lendário a
+    /// cada sete semanas de trabalho — tempo demais entre dois prêmios para o marco ser
+    /// sentido como marco. A 25, é mensal.
     /// </summary>
-    public const int ChestWorkHourMilestone = 40;
+    public const int ChestWorkHourMilestone = 25;
 
     public static Rarity RollRarity()
     {

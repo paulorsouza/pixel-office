@@ -15,11 +15,18 @@ clientes os consomem:
 wwwroot/shared/work-core.js    cliente de API, helpers de DOM, formatação, toast/modal
 wwwroot/shared/work-ui.css     design system escopado em `.wq` (tema claro e escuro)
 wwwroot/shared/card-dialogs.js formulário e detalhe do card (criar, editar, checklist, comentários)
+wwwroot/shared/quick-parse.js  parser da captura de uma linha (módulo puro, com teste)
+wwwroot/shared/quick-add.js    o campo de captura em si (input + pílulas)
 wwwroot/shared/board.js        quadro kanban com drag & drop posicional
 wwwroot/shared/backlog.js      a mesma base em lista/tabela
 wwwroot/shared/timesheet.js    semana de horas, lançamento rápido e contador ao vivo
 wwwroot/shared/objectives.js   metas diárias e semanais
 ```
+
+**QA sem banco:** `wwwroot/work-test.html` monta quadro, backlog e horas com um
+`client` falso em memória — dá para mexer nas três telas sem Postgres e sem Phaser.
+Serve `wwwroot/` com qualquer servidor estático e abre `/work-test.html`;
+`?tab=hours`, `?theme=dark` e `?touch=1` cobrem os casos que costumam quebrar.
 
 - **App web** — `wwwroot/js/board.js`, `backlog.js`, `hours.js` e `goals.js` são cascas de
   ~15 linhas. `wwwroot/js/work-bridge.js` traduz a autenticação do app para o contrato
@@ -57,6 +64,36 @@ Cada card carrega: tipo, **prioridade**, código, título, **etiquetas**, respon
 - **Filtros**: sprint, responsável (com atalho *Só meus*), prioridade, etiqueta, tipo e
   busca por título/código.
 
+### Criar em uma linha
+
+O caminho padrão para criar atividade **não é mais o formulário de 11 campos**.
+No topo do backlog e no pé de cada coluna do kanban existe um campo só: digita o
+título, Enter cria, o foco fica — dá para despejar dez atividades seguidas sem
+tocar no mouse. Sem token nenhum sai Task/Média, na coluna onde foi digitado,
+herdando o sprint e o responsável dos filtros da tela.
+
+Tokens reconhecidos (`quick-parse.js`), válidos como palavra inteira e em
+qualquer posição da frase:
+
+| Token | Vira | Exemplos |
+|---|---|---|
+| `/bug` `/atd` `/task` | tipo | `/b` `/a` `/t` também |
+| `!!` `!alta` `!baixa` | prioridade | `!u` `!a` `!m` `!b` |
+| `@ana` | responsável | casa por prefixo, nome ou sobrenome, sem acento; `@eu` |
+| `#frontend` | etiqueta, ou épico se não houver etiqueta | `_` vale por espaço |
+| `~2h` `~90m` `~1,5h` | estimativa | |
+| `hoje` `amanhã` `sex` `12/09` | prazo | dia da semana só na abreviação de 3 letras |
+
+O que não casa com nada **continua no título** — nada é engolido em silêncio.
+E `Ctrl/⌘+Enter` abre o formulário completo já preenchido com o que foi digitado,
+para quando falta descrição ou checklist.
+
+Duas fontes decidem tipo, prioridade e responsável, e a regra de desempate é a
+recência: o **token** vale para aquela linha; a **pílula** clicada é grudenta e
+sobrevive à criação (cadastrar cinco bugs seguidos é um clique, não cinco). Um
+token novo derruba a pílula; continuar digitando não. As pílulas são o caminho do
+celular, onde ninguém vai digitar `!alta`.
+
 ### Facilitar a atividade atual
 
 Dois botões em cada card, e os mesmos no detalhe:
@@ -85,7 +122,23 @@ conta como jornada. Balanceamento se ajusta em `WorkCatalogSeed.cs` e vale no pr
 | `outro` | 📌 Outro | 30 min | 30 | 15 | |
 
 **Lançamento rápido** é um clique: o botão já traz a duração padrão e mostra quanto vai
-render. Para data, duração ou nota diferentes, o mesmo painel abre o formulário completo.
+render. O `±` colado nele abre a folha no mesmo tipo, para ajustar antes de gravar.
+
+**A grade da semana é o formulário.** Cada célula (tipo × dia) é um botão, inclusive as
+zeradas — a linha vazia é o convite. Um toque abre a folha já sabendo o dia e o tipo; um
+toque num preset de duração (15min … 8h) grava. Dois toques, sem digitar nada, e dá para
+preencher a semana inteira assim. O `−`/`+` de 15 em 15 cobre o que os presets não cobrem.
+
+- **Editar é tocar na linha** do lançamento, não só apagar: usa o `PATCH` que já existia e
+  a UI nunca chamava. A **data não muda na edição** (o `PATCH` não move o dia) e a folha
+  diz isso no rótulo; para trocar de dia, apaga e lança de novo.
+- **Repetir o último dia** procura o último dia com movimento (até 14 dias atrás), mostra o
+  que vai copiar e recria tudo com a data de hoje — em série, porque cada lançamento
+  precisa passar pelo teto diário enxergando o anterior.
+- **Desenvolvimento sem atividade ativa** não é mais um beco: em vez de só reclamar, abre a
+  folha com o tipo escolhido para a pessoa apontar o card ali mesmo. Quem *exige* card já
+  chega com a atividade ativa selecionada; quem não exige (estudo, reunião) chega com
+  nenhuma, para não sujar o "lançado" de um card que não pediu aquilo.
 
 **Contador ao vivo** (`/api/timer/start` e `/stop`, ou sentar numa estação no jogo) fecha o
 lançamento e paga na hora. Encerrar na estação do jogo agora passa pelo **mesmo caminho**

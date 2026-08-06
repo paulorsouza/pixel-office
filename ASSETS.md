@@ -93,11 +93,26 @@ Tudo abaixo foi **renderizado e conferido visualmente**. **Não chute de novo** 
 #### Character Generator modular
 
 - Fonte: `LimeZu/personagens/character-generator-parts/`.
-- Ordem de composição oficial: **Body → Eyes → Outfit → Hairstyle → Accessory**.
+- Ordem de composição do pack: **Body → Eyes → Outfit → Hairstyle → Accessory**. O cliente
+  desmembra o acessório em três camadas, pela parte do corpo:
+  **Body → Eyes → Outfit → Costas → Hairstyle → Rosto → Cabeça** — é o que permite usar
+  óculos, boné e mochila ao mesmo tempo.
 - As folhas modulares têm **896×656**; `Bodies` mede **927×656** porque inclui anotações à direita,
   fora da área útil. Não use a largura total para inferir colunas.
-- Cada célula útil mede **16×32**. Linhas usadas pelo cliente: `idle` em **y=32**, `walk` em
-  **y=64** e `sit` em **y=128**.
+- Cada célula útil mede **16×32**. Linhas usadas pelo cliente na folha do PACK: `idle` em
+  **y=32**, `walk` em **y=64** e `sit` em **y=128**.
+- ⚠️ **O cliente NÃO versiona a folha do pack.** `client-web/tools/generate-character-parts.mjs`
+  recorta as três linhas para uma folha de **384×96** (`idle` y=0, `walk` y=32, `sit` y=64), o que
+  derruba cada peça de ~45 KB para ~2 KB — é o que torna viável versionar as **432 opções**
+  (9 peles, 7 olhos, 132 roupas, 200 cabelos, 84 acessórios) em 2 MB. A geometria é declarada em
+  `catalog.json` (`frame.poses`), então mudar o recorte é mudar o JSON, não o código.
+- O catálogo agrupa por **modelo × cor**: as variantes de uma família (`Outfit_01_01..10`) são a
+  mesma silhueta em paletas diferentes. É o que a UI usa para não virar uma parede de 200
+  miniaturas de cabelo.
+- Os frames `sit` de cima/baixo são **gerados**: copiam o `idle` da direção e refazem as três
+  últimas linhas de pixel (quadril alargado, joelho escurecido em 0.82, pé apagado).
+  `node client-web/tools/generate-character-parts.mjs --check <dir>` reproduz folhas antigas de
+  896×656 pixel a pixel — foi assim que a regra foi recuperada quando o gerador original se perdeu.
 - `idle` e `walk`: 24 frames na ordem `right(0-5), up(6-11), left(12-17), down(18-23)`.
 - `sit`: **24 frames**, na ordem própria `right(0-5), left(6-11), up(12-17), down(18-23)`. O pack só
   trazia as laterais; cima e baixo foram geradas por script e escritas nas 23 folhas modulares (o
@@ -214,8 +229,9 @@ Organizados em subpastas. O cliente multi-cena usa `chars/`, `tiles/`, `floors/`
 |---|---|
 | **`chars/`** `Adam_run.png`, `Adam_idle_anim.png` | Personagem (24 frames de 16×32) |
 | **`chars/Adam_sit.png`** | Pose sentada (12 frames de 32×32; ver §3.1) |
-| **`character/`** `catalog.json` + 23 PNGs | Avatar modular: corpos, olhos, roupas, cabelos e acessórios |
+| **`character/`** `catalog.json` + 432 PNGs de 384×96 | Avatar modular: **todas** as peças do pack, recortadas (§3.1) |
 | **`equipment/`** `catalog.json` | Slots, itens, velocidades, poses e camadas dos equipamentos |
+| **`equipment/items/`** 41 PNGs de 32×32 | Arte de cada equipamento (`tools/generate-equipment-icons.mjs`) |
 | **`tiles/`** `room_builder.png` | Room builder do Office (256×224) — paredes e estrutura |
 | **`floors/`** `floor_wood/carpet/cream/sage/water.png` | Pisos lisos (Modern Interiors) — ver §3.2 |
 | **`furniture/office/`** `of_1..of_339.png` | Os 339 móveis do Office Revamped (§4.1) |

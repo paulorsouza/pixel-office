@@ -419,32 +419,46 @@ test('posicionamento respeita limites, circulação da porta e outros móveis', 
   );
 });
 
-test('personagem modular oferece cinco camadas válidas e assets versionados', () => {
+test('personagem modular oferece sete camadas válidas e assets versionados', () => {
+  // Acessório virou TRÊS camadas (costas, rosto, cabeça) para dar para usar óculos,
+  // boné e mochila ao mesmo tempo. A ordem é a de desenho: mochila antes do cabelo,
+  // chapéu depois.
   assert.deepEqual(
     characterCatalog.categories.map((category) => category.id),
-    ['body', 'eyes', 'outfit', 'hairstyle', 'accessory'],
+    ['body', 'eyes', 'outfit', 'back', 'hairstyle', 'face', 'head'],
   );
   assert.equal(characterCatalog.frame.width, 16);
   assert.equal(characterCatalog.frame.height, 32);
+  // Folha recortada: idle, walk e sit, nesta ordem, 32px cada.
+  assert.deepEqual(
+    Object.entries(characterCatalog.frame.poses).map(([pose, spec]) => [pose, spec.y]),
+    [['idle', 0], ['walk', 32], ['sit', 64]],
+  );
   for (const category of characterCatalog.categories) {
     assert.ok(category.options.length >= 4, `${category.id}: opções suficientes`);
+    // Modelo × cor: a tela agrupa por família, então toda opção precisa declarar a sua.
     for (const option of category.options) {
+      assert.ok(option.family && option.familyName, `${option.id}: família declarada`);
       if (option.path) assert.ok(existsSync(resolve(CLIENT_ROOT, option.path)), option.path);
     }
   }
   assert.match(clientIndexSource, /id="menu-tab-character"/);
   assert.match(clientIndexSource, /id="character-panel-view"/);
+  assert.match(clientIndexSource, /id="character-layers"/);
 });
 
 test('seleção inválida volta ao padrão e poses respeitam direção e veículo', () => {
   const normalized = characterModule.normalizeCharacterSelection(characterCatalog, {
     body: 'inexistente',
     eyes: 'eyes-05',
+    // Chave da v2, quando acessório era uma camada só: a peça continua válida e
+    // precisa reaparecer na camada nova, sem migração de dados.
     accessory: 'glasses-03',
   });
   assert.equal(normalized.body, characterCatalog.defaultSelection.body);
   assert.equal(normalized.eyes, 'eyes-05');
-  assert.equal(normalized.accessory, 'glasses-03');
+  assert.equal(normalized.face, 'glasses-03');
+  assert.equal(normalized.head, 'none');
   assert.deepEqual(
     characterModule.characterFrameSpec(characterCatalog, 'idle', 'down', 0, false),
     { pose: 'idle', frame: 18, name: 'idle-18' },

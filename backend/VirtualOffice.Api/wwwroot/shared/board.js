@@ -6,6 +6,7 @@ import {
   PRIORITY_ORDER, PRIORITY_LABEL, PRIORITY_COLOR, TYPE_ORDER,
 } from "./work-core.js";
 import { createCardDialogs, TYPE_COLOR } from "./card-dialogs.js";
+import { createQuickAdd } from "./quick-add.js";
 
 const debounce = (fn, ms) => {
   let timer;
@@ -102,26 +103,47 @@ export function mountBoard(host, ctx) {
       }, "★ Só meus"),
       h("input", {
         class: "wq-input wq-search", type: "search", placeholder: "Buscar título ou código…",
-        value: filters.q,
+        value: filters.q, dataset: { focusKey: "busca" },
         oninput: debounce((e) => { filters.q = e.target.value; refresh(); }, 300),
       }),
       h("div", { class: "wq-spacer" }),
       h("span", { class: "wq-faint" }, `${items.length} atividades`),
-      h("button", { class: "wq-btn primary", onclick: () => newCard() }, "＋ Nova atividade"));
+      h("button", { class: "wq-btn", onclick: () => newCard() }, "Formulário completo"));
   }
 
-  const newCard = (status) => dialogs.openEditor(null, status, {
+  const cardDefaults = () => ({
     sprintId: filters.sprintId,
     assigneeId: filters.mine ? currentUserId : filters.assigneeId,
   });
+  const newCard = (status) => dialogs.openEditor(null, status, cardDefaults());
+
+  // Uma captura rápida por coluna, criada uma vez só. As colunas são refeitas a
+  // cada refresh (inclusive os que vêm do SignalR): recriar o campo junto
+  // apagaria o que a pessoa está digitando bem no meio da frase.
+  const adders = new Map();
+  function adderFor(status) {
+    if (!adders.has(status)) {
+      adders.set(status, createQuickAdd({
+        client, feedback, meta: () => meta, currentUserId, status, compact: true,
+        defaults: cardDefaults,
+        placeholder: `＋ em ${STATUS_LABEL[status]}`,
+        onCreated: () => refresh(),
+        openFull: (payload) => dialogs.openEditor(null, status, payload),
+      }));
+    }
+    return adders.get(status).el;
+  }
 
   // ----------------------------------------------------------- quadro
 
   function draw() {
-    keepFocus(host, ".wq-search", () => {
+    keepFocus(host, ".wq-search, .wq-quick-input", () => {
       drawToolbar();
       board.replaceChildren(...STATUS_ORDER.map(column));
     });
+    // O campo é o mesmo nó de antes, mas acabou de ser reinserido: quem sabe se
+    // ele está aberto ou fechado é ele, depois que o foco assentar.
+    for (const adder of adders.values()) adder.sync();
   }
 
   function column(status) {
@@ -134,7 +156,7 @@ export function mountBoard(host, ctx) {
         STATUS_LABEL[status],
         h("span", { class: "count" }, String(columnItems.length))),
       body,
-      h("button", { class: "wq-col-add", onclick: () => newCard(status) }, "＋ adicionar"));
+      adderFor(status));
 
     let line = null;
     const clearLine = () => { line?.remove(); line = null; };

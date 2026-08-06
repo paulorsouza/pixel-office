@@ -37,6 +37,11 @@ public class PlayerState
     public bool AtDesk { get; set; }              // sentado na própria mesa
     public int? AutoEntryId { get; set; }         // id do lançamento automático em aberto
     public string AutoKind { get; set; } = "";    // "meeting" | "desk" — qual estado abriu o auto-timer
+
+    // Com quem está trabalhando agora: "" | "meeting" | "pair". Mora aqui, e não no
+    // banco, porque é estado do minuto: serve para avisar quando ENTRA e quando SAI da
+    // companhia — o pago mesmo é contado em `PresenceDay`.
+    public string TeamworkKind { get; set; } = "";
 }
 
 /// <summary>
@@ -89,6 +94,32 @@ public static class Presence
 
     public static bool SameMeeting(PlayerState a, PlayerState b)
         => InMeeting(a) && InMeeting(b);
+
+    /// <summary>
+    /// Trabalhando em dupla: os dois sentados na PRÓPRIA mesa (o que só acontece com uma
+    /// task ativa aberta), na mesma cena e perto o bastante para conversarem — é o mesmo
+    /// raio da voz por proximidade, então a regra é "dá para parear se dá para ouvir".
+    ///
+    /// Não basta estar perto: duas pessoas paradas no corredor não estão pareando, e
+    /// pagar por isso transformaria o bônus em "fique ao lado de alguém".
+    /// </summary>
+    public static bool PairingWith(PlayerState a, PlayerState b, double radiusPx = 190)
+        => a.AtDesk && b.AtDesk
+            && a.Key != b.Key
+            && a.Scene == b.Scene
+            && Dist(a, b) <= radiusPx;
+
+    /// <summary>
+    /// Com quem esta pessoa está trabalhando agora: "pair", "meeting" ou "".
+    /// Pair vence porque paga mais e é o compromisso maior — quem está pareando dentro
+    /// de uma reunião está, antes de tudo, pareando.
+    /// </summary>
+    public static string TeamworkKindOf(PlayerState p, IReadOnlyCollection<PlayerState> others)
+    {
+        if (others.Any(other => PairingWith(p, other))) return "pair";
+        if (InMeeting(p) && others.Any(other => other.Key != p.Key && SameMeeting(p, other))) return "meeting";
+        return "";
+    }
 
     public static double Dist(PlayerState a, PlayerState b)
         => Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));

@@ -72,6 +72,9 @@
 .wq-muted { color: var(--wq-text-2); }
 .wq-faint { color: var(--wq-text-3); }
 .wq-spacer { flex: 1; }
+/* `.wq-field` e afins declaram `display: flex`, que ganha do `[hidden]` do
+   navegador. Sem esta linha, esconder um campo por JS não esconde nada. */
+.wq [hidden] { display: none !important; }
 
 /* ---------- controles ---------- */
 .wq-btn {
@@ -175,12 +178,49 @@ textarea.wq-input { height: auto; min-height: 74px; padding: 8px 9px; resize: ve
   display: flex; flex-direction: column; gap: 7px; overflow-y: auto;
   padding: 0 8px 8px; min-height: 56px; max-height: 62vh;
 }
-.wq-col-add {
-  margin: 0 8px 8px; padding: 7px; border-radius: var(--wq-r-sm);
-  font-size: 12.5px; font-weight: 600; color: var(--wq-text-3);
-  border: 1px dashed var(--wq-border-strong);
+/* ---------- captura rápida (uma linha cria o card) ---------- */
+.wq-quick-add { display: flex; flex-direction: column; gap: 7px; }
+.wq-quick-add-row { display: flex; gap: 7px; align-items: center; }
+.wq-quick-add-row .wq-quick-input { flex: 1; min-width: 0; }
+.wq-quick-input::placeholder { color: var(--wq-text-3); }
+.wq-quick-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.wq-quick-hint {
+  font-size: 11px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.wq-col-add:hover { color: var(--wq-accent); border-color: var(--wq-accent); background: var(--wq-surface); }
+
+/* Pílula: o mesmo visual do chip, mas clicável e alta o bastante para o dedo.
+   É o caminho do celular — lá ninguém vai digitar "!alta". */
+.wq-pill, .wq-pill-select {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: max(24px, var(--wq-tap)); padding: 0 9px;
+  border-radius: var(--wq-r-full); border: 1px solid transparent;
+  font-size: 11px; font-weight: 700; letter-spacing: .2px; white-space: nowrap;
+  background: var(--wq-surface-2); color: var(--wq-text-2);
+}
+.wq-pill:hover { filter: brightness(.96); }
+.wq-pill.read { cursor: default; }
+.wq-pill-select {
+  width: auto; min-height: 0; appearance: none; padding-right: 22px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 10px center, right 6px center;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+  border-color: var(--wq-border-strong);
+}
+
+/* Dentro da coluna do kanban o campo fica discreto até receber o foco. */
+.wq-quick-add.compact { margin: 0 8px 8px; gap: 5px; }
+.wq-quick-add.compact .wq-quick-input {
+  height: max(30px, var(--wq-tap)); font-size: 12.5px;
+  background: transparent; border-style: dashed;
+}
+.wq-quick-add.compact .wq-quick-input:focus { background: var(--wq-surface); border-style: solid; }
+.wq-quick-add.compact .wq-quick-go { padding: 0 10px; min-width: max(34px, var(--wq-tap)); }
+.wq-quick-add.compact:not(.open) .wq-quick-chips,
+.wq-quick-add.compact:not(.open) .wq-quick-go { display: none; }
+.wq-quick-add.compact .wq-quick-hint { display: none; }
 
 .wq-card {
   position: relative; overflow: hidden; cursor: grab;
@@ -248,6 +288,7 @@ textarea.wq-input { height: auto; min-height: 74px; padding: 8px 9px; resize: ve
 .wq-stat .sub { font-size: 11.5px; color: var(--wq-text-2); }
 
 .wq-quick { display: flex; flex-wrap: wrap; gap: 7px; }
+.wq-quick-item { display: flex; }
 .wq-quick button {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 12px 8px 9px; border-radius: var(--wq-r-sm);
@@ -261,6 +302,42 @@ textarea.wq-input { height: auto; min-height: 74px; padding: 8px 9px; resize: ve
 .wq-quick .txt { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
 .wq-quick .txt b { font-size: 12.5px; }
 .wq-quick .txt small { font-size: 10.5px; color: var(--wq-text-3); }
+/* O botão principal lança o padrão; o `±` colado abre a folha para ajustar. */
+.wq-quick-item .main { flex: 1; border-radius: var(--wq-r-sm) 0 0 var(--wq-r-sm); }
+.wq-quick-item .main:only-child { border-radius: var(--wq-r-sm); }
+.wq-quick-item .side {
+  border-radius: 0 var(--wq-r-sm) var(--wq-r-sm) 0; border-left: none;
+  padding: 0 11px; font-size: 15px; font-weight: 700; color: var(--wq-text-3);
+  min-width: max(34px, var(--wq-tap));
+  align-items: center; justify-content: center;
+}
+.wq-quick-item .side:hover { color: var(--wq-accent); }
+
+/* Célula da grade: o número É o botão de lançar naquele dia e tipo. */
+.wq-cell {
+  width: 100%; min-height: max(26px, var(--wq-tap)); padding: 2px 5px;
+  border-radius: var(--wq-r-sm); font-variant-numeric: tabular-nums;
+  font-size: 13px; color: inherit; text-align: right;
+  border: 1px solid transparent; transition: background .12s, border-color .12s, color .12s;
+}
+.wq-cell:hover { background: var(--wq-accent-weak); border-color: var(--wq-accent); color: var(--wq-text); }
+.wq-cell:not(.on) { color: var(--wq-text-3); }
+.wq-grid td.num { padding: 3px 6px; }
+
+/* Presets de duração — o caminho de um toque só: escolher já lança. */
+.wq-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.wq-preset {
+  min-height: max(32px, var(--wq-tap)); padding: 0 12px; border-radius: var(--wq-r-sm);
+  font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums;
+  background: var(--wq-surface-2); border: 1px solid var(--wq-border-strong); color: var(--wq-text);
+  flex: 1 0 auto;
+}
+.wq-preset:hover { border-color: var(--wq-accent); background: var(--wq-accent-weak); }
+.wq-preset.default { border-style: dashed; border-color: var(--wq-accent); }
+.wq-preset.on { background: var(--wq-accent); border-color: var(--wq-accent); color: #fff; }
+.wq[data-theme="dark"] .wq-preset.on { color: #2a1b12; }
+.wq-stepper { display: flex; align-items: center; gap: 7px; }
+.wq-stepper .wq-btn { font-size: 16px; font-weight: 700; padding: 0 13px; }
 
 .wq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .wq-table th, .wq-table td { padding: 8px 11px; border-bottom: 1px solid var(--wq-border); text-align: left; }
@@ -369,7 +446,14 @@ textarea.wq-input { height: auto; min-height: 74px; padding: 8px 9px; resize: ve
   .wq-toolbar .wq-search { flex: 1 1 100%; }
   .wq-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wq-goals { grid-template-columns: 1fr; }
-  .wq-quick button { flex: 1 1 calc(50% - 7px); }
+  .wq-quick-item { flex: 1 1 calc(50% - 7px); min-width: 0; }
+  .wq-quick-item .main { min-width: 0; }
+  .wq-quick .txt { min-width: 0; overflow: hidden; }
+  .wq-quick .txt b, .wq-quick .txt small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* Presets em duas colunas cheias: alvo grande é o que faz isto funcionar no
+     celular, onde digitar minutos é justamente o que se quer evitar. */
+  .wq-preset { flex: 1 1 calc(33.333% - 6px); }
+  .wq-quick-add-row .wq-quick-go { padding: 0 12px; }
   .wq-toast { left: 12px; right: 12px; max-width: none; bottom: calc(14px + env(safe-area-inset-bottom)); }
 }
 

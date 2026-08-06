@@ -20,6 +20,11 @@ public static class WorkCatalogSeed
     // de trabalho renderia menos que cinco minutos de janela aberta, e o quadro e a
     // planilha de horas viravam enfeite. A escala RELATIVA entre atividades não mudou —
     // estudo continua pagando quase o dobro de desenvolvimento.
+    //
+    // Estas taxas NÃO subiram na revisão de 2026-08-06, que levou a presença a 500/h. O
+    // que destravou o lançamento de horas foi o teto (400 → 6.000/dia): a 400, a taxa era
+    // irrelevante, porque uma hora e meia de estudo já estourava o dia. E reunião e pair
+    // ganharam uma fonte própria, paga ao vivo por estar COM alguém — ver ECONOMIA §2.5.
     private static readonly ActivityDef[] Activities =
     [
         new("task", "Desenvolvimento", "💻", "#2f6bff", 150, 360, RequiresWorkItem: true, DailyTarget: 360),
@@ -40,8 +45,9 @@ public static class WorkCatalogSeed
     // 60...) foram calibrados quando a presença pagava 180/dia; ao lado de 2.700/dia
     // eles viraram troco, e um objetivo que paga troco deixa de ser objetivo.
     //
-    // Alvo: os seis diários somam 1.200 (≈45% do teto de presença do dia) e os cinco
-    // semanais somam 4.700. Fechar tudo continua valendo mais que só ficar online.
+    // Alvo: os seis diários somam 1.200 (≈27% do teto de presença do dia, que subiu para
+    // 4.500) e os cinco semanais somam 4.700. Fechar tudo continua valendo mais que só
+    // ficar online.
     private static readonly ObjectiveDef[] Goals =
     [
         // As "bem bestas" primeiro: dá para fechar só entrando e batendo o ponto.

@@ -52,11 +52,11 @@ public static class CardGameEndpoints
         new("generation-8", "Edição Galar/Hisui", "Pokémon da Geração VIII.", 8, 250),
         new("generation-9", "Edição Paldea", "Pokémon da Geração IX.", 9, 250),
         new("rare", "Booster Raro",
-            "Uma Rare+ garantida e 12,5% de shiny nas Comuns que vierem.", null, 2_500),
+            "Uma Rare+ garantida e 15% de shiny nas Comuns que vierem.", null, 2_500),
         new("ultra-rare", "Booster Ultrarraro",
-            "Uma Epic garantida, 5% de shiny por carta e 25% nas Comuns.", null, 5_000),
+            "Uma Epic garantida, poucas Comuns e 35% de shiny nelas.", null, 5_000),
         new("legendary", "Booster Lendário",
-            "Uma Legendary garantida, 10% de shiny por carta e 50% nas Comuns.", null, 10_000),
+            "Uma Legendary garantida, ~1 Comum no envelope e 75% de shiny nela.", null, 10_000),
         new("special", "Booster Especial", "Cinco cartas dos tipos do alvo e 10% de shiny do alvo.", null,
             SpecialOtherShinyChance, true),
     ];
@@ -449,7 +449,7 @@ public static class CardGameEndpoints
                 }
                 : pool;
             if (candidates.Count == 0) candidates = pool;
-            var card = WeightedPick(candidates);
+            var card = WeightedPick(candidates, definition.Id);
             var shiny = RandomNumberGenerator.GetInt32(100_000)
                 < definition.ShinyChancePerHundredThousand + shinyBonus
                     + CommonShinyBonus(definition.Id, card.Rarity);
@@ -473,9 +473,9 @@ public static class CardGameEndpoints
     private static int CommonShinyBonus(string boosterId, string rarity) =>
         rarity is not ("Common" or "Uncommon") ? 0 : boosterId switch
         {
-            "rare" => 12_500,        // 12,5%
-            "ultra-rare" => 25_000,  // 25%
-            "legendary" => 50_000,   // 50%
+            "rare" => 15_000,        // 15%
+            "ultra-rare" => 35_000,  // 35%
+            "legendary" => 75_000,   // 75%
             _ => 0,
         };
 
@@ -722,9 +722,11 @@ public static class CardGameEndpoints
 
     private static string RandomSide() => Sides[RandomNumberGenerator.GetInt32(Sides.Length)];
 
-    private static CardGameDefinition WeightedPick(IReadOnlyList<CardGameDefinition> cards)
+    private static CardGameDefinition WeightedPick(
+        IReadOnlyList<CardGameDefinition> cards,
+        string boosterId = "")
     {
-        var weights = cards.Select(card => RarityWeight(card.Rarity)).ToArray();
+        var weights = cards.Select(card => RarityWeight(card.Rarity, boosterId)).ToArray();
         var roll = RandomNumberGenerator.GetInt32(weights.Sum());
         for (var index = 0; index < cards.Count; index++)
         {
@@ -734,14 +736,44 @@ public static class CardGameEndpoints
         return cards[^1];
     }
 
-    private static int RarityWeight(string rarity) => rarity switch
+    /// <summary>
+    /// Peso de sorteio por raridade, e por booster.
+    /// </summary>
+    /// <remarks>
+    /// Todo booster PODE dar carta Comum — o que muda é quanto. Sem esta tabela o
+    /// peso era global e o Booster Lendário saía com quase quatro cartas fracas em
+    /// cinco: um envelope de 10.000 moedas entregando o mesmo miolo do Nacional.
+    ///
+    /// A escala foi calibrada para a média de cartas Comum/Incomum por envelope,
+    /// contando que o último slot já é garantido (Rare+, Epic+ ou Legendary):
+    ///
+    ///     Nacional     ~4,3 de 5
+    ///     Raro         ~2,8 de 5
+    ///     Ultrarraro   ~1,7 de 5
+    ///     Lendário     ~0,8 de 5   (a Comum que sobra vem shiny em 75% das vezes)
+    /// </remarks>
+    private static int RarityWeight(string rarity, string boosterId = "") => boosterId switch
     {
-        "Uncommon" => 2_500,
-        "Rare" => 650,
-        "Epic" => 90,
-        "Legendary" => 8,
-        "Special" => 1,
-        _ => 6_500,
+        "rare" => rarity switch
+        {
+            "Uncommon" => 1_200, "Rare" => 900, "Epic" => 180, "Legendary" => 20, "Special" => 1,
+            _ => 1_800,
+        },
+        "ultra-rare" => rarity switch
+        {
+            "Uncommon" => 450, "Rare" => 900, "Epic" => 400, "Legendary" => 60, "Special" => 1,
+            _ => 600,
+        },
+        "legendary" => rarity switch
+        {
+            "Uncommon" => 150, "Rare" => 700, "Epic" => 500, "Legendary" => 150, "Special" => 1,
+            _ => 200,
+        },
+        _ => rarity switch
+        {
+            "Uncommon" => 2_500, "Rare" => 650, "Epic" => 90, "Legendary" => 8, "Special" => 1,
+            _ => 6_500,
+        },
     };
 
     private static bool IsBaseCard(CardGameDefinition card) => string.IsNullOrEmpty(card.Variant);

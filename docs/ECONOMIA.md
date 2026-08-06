@@ -22,7 +22,7 @@ Todo número aqui foi lido do código, com o arquivo e a linha ao lado. Ao mexer
 como um segundo placar. Saíram `User.Xp`, o nível, o ranking de XP e os campos de XP de atividade,
 objetivo e lançamento; a tabela `XpEvents` virou **`CoinEvents`** (mesma tabela, renomeada, com a
 coluna `Amount` a menos). O marco que dava Baú Lendário a cada 5 níveis passou a cair a cada
-**40 horas lançadas** ([§6.1](#61-baús-que-moeda-não-compra-v2)).
+**25 horas lançadas** ([§6.1](#61-baús-que-moeda-não-compra-v2)).
 
 A moeda é creditada sempre pelo mesmo lugar, `Game.AwardAsync`
 ([Game.cs](../backend/VirtualOffice.Api/Game.cs)), que grava um `CoinEvent` com um campo
@@ -37,8 +37,9 @@ por ele que dá para auditar de onde veio o dinheiro.
 |---|---|---|---:|---|
 | Saldo inicial da conta | — | 250, uma vez | — | [Game.cs](../backend/VirtualOffice.Api/Game.cs) |
 | Bônus de boas-vindas | `grant` | 0 (beta: 10.000), uma vez | — | [Game.cs](../backend/VirtualOffice.Api/Game.cs) |
-| Lançamento de horas | `time` | **75–275/hora**, por atividade | **400/dia** ⚠️ | [Game.cs](../backend/VirtualOffice.Api/Game.cs) |
-| Presença online | `presence` | **300/hora × equipamento** | **2.700/dia × equipamento** | [Game.cs](../backend/VirtualOffice.Api/Game.cs) |
+| Lançamento de horas | `time` | **75–275/hora**, por atividade | **6.000/dia** | [Game.cs](../backend/VirtualOffice.Api/Game.cs) |
+| Presença online | `presence` | **500/hora × equipamento** | **4.500/dia × equipamento** | [Game.cs](../backend/VirtualOffice.Api/Game.cs) |
+| **Equipe (reunião/pair)** | `teamwork` | **180–240/hora × celular** | **1.200/dia × celular** | [PresenceRewards.cs](../backend/VirtualOffice.Api/PresenceRewards.cs) |
 | Objetivos diários | `objective` | **1.200/dia** somando os seis | — (o próprio alvo limita) | [WorkCatalogSeed.cs](../backend/VirtualOffice.Api/WorkCatalogSeed.cs) |
 | Objetivos semanais | `objective` | **4.700/semana** somando os cinco | — (idem) | [WorkCatalogSeed.cs](../backend/VirtualOffice.Api/WorkCatalogSeed.cs) |
 | Concluir item do quadro | `workitem` | 24–72 por item | **nenhum** ⚠️ | [WorkEndpoints.cs:234](../backend/VirtualOffice.Api/WorkEndpoints.cs) |
@@ -62,16 +63,16 @@ lançar para bater nele:
 Estudo paga quase o dobro de Desenvolvimento por hora — decisão de produto, não acidente. As taxas
 foram multiplicadas por 5 junto com a presença, mantendo a escala relativa entre atividades.
 
-### ⚠️ 2.1-b O teto do trabalho ficou para trás
+### ✅ 2.1-b O teto do trabalho foi corrigido (2026-08-06)
 
-`DailyGoldCapFromTime` continua **400/dia** enquanto a presença subiu para **2.700/dia**. Na
-prática: **uma hora e meia de estudo esgota o dia de trabalho**, e ficar online rende quase 7×
-mais que produzir.
+`DailyGoldCapFromTime` era **400/dia** enquanto a presença pagava 2.700: **uma hora e meia de
+estudo esgotava o dia de trabalho**, e ficar online rendia quase 7× mais que produzir — o oposto
+do princípio que o jogo declarava.
 
-Isso inverte o princípio que o próprio jogo declarava ("ficar logado rende, mas não substitui
-produzir"). Restaurar a relação antiga (trabalho ≈ 2,2× presença) exigiria um teto perto de
-**6.000/dia**. O número não foi mexido porque ninguém pediu — é decisão de produto, não conserto
-de bug. Enquanto ficar assim, o quadro e a planilha de horas competem em desvantagem.
+Agora são **6.000/dia**. O teto volta a ser o que devia ser — um freio contra lançamento inventado,
+não um teto sobre quem trabalha: oito horas da atividade mais cara (estudo, 275/h) dão 2.200, com
+folga de quase três vezes até encostar nele. Quem lança oito horas de desenvolvimento recebe as
+1.200 inteiras, em vez de 400.
 
 ### 2.2 O quadro é a única fonte sem teto
 
@@ -92,8 +93,12 @@ Mouse, teclado, celular e alguns automóveis somam `passiveCoinPercent`, e o bô
 **a taxa e o teto** ([PresenceRewards.cs](../backend/VirtualOffice.Api/PresenceRewards.cs)):
 
 ```
-taxa = 5/min (300/h) × (1 + bônus)      teto = 2.700/dia (9 h) × (1 + bônus)
+taxa = 500/h × (1 + bônus)      teto = 4.500/dia (9 h) × (1 + bônus)
 ```
+
+A taxa é configurada **por hora** (`PresenceGoldPerHour`), e não mais por minuto: por minuto ela
+tinha de ser inteira, e 500/h não tinha como ser escrito. O pagamento por direito acumulado já
+fecha a fração sozinho.
 
 O pagamento é por **direito acumulado** (`floor(minutos × taxa) − já pago`), que é o que faz a
 moeda quebrada do bônus fechar sem precisar de coluna nova.
@@ -104,12 +109,40 @@ cassino e loja.
 
 | Conjunto | Bônus | Moedas/hora | Teto/dia | Semana |
 |---|---:|---:|---:|---:|
-| Nenhum | 0% | 300 | 2.700 | 18.900 |
-| Incomum completo (loja) | 33% | 399 | 3.591 | 25.137 |
-| **Lendário completo** | **100%** | **600** | **5.400** | 37.800 |
-| Exótico completo | 140% | 720 | 6.480 | 45.360 |
+| Nenhum | 0% | 500 | 4.500 | 31.500 |
+| Incomum completo (loja) | 33% | 665 | 5.985 | 41.895 |
+| **Lendário completo** | **100%** | **1.000** | **9.000** | 63.000 |
+| Exótico completo | 140% | 1.200 | 10.800 | 75.600 |
 
 Tirar o equipamento no meio do dia **não estorna** o que já foi pago; o pagamento só para.
+
+### 2.5 Equipe: o que se ganha por estar COM alguém (2026-08-06)
+
+Fonte nova, `teamwork`, paga **por cima** da presença enquanto a pessoa está de fato acompanhada:
+
+| Situação | Como o servidor sabe | Gold/h |
+|---|---|---:|
+| **Pair programming** | os dois sentados na própria mesa (com task ativa), mesma cena, dentro do raio da voz (190px) | **240** |
+| **Reunião** | na sala de reunião ou com o fone, e pelo menos mais uma pessoa também | **180** |
+
+Teto próprio de **1.200/dia**, separado do da presença — um dia inteiro de reunião não substitui o
+dia de trabalho, e um dia inteiro de trabalho não impede a reunião de pagar. Pair vence reunião
+quando as duas valem: quem pareia dentro de uma reunião está, antes de tudo, pareando.
+
+Três decisões que valem registrar:
+
+- **O multiplicador de passiva NÃO se aplica aqui.** O conjunto paga o tempo online; a equipe paga
+  a companhia. Se a passiva valesse, quem tem o melhor mouse ganharia mais por participar da mesma
+  reunião. Quem escala esta fonte é o **celular** (`teamworkCoinPercent`, +5% a +50%), que é o item
+  de estar acessível — e alguns veículos, pela carona.
+- **Bot não conta como par.** Ele entra na conta de quem acompanha, mas um bot parado ao lado da
+  sua mesa não é dupla.
+- **O jogo avisa.** Um toast quando a companhia começa e outro quando acaba, uma vez cada — o bônus
+  pinga três a quatro moedas por minuto no meio do trickle da presença, e sem o aviso ninguém
+  descobriria por que a moeda subiu mais rápido.
+
+E um baú por dia acompanhado: **1 h junto → Baú Comum, 3 h → Baú Raro** (idempotente pela chave do
+dia, em [Lootboxes.cs](../backend/VirtualOffice.Api/Lootboxes.cs)).
 
 ### 2.3 O que o teto diário realmente cobre
 
@@ -144,17 +177,22 @@ Somando todas as fontes com teto, para um jogador que faz **tudo** todo dia:
 
 | Fonte | Semana | Fatia |
 |---|---:|---:|
-| Presença online (2.700 × 7) | 18.900 | 60% |
-| Objetivos diários (1.200 × 7) | 8.400 | 27% |
-| Objetivos semanais | 4.700 | 15% |
-| Lançamento de horas (400 × 7) | 2.800 | 9% |
-| **Total** | **31.500** | |
+| Presença online (4.500 × 7) | 31.500 | 51% |
+| Objetivos diários (1.200 × 7) | 8.400 | 14% |
+| Equipe — reunião/pair (1.200 × 7) | 8.400 | 14% |
+| Lançamento de horas (8 h de dev = 1.200 × 7) | 8.400 | 14% |
+| Objetivos semanais | 4.700 | 8% |
+| **Total** | **61.400** | |
 
-**A renda quintuplicou** (5.945 → 31.500) e os **preços ficaram como estavam**, por decisão de
-produto: no beta, ter gente circulando pelo conteúdo vale mais que a progressão longa. A régua da
-[§5.3](#53-a-régua-atual) mudou de sentido — o que era decisão de semana virou compra de rotina.
+⚠️ **A linha de horas mudou de sentido.** Antes ela era o TETO (400/dia); agora o teto é 6.000 e
+quem manda é quanto a pessoa lança de verdade — a tabela usa oito horas de desenvolvimento como
+jornada típica. Ir de 6.000/dia exigiria 22 horas de estudo, o que não é jornada, é fraude.
 
-**Mais o quadro, que é ilimitado.** Trate 31.500 como o piso do teto, não como o máximo.
+**A renda dobrou de novo** (31.500 → 61.400) e os **preços continuam como estavam**. A régua da
+[§5.3](#53-a-régua-atual) já estava frouxa e ficou mais: se o beta mostrar que o conteúdo acaba
+rápido demais, **o botão a girar é o preço, não a renda** — foi renda que se pediu.
+
+**Mais o quadro, que é ilimitado.** Trate 61.400 como o piso do teto, não como o máximo.
 
 Esse número é a régua de todo preço do jogo. Se a renda mudar, ele muda — e tudo em [§5](#5-o-que-a-moeda-compra) precisa ser reconferido.
 
@@ -268,34 +306,29 @@ garante que o prêmio cresça quando qualquer um dos três sobe:
 
 | Mesa | Fácil (50) | Normal (100) | Hard (200) |
 |---|---|---|---|
-| Common | 1N → 2N → 3N → 1N+1R | 2N → 3N → 1N+1R → 2N+2R | 3N → 1N+1R → 2N+2R → **4R + Lendário** |
-| Great | 2N → 3N → 1N+1R → 2N+2R | 3N → 1N+1R → 2N+2R → 4R | 1N+1R → 2N+2R → 4R → **6R + Lendário** |
-| Ultra | 3N → 1N+1R → 2N+2R → 4R | 1N+1R → 2N+2R → 4R → 6R | 2N+2R → 4R → 6R → **8R + Lendário** |
+| Common | 1N → 2N → 3N → 1N+1R | 2N → 3N → 1N+1R → 2N+2R | 3N → 1N+1R → 2N+2R → **4R + Ultrarraro** |
+| Great | 2N → 3N → 1N+1R → 2N+2R | 3N → 1N+1R → 2N+2R → 4R | 1N+1R → 2N+2R → 4R → **6R + Ultrarraro** |
+| Ultra | 3N → 1N+1R → 2N+2R → 4R | 1N+1R → 2N+2R → 4R → 6R | 2N+2R → 4R → 6R → **8R + Ultrarraro** |
 | **Master** | 1N+1R → 2N+2R → 4R → 6R | 2N+2R → 4R → 6R → 8R | 4R → 6R → 8R → **10R + Lendário + Baú Exótico** |
 
 ### O chefão
 
-A quarta partida do Hard é o **chefão**, e é ele que paga o **Booster Lendário — em todas as ligas**.
-O Baú Exótico continua exclusivo da Master.
+A quarta partida do Hard é o **chefão**. As três mesas de baixo pagam **Booster Ultrarraro**; o
+**Lendário e o Baú Exótico ficam só na Master**, junto com o Mewtwo Rei 15/15/15/15 — a carta
+impossível pertence à mesa do prêmio impossível.
 
-Como o prêmio é o mesmo em qualquer mesa, o chefão é a **mesma parede em qualquer mesa**: nas três
-primeiras partidas do Hard a casa joga com o teto da liga de cima, mas na quarta ela perde o teto por
-completo e puxa do catálogo inteiro. O que muda entre as mesas é só o **seu** limite.
+O teto do chefão é **relativo ao seu**: `teto da liga + 20`. Sem teto nenhum, a Common (baralho de 24
+contra casa de 55) virava impossível em vez de difícil.
 
-Medido na mesa Great (baralho do jogador fixo em 22–34, média 30,8):
+| Mesa | Seu teto | Chefão joga até | Mewtwo Rei |
+|---|---:|---:|---|
+| Common | 24 | 44 | não |
+| Great | 34 | 54 | não |
+| Ultra | 44 | 64 | não |
+| Master | — | sem teto | **sim** |
 
-| Modo | Baralho da casa | Acima do teto do jogador |
-|---|---|---:|
-| Fácil | 11–18 (média 15,5), joga ao acaso | 0 de 15 |
-| Normal | 24–31 (média 26,6), energizadas crescentes | 0 de 15 |
-| Hard 1–3 | 39–44 (média 41,6) | 14 de 15 |
-| **Hard 4 (chefão)** | **41–55 (média 44,7)** + Mewtwo Rei + 5 energizadas | **14 de 15** |
-
-⚠️ **Na Common o chefão é quase impossível.** Baralho de até 24 contra uma casa que vem de 41 a 55 é
-uma diferença de ~20 de poder médio, contra ~14 na Great. É a consequência direta de o Lendário valer
-o mesmo em todas as mesas: a casa é igual e só o seu teto muda. Se a Common virar conteúdo morto, o
-ajuste é dar ao chefão um teto relativo (`HouseMaxPower` do chefão = teto da liga + 20) em vez de
-nenhum — uma linha em `CasinoLeagueTables`.
+Medido na Common com o baralho ótimo (15 cartas de poder 24): casa de 39 a 44, média 40,6 — cada
+borda dela vale ~4 a mais que a sua. É uma parede, mas o tipo (+1) e a posição ainda decidem.
 
 ---
 
@@ -405,8 +438,25 @@ fácil, são elas que preservam o sentido de conquista:
 | Raro | Troca no álbum | 50 cartas excedentes, ≥10 `Rare+`, ≥10 tipos |
 | Raro | Arrange Dice, 5+ vizinhas | aposta |
 | Especial | Dez cópias normais iguais | 10 cartas |
-| **Lendário** | **Chefão do Hard, em qualquer liga** | 200 moedas por escada |
-| Comum shiny | Boosters Raro (12,5%), Ultrarraro (25%) e Lendário (50%) | preço do booster |
+| Ultrarraro | Chefão do Hard nas ligas Common, Great e Ultra | 200 moedas por escada |
+| **Lendário** | **Chefão do Hard da Master League** | 200 moedas por escada |
+| Comum shiny | Boosters Raro (15%), Ultrarraro (35%) e Lendário (75%) | preço do booster |
+
+### 6.2 Quanta carta fraca cada booster entrega
+
+Todo booster pode dar Comum e Incomum; o peso do sorteio é que muda por envelope
+([CardGameEndpoints.cs, `RarityWeight`](../backend/VirtualOffice.Api/CardGameEndpoints.cs)). Medido
+em 60 envelopes de cada:
+
+| Booster | Comum/Incomum por envelope | Shiny entre elas | Legendary por envelope |
+|---|---:|---:|---:|
+| Nacional | 4,33 de 5 | 0% | 0,00 |
+| Raro | 2,88 de 5 | 20% | 0,03 |
+| Ultrarraro | 1,92 de 5 | 45% | 0,10 |
+| **Lendário** | **0,77 de 5** | **85%** | **1,13** |
+
+A carta fraca que sobra no Lendário quase sempre vem shiny — e shiny de carta fraca é exatamente o
+que serve para a Common League, onde o +1 não conta no teto.
 
 O Lendário é o único item do jogo que **moeda nenhuma compra**. Se a renda subir muito, essa
 propriedade é o que sobra de progressão não-inflacionável — não a remova sem substituir.
@@ -418,9 +468,11 @@ Mesma ideia, do lado do equipamento:
 | Baú | Fonte | Limite |
 |---|---|---|
 | Comum | os seis objetivos diários | 1/dia |
-| Comum/Raro/Lendário | timer do celular equipado | 6 a 24 h, pelo celular |
+| Comum/Raro/Lendário | timer do celular equipado | 4 a 12 h **online**, pelo celular |
+| **Comum** | **1 h acompanhado no dia** (reunião ou pair) | **1/dia** |
+| **Raro** | **3 h acompanhadas no dia** | **1/dia** |
 | Raro | os cinco objetivos semanais | 1/semana |
-| Lendário | **a cada 40 horas lançadas** | 1 por faixa de 40 h |
+| Lendário | **a cada 25 horas lançadas** | 1 por faixa de 25 h |
 | Lendário | trinca `rocket` no Nerd Slots | 0,0125% por giro |
 | Lendário | sequência de 7 no Arrange Dice | a jogada perfeita |
 | **Exótico** | **Liga, 6ª vitória seguida** | **única fonte no jogo** |
@@ -490,9 +542,12 @@ Já dá para ajustar sem recompilar, pela seção `Game` do `appsettings.json` o
 | `StartingCoins` | 250 | sim |
 | `WelcomeGrantCoins` | 0 (beta: 10.000) | sim, e no `docker-compose.yml` |
 | `WelcomeGrantKey` | `beta-v1` | sim, e no `docker-compose.yml` |
-| `DailyGoldCapFromTime` | 400 | sim |
-| `PresenceGoldPerMinute` | **5** (300/h) | **não** — só o padrão do código |
-| `PresenceGoldDailyCap` | **2.700** (9 h) | **não** — só o padrão do código |
+| `DailyGoldCapFromTime` | 6.000 | sim |
+| `PresenceGoldPerHour` | **500** | sim |
+| `PresenceGoldDailyCap` | **4.500** (9 h) | sim |
+| `TeamworkMeetingGoldPerHour` | **180** | sim |
+| `TeamworkPairGoldPerHour` | **240** | sim |
+| `TeamworkGoldDailyCap` | **1.200** | sim |
 | `TimeZoneOffsetHours` | −3 | sim, e no `docker-compose.yml` |
 
 Preço de item, gold/hora de atividade e recompensa de objetivo **não** são configuráveis: moram no

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness de personagem (sem Phaser)</title>
+<!-- O CSS é o DE VERDADE: um harness com estilo próprio testaria outra coisa. -->
+<link rel="stylesheet" href="src/hud/hud.css">
+<style>
+  body{margin:0;padding:14px;background:#120d11;font-family:Inter,system-ui,sans-serif}
+  #harness-log{margin:0 0 12px;padding:9px 11px;border:2px solid #38242a;color:#cbb;background:#1b1217;
+    font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<pre id="harness-log">carregando…</pre>
+<div id="harness-mount"></div>
+<script type="module">
+// Harness da tela de aparência. Mesma ideia do `equipment-test.html`: a tela é DOM
+// pura e subir o mundo do Phaser só para clicar num cabelo tornaria o QA refém do
+// canvas. A marcação vem do `index.html` de verdade, recortada em tempo de carga.
+//
+// O servidor é opcional aqui: sem API, `load`/`save` falham e a tela tem de
+// continuar funcionando com o cache local — que é exatamente o caso que interessa
+// testar ("perdi a conexão, perdi meu avatar?").
+import { createCharacterCustomizer } from './src/CharacterSystem.js';
+
+const log = document.querySelector('#harness-log');
+const write = (...parts) => { log.textContent += `\n${parts.join(' ')}`; };
+
+const query = new URLSearchParams(location.search);
+if (query.get('touch') === '1') document.documentElement.dataset.touch = 'on';
+
+const html = await (await fetch('index.html')).text();
+const parsed = new DOMParser().parseFromString(html, 'text/html');
+const panel = parsed.querySelector('#equipment-menu');
+panel.hidden = false;
+document.querySelector('#harness-mount').append(panel);
+
+const catalog = await (await fetch('assets/character/catalog.json')).json();
+
+// `?server=1` conversa com a API de verdade (precisa do backend na 5210); sem isso,
+// o harness finge um servidor em memória para exercitar o caminho de gravação.
+const memory = { stored: null };
+const fake = {
+  load: async () => memory.stored,
+  save: async (selection) => { memory.stored = selection; write('[save]', JSON.stringify(selection)); },
+};
+let api = fake;
+if (query.get('server') === '1') {
+  const { createGameItemsClient } = await import('./src/GameItemsSystem.js');
+  const gameItems = createGameItemsClient();
+  api = { load: () => gameItems.character(), save: (selection) => gameItems.saveCharacter(selection) };
+}
+
+const customizer = createCharacterCustomizer(catalog, {
+  ...api,
+  onChange: (selection) => write('[aparência]', JSON.stringify(selection)),
+});
+customizer.setTab('character');
+window.__characterHarness = { customizer, catalog, memory };
+
+log.textContent = 'harness pronto — window.__characterHarness';
+write('camadas:', catalog.categories.map((c) => `${c.id}(${c.options.length})`).join(' '));
+write('abas na tela:', document.querySelectorAll('#character-layers .character-layer').length);
+write('modelos visíveis:', document.querySelectorAll('#character-controls .character-option').length);
+</script>
+</body>
+</html>

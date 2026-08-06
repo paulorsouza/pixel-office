@@ -479,6 +479,9 @@ namespace VirtualOffice.Api.Migrations
                     b.Property<DateTime>("AcquiredUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("BagOrder")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ContainerPlacementId")
                         .HasColumnType("integer");
 
@@ -777,6 +780,12 @@ namespace VirtualOffice.Api.Migrations
                     b.Property<DateTime>("PeriodDay")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("TeamworkGoldAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TeamworkMinutes")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -928,6 +937,10 @@ namespace VirtualOffice.Api.Migrations
 
                     b.Property<int>("AppRole")
                         .HasColumnType("integer");
+
+                    b.Property<string>("CharacterJson")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Coins")
                         .HasColumnType("integer");

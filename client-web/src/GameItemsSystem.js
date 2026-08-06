@@ -81,6 +81,9 @@ export function createGameItemsClient(options = {}) {
     // Trocar de equipamento em outra aba precisa chegar aqui: o loadout é do servidor,
     // então duas janelas abertas não podem discordar sobre o que está vestido.
     connection.on('EquipmentChanged', () => emit('EquipmentChanged'));
+    // Mesma razão para a aparência: duas abas abertas não podem discordar sobre
+    // quem é o avatar.
+    connection.on('CharacterChanged', (selection) => emit('CharacterChanged', selection));
     connection.on('WorkSessionChanged', (payload) => emit('WorkSessionChanged', payload));
     // Economia e metas: o backend avisa quem lançou horas ou concluiu um objetivo,
     // venha o lançamento do jogo ou do app web.
@@ -144,6 +147,21 @@ export function createGameItemsClient(options = {}) {
     async setEquipmentSlot(slot, instanceId) {
       return request(`/api/game/equipment/${encodeURIComponent(slot)}`, {
         method: 'PUT', body: JSON.stringify({ instanceId: instanceId ?? null }),
+      });
+    },
+    /** Grava a ordem da bag inteira (ids na ordem em que aparecem). */
+    async setBagOrder(instanceIds) {
+      return request('/api/game/equipment/bag/order', {
+        method: 'PUT', body: JSON.stringify({ instanceIds }),
+      });
+    },
+    /** Aparência do avatar guardada na conta. `{}` = nunca customizou. */
+    async character() {
+      return (await request('/api/game/character'))?.character || {};
+    },
+    async saveCharacter(selection) {
+      return request('/api/game/character', {
+        method: 'PUT', body: JSON.stringify(selection),
       });
     },
     /** Abre um baú. Devolve o prêmio e o snapshot de equipamento já atualizado. */

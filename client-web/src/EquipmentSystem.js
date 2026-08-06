@@ -63,10 +63,20 @@ export function loadoutIds(snapshot) {
   return loadout;
 }
 
+/**
+ * Arte do item.
+ *
+ * Era um desenho em CSS por SLOT — os cinco mouses eram o mesmo contorno pintado de
+ * outra cor, o que fazia a raridade parecer etiqueta. Agora cada item tem o seu PNG
+ * de 32×32 (`tools/generate-equipment-icons.mjs`), e a moldura continua sendo do
+ * card, que é quem carrega a cor da raridade.
+ */
 function itemIcon(item, className = '') {
-  const icon = item?.icon || item?.slot || 'empty';
-  const label = item?.shortLabel || '';
-  return `<span class="item-glyph icon-${icon} ${className}" aria-hidden="true"><b>${label}</b><i></i></span>`;
+  if (!item?.id) {
+    return `<span class="item-glyph ${className}" aria-hidden="true"><b>${item?.shortLabel || ''}</b></span>`;
+  }
+  return `<span class="item-glyph ${className}" aria-hidden="true">
+    <img src="assets/equipment/items/${item.id}.png" alt="" draggable="false"></span>`;
 }
 
 function escapeHtml(value) {
@@ -167,7 +177,7 @@ export function createEquipmentMenu(catalog, options = {}) {
   const itemCardHtml = (item) => `
     <button class="inventory-item${item.equipped ? ' equipped' : ''}" type="button"
       data-instance-id="${item.instanceId}" data-rarity="${item.rarity || 'common'}"
-      aria-pressed="${item.equipped}"
+      data-slot="${item.slot}" aria-pressed="${item.equipped}"
       style="--item-accent:${item.accent};--item-secondary:${item.secondary}">
       <span class="inventory-item-art">
         ${itemIcon(item)}
@@ -347,11 +357,51 @@ export function createEquipmentMenu(catalog, options = {}) {
     render();
   };
 
+  /**
+   * A arte do item voa do card até o encaixe.
+   *
+   * Sem isso, equipar era o card mudar de cor e o slot mudar de conteúdo no mesmo
+   * frame — duas coisas acontecendo longe uma da outra, e o jogador não via a
+   * ligação entre elas. O voo dura 300ms e é o mesmo gesto que o RPG usa para dizer
+   * "isto foi parar ali".
+   *
+   * `prefers-reduced-motion` cancela o voo, não a troca: quem desligou movimento
+   * continua equipando, só sem a viagem.
+   */
+  const flyToSlot = (card, slotId) => {
+    const source = card?.querySelector('.item-glyph');
+    const slot = slotsRoot.querySelector(`.equipment-slot[data-slot-id="${slotId}"]`);
+    if (!source || !slot || window.matchMedia?.('(prefers-reduced-motion:reduce)').matches) return;
+    const from = source.getBoundingClientRect();
+    const to = slot.getBoundingClientRect();
+    const ghost = source.cloneNode(true);
+    ghost.className = 'item-glyph equip-ghost';
+    ghost.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
+    document.body.append(ghost);
+    requestAnimationFrame(() => {
+      const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+      const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+      ghost.style.transform = `translate(${dx}px,${dy}px) scale(.6)`;
+      ghost.style.opacity = '.25';
+    });
+    setTimeout(() => {
+      ghost.remove();
+      // O painel foi redesenhado nesse meio tempo: o nó de antes já não está na
+      // árvore, então a chegada é marcada no slot ATUAL, procurado de novo.
+      const landed = slotsRoot.querySelector(`.equipment-slot[data-slot-id="${slotId}"]`);
+      landed?.classList.add('slot-landed');
+      setTimeout(() => landed?.classList.remove('slot-landed'), 420);
+    }, 300);
+  };
+
   const equip = (instanceId) => {
     const item = items().find((row) => String(row.instanceId) === String(instanceId));
     if (!item) return null;
     // Clicar no que já está equipado guarda: é o mesmo gesto de tirar, sem obrigar
     // o jogador a mirar no slot lá do outro lado do painel.
+    if (!item.equipped) {
+      flyToSlot(list.querySelector(`.inventory-item[data-instance-id="${item.instanceId}"]`), item.slot);
+    }
     apply(() => options.setSlot(item.slot, item.equipped ? null : item.instanceId));
     return item;
   };
@@ -410,11 +460,107 @@ export function createEquipmentMenu(catalog, options = {}) {
     return open;
   };
 
+  // ------------------------------------------------------- arrastar para ordenar
+  //
+  // A bag chega ordenada pelo servidor, e a ordem é do jogador (`BagOrder`). Aqui só
+  // se move o card na tela e se manda a lista inteira — nunca "moveu de 3 para 7",
+  // que divergiria se dois arrastes se atropelassem.
+  //
+  // O gesto tem dois gatilhos porque os dois aparelhos são diferentes: no mouse
+  // arrasta-se depois de 8px, no toque só depois de segurar 350ms. Sem a espera no
+  // toque, rolar a lista viraria arrastar card, e a bag ficaria impossível de ler.
+  let drag = null;
+
+  // O ponteiro pode ter sumido entre o `pointerdown` e a captura (dedo levantado,
+  // evento sintético do harness): a captura é otimização de robustez, e falhar nela
+  // não pode derrubar o arraste inteiro.
+  const capture = (card, pointerId) => {
+    try {
+      card.setPointerCapture?.(pointerId);
+    } catch { /* sem ponteiro ativo */ }
+  };
+
+  const cardUnder = (x, y, ignore) => [...list.querySelectorAll('.inventory-item')]
+    .find((card) => {
+      if (card === ignore || card.dataset.slot !== ignore.dataset.slot) return false;
+      const box = card.getBoundingClientRect();
+      return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+    });
+
+  // Instante do último arraste: o `click` que o navegador dispara ao soltar chegaria
+  // no card e equiparia o que a pessoa acabou de mover de lugar.
+  let lastDragEnd = 0;
+
+  const endDrag = (commit) => {
+    if (!drag) return;
+    clearTimeout(drag.holdTimer);
+    const { card, target, moved, x = 0 } = drag;
+    drag = null;
+    card.classList.remove('dragging');
+    card.style.transform = '';
+    for (const marked of list.querySelectorAll('.drop-target')) marked.classList.remove('drop-target');
+    if (!moved) return;
+    lastDragEnd = performance.now();
+    if (!commit || !target) return;
+    // Antes ou depois do alvo conforme o lado em que soltou: passar da metade do
+    // card significa "entra depois dele".
+    const box = target.getBoundingClientRect();
+    target.parentNode.insertBefore(card, x > box.left + box.width / 2 ? target.nextSibling : target);
+    const order = [...list.querySelectorAll('.inventory-item')]
+      .map((entry) => Number(entry.dataset.instanceId));
+    if (options.setBagOrder) apply(() => options.setBagOrder(order));
+  };
+
+  list.addEventListener('pointerdown', (event) => {
+    const card = event.target.closest('.inventory-item');
+    if (!card || event.button > 0 || pending) return;
+    drag = { card, startX: event.clientX, startY: event.clientY, pointerId: event.pointerId, moved: false, target: null };
+    if (event.pointerType !== 'mouse') {
+      drag.holdTimer = setTimeout(() => {
+        if (!drag) return;
+        drag.moved = true;
+        drag.card.classList.add('dragging');
+        // Captura também no toque: sem ela, soltar o dedo fora do card não fecharia
+        // o arraste e o item ficaria colado no ponteiro.
+        capture(drag.card, drag.pointerId);
+      }, 350);
+    }
+  });
+
+  list.addEventListener('pointermove', (event) => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (!drag.moved) {
+      // Dedo que andou antes dos 350ms está rolando a lista, não arrastando card.
+      if (event.pointerType !== 'mouse') {
+        if (Math.hypot(dx, dy) > 8) { clearTimeout(drag.holdTimer); drag = null; }
+        return;
+      }
+      if (Math.hypot(dx, dy) < 8) return;
+      drag.moved = true;
+      drag.card.classList.add('dragging');
+      capture(drag.card, event.pointerId);
+    }
+    event.preventDefault();
+    drag.x = event.clientX;
+    drag.card.style.transform = `translate(${dx}px,${dy}px)`;
+    const over = cardUnder(event.clientX, event.clientY, drag.card);
+    if (over === drag.target) return;
+    drag.target?.classList.remove('drop-target');
+    drag.target = over || null;
+    drag.target?.classList.add('drop-target');
+  });
+
+  for (const event of ['pointerup', 'pointercancel']) {
+    list.addEventListener(event, (native) => endDrag(native.type === 'pointerup'));
+  }
+
   close.addEventListener('click', () => setOpen(false));
   clear.addEventListener('click', () => clearAll());
   list.addEventListener('click', (event) => {
     const card = event.target.closest('.inventory-item');
-    if (card) equip(card.dataset.instanceId);
+    if (card && performance.now() - lastDragEnd > 150) equip(card.dataset.instanceId);
   });
   // A comparação segue o ponteiro no desktop e o foco no teclado. No toque não há
   // hover: lá o toque equipa direto e o resultado aparece no slot — um passo a menos,

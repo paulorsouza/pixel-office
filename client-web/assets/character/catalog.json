@@ -1,21 +1,22 @@
 {
-  "storageKey": "office-quest-character-v1",
+  "_leia": "Gerado por client-web/tools/generate-character-parts.mjs — não edite à mão.",
+  "storageKey": "office-quest-character-v2",
   "frame": {
     "width": 16,
     "height": 32,
     "poses": {
       "idle": {
-        "y": 32,
+        "y": 0,
         "frames": 24,
         "frameRate": 5
       },
       "walk": {
-        "y": 64,
+        "y": 32,
         "frames": 24,
         "frameRate": 10
       },
       "sit": {
-        "y": 128,
+        "y": 64,
         "frames": 24,
         "frameRate": 5
       }
@@ -26,7 +27,9 @@
     "eyes": "eyes-03",
     "outfit": "outfit-01-03",
     "hairstyle": "hairstyle-01-03",
-    "accessory": "none"
+    "back": "none",
+    "face": "none",
+    "head": "none"
   },
   "categories": [
     {
@@ -36,27 +39,75 @@
       "options": [
         {
           "id": "body-01",
-          "name": "Pele 1",
+          "name": "Tom 1",
+          "family": "body",
+          "familyName": "Pele",
           "path": "assets/character/bodies/body_01.png",
-          "accent": "#ffd0b5"
+          "accent": "#bf8b78"
+        },
+        {
+          "id": "body-02",
+          "name": "Tom 2",
+          "family": "body",
+          "familyName": "Pele",
+          "path": "assets/character/bodies/body_02.png",
+          "accent": "#ffcbb0"
         },
         {
           "id": "body-03",
-          "name": "Pele 2",
+          "name": "Tom 3",
+          "family": "body",
+          "familyName": "Pele",
           "path": "assets/character/bodies/body_03.png",
-          "accent": "#edaa83"
+          "accent": "#ffb893"
+        },
+        {
+          "id": "body-04",
+          "name": "Tom 4",
+          "family": "body",
+          "familyName": "Pele",
+          "path": "assets/character/bodies/body_04.png",
+          "accent": "#bb845c"
         },
         {
           "id": "body-05",
-          "name": "Pele 3",
+          "name": "Tom 5",
+          "family": "body",
+          "familyName": "Pele",
           "path": "assets/character/bodies/body_05.png",
-          "accent": "#b96f50"
+          "accent": "#cdb57a"
+        },
+        {
+          "id": "body-06",
+          "name": "Tom 6",
+          "family": "body",
+          "familyName": "Pele",
+          "path": "assets/character/bodies/body_06.png",
+          "accent": "#d4cabb"
+        },
+        {
+          "id": "body-07",
+          "name": "Tom 7",
+          "family": "body",
+          "familyName": "Pele",
+          "path": "assets/character/bodies/body_07.png",
+          "accent": "#f0ae80"
         },
         {
           "id": "body-08",
-          "name": "Pele 4",
+          "name": "Tom 8",
+          "family": "body",
+          "familyName": "Pele",
           "path": "assets/character/bodies/body_08.png",
-          "accent": "#754331"
+          "accent": "#e6b8d7"
+        },
+        {
+          "id": "body-09",
+          "name": "Tom 9",
+          "family": "body",
+          "familyName": "Pele",
+          "path": "assets/character/bodies/body_09.png",
+          "accent": "#bab8d7"
         }
       ]
     },
@@ -68,26 +119,58 @@
         {
           "id": "eyes-01",
           "name": "Castanhos",
+          "family": "eyes",
+          "familyName": "Olhos",
           "path": "assets/character/eyes/eyes_01.png",
-          "accent": "#5d382d"
+          "accent": "#674d49"
+        },
+        {
+          "id": "eyes-02",
+          "name": "Verdes",
+          "family": "eyes",
+          "familyName": "Olhos",
+          "path": "assets/character/eyes/eyes_02.png",
+          "accent": "#568d61"
         },
         {
           "id": "eyes-03",
-          "name": "Azuis",
+          "name": "Verde-oliva",
+          "family": "eyes",
+          "familyName": "Olhos",
           "path": "assets/character/eyes/eyes_03.png",
-          "accent": "#65b9e8"
+          "accent": "#959d58"
+        },
+        {
+          "id": "eyes-04",
+          "name": "Cinzas",
+          "family": "eyes",
+          "familyName": "Olhos",
+          "path": "assets/character/eyes/eyes_04.png",
+          "accent": "#6c6e85"
         },
         {
           "id": "eyes-05",
-          "name": "Verdes",
+          "name": "Âmbar",
+          "family": "eyes",
+          "familyName": "Olhos",
           "path": "assets/character/eyes/eyes_05.png",
-          "accent": "#64b680"
+          "accent": "#956020"
+        },
+        {
+          "id": "eyes-06",
+          "name": "Azuis",
+          "family": "eyes",
+          "familyName": "Olhos",
+          "path": "assets/character/eyes/eyes_06.png",
+          "accent": "#3b7aa2"
         },
         {
           "id": "eyes-07",
-          "name": "Violetas",
+          "name": "Ciano",
+          "family": "eyes",
+          "familyName": "Olhos",
           "path": "assets/character/eyes/eyes_07.png",
-          "accent": "#a579d2"
+          "accent": "#5ed6f2"
         }
       ]
     },
@@ -97,34 +180,1187 @@
       "required": true,
       "options": [
         {
+          "id": "outfit-01-01",
+          "name": "Roxo",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_01.png",
+          "accent": "#805e8e"
+        },
+        {
+          "id": "outfit-01-02",
+          "name": "Azul claro",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_02.png",
+          "accent": "#a6b6e9"
+        },
+        {
           "id": "outfit-01-03",
-          "name": "Casual verde",
+          "name": "Laranja",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
           "path": "assets/character/outfits/outfit_01_03.png",
-          "accent": "#5daf83"
+          "accent": "#bfa690"
+        },
+        {
+          "id": "outfit-01-04",
+          "name": "Vermelho 1",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_04.png",
+          "accent": "#d93232"
+        },
+        {
+          "id": "outfit-01-05",
+          "name": "Ciano",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_05.png",
+          "accent": "#3e6d5e"
+        },
+        {
+          "id": "outfit-01-06",
+          "name": "Vermelho 2",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_06.png",
+          "accent": "#d0614c"
+        },
+        {
+          "id": "outfit-01-07",
+          "name": "Rosa",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_07.png",
+          "accent": "#d061b1"
+        },
+        {
+          "id": "outfit-01-08",
+          "name": "Marrom 1",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_08.png",
+          "accent": "#95763e"
+        },
+        {
+          "id": "outfit-01-09",
+          "name": "Ciano claro",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_09.png",
+          "accent": "#afd3e1"
+        },
+        {
+          "id": "outfit-01-10",
+          "name": "Marrom 2",
+          "family": "outfit-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/outfits/outfit_01_10.png",
+          "accent": "#903f60"
+        },
+        {
+          "id": "outfit-02-01",
+          "name": "Vermelho",
+          "family": "outfit-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/outfits/outfit_02_01.png",
+          "accent": "#a2394b"
+        },
+        {
+          "id": "outfit-02-02",
+          "name": "Marrom",
+          "family": "outfit-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/outfits/outfit_02_02.png",
+          "accent": "#90444c"
+        },
+        {
+          "id": "outfit-02-03",
+          "name": "Amarelo",
+          "family": "outfit-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/outfits/outfit_02_03.png",
+          "accent": "#a99244"
+        },
+        {
+          "id": "outfit-02-04",
+          "name": "Ciano",
+          "family": "outfit-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/outfits/outfit_02_04.png",
+          "accent": "#4497a9"
+        },
+        {
+          "id": "outfit-03-01",
+          "name": "Chumbo",
+          "family": "outfit-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/outfits/outfit_03_01.png",
+          "accent": "#565972"
+        },
+        {
+          "id": "outfit-03-02",
+          "name": "Cinza",
+          "family": "outfit-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/outfits/outfit_03_02.png",
+          "accent": "#9c7a9d"
+        },
+        {
+          "id": "outfit-03-03",
+          "name": "Azul",
+          "family": "outfit-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/outfits/outfit_03_03.png",
+          "accent": "#397a9d"
+        },
+        {
+          "id": "outfit-03-04",
+          "name": "Vermelho",
+          "family": "outfit-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/outfits/outfit_03_04.png",
+          "accent": "#936456"
+        },
+        {
+          "id": "outfit-04-01",
+          "name": "Verde",
+          "family": "outfit-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/outfits/outfit_04_01.png",
+          "accent": "#578468"
+        },
+        {
+          "id": "outfit-04-02",
+          "name": "Laranja",
+          "family": "outfit-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/outfits/outfit_04_02.png",
+          "accent": "#b3754a"
+        },
+        {
+          "id": "outfit-04-03",
+          "name": "Chumbo",
+          "family": "outfit-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/outfits/outfit_04_03.png",
+          "accent": "#606c7a"
+        },
+        {
+          "id": "outfit-05-01",
+          "name": "Cinza",
+          "family": "outfit-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/outfits/outfit_05_01.png",
+          "accent": "#6c6e85"
         },
         {
           "id": "outfit-05-02",
-          "name": "Urbano azul",
+          "name": "Azul",
+          "family": "outfit-05",
+          "familyName": "Modelo 05",
           "path": "assets/character/outfits/outfit_05_02.png",
-          "accent": "#4f87b8"
+          "accent": "#4d6e85"
+        },
+        {
+          "id": "outfit-05-03",
+          "name": "Chumbo",
+          "family": "outfit-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/outfits/outfit_05_03.png",
+          "accent": "#4d695a"
+        },
+        {
+          "id": "outfit-05-04",
+          "name": "Laranja",
+          "family": "outfit-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/outfits/outfit_05_04.png",
+          "accent": "#dc9b5a"
+        },
+        {
+          "id": "outfit-05-05",
+          "name": "Vermelho claro",
+          "family": "outfit-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/outfits/outfit_05_05.png",
+          "accent": "#efdfe3"
+        },
+        {
+          "id": "outfit-06-01",
+          "name": "Cinza",
+          "family": "outfit-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/outfits/outfit_06_01.png",
+          "accent": "#6c6e85"
+        },
+        {
+          "id": "outfit-06-02",
+          "name": "Chumbo 1",
+          "family": "outfit-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/outfits/outfit_06_02.png",
+          "accent": "#6c6e6f"
+        },
+        {
+          "id": "outfit-06-03",
+          "name": "Chumbo 2",
+          "family": "outfit-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/outfits/outfit_06_03.png",
+          "accent": "#6c5a6f"
+        },
+        {
+          "id": "outfit-06-04",
+          "name": "Azul",
+          "family": "outfit-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/outfits/outfit_06_04.png",
+          "accent": "#4f7598"
+        },
+        {
+          "id": "outfit-07-01",
+          "name": "Chumbo 1",
+          "family": "outfit-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/outfits/outfit_07_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-07-02",
+          "name": "Chumbo 2",
+          "family": "outfit-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/outfits/outfit_07_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-07-03",
+          "name": "Chumbo 3",
+          "family": "outfit-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/outfits/outfit_07_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-07-04",
+          "name": "Chumbo 4",
+          "family": "outfit-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/outfits/outfit_07_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-08-01",
+          "name": "Branco 1",
+          "family": "outfit-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/outfits/outfit_08_01.png",
+          "accent": "#f8f8f8"
+        },
+        {
+          "id": "outfit-08-02",
+          "name": "Branco 2",
+          "family": "outfit-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/outfits/outfit_08_02.png",
+          "accent": "#bab3b8"
+        },
+        {
+          "id": "outfit-08-03",
+          "name": "Cinza",
+          "family": "outfit-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/outfits/outfit_08_03.png",
+          "accent": "#827980"
+        },
+        {
+          "id": "outfit-09-01",
+          "name": "Roxo claro 1",
+          "family": "outfit-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/outfits/outfit_09_01.png",
+          "accent": "#ebe4f2"
+        },
+        {
+          "id": "outfit-09-02",
+          "name": "Roxo claro 2",
+          "family": "outfit-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/outfits/outfit_09_02.png",
+          "accent": "#ebe4f2"
+        },
+        {
+          "id": "outfit-09-03",
+          "name": "Roxo claro 3",
+          "family": "outfit-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/outfits/outfit_09_03.png",
+          "accent": "#ebe4f2"
+        },
+        {
+          "id": "outfit-10-01",
+          "name": "Cinza 1",
+          "family": "outfit-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/outfits/outfit_10_01.png",
+          "accent": "#9094aa"
+        },
+        {
+          "id": "outfit-10-02",
+          "name": "Azul",
+          "family": "outfit-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/outfits/outfit_10_02.png",
+          "accent": "#6c95b7"
         },
         {
           "id": "outfit-10-03",
-          "name": "Jaqueta vermelha",
+          "name": "Vermelho",
+          "family": "outfit-10",
+          "familyName": "Modelo 10",
           "path": "assets/character/outfits/outfit_10_03.png",
-          "accent": "#c84f58"
+          "accent": "#a63249"
+        },
+        {
+          "id": "outfit-10-04",
+          "name": "Cinza 2",
+          "family": "outfit-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/outfits/outfit_10_04.png",
+          "accent": "#897478"
+        },
+        {
+          "id": "outfit-10-05",
+          "name": "Verde",
+          "family": "outfit-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/outfits/outfit_10_05.png",
+          "accent": "#89b578"
+        },
+        {
+          "id": "outfit-11-01",
+          "name": "Chumbo 1",
+          "family": "outfit-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/outfits/outfit_11_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-11-02",
+          "name": "Chumbo 2",
+          "family": "outfit-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/outfits/outfit_11_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-11-03",
+          "name": "Chumbo 3",
+          "family": "outfit-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/outfits/outfit_11_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-11-04",
+          "name": "Chumbo 4",
+          "family": "outfit-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/outfits/outfit_11_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-12-01",
+          "name": "Chumbo 1",
+          "family": "outfit-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/outfits/outfit_12_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-12-02",
+          "name": "Chumbo 2",
+          "family": "outfit-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/outfits/outfit_12_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-12-03",
+          "name": "Chumbo 3",
+          "family": "outfit-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/outfits/outfit_12_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-13-01",
+          "name": "Azul",
+          "family": "outfit-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/outfits/outfit_13_01.png",
+          "accent": "#50a7e8"
+        },
+        {
+          "id": "outfit-13-02",
+          "name": "Azul claro",
+          "family": "outfit-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/outfits/outfit_13_02.png",
+          "accent": "#b4a7e8"
+        },
+        {
+          "id": "outfit-13-03",
+          "name": "Verde",
+          "family": "outfit-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/outfits/outfit_13_03.png",
+          "accent": "#5aa77e"
+        },
+        {
+          "id": "outfit-13-04",
+          "name": "Vermelho",
+          "family": "outfit-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/outfits/outfit_13_04.png",
+          "accent": "#b1637e"
+        },
+        {
+          "id": "outfit-14-01",
+          "name": "Chumbo 1",
+          "family": "outfit-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/outfits/outfit_14_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-14-02",
+          "name": "Chumbo 2",
+          "family": "outfit-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/outfits/outfit_14_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-14-03",
+          "name": "Chumbo 3",
+          "family": "outfit-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/outfits/outfit_14_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-14-04",
+          "name": "Chumbo 4",
+          "family": "outfit-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/outfits/outfit_14_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-14-05",
+          "name": "Chumbo 5",
+          "family": "outfit-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/outfits/outfit_14_05.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-15-01",
+          "name": "Chumbo 1",
+          "family": "outfit-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/outfits/outfit_15_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-15-02",
+          "name": "Chumbo 2",
+          "family": "outfit-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/outfits/outfit_15_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-15-03",
+          "name": "Chumbo 3",
+          "family": "outfit-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/outfits/outfit_15_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-16-01",
+          "name": "Laranja 1",
+          "family": "outfit-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/outfits/outfit_16_01.png",
+          "accent": "#f5aa14"
+        },
+        {
+          "id": "outfit-16-02",
+          "name": "Laranja 2",
+          "family": "outfit-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/outfits/outfit_16_02.png",
+          "accent": "#f58a4f"
+        },
+        {
+          "id": "outfit-16-03",
+          "name": "Vermelho",
+          "family": "outfit-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/outfits/outfit_16_03.png",
+          "accent": "#e15847"
+        },
+        {
+          "id": "outfit-17-01",
+          "name": "Ciano 1",
+          "family": "outfit-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/outfits/outfit_17_01.png",
+          "accent": "#4b9296"
+        },
+        {
+          "id": "outfit-17-02",
+          "name": "Azul",
+          "family": "outfit-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/outfits/outfit_17_02.png",
+          "accent": "#8992d3"
+        },
+        {
+          "id": "outfit-17-03",
+          "name": "Ciano 2",
+          "family": "outfit-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/outfits/outfit_17_03.png",
+          "accent": "#89ccd3"
+        },
+        {
+          "id": "outfit-18-01",
+          "name": "Chumbo 1",
+          "family": "outfit-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/outfits/outfit_18_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-18-02",
+          "name": "Chumbo 2",
+          "family": "outfit-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/outfits/outfit_18_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-18-03",
+          "name": "Chumbo 3",
+          "family": "outfit-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/outfits/outfit_18_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-18-04",
+          "name": "Chumbo 4",
+          "family": "outfit-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/outfits/outfit_18_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-19-01",
+          "name": "Azul 1",
+          "family": "outfit-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/outfits/outfit_19_01.png",
+          "accent": "#4280dd"
+        },
+        {
+          "id": "outfit-19-02",
+          "name": "Cinza",
+          "family": "outfit-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/outfits/outfit_19_02.png",
+          "accent": "#787d93"
         },
         {
           "id": "outfit-19-03",
-          "name": "Social claro",
+          "name": "Azul 2",
+          "family": "outfit-19",
+          "familyName": "Modelo 19",
           "path": "assets/character/outfits/outfit_19_03.png",
-          "accent": "#e2d3bd"
+          "accent": "#8d94b2"
+        },
+        {
+          "id": "outfit-19-04",
+          "name": "Rosa",
+          "family": "outfit-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/outfits/outfit_19_04.png",
+          "accent": "#cd94b2"
+        },
+        {
+          "id": "outfit-20-01",
+          "name": "Chumbo 1",
+          "family": "outfit-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/outfits/outfit_20_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-20-02",
+          "name": "Chumbo 2",
+          "family": "outfit-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/outfits/outfit_20_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-20-03",
+          "name": "Chumbo 3",
+          "family": "outfit-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/outfits/outfit_20_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-21-01",
+          "name": "Azul claro 1",
+          "family": "outfit-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/outfits/outfit_21_01.png",
+          "accent": "#c6cde6"
+        },
+        {
+          "id": "outfit-21-02",
+          "name": "Azul",
+          "family": "outfit-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/outfits/outfit_21_02.png",
+          "accent": "#6a7598"
+        },
+        {
+          "id": "outfit-21-03",
+          "name": "Azul claro 2",
+          "family": "outfit-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/outfits/outfit_21_03.png",
+          "accent": "#c6cde6"
+        },
+        {
+          "id": "outfit-21-04",
+          "name": "Azul claro 3",
+          "family": "outfit-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/outfits/outfit_21_04.png",
+          "accent": "#c6cde6"
+        },
+        {
+          "id": "outfit-22-01",
+          "name": "Cinza",
+          "family": "outfit-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/outfits/outfit_22_01.png",
+          "accent": "#88818e"
+        },
+        {
+          "id": "outfit-22-02",
+          "name": "Chumbo",
+          "family": "outfit-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/outfits/outfit_22_02.png",
+          "accent": "#6b6358"
+        },
+        {
+          "id": "outfit-22-03",
+          "name": "Ciano",
+          "family": "outfit-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/outfits/outfit_22_03.png",
+          "accent": "#416358"
+        },
+        {
+          "id": "outfit-22-04",
+          "name": "Azul",
+          "family": "outfit-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/outfits/outfit_22_04.png",
+          "accent": "#4263a1"
+        },
+        {
+          "id": "outfit-23-01",
+          "name": "Amarelo",
+          "family": "outfit-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/outfits/outfit_23_01.png",
+          "accent": "#bda766"
+        },
+        {
+          "id": "outfit-23-02",
+          "name": "Cinza",
+          "family": "outfit-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/outfits/outfit_23_02.png",
+          "accent": "#bda7a7"
+        },
+        {
+          "id": "outfit-23-03",
+          "name": "Ciano",
+          "family": "outfit-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/outfits/outfit_23_03.png",
+          "accent": "#77bfbf"
+        },
+        {
+          "id": "outfit-23-04",
+          "name": "Verde",
+          "family": "outfit-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/outfits/outfit_23_04.png",
+          "accent": "#77bf71"
+        },
+        {
+          "id": "outfit-24-01",
+          "name": "Azul",
+          "family": "outfit-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/outfits/outfit_24_01.png",
+          "accent": "#0092e3"
+        },
+        {
+          "id": "outfit-24-02",
+          "name": "Ciano 1",
+          "family": "outfit-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/outfits/outfit_24_02.png",
+          "accent": "#6dcfc6"
+        },
+        {
+          "id": "outfit-24-03",
+          "name": "Ciano 2",
+          "family": "outfit-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/outfits/outfit_24_03.png",
+          "accent": "#009292"
+        },
+        {
+          "id": "outfit-24-04",
+          "name": "Roxo",
+          "family": "outfit-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/outfits/outfit_24_04.png",
+          "accent": "#ad83c6"
+        },
+        {
+          "id": "outfit-25-01",
+          "name": "Azul",
+          "family": "outfit-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/outfits/outfit_25_01.png",
+          "accent": "#0092e3"
+        },
+        {
+          "id": "outfit-25-02",
+          "name": "Cinza",
+          "family": "outfit-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/outfits/outfit_25_02.png",
+          "accent": "#9ba3a7"
+        },
+        {
+          "id": "outfit-25-03",
+          "name": "Laranja",
+          "family": "outfit-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/outfits/outfit_25_03.png",
+          "accent": "#ad957c"
+        },
+        {
+          "id": "outfit-25-04",
+          "name": "Vermelho",
+          "family": "outfit-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/outfits/outfit_25_04.png",
+          "accent": "#9d4c6d"
+        },
+        {
+          "id": "outfit-25-05",
+          "name": "Vermelho claro",
+          "family": "outfit-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/outfits/outfit_25_05.png",
+          "accent": "#ffdfec"
+        },
+        {
+          "id": "outfit-26-01",
+          "name": "Chumbo 1",
+          "family": "outfit-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/outfits/outfit_26_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-26-02",
+          "name": "Chumbo 2",
+          "family": "outfit-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/outfits/outfit_26_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-26-03",
+          "name": "Chumbo 3",
+          "family": "outfit-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/outfits/outfit_26_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "outfit-27-01",
+          "name": "Cinza 1",
+          "family": "outfit-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/outfits/outfit_27_01.png",
+          "accent": "#71748c"
+        },
+        {
+          "id": "outfit-27-02",
+          "name": "Cinza 2",
+          "family": "outfit-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/outfits/outfit_27_02.png",
+          "accent": "#71748c"
+        },
+        {
+          "id": "outfit-27-03",
+          "name": "Azul",
+          "family": "outfit-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/outfits/outfit_27_03.png",
+          "accent": "#7e84bb"
+        },
+        {
+          "id": "outfit-28-01",
+          "name": "Roxo claro 1",
+          "family": "outfit-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/outfits/outfit_28_01.png",
+          "accent": "#ead9f3"
+        },
+        {
+          "id": "outfit-28-02",
+          "name": "Roxo claro 2",
+          "family": "outfit-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/outfits/outfit_28_02.png",
+          "accent": "#ead9f3"
+        },
+        {
+          "id": "outfit-28-03",
+          "name": "Roxo claro 3",
+          "family": "outfit-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/outfits/outfit_28_03.png",
+          "accent": "#ead9f3"
+        },
+        {
+          "id": "outfit-28-04",
+          "name": "Roxo claro 4",
+          "family": "outfit-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/outfits/outfit_28_04.png",
+          "accent": "#ead9f3"
+        },
+        {
+          "id": "outfit-29-01",
+          "name": "Azul 1",
+          "family": "outfit-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/outfits/outfit_29_01.png",
+          "accent": "#a1abd4"
+        },
+        {
+          "id": "outfit-29-02",
+          "name": "Azul 2",
+          "family": "outfit-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/outfits/outfit_29_02.png",
+          "accent": "#5babd4"
+        },
+        {
+          "id": "outfit-29-03",
+          "name": "Azul claro",
+          "family": "outfit-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/outfits/outfit_29_03.png",
+          "accent": "#c2c8ea"
+        },
+        {
+          "id": "outfit-29-04",
+          "name": "Azul 3",
+          "family": "outfit-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/outfits/outfit_29_04.png",
+          "accent": "#7471d6"
+        },
+        {
+          "id": "outfit-30-01",
+          "name": "Chumbo",
+          "family": "outfit-30",
+          "familyName": "Modelo 30",
+          "path": "assets/character/outfits/outfit_30_01.png",
+          "accent": "#565972"
+        },
+        {
+          "id": "outfit-30-02",
+          "name": "Azul",
+          "family": "outfit-30",
+          "familyName": "Modelo 30",
+          "path": "assets/character/outfits/outfit_30_02.png",
+          "accent": "#71729e"
+        },
+        {
+          "id": "outfit-30-03",
+          "name": "Cinza",
+          "family": "outfit-30",
+          "familyName": "Modelo 30",
+          "path": "assets/character/outfits/outfit_30_03.png",
+          "accent": "#8a837c"
+        },
+        {
+          "id": "outfit-31-01",
+          "name": "Azul 1",
+          "family": "outfit-31",
+          "familyName": "Modelo 31",
+          "path": "assets/character/outfits/outfit_31_01.png",
+          "accent": "#335789"
+        },
+        {
+          "id": "outfit-31-02",
+          "name": "Roxo",
+          "family": "outfit-31",
+          "familyName": "Modelo 31",
+          "path": "assets/character/outfits/outfit_31_02.png",
+          "accent": "#6c3e89"
+        },
+        {
+          "id": "outfit-31-03",
+          "name": "Azul 2",
+          "family": "outfit-31",
+          "familyName": "Modelo 31",
+          "path": "assets/character/outfits/outfit_31_03.png",
+          "accent": "#453e85"
         },
         {
           "id": "outfit-31-04",
-          "name": "Tech verde",
+          "name": "Ciano",
+          "family": "outfit-31",
+          "familyName": "Modelo 31",
           "path": "assets/character/outfits/outfit_31_04.png",
-          "accent": "#58aa82"
+          "accent": "#276858"
+        },
+        {
+          "id": "outfit-31-05",
+          "name": "Marrom",
+          "family": "outfit-31",
+          "familyName": "Modelo 31",
+          "path": "assets/character/outfits/outfit_31_05.png",
+          "accent": "#694334"
+        },
+        {
+          "id": "outfit-32-01",
+          "name": "Azul 1",
+          "family": "outfit-32",
+          "familyName": "Modelo 32",
+          "path": "assets/character/outfits/outfit_32_01.png",
+          "accent": "#335789"
+        },
+        {
+          "id": "outfit-32-02",
+          "name": "Roxo",
+          "family": "outfit-32",
+          "familyName": "Modelo 32",
+          "path": "assets/character/outfits/outfit_32_02.png",
+          "accent": "#644074"
+        },
+        {
+          "id": "outfit-32-03",
+          "name": "Chumbo",
+          "family": "outfit-32",
+          "familyName": "Modelo 32",
+          "path": "assets/character/outfits/outfit_32_03.png",
+          "accent": "#5e5b60"
+        },
+        {
+          "id": "outfit-32-04",
+          "name": "Azul 2",
+          "family": "outfit-32",
+          "familyName": "Modelo 32",
+          "path": "assets/character/outfits/outfit_32_04.png",
+          "accent": "#464965"
+        },
+        {
+          "id": "outfit-32-05",
+          "name": "Marrom",
+          "family": "outfit-32",
+          "familyName": "Modelo 32",
+          "path": "assets/character/outfits/outfit_32_05.png",
+          "accent": "#683f3d"
+        },
+        {
+          "id": "outfit-33-01",
+          "name": "Loiro",
+          "family": "outfit-33",
+          "familyName": "Modelo 33",
+          "path": "assets/character/outfits/outfit_33_01.png",
+          "accent": "#fdf8ec"
+        },
+        {
+          "id": "outfit-33-02",
+          "name": "Verde claro",
+          "family": "outfit-33",
+          "familyName": "Modelo 33",
+          "path": "assets/character/outfits/outfit_33_02.png",
+          "accent": "#e7f8ec"
+        },
+        {
+          "id": "outfit-33-03",
+          "name": "Branco",
+          "family": "outfit-33",
+          "familyName": "Modelo 33",
+          "path": "assets/character/outfits/outfit_33_03.png",
+          "accent": "#e7e5ec"
+        }
+      ]
+    },
+    {
+      "id": "back",
+      "name": "Costas",
+      "required": false,
+      "options": [
+        {
+          "id": "none",
+          "name": "Nenhum",
+          "family": "none",
+          "familyName": "Nenhum",
+          "path": null,
+          "accent": "#73545a"
+        },
+        {
+          "id": "backpack-01",
+          "name": "Laranja",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_01.png",
+          "accent": "#8a6d58"
+        },
+        {
+          "id": "backpack-02",
+          "name": "Amarelo",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_02.png",
+          "accent": "#bda766"
+        },
+        {
+          "id": "backpack-03",
+          "name": "Verde 1",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_03.png",
+          "accent": "#74b453"
+        },
+        {
+          "id": "backpack-04",
+          "name": "Verde 2",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_04.png",
+          "accent": "#3cb074"
+        },
+        {
+          "id": "backpack-05",
+          "name": "Vermelho 1",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_05.png",
+          "accent": "#e63f38"
+        },
+        {
+          "id": "backpack-06",
+          "name": "Azul 1",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_06.png",
+          "accent": "#4995e3"
+        },
+        {
+          "id": "backpack-07",
+          "name": "Vermelho 2",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_07.png",
+          "accent": "#e88dad"
+        },
+        {
+          "id": "backpack-08",
+          "name": "Cinza",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_08.png",
+          "accent": "#9da3b7"
+        },
+        {
+          "id": "backpack-09",
+          "name": "Roxo",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_09.png",
+          "accent": "#8555c5"
+        },
+        {
+          "id": "backpack-10",
+          "name": "Azul 2",
+          "family": "backpack",
+          "familyName": "Mochila",
+          "path": "assets/character/accessories/backpack_10.png",
+          "accent": "#50a7e8"
+        },
+        {
+          "id": "gloves-01",
+          "name": "Laranja claro",
+          "family": "gloves",
+          "familyName": "Luvas",
+          "path": "assets/character/accessories/gloves_01.png",
+          "accent": "#f4eae2"
+        },
+        {
+          "id": "gloves-02",
+          "name": "Verde claro",
+          "family": "gloves",
+          "familyName": "Luvas",
+          "path": "assets/character/accessories/gloves_02.png",
+          "accent": "#c8e9d9"
+        },
+        {
+          "id": "gloves-03",
+          "name": "Roxo",
+          "family": "gloves",
+          "familyName": "Luvas",
+          "path": "assets/character/accessories/gloves_03.png",
+          "accent": "#c8a7d9"
+        },
+        {
+          "id": "gloves-04",
+          "name": "Laranja",
+          "family": "gloves",
+          "familyName": "Luvas",
+          "path": "assets/character/accessories/gloves_04.png",
+          "accent": "#b7723c"
         }
       ]
     },
@@ -134,77 +1370,2194 @@
       "required": true,
       "options": [
         {
+          "id": "hairstyle-01-01",
+          "name": "Ruivo",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/hairstyles/hairstyle_01_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-01-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/hairstyles/hairstyle_01_02.png",
+          "accent": "#8a6552"
+        },
+        {
           "id": "hairstyle-01-03",
-          "name": "Curto castanho",
+          "name": "Castanho",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
           "path": "assets/character/hairstyles/hairstyle_01_03.png",
-          "accent": "#76513d"
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-01-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/hairstyles/hairstyle_01_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-01-05",
+          "name": "Grisalho",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/hairstyles/hairstyle_01_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-01-06",
+          "name": "Grafite",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/hairstyles/hairstyle_01_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-01-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-01",
+          "familyName": "Modelo 01",
+          "path": "assets/character/hairstyles/hairstyle_01_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-02-01",
+          "name": "Ruivo",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-02-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-02-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-02-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-02-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-02-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-02-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-02",
+          "familyName": "Modelo 02",
+          "path": "assets/character/hairstyles/hairstyle_02_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-03-01",
+          "name": "Ruivo",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_01.png",
+          "accent": "#cc9659"
+        },
+        {
+          "id": "hairstyle-03-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_02.png",
+          "accent": "#ba8d5e"
+        },
+        {
+          "id": "hairstyle-03-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_03.png",
+          "accent": "#866150"
+        },
+        {
+          "id": "hairstyle-03-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_04.png",
+          "accent": "#6f5449"
+        },
+        {
+          "id": "hairstyle-03-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_05.png",
+          "accent": "#a2a2a0"
+        },
+        {
+          "id": "hairstyle-03-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_06.png",
+          "accent": "#898171"
+        },
+        {
+          "id": "hairstyle-03-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-03",
+          "familyName": "Modelo 03",
+          "path": "assets/character/hairstyles/hairstyle_03_07.png",
+          "accent": "#647e99"
+        },
+        {
+          "id": "hairstyle-04-01",
+          "name": "Ruivo",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/hairstyles/hairstyle_04_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-04-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/hairstyles/hairstyle_04_02.png",
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-04-03",
+          "name": "Castanho",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/hairstyles/hairstyle_04_03.png",
+          "accent": "#724a40"
         },
         {
           "id": "hairstyle-04-04",
-          "name": "Curto dourado",
+          "name": "Castanho escuro",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
           "path": "assets/character/hairstyles/hairstyle_04_04.png",
-          "accent": "#d19b4a"
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-04-05",
+          "name": "Grisalho",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/hairstyles/hairstyle_04_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-04-06",
+          "name": "Grafite",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/hairstyles/hairstyle_04_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-04-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-04",
+          "familyName": "Modelo 04",
+          "path": "assets/character/hairstyles/hairstyle_04_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-05-01",
+          "name": "Ruivo",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-05-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-05-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-05-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-05-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-05-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-05-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-05",
+          "familyName": "Modelo 05",
+          "path": "assets/character/hairstyles/hairstyle_05_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-06-01",
+          "name": "Ruivo",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_01.png",
+          "accent": "#cc9659"
+        },
+        {
+          "id": "hairstyle-06-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_02.png",
+          "accent": "#ba8d5e"
+        },
+        {
+          "id": "hairstyle-06-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_03.png",
+          "accent": "#866150"
+        },
+        {
+          "id": "hairstyle-06-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_04.png",
+          "accent": "#6f5449"
+        },
+        {
+          "id": "hairstyle-06-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_05.png",
+          "accent": "#a2a2a0"
+        },
+        {
+          "id": "hairstyle-06-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_06.png",
+          "accent": "#898171"
+        },
+        {
+          "id": "hairstyle-06-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-06",
+          "familyName": "Modelo 06",
+          "path": "assets/character/hairstyles/hairstyle_06_07.png",
+          "accent": "#647e99"
+        },
+        {
+          "id": "hairstyle-07-01",
+          "name": "Ruivo",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-07-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_02.png",
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-07-03",
+          "name": "Castanho",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_03.png",
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-07-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-07-05",
+          "name": "Grisalho",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-07-06",
+          "name": "Grafite",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-07-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-07",
+          "familyName": "Modelo 07",
+          "path": "assets/character/hairstyles/hairstyle_07_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-08-01",
+          "name": "Ruivo",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-08-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-08-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-08-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-08-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-08-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-08-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-08",
+          "familyName": "Modelo 08",
+          "path": "assets/character/hairstyles/hairstyle_08_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-09-01",
+          "name": "Ruivo",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-09-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-09-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-09-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-09-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-09-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-09-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-09",
+          "familyName": "Modelo 09",
+          "path": "assets/character/hairstyles/hairstyle_09_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-10-01",
+          "name": "Ruivo",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/hairstyles/hairstyle_10_01.png",
+          "accent": "#ab6736"
         },
         {
           "id": "hairstyle-10-02",
-          "name": "Liso preto",
+          "name": "Castanho claro",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
           "path": "assets/character/hairstyles/hairstyle_10_02.png",
-          "accent": "#34303d"
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-10-03",
+          "name": "Castanho",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/hairstyles/hairstyle_10_03.png",
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-10-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/hairstyles/hairstyle_10_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-10-05",
+          "name": "Grisalho",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/hairstyles/hairstyle_10_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-10-06",
+          "name": "Grafite",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/hairstyles/hairstyle_10_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-10-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-10",
+          "familyName": "Modelo 10",
+          "path": "assets/character/hairstyles/hairstyle_10_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-11-01",
+          "name": "Ruivo",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-11-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-11-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-11-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-11-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-11-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-11-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-11",
+          "familyName": "Modelo 11",
+          "path": "assets/character/hairstyles/hairstyle_11_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-12-01",
+          "name": "Ruivo",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-12-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-12-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-12-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-12-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-12-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-12-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-12",
+          "familyName": "Modelo 12",
+          "path": "assets/character/hairstyles/hairstyle_12_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-13-01",
+          "name": "Ruivo",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-13-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_02.png",
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-13-03",
+          "name": "Castanho",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_03.png",
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-13-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-13-05",
+          "name": "Grisalho",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-13-06",
+          "name": "Grafite",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-13-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-13",
+          "familyName": "Modelo 13",
+          "path": "assets/character/hairstyles/hairstyle_13_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-14-01",
+          "name": "Ruivo",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-14-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-14-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-14-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-14-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-14-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-14-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-14",
+          "familyName": "Modelo 14",
+          "path": "assets/character/hairstyles/hairstyle_14_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-15-01",
+          "name": "Ruivo",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-15-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_02.png",
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-15-03",
+          "name": "Castanho",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_03.png",
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-15-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-15-05",
+          "name": "Grisalho",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-15-06",
+          "name": "Grafite",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-15-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-15",
+          "familyName": "Modelo 15",
+          "path": "assets/character/hairstyles/hairstyle_15_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-16-01",
+          "name": "Ruivo",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/hairstyles/hairstyle_16_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-16-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/hairstyles/hairstyle_16_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-16-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/hairstyles/hairstyle_16_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-16-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/hairstyles/hairstyle_16_04.png",
+          "accent": "#674d49"
         },
         {
           "id": "hairstyle-16-05",
-          "name": "Médio cobre",
+          "name": "Grisalho 1",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
           "path": "assets/character/hairstyles/hairstyle_16_05.png",
-          "accent": "#a75a42"
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-16-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/hairstyles/hairstyle_16_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-16-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-16",
+          "familyName": "Modelo 16",
+          "path": "assets/character/hairstyles/hairstyle_16_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-17-01",
+          "name": "Ruivo",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-17-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-17-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-17-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-17-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-17-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-17-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-17",
+          "familyName": "Modelo 17",
+          "path": "assets/character/hairstyles/hairstyle_17_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-18-01",
+          "name": "Ruivo",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-18-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-18-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-18-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-18-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-18-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-18-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-18",
+          "familyName": "Modelo 18",
+          "path": "assets/character/hairstyles/hairstyle_18_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-19-01",
+          "name": "Ruivo",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-19-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_02.png",
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-19-03",
+          "name": "Castanho",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_03.png",
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-19-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-19-05",
+          "name": "Grisalho",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-19-06",
+          "name": "Grafite",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-19-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-19",
+          "familyName": "Modelo 19",
+          "path": "assets/character/hairstyles/hairstyle_19_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-20-01",
+          "name": "Ruivo",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-20-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-20-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-20-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-20-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-20-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-20-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-20",
+          "familyName": "Modelo 20",
+          "path": "assets/character/hairstyles/hairstyle_20_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-21-01",
+          "name": "Ruivo",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-21-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-21-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-21-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-21-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-21-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-21-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-21",
+          "familyName": "Modelo 21",
+          "path": "assets/character/hairstyles/hairstyle_21_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-22-01",
+          "name": "Ruivo",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-22-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-22-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-22-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-22-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-22-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-22-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-22",
+          "familyName": "Modelo 22",
+          "path": "assets/character/hairstyles/hairstyle_22_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-23-01",
+          "name": "Ruivo",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-23-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-23-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-23-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_04.png",
+          "accent": "#6f5449"
+        },
+        {
+          "id": "hairstyle-23-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-23-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-23-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-23",
+          "familyName": "Modelo 23",
+          "path": "assets/character/hairstyles/hairstyle_23_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-24-01",
+          "name": "Ruivo",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/hairstyles/hairstyle_24_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-24-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/hairstyles/hairstyle_24_02.png",
+          "accent": "#957350"
         },
         {
           "id": "hairstyle-24-03",
-          "name": "Longo castanho",
+          "name": "Castanho 1",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
           "path": "assets/character/hairstyles/hairstyle_24_03.png",
-          "accent": "#6a4637"
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-24-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/hairstyles/hairstyle_24_04.png",
+          "accent": "#6f5449"
+        },
+        {
+          "id": "hairstyle-24-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/hairstyles/hairstyle_24_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-24-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/hairstyles/hairstyle_24_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-24-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-24",
+          "familyName": "Modelo 24",
+          "path": "assets/character/hairstyles/hairstyle_24_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-25-01",
+          "name": "Ruivo",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_01.png",
+          "accent": "#ab6736"
+        },
+        {
+          "id": "hairstyle-25-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_02.png",
+          "accent": "#8a6552"
+        },
+        {
+          "id": "hairstyle-25-03",
+          "name": "Castanho",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_03.png",
+          "accent": "#724a40"
+        },
+        {
+          "id": "hairstyle-25-04",
+          "name": "Castanho escuro",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_04.png",
+          "accent": "#5b4643"
+        },
+        {
+          "id": "hairstyle-25-05",
+          "name": "Grisalho",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_05.png",
+          "accent": "#898887"
+        },
+        {
+          "id": "hairstyle-25-06",
+          "name": "Grafite",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_06.png",
+          "accent": "#706663"
+        },
+        {
+          "id": "hairstyle-25-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-25",
+          "familyName": "Modelo 25",
+          "path": "assets/character/hairstyles/hairstyle_25_07.png",
+          "accent": "#535662"
+        },
+        {
+          "id": "hairstyle-26-01",
+          "name": "Ruivo",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_01.png",
+          "accent": "#b37b3f"
+        },
+        {
+          "id": "hairstyle-26-02",
+          "name": "Castanho claro",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_02.png",
+          "accent": "#957350"
+        },
+        {
+          "id": "hairstyle-26-03",
+          "name": "Castanho 1",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_03.png",
+          "accent": "#805449"
+        },
+        {
+          "id": "hairstyle-26-04",
+          "name": "Castanho 2",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_04.png",
+          "accent": "#674d49"
+        },
+        {
+          "id": "hairstyle-26-05",
+          "name": "Grisalho 1",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_05.png",
+          "accent": "#969695"
+        },
+        {
+          "id": "hairstyle-26-06",
+          "name": "Grisalho 2",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_06.png",
+          "accent": "#79746f"
+        },
+        {
+          "id": "hairstyle-26-07",
+          "name": "Preto azulado",
+          "family": "hairstyle-26",
+          "familyName": "Modelo 26",
+          "path": "assets/character/hairstyles/hairstyle_26_07.png",
+          "accent": "#566279"
+        },
+        {
+          "id": "hairstyle-27-01",
+          "name": "Vermelho",
+          "family": "hairstyle-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/hairstyles/hairstyle_27_01.png",
+          "accent": "#e88dad"
+        },
+        {
+          "id": "hairstyle-27-02",
+          "name": "Verde",
+          "family": "hairstyle-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/hairstyles/hairstyle_27_02.png",
+          "accent": "#529760"
+        },
+        {
+          "id": "hairstyle-27-03",
+          "name": "Azul 1",
+          "family": "hairstyle-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/hairstyles/hairstyle_27_03.png",
+          "accent": "#6499ba"
+        },
+        {
+          "id": "hairstyle-27-04",
+          "name": "Azul 2",
+          "family": "hairstyle-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/hairstyles/hairstyle_27_04.png",
+          "accent": "#4280dd"
+        },
+        {
+          "id": "hairstyle-27-05",
+          "name": "Ruivo 1",
+          "family": "hairstyle-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/hairstyles/hairstyle_27_05.png",
+          "accent": "#f2b22b"
+        },
+        {
+          "id": "hairstyle-27-06",
+          "name": "Ruivo 2",
+          "family": "hairstyle-27",
+          "familyName": "Modelo 27",
+          "path": "assets/character/hairstyles/hairstyle_27_06.png",
+          "accent": "#d93232"
+        },
+        {
+          "id": "hairstyle-28-01",
+          "name": "Vermelho",
+          "family": "hairstyle-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/hairstyles/hairstyle_28_01.png",
+          "accent": "#e88dad"
+        },
+        {
+          "id": "hairstyle-28-02",
+          "name": "Verde",
+          "family": "hairstyle-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/hairstyles/hairstyle_28_02.png",
+          "accent": "#529760"
+        },
+        {
+          "id": "hairstyle-28-03",
+          "name": "Azul 1",
+          "family": "hairstyle-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/hairstyles/hairstyle_28_03.png",
+          "accent": "#6499ba"
+        },
+        {
+          "id": "hairstyle-28-04",
+          "name": "Azul 2",
+          "family": "hairstyle-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/hairstyles/hairstyle_28_04.png",
+          "accent": "#4280dd"
+        },
+        {
+          "id": "hairstyle-28-05",
+          "name": "Ruivo 1",
+          "family": "hairstyle-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/hairstyles/hairstyle_28_05.png",
+          "accent": "#f2b22b"
+        },
+        {
+          "id": "hairstyle-28-06",
+          "name": "Ruivo 2",
+          "family": "hairstyle-28",
+          "familyName": "Modelo 28",
+          "path": "assets/character/hairstyles/hairstyle_28_06.png",
+          "accent": "#d93232"
+        },
+        {
+          "id": "hairstyle-29-01",
+          "name": "Vermelho claro",
+          "family": "hairstyle-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/hairstyles/hairstyle_29_01.png",
+          "accent": "#eea5b8"
+        },
+        {
+          "id": "hairstyle-29-02",
+          "name": "Verde",
+          "family": "hairstyle-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/hairstyles/hairstyle_29_02.png",
+          "accent": "#74b453"
+        },
+        {
+          "id": "hairstyle-29-03",
+          "name": "Ciano",
+          "family": "hairstyle-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/hairstyles/hairstyle_29_03.png",
+          "accent": "#73b8c6"
+        },
+        {
+          "id": "hairstyle-29-04",
+          "name": "Azul",
+          "family": "hairstyle-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/hairstyles/hairstyle_29_04.png",
+          "accent": "#50a7e8"
         },
         {
           "id": "hairstyle-29-05",
-          "name": "Longo violeta",
+          "name": "Ruivo",
+          "family": "hairstyle-29",
+          "familyName": "Modelo 29",
           "path": "assets/character/hairstyles/hairstyle_29_05.png",
-          "accent": "#765690"
+          "accent": "#f8d239"
+        },
+        {
+          "id": "hairstyle-29-06",
+          "name": "Loiro",
+          "family": "hairstyle-29",
+          "familyName": "Modelo 29",
+          "path": "assets/character/hairstyles/hairstyle_29_06.png",
+          "accent": "#fc5c46"
         }
       ]
     },
     {
-      "id": "accessory",
-      "name": "Acessório",
+      "id": "face",
+      "name": "Rosto",
       "required": false,
       "options": [
         {
           "id": "none",
           "name": "Nenhum",
+          "family": "none",
+          "familyName": "Nenhum",
           "path": null,
           "accent": "#73545a"
         },
         {
+          "id": "mustache-01",
+          "name": "Preto azulado 1",
+          "family": "mustache",
+          "familyName": "Bigode",
+          "path": "assets/character/accessories/mustache_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "mustache-02",
+          "name": "Preto azulado 2",
+          "family": "mustache",
+          "familyName": "Bigode",
+          "path": "assets/character/accessories/mustache_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "mustache-03",
+          "name": "Preto azulado 3",
+          "family": "mustache",
+          "familyName": "Bigode",
+          "path": "assets/character/accessories/mustache_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "mustache-04",
+          "name": "Preto azulado 4",
+          "family": "mustache",
+          "familyName": "Bigode",
+          "path": "assets/character/accessories/mustache_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "mustache-05",
+          "name": "Preto azulado 5",
+          "family": "mustache",
+          "familyName": "Bigode",
+          "path": "assets/character/accessories/mustache_05.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "beard-01",
+          "name": "Castanho",
+          "family": "beard",
+          "familyName": "Barba",
+          "path": "assets/character/accessories/beard_01.png",
+          "accent": "#6f5449"
+        },
+        {
+          "id": "beard-02",
+          "name": "Ruivo 1",
+          "family": "beard",
+          "familyName": "Barba",
+          "path": "assets/character/accessories/beard_02.png",
+          "accent": "#8a4830"
+        },
+        {
+          "id": "beard-03",
+          "name": "Ruivo 2",
+          "family": "beard",
+          "familyName": "Barba",
+          "path": "assets/character/accessories/beard_03.png",
+          "accent": "#a16a3b"
+        },
+        {
+          "id": "beard-04",
+          "name": "Grisalho",
+          "family": "beard",
+          "familyName": "Barba",
+          "path": "assets/character/accessories/beard_04.png",
+          "accent": "#a69e97"
+        },
+        {
+          "id": "beard-05",
+          "name": "Preto azulado",
+          "family": "beard",
+          "familyName": "Barba",
+          "path": "assets/character/accessories/beard_05.png",
+          "accent": "#666e8c"
+        },
+        {
+          "id": "glasses-01",
+          "name": "Chumbo 1",
+          "family": "glasses",
+          "familyName": "Óculos",
+          "path": "assets/character/accessories/glasses_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "glasses-02",
+          "name": "Chumbo 2",
+          "family": "glasses",
+          "familyName": "Óculos",
+          "path": "assets/character/accessories/glasses_02.png",
+          "accent": "#46465e"
+        },
+        {
           "id": "glasses-03",
-          "name": "Óculos rosa",
+          "name": "Chumbo 3",
+          "family": "glasses",
+          "familyName": "Óculos",
           "path": "assets/character/accessories/glasses_03.png",
-          "accent": "#e453b4"
+          "accent": "#46465e"
+        },
+        {
+          "id": "glasses-04",
+          "name": "Chumbo 4",
+          "family": "glasses",
+          "familyName": "Óculos",
+          "path": "assets/character/accessories/glasses_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "glasses-05",
+          "name": "Chumbo 5",
+          "family": "glasses",
+          "familyName": "Óculos",
+          "path": "assets/character/accessories/glasses_05.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "glasses-06",
+          "name": "Chumbo 6",
+          "family": "glasses",
+          "familyName": "Óculos",
+          "path": "assets/character/accessories/glasses_06.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "monocle-01",
+          "name": "Marrom",
+          "family": "monocle",
+          "familyName": "Monóculo",
+          "path": "assets/character/accessories/monocle_01.png",
+          "accent": "#795237"
+        },
+        {
+          "id": "monocle-02",
+          "name": "Vermelho",
+          "family": "monocle",
+          "familyName": "Monóculo",
+          "path": "assets/character/accessories/monocle_02.png",
+          "accent": "#965752"
+        },
+        {
+          "id": "monocle-03",
+          "name": "Azul",
+          "family": "monocle",
+          "familyName": "Monóculo",
+          "path": "assets/character/accessories/monocle_03.png",
+          "accent": "#526096"
+        },
+        {
+          "id": "medical-mask-01",
+          "name": "Chumbo 1",
+          "family": "medical-mask",
+          "familyName": "Máscara",
+          "path": "assets/character/accessories/medical_mask_01.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "medical-mask-02",
+          "name": "Chumbo 2",
+          "family": "medical-mask",
+          "familyName": "Máscara",
+          "path": "assets/character/accessories/medical_mask_02.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "medical-mask-03",
+          "name": "Chumbo 3",
+          "family": "medical-mask",
+          "familyName": "Máscara",
+          "path": "assets/character/accessories/medical_mask_03.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "medical-mask-04",
+          "name": "Chumbo 4",
+          "family": "medical-mask",
+          "familyName": "Máscara",
+          "path": "assets/character/accessories/medical_mask_04.png",
+          "accent": "#46465e"
+        },
+        {
+          "id": "medical-mask-05",
+          "name": "Chumbo 5",
+          "family": "medical-mask",
+          "familyName": "Máscara",
+          "path": "assets/character/accessories/medical_mask_05.png",
+          "accent": "#46465e"
+        }
+      ]
+    },
+    {
+      "id": "head",
+      "name": "Cabeça",
+      "required": false,
+      "options": [
+        {
+          "id": "none",
+          "name": "Nenhum",
+          "family": "none",
+          "familyName": "Nenhum",
+          "path": null,
+          "accent": "#73545a"
+        },
+        {
+          "id": "ladybug-01",
+          "name": "Vermelho",
+          "family": "ladybug",
+          "familyName": "Joaninha",
+          "path": "assets/character/accessories/ladybug_01.png",
+          "accent": "#e63f38"
+        },
+        {
+          "id": "ladybug-02",
+          "name": "Amarelo",
+          "family": "ladybug",
+          "familyName": "Joaninha",
+          "path": "assets/character/accessories/ladybug_02.png",
+          "accent": "#f8d239"
+        },
+        {
+          "id": "ladybug-03",
+          "name": "Verde",
+          "family": "ladybug",
+          "familyName": "Joaninha",
+          "path": "assets/character/accessories/ladybug_03.png",
+          "accent": "#368f38"
+        },
+        {
+          "id": "ladybug-04",
+          "name": "Ciano",
+          "family": "ladybug",
+          "familyName": "Joaninha",
+          "path": "assets/character/accessories/ladybug_04.png",
+          "accent": "#3682a7"
+        },
+        {
+          "id": "bee-01",
+          "name": "Amarelo",
+          "family": "bee",
+          "familyName": "Abelha",
+          "path": "assets/character/accessories/bee_01.png",
+          "accent": "#f8d239"
+        },
+        {
+          "id": "bee-02",
+          "name": "Loiro",
+          "family": "bee",
+          "familyName": "Abelha",
+          "path": "assets/character/accessories/bee_02.png",
+          "accent": "#e5ea8e"
+        },
+        {
+          "id": "bee-03",
+          "name": "Laranja",
+          "family": "bee",
+          "familyName": "Abelha",
+          "path": "assets/character/accessories/bee_03.png",
+          "accent": "#f87639"
+        },
+        {
+          "id": "snapback-01",
+          "name": "Vermelho 1",
+          "family": "snapback",
+          "familyName": "Boné",
+          "path": "assets/character/accessories/snapback_01.png",
+          "accent": "#e63f38"
+        },
+        {
+          "id": "snapback-02",
+          "name": "Azul",
+          "family": "snapback",
+          "familyName": "Boné",
+          "path": "assets/character/accessories/snapback_02.png",
+          "accent": "#4995e3"
         },
         {
           "id": "snapback-03",
-          "name": "Boné verde",
+          "name": "Verde",
+          "family": "snapback",
+          "familyName": "Boné",
           "path": "assets/character/accessories/snapback_03.png",
-          "accent": "#63a65c"
+          "accent": "#74b453"
+        },
+        {
+          "id": "snapback-04",
+          "name": "Cinza",
+          "family": "snapback",
+          "familyName": "Boné",
+          "path": "assets/character/accessories/snapback_04.png",
+          "accent": "#9da3b7"
+        },
+        {
+          "id": "snapback-05",
+          "name": "Vermelho 2",
+          "family": "snapback",
+          "familyName": "Boné",
+          "path": "assets/character/accessories/snapback_05.png",
+          "accent": "#e88dad"
+        },
+        {
+          "id": "snapback-06",
+          "name": "Amarelo",
+          "family": "snapback",
+          "familyName": "Boné",
+          "path": "assets/character/accessories/snapback_06.png",
+          "accent": "#bda766"
+        },
+        {
+          "id": "dino-snapback-01",
+          "name": "Verde",
+          "family": "dino-snapback",
+          "familyName": "Boné dino",
+          "path": "assets/character/accessories/dino_snapback_01.png",
+          "accent": "#9bc246"
+        },
+        {
+          "id": "dino-snapback-02",
+          "name": "Ciano",
+          "family": "dino-snapback",
+          "familyName": "Boné dino",
+          "path": "assets/character/accessories/dino_snapback_02.png",
+          "accent": "#89bcc6"
+        },
+        {
+          "id": "dino-snapback-03",
+          "name": "Laranja",
+          "family": "dino-snapback",
+          "familyName": "Boné dino",
+          "path": "assets/character/accessories/dino_snapback_03.png",
+          "accent": "#e0a146"
+        },
+        {
+          "id": "policeman-hat-01",
+          "name": "Cinza 1",
+          "family": "policeman-hat",
+          "familyName": "Quepe",
+          "path": "assets/character/accessories/policeman_hat_01.png",
+          "accent": "#6c6e85"
+        },
+        {
+          "id": "policeman-hat-02",
+          "name": "Azul 1",
+          "family": "policeman-hat",
+          "familyName": "Quepe",
+          "path": "assets/character/accessories/policeman_hat_02.png",
+          "accent": "#5d74a4"
+        },
+        {
+          "id": "policeman-hat-03",
+          "name": "Roxo 1",
+          "family": "policeman-hat",
+          "familyName": "Quepe",
+          "path": "assets/character/accessories/policeman_hat_03.png",
+          "accent": "#875fa4"
+        },
+        {
+          "id": "policeman-hat-04",
+          "name": "Cinza 2",
+          "family": "policeman-hat",
+          "familyName": "Quepe",
+          "path": "assets/character/accessories/policeman_hat_04.png",
+          "accent": "#6c6e85"
+        },
+        {
+          "id": "policeman-hat-05",
+          "name": "Azul 2",
+          "family": "policeman-hat",
+          "familyName": "Quepe",
+          "path": "assets/character/accessories/policeman_hat_05.png",
+          "accent": "#5d74a4"
+        },
+        {
+          "id": "policeman-hat-06",
+          "name": "Roxo 2",
+          "family": "policeman-hat",
+          "familyName": "Quepe",
+          "path": "assets/character/accessories/policeman_hat_06.png",
+          "accent": "#875fa4"
+        },
+        {
+          "id": "bataclava-01",
+          "name": "Azul 1",
+          "family": "bataclava",
+          "familyName": "Balaclava",
+          "path": "assets/character/accessories/bataclava_01.png",
+          "accent": "#51506f"
+        },
+        {
+          "id": "bataclava-02",
+          "name": "Azul 2",
+          "family": "bataclava",
+          "familyName": "Balaclava",
+          "path": "assets/character/accessories/bataclava_02.png",
+          "accent": "#71729e"
+        },
+        {
+          "id": "bataclava-03",
+          "name": "Cinza",
+          "family": "bataclava",
+          "familyName": "Balaclava",
+          "path": "assets/character/accessories/bataclava_03.png",
+          "accent": "#8a837c"
+        },
+        {
+          "id": "detective-hat-01",
+          "name": "Laranja 1",
+          "family": "detective-hat",
+          "familyName": "Chapéu de detetive",
+          "path": "assets/character/accessories/detective_hat_01.png",
+          "accent": "#c37759"
+        },
+        {
+          "id": "detective-hat-02",
+          "name": "Vermelho",
+          "family": "detective-hat",
+          "familyName": "Chapéu de detetive",
+          "path": "assets/character/accessories/detective_hat_02.png",
+          "accent": "#c36459"
+        },
+        {
+          "id": "detective-hat-03",
+          "name": "Laranja 2",
+          "family": "detective-hat",
+          "familyName": "Chapéu de detetive",
+          "path": "assets/character/accessories/detective_hat_03.png",
+          "accent": "#b99b8f"
+        },
+        {
+          "id": "zombie-brain-01",
+          "name": "Amarelo 1",
+          "family": "zombie-brain",
+          "familyName": "Cérebro zumbi",
+          "path": "assets/character/accessories/zombie_brain_01.png",
+          "accent": "#c6a755"
+        },
+        {
+          "id": "zombie-brain-02",
+          "name": "Amarelo 2",
+          "family": "zombie-brain",
+          "familyName": "Cérebro zumbi",
+          "path": "assets/character/accessories/zombie_brain_02.png",
+          "accent": "#c6a755"
+        },
+        {
+          "id": "zombie-brain-03",
+          "name": "Roxo",
+          "family": "zombie-brain",
+          "familyName": "Cérebro zumbi",
+          "path": "assets/character/accessories/zombie_brain_03.png",
+          "accent": "#6d0bc9"
+        },
+        {
+          "id": "bolt-01",
+          "name": "Azul claro 1",
+          "family": "bolt",
+          "familyName": "Parafuso",
+          "path": "assets/character/accessories/bolt_01.png",
+          "accent": "#b9c3d5"
+        },
+        {
+          "id": "bolt-02",
+          "name": "Azul claro 2",
+          "family": "bolt",
+          "familyName": "Parafuso",
+          "path": "assets/character/accessories/bolt_02.png",
+          "accent": "#b9c3d5"
+        },
+        {
+          "id": "bolt-03",
+          "name": "Azul claro 3",
+          "family": "bolt",
+          "familyName": "Parafuso",
+          "path": "assets/character/accessories/bolt_03.png",
+          "accent": "#b9c3d5"
+        },
+        {
+          "id": "beanie-01",
+          "name": "Cinza 1",
+          "family": "beanie",
+          "familyName": "Gorro",
+          "path": "assets/character/accessories/beanie_01.png",
+          "accent": "#676e8d"
+        },
+        {
+          "id": "beanie-02",
+          "name": "Cinza 2",
+          "family": "beanie",
+          "familyName": "Gorro",
+          "path": "assets/character/accessories/beanie_02.png",
+          "accent": "#a59992"
+        },
+        {
+          "id": "beanie-03",
+          "name": "Rosa",
+          "family": "beanie",
+          "familyName": "Gorro",
+          "path": "assets/character/accessories/beanie_03.png",
+          "accent": "#a57992"
         },
         {
           "id": "beanie-04",
-          "name": "Gorro azul",
+          "name": "Ciano",
+          "family": "beanie",
+          "familyName": "Gorro",
           "path": "assets/character/accessories/beanie_04.png",
-          "accent": "#4c8fba"
+          "accent": "#57969d"
         },
         {
-          "id": "backpack-04",
-          "name": "Mochila azul",
-          "path": "assets/character/accessories/backpack_04.png",
-          "accent": "#557fac"
+          "id": "beanie-05",
+          "name": "Vermelho",
+          "family": "beanie",
+          "familyName": "Gorro",
+          "path": "assets/character/accessories/beanie_05.png",
+          "accent": "#a0574c"
+        },
+        {
+          "id": "chef-01",
+          "name": "Roxo claro",
+          "family": "chef",
+          "familyName": "Chapéu de chef",
+          "path": "assets/character/accessories/chef_01.png",
+          "accent": "#ebe4f2"
+        },
+        {
+          "id": "chef-02",
+          "name": "Branco",
+          "family": "chef",
+          "familyName": "Chapéu de chef",
+          "path": "assets/character/accessories/chef_02.png",
+          "accent": "#d2c9c6"
+        },
+        {
+          "id": "chef-03",
+          "name": "Cinza",
+          "family": "chef",
+          "familyName": "Chapéu de chef",
+          "path": "assets/character/accessories/chef_03.png",
+          "accent": "#9a9492"
+        },
+        {
+          "id": "party-cone-01",
+          "name": "Vermelho 1",
+          "family": "party-cone",
+          "familyName": "Chapéu de festa",
+          "path": "assets/character/accessories/party_cone_01.png",
+          "accent": "#e63f38"
+        },
+        {
+          "id": "party-cone-02",
+          "name": "Vermelho 2",
+          "family": "party-cone",
+          "familyName": "Chapéu de festa",
+          "path": "assets/character/accessories/party_cone_02.png",
+          "accent": "#cf3f75"
+        },
+        {
+          "id": "party-cone-03",
+          "name": "Ciano",
+          "family": "party-cone",
+          "familyName": "Chapéu de festa",
+          "path": "assets/character/accessories/party_cone_03.png",
+          "accent": "#4aaed9"
+        },
+        {
+          "id": "party-cone-04",
+          "name": "Ciano claro",
+          "family": "party-cone",
+          "familyName": "Chapéu de festa",
+          "path": "assets/character/accessories/party_cone_04.png",
+          "accent": "#c4e1ee"
         }
       ]
     }

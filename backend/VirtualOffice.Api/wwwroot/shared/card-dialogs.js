@@ -52,29 +52,35 @@ export function createCardDialogs(ctx) {
 
   // -------------------------------------------------- criar / editar
 
+  /**
+   * `defaults` aceita os MESMOS campos de um card (título, tipo, etiquetas…),
+   * não só sprint e responsável: é assim que a captura de uma linha entrega o
+   * que já foi digitado quando a pessoa pede o formulário completo.
+   */
   function openEditor(existing, status, defaults = {}) {
     const { sprints, epics, users, labels } = meta();
     const f = {};
-    const selected = new Set((existing?.labels ?? []).map((l) => l.id));
+    const seed = existing ?? defaults;
+    const selected = new Set(existing ? (existing.labels ?? []).map((l) => l.id) : (defaults.labelIds ?? []));
 
     const body = h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
-      field("Título", f.title = h("input", { class: "wq-input", value: existing?.title ?? "", placeholder: "O que precisa ser feito?" })),
-      field("Descrição", f.desc = h("textarea", { class: "wq-input", placeholder: "Contexto, critérios de aceite…" }, existing?.description ?? "")),
+      field("Título", f.title = h("input", { class: "wq-input", value: seed.title ?? "", placeholder: "O que precisa ser feito?" })),
+      field("Descrição", f.desc = h("textarea", { class: "wq-input", placeholder: "Contexto, critérios de aceite…" }, seed.description ?? "")),
       h("div", { class: "wq-field-row" },
-        field("Tipo", f.type = pick(TYPE_ORDER.map((t) => [t, t]), existing?.type ?? "Task")),
-        field("Prioridade", f.priority = pick(PRIORITY_ORDER.map((p) => [p, PRIORITY_LABEL[p]]), existing?.priority ?? "Medium")),
-        field("Status", f.status = pick(STATUS_ORDER.map((s) => [s, STATUS_LABEL[s]]), existing?.status ?? status ?? "Backlog"))),
+        field("Tipo", f.type = pick(TYPE_ORDER.map((t) => [t, t]), seed.type ?? "Task")),
+        field("Prioridade", f.priority = pick(PRIORITY_ORDER.map((p) => [p, PRIORITY_LABEL[p]]), seed.priority ?? "Medium")),
+        field("Status", f.status = pick(STATUS_ORDER.map((s) => [s, STATUS_LABEL[s]]), seed.status ?? status ?? "Backlog"))),
       h("div", { class: "wq-field-row" },
         field("Responsável", f.assignee = pick(
           [["0", "— ninguém —"], ...users.map((u) => [String(u.id), u.name])],
-          String(existing?.assigneeId ?? defaults.assigneeId ?? "0"))),
-        field("Épico", f.epic = pick([["0", "— nenhum —"], ...epics.map((e) => [String(e.id), e.name])], String(existing?.epicId ?? "0"))),
+          String(seed.assigneeId || 0))),
+        field("Épico", f.epic = pick([["0", "— nenhum —"], ...epics.map((e) => [String(e.id), e.name])], String(seed.epicId || 0))),
         field("Sprint", f.sprint = pick(
           [["0", "— backlog —"], ...sprints.map((s) => [String(s.id), s.name])],
-          String(existing?.sprintId ?? defaults.sprintId ?? "0")))),
+          String(seed.sprintId || 0)))),
       h("div", { class: "wq-field-row" },
-        field("Estimativa (h)", f.estimate = h("input", { class: "wq-input", type: "number", min: "0", step: "0.5", value: existing?.estimateHours ?? "" })),
-        field("Prazo", f.due = h("input", { class: "wq-input", type: "date", value: existing?.dueUtc ? String(existing.dueUtc).slice(0, 10) : "" }))),
+        field("Estimativa (h)", f.estimate = h("input", { class: "wq-input", type: "number", min: "0", step: "0.5", value: seed.estimateHours || "" })),
+        field("Prazo", f.due = h("input", { class: "wq-input", type: "date", value: seed.dueUtc ? String(seed.dueUtc).slice(0, 10) : "" }))),
       field("Etiquetas", h("div", { class: "wq-card-labels" },
         labels.map((l) => {
           const chip = h("button", {

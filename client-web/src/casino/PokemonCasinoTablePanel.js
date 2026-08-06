@@ -114,6 +114,7 @@ function injectStyles() {
 const rewardCopy = (reward) => [
   reward?.normal ? `${reward.normal} Nacional` : '',
   reward?.rare ? `${reward.rare} Raro` : '',
+  reward?.ultraRare ? `${reward.ultraRare} Ultrarraro` : '',
   reward?.legendary ? `${reward.legendary} Lendário` : '',
   reward?.exoticChest ? 'Baú Exótico' : '',
 ].filter(Boolean).join(' + ');

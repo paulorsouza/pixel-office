@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness da mesa da casa (API real, sem Phaser)</title>
+<!-- Aqui o backend é o DE VERDADE: a API de dev em :5199, com o bypass do
+     `X-User-Id`. O que é falso é só a HUD e o mundo. Serve para conferir o salão,
+     a escolha de dificuldade e a partida sem abrir o jogo inteiro. -->
+<link rel="stylesheet" href="src/hud/hud.css">
+<style>
+  body{margin:0;background:#0b1022;color:#fff;font-family:Inter,system-ui,sans-serif}
+  #harness-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;background:#151b34}
+  #harness-head h1{flex:1;margin:0;font-size:14px}
+  #harness-note{color:#9aa6c6;font-size:11px}
+  #pokemon-casino-table-panel{position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+    background:#080b17dc;padding:12px}
+</style>
+</head>
+<body>
+<div id="harness-head">
+  <h1>Harness da Liga Pokémon da Casa</h1>
+  <label>API <input id="api" value="http://localhost:5199" size="24"></label>
+  <label>usuário <input id="uid" value="1" size="3"></label>
+  <label>mesa
+    <select id="liga">
+      <option value="">(salão: sem mesa física)</option>
+      <option value="common">Common League</option>
+      <option value="great" selected>Great League</option>
+      <option value="ultra">Ultra League</option>
+      <option value="master">Master League</option>
+    </select>
+  </label>
+  <button class="cg-btn" id="abrir">Sentar na mesa</button>
+  <small id="harness-note"></small>
+</div>
+<script type="module">
+import { createPokemonCasinoTablePanel } from './src/casino/PokemonCasinoTablePanel.js';
+
+const catalog = await (await fetch('assets/cardgame/catalog.json')).json();
+const typeChart = await (await fetch('assets/cardgame/type-chart.json')).json();
+const base = () => document.getElementById('api').value.replace(/\/$/, '');
+const headers = () => ({ 'X-User-Id': document.getElementById('uid').value, 'Content-Type': 'application/json' });
+
+async function api(path, options = {}) {
+  const res = await fetch(`${base()}/api${path}`, { ...options, headers: headers() });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+  return body;
+}
+
+// A fatia de `gameItems` que a mesa usa, falando com a API de dev.
+const gameItems = {
+  pokemonCasinoTables: () => api('/cardgame/casino-table'),
+  pokemonCasinoTable: (leagueId) => api(`/cardgame/casino-table/${leagueId}`),
+  startPokemonCasinoBattle: (leagueId, difficulty, key = crypto.randomUUID()) =>
+    api(`/cardgame/casino-table/${leagueId}/start`, {
+      method: 'POST', body: JSON.stringify({ difficulty, idempotencyKey: key }) }),
+  playPokemonCasinoCard: (leagueId, roundId, cardId, cellIndex, key = crypto.randomUUID()) =>
+    api(`/cardgame/casino-table/${leagueId}/move`, {
+      method: 'POST', body: JSON.stringify({ roundId, cardId, cellIndex, idempotencyKey: key }) }),
+  leavePokemonCasinoTable: (leagueId, roundId, key = crypto.randomUUID()) =>
+    api(`/cardgame/casino-table/${leagueId}/leave`, {
+      method: 'POST', body: JSON.stringify({ roundId, idempotencyKey: key }) }),
+};
+
+const panel = createPokemonCasinoTablePanel({
+  gameItems,
+  hud: { closeSheets() {}, register() {} },
+  catalog,
+  typeChart,
+  onToast: (message) => { document.getElementById('harness-note').textContent = message; },
+});
+
+// É o que a mesa física do mapa faz: passa a liga dela para o painel.
+document.getElementById('abrir').onclick = () => {
+  const leagueId = document.getElementById('liga').value;
+  panel.open('pokemon-card-table', leagueId ? { leagueId } : {}).catch((error) => {
+    document.getElementById('harness-note').textContent = error.message;
+  });
+};
+window.casinoPanel = panel;
+</script>
+</body>
+</html>

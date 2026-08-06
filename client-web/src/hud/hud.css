@@ -308,38 +308,28 @@ button{font:inherit}
   box-shadow:inset 0 0 0 2px var(--item-accent,#d39a68),inset -5px -5px #0003,2px 3px #1a1014}
 .item-glyph b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#20151a;
   font:900 10px monospace;text-shadow:1px 1px #fff5}
-.item-glyph i,.item-glyph i::before,.item-glyph i::after{position:absolute;display:block;content:""}
 .slot-item-glyph{width:36px;height:36px}.slot-item-glyph b{font-size:8px}
-.icon-amulet b,.icon-phone b,.icon-wallet b,.icon-keyboard b,.icon-mouse b,
-.icon-skate b,.icon-roller b,.icon-scooter b,.icon-motorcycle b{display:none}
-/* Amuleto: pingente losango pendurado no cordão. */
-.icon-amulet i{left:14px;top:13px;width:16px;height:16px;transform:rotate(45deg);
-  border:3px solid #24171c;background:var(--item-accent);box-shadow:2px 2px #1c1115}
-.icon-amulet i::before{left:5px;top:-11px;width:4px;height:9px;transform:rotate(-45deg);background:#f7ddb1}
-.icon-amulet i::after{left:4px;top:4px;width:6px;height:6px;background:var(--item-secondary)}
-/* Celular: corpo, tela e botão. */
-.icon-phone i{left:15px;top:6px;width:16px;height:32px;border:3px solid #24171c;border-radius:4px;
-  background:var(--item-secondary);box-shadow:2px 2px #1c1115}
-.icon-phone i::before{left:2px;top:3px;width:10px;height:19px;background:var(--item-accent)}
-.icon-phone i::after{left:4px;top:25px;width:6px;height:2px;border-radius:2px;background:#f7ddb1}
-/* Carteira: dobra com fecho e uma nota espiando. */
-.icon-wallet i{left:8px;top:14px;width:30px;height:20px;border:3px solid #24171c;border-radius:3px;
-  background:var(--item-secondary);box-shadow:2px 2px #1c1115}
-.icon-wallet i::before{left:4px;top:-6px;width:18px;height:6px;background:var(--item-accent);box-shadow:inset 0 2px #ffffff40}
-.icon-wallet i::after{right:3px;top:6px;width:8px;height:7px;border-radius:2px;background:#f0bd5e;box-shadow:inset -2px -2px #9b5b31}
-.icon-keyboard i{left:6px;top:13px;width:31px;height:20px;border:3px solid #22171b;background:var(--item-accent);box-shadow:2px 2px #1d1216}
-.icon-keyboard i::after{left:4px;top:4px;width:3px;height:3px;background:#493238;box-shadow:6px 0 #493238,12px 0 #493238,18px 0 #493238,0 6px #493238,6px 6px #493238,12px 6px #493238,18px 6px #493238}
-.icon-mouse i{left:14px;top:7px;width:15px;height:29px;border:3px solid #24171c;border-radius:9px 9px 7px 7px;background:var(--item-accent);box-shadow:2px 2px #1c1115}
-.icon-mouse i::before{left:5px;top:1px;width:3px;height:8px;background:var(--item-secondary)}
-.icon-skate i{left:5px;top:23px;width:33px;height:8px;border:3px solid #24171c;border-radius:45%;background:var(--item-accent)}
-.icon-skate i::after{left:5px;top:7px;width:5px;height:5px;border-radius:50%;background:#1d151a;box-shadow:17px 0 #1d151a}
-.icon-roller i{left:7px;top:12px;width:14px;height:21px;border:3px solid #25171c;background:var(--item-accent);box-shadow:17px 3px var(--item-secondary)}
-.icon-roller i::after{left:1px;top:21px;width:5px;height:5px;border-radius:50%;background:#171116;box-shadow:7px 0 #171116,17px 3px #171116,24px 3px #171116}
-.icon-scooter i{left:8px;top:27px;width:30px;height:6px;border:3px solid #24171c;background:var(--item-accent)}
-.icon-scooter i::before{left:21px;top:-21px;width:4px;height:22px;background:#d7e1df;box-shadow:5px 0 #24171c}
-.icon-scooter i::after{left:1px;top:5px;width:6px;height:6px;border-radius:50%;background:#171116;box-shadow:20px 0 #171116}
-.icon-motorcycle i{left:8px;top:19px;width:28px;height:14px;border:3px solid #24171c;background:var(--item-accent);transform:skew(-12deg)}
-.icon-motorcycle i::before{left:-4px;top:10px;width:10px;height:10px;border:3px solid #1b1216;border-radius:50%;background:#9aa5aa;box-shadow:24px 0 0 -3px #9aa5aa,24px 0 0 0 #1b1216}
+/* A arte é um PNG por item (assets/equipment/items/<id>.png, gerado por
+   tools/generate-equipment-icons.mjs). Antes cada slot tinha um desenho em CSS aqui
+   — trinta linhas de retângulos que davam UM contorno para os cinco mouses. */
+.item-glyph img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+/* Voo do item até o encaixe ao equipar. `position:fixed` porque o card e o slot
+   estão em painéis diferentes, cada um com a sua rolagem. */
+.equip-ghost{position:fixed;z-index:80;pointer-events:none;
+  transition:transform .3s cubic-bezier(.4,1.5,.6,1),opacity .3s ease-in}
+.slot-landed{animation:slot-land .42s ease-out}
+@keyframes slot-land{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.12);filter:brightness(1.5)}
+  100%{transform:scale(1)}
+}
+/* Arrastar para ordenar: o card levantado segue o dedo e o alvo abre espaço. */
+.inventory-item.dragging{z-index:5;opacity:.9;box-shadow:0 0 0 2px #efbc68,6px 8px #0007;cursor:grabbing}
+.inventory-item.drop-target{box-shadow:inset 0 0 0 2px #efbc68,2px 3px #171015;filter:brightness(1.2)}
+@media(prefers-reduced-motion:reduce){
+  .equip-ghost{transition:none}
+  .slot-landed{animation:none}
+}
 
 #character-panel-view{display:grid;grid-template-columns:270px 1fr;gap:12px;padding:12px;background:#1b1217}
 .character-preview-panel{display:flex;min-height:0;flex-direction:column}
@@ -381,6 +371,38 @@ button{font:inherit}
   color:#f7e3ca;background:#2c1c21dd;font-size:7px;text-overflow:ellipsis;white-space:nowrap;text-align:center}
 .character-none-mark{position:absolute;left:50%;top:12px;display:grid;width:34px;height:42px;transform:translateX(-50%);
   place-items:center;border:2px dashed #91665d;color:#bd8977;background:#26191e;font-size:18px}
+
+/* Abas de camada. Com sete camadas e 435 peças, a tela deixou de caber numa lista
+   só: escolhe-se a CAMADA aqui em cima, e a grade abaixo mostra só ela. A cor da
+   borda é a da peça vestida — a fileira vira um resumo do avatar. */
+.character-layer-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px 8px 0;
+  scrollbar-color:#976047 #24171c;scrollbar-width:thin}
+.character-layer{flex:0 0 auto;min-width:66px;padding:5px 8px 6px;border:2px solid #28191e;
+  border-bottom-color:var(--character-accent);color:#dcbb9c;background:#3d2a2f;
+  box-shadow:inset 0 -3px #0003;cursor:pointer;text-align:left}
+.character-layer b{display:block;font-size:9px;letter-spacing:.06em;text-transform:uppercase}
+.character-layer small{display:block;max-width:96px;overflow:hidden;color:#b98c6f;font-size:7px;
+  text-overflow:ellipsis;white-space:nowrap}
+.character-layer:hover{filter:brightness(1.12)}
+.character-layer.active{color:#2a1b20;background:#efbc68;box-shadow:inset 0 -3px #a3653f}
+.character-layer.active small{color:#5c3a29}
+/* A rolagem é DAQUI, não do painel: com 33 modelos de roupa a grade é o que cresce,
+   e rolar a moldura junto tiraria a prévia da tela. */
+#character-controls{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.character-family{display:contents}
+/* Cartela de cores do modelo aberto. É a resposta à segunda pergunta ("de que
+   cor?"), e só ela — o desenho já foi escolhido na grade acima. */
+.character-swatches{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-top:2px solid #3b272d;background:#2b1d22}
+.character-swatch{position:relative;width:30px;height:30px;border:2px solid #28191e;
+  background:var(--character-accent);box-shadow:inset -2px -2px #0003,2px 2px #171015;cursor:pointer}
+.character-swatch i{display:grid;width:100%;height:100%;place-items:center;color:#e2b291;font:900 14px Arial;font-style:normal}
+.character-swatch:hover,.character-swatch:focus-visible{outline:2px solid #e9ad6c;outline-offset:2px}
+.character-swatch.selected{box-shadow:0 0 0 2px #efbc68,inset -2px -2px #0003,2px 2px #171015}
+.character-swatch.selected::after{content:"";position:absolute;inset:4px;border:2px solid #ffffffcc}
+.character-save-state{padding:0 9px 8px;color:#c59475;background:#4a3034;font-size:8px;text-align:center}
+.character-save-state:empty{display:none}
+.character-save-state[data-tone="ok"]{color:#9fd6a4}
+.character-save-state[data-tone="warn"]{color:#efbc68}
 
 #room-decoration-panel{position:fixed;right:12px;top:12px;bottom:12px;z-index:40;display:flex;width:min(370px,calc(100vw - 24px));
   overflow:hidden;flex-direction:column;border:4px solid #24171c;color:#f7dfbf;background:#2a1c21;
@@ -589,11 +611,20 @@ button{font:inherit}
 @media(pointer:coarse){
   #room-decoration-panel button,#equipment-menu button,#furniture-interaction-close{min-height:44px}
   .menu-view-tab{min-height:44px}
+  /* A cartela de cores é o único controle quadrado do painel: só a altura mínima
+     deixaria um alvo de 30×44, que erra no polegar tanto quanto o de 30×30. */
+  .character-swatch{width:44px}
+  /* O card do modelo desenha o avatar em `position:absolute`, então nada dentro
+     dele empurra altura: o mínimo de 44px do dedo achatava a miniatura até sumir.
+     Aqui o piso é o do card, não o do toque. */
+  #equipment-menu .character-option{min-height:86px}
 }
 html[data-touch="on"] #room-decoration-panel button,
 html[data-touch="on"] #equipment-menu button,
 html[data-touch="on"] #furniture-interaction-close,
 html[data-touch="on"] .menu-view-tab{min-height:44px}
+html[data-touch="on"] .character-swatch{width:44px}
+html[data-touch="on"] #equipment-menu .character-option{min-height:86px}
 
 /* ==================================================================== HUD v2
    Dock de ícones + folhas. Faixas de z-index em uso, de baixo para cima:

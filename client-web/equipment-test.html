@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness de equipamentos (sem Phaser)</title>
+<!-- O CSS é o DE VERDADE: um harness com estilo próprio testaria outra coisa. -->
+<link rel="stylesheet" href="src/hud/hud.css">
+<style>
+  body{margin:0;padding:14px;background:#120d11;font-family:Inter,system-ui,sans-serif}
+  #harness-log{margin:0 0 12px;padding:9px 11px;border:2px solid #38242a;color:#cbb;background:#1b1217;
+    font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<pre id="harness-log">carregando…</pre>
+<div id="harness-mount"></div>
+<script type="module">
+// Harness do painel de equipamentos. Phaser não sobe aqui de propósito: a área
+// "Itens" é DOM pura, e subir o mundo inteiro só para clicar num card torna o QA
+// refém do canvas (ver hud-test.html, mesma ideia).
+//
+// A marcação vem do `index.html` de verdade, recortada em tempo de carga — copiar
+// o HTML para cá criaria uma segunda versão da tela, que é justamente o que um
+// harness não pode ter.
+import { createEquipmentMenu, prepareEquipmentCatalog } from './src/EquipmentSystem.js';
+import { createGameItemsClient } from './src/GameItemsSystem.js';
+
+const log = document.querySelector('#harness-log');
+const write = (...parts) => { log.textContent += `\n${parts.join(' ')}`; };
+
+// `?touch=1` liga a afordância de toque, igual ao jogo (`TouchControls.js`). Sem
+// isto o harness mede alvos de mouse e daria o painel como aprovado no celular.
+const query = new URLSearchParams(location.search);
+if (query.get('touch') === '1') {
+  document.documentElement.dataset.touch = 'on';
+}
+
+const html = await (await fetch('index.html')).text();
+const parsed = new DOMParser().parseFromString(html, 'text/html');
+const panel = parsed.querySelector('#equipment-menu');
+panel.hidden = false;
+document.querySelector('#harness-mount').append(panel);
+
+const catalog = prepareEquipmentCatalog(await (await fetch('assets/equipment/catalog.json')).json());
+const gameItems = createGameItemsClient();
+
+// `?fake=1` monta a bag em memória, no formato do `GET /api/game/equipment`. Existe
+// porque a tela também precisa ser conferida sem banco: subir Postgres + API para
+// olhar um card equipando é caro demais para o QA de layout, e o resultado seria o
+// mesmo — o painel só desenha o que o snapshot diz.
+const fakeServer = () => {
+  const slots = catalog.slots.map((slot) => ({
+    id: slot.id, name: slot.id, shortLabel: slot.shortLabel, description: '',
+  }));
+  const rarities = ['common', 'uncommon', 'rare', 'legendary', 'exotic'];
+  const items = catalog.items.map((item, index) => ({
+    instanceId: index + 1,
+    id: item.id,
+    name: item.id.replace(/-/g, ' '),
+    slot: item.slot,
+    rarity: rarities[index % rarities.length],
+    rarityName: rarities[index % rarities.length],
+    equippedSlot: '',
+    equipped: false,
+    effectLabels: ['+10% de moeda passiva'],
+    chest: null,
+  }));
+  const state = { slots, rarities: [], loadout: {}, items, chests: [], effects: {}, effectLabels: [] };
+  const snapshot = () => ({
+    ...state,
+    loadout: Object.fromEntries(slots.map((slot) => [
+      slot.id, state.items.find((item) => item.equippedSlot === slot.id) || null,
+    ])),
+  });
+  return {
+    loadEquipment: async () => snapshot(),
+    setSlot: async (slot, instanceId) => {
+      for (const item of state.items) {
+        if (item.equippedSlot === slot) { item.equippedSlot = ''; item.equipped = false; }
+      }
+      const chosen = state.items.find((item) => item.instanceId === instanceId);
+      if (chosen) { chosen.equippedSlot = slot; chosen.equipped = true; }
+      return snapshot();
+    },
+    setBagOrder: async (instanceIds) => {
+      state.items.sort((a, b) => instanceIds.indexOf(a.instanceId) - instanceIds.indexOf(b.instanceId));
+      write('[ordem]', instanceIds.slice(0, 8).join(','), '…');
+      return snapshot();
+    },
+    openLootbox: async () => { throw new Error('sem baús no modo offline'); },
+  };
+};
+
+const api = query.get('fake') === '1' ? fakeServer() : {
+  loadEquipment: () => gameItems.equipment(),
+  setSlot: (slot, instanceId) => gameItems.setEquipmentSlot(slot, instanceId),
+  setBagOrder: (instanceIds) => gameItems.setBagOrder(instanceIds),
+  openLootbox: (instanceId) => gameItems.openLootbox(instanceId),
+};
+const menu = createEquipmentMenu(catalog, {
+  ...api,
+  onToast: (message) => write('[toast]', message),
+  onPrize: (prize) => write('[prêmio]', JSON.stringify(prize)),
+});
+window.__equipmentHarness = { menu, gameItems, catalog };
+menu.setOpen(true);
+await menu.refresh();
+log.textContent = 'harness pronto — window.__equipmentHarness';
+write('itens na bag:', document.querySelectorAll('#equipment-list .inventory-item').length);
+write('slots no tabuleiro:', document.querySelectorAll('#equipment-slots .equipment-slot').length);
+</script>
+</body>
+</html>

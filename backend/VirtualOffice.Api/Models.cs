@@ -34,6 +34,17 @@ public class User
     public string? GoogleSubject { get; set; }
     public string? Email { get; set; }
     public UserRole AppRole { get; set; } = UserRole.Member;
+
+    /// <summary>
+    /// Aparência do avatar: um par camada→opção por linha, em JSON (<c>{"body":"body-03",…}</c>).
+    ///
+    /// Mora aqui, e não no <c>localStorage</c>, porque a customização é a identidade da
+    /// pessoa no mundo — trocar de navegador ou entrar pelo celular não pode devolver
+    /// um estranho. O servidor guarda os ids sem conhecê-los: o catálogo é asset do
+    /// cliente (<c>assets/character/catalog.json</c>) e é ele quem valida o que existe.
+    /// Vazio = nunca customizou, e o cliente aplica o conjunto padrão.
+    /// </summary>
+    public string CharacterJson { get; set; } = "";
 }
 
 /// <summary>
@@ -278,6 +289,15 @@ public class PresenceDay
     public DateTime PeriodDay { get; set; }
     public int MinutesOnline { get; set; }
     public int GoldAwarded { get; set; }
+
+    /// <summary>
+    /// Minutos do dia em que a pessoa esteve COM alguém — em reunião ou pareando.
+    /// Contador separado do tempo online porque paga por uma régua própria e tem teto
+    /// próprio: o jogo quer distinguir "estava aqui" de "estava junto".
+    /// </summary>
+    public int TeamworkMinutes { get; set; }
+    public int TeamworkGoldAwarded { get; set; }
+
     public DateTime FirstSeenUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
 }
@@ -369,6 +389,12 @@ public class GameItemInstance
     public int? ContainerPlacementId { get; set; }
     public DateTime AcquiredUtc { get; set; } = DateTime.UtcNow;
     public string StateJson { get; set; } = "{}";
+
+    /// <summary>
+    /// Posição da unidade na bag, escolhida pelo jogador arrastando o card. Zero é
+    /// "nunca movida", e aí vale a ordenação natural (slot, raridade, nome).
+    /// </summary>
+    public int BagOrder { get; set; }
 }
 
 public class FurniturePlacement

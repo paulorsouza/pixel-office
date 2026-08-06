@@ -5,6 +5,7 @@ import {
   STATUS_LABEL, STATUS_COLOR, PRIORITY_LABEL, PRIORITY_COLOR, TYPE_ORDER,
 } from "./work-core.js";
 import { createCardDialogs, TYPE_COLOR } from "./card-dialogs.js";
+import { createQuickAdd } from "./quick-add.js";
 import { loadBoardMeta } from "./board.js";
 
 const SORTS = {
@@ -24,8 +25,6 @@ export function mountBacklog(host, ctx) {
 
   const toolbar = h("div", { class: "wq-toolbar" });
   const panel = h("div", { class: "wq-panel wq-scroll" });
-  host.replaceChildren(toolbar, panel);
-  panel.replaceChildren(placeholder("Carregando…"));
 
   const dialogs = createCardDialogs({
     client, feedback, meta: () => meta,
@@ -33,6 +32,17 @@ export function mountBacklog(host, ctx) {
     onActiveTaskChange: (w) => ctx.onActiveTaskChange?.(w),
     onTimerChange: () => ctx.onTimerChange?.(),
   });
+
+  // Criado UMA vez e reaproveitado: a barra é redesenhada a cada refresh, e o
+  // que estava sendo digitado (e as pílulas escolhidas) não pode ir junto.
+  const quickAdd = createQuickAdd({
+    client, feedback, meta: () => meta, currentUserId: client.userId,
+    onCreated: () => refresh(),
+    openFull: (payload) => dialogs.openEditor(null, payload.status, payload),
+  });
+
+  host.replaceChildren(toolbar, quickAdd.el, panel);
+  panel.replaceChildren(placeholder("Carregando…"));
 
   async function refresh() {
     if (disposed) return;
@@ -50,7 +60,7 @@ export function mountBacklog(host, ctx) {
   }
 
   function draw() {
-    keepFocus(host, ".wq-search", drawNow);
+    keepFocus(host, ".wq-search, .wq-quick-input", drawNow);
   }
 
   function drawNow() {
@@ -73,11 +83,12 @@ export function mountBacklog(host, ctx) {
         }), "Mostrar arquivadas"),
       h("input", {
         class: "wq-input wq-search", type: "search", placeholder: "Buscar…", value: filters.q,
+        dataset: { focusKey: "busca" },
         oninput: (e) => { filters.q = e.target.value; clearTimeout(draw.t); draw.t = setTimeout(refresh, 300); },
       }),
       h("div", { class: "wq-spacer" }),
       h("span", { class: "wq-faint" }, `${items.length} atividades`),
-      h("button", { class: "wq-btn primary", onclick: () => dialogs.openEditor(null) }, "＋ Nova atividade"));
+      h("button", { class: "wq-btn", onclick: () => dialogs.openEditor(null) }, "Formulário completo"));
 
     panel.replaceChildren(h("table", { class: "wq-table" },
       h("thead", {}, h("tr", {},

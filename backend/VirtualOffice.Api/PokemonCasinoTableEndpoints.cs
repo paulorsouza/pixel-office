@@ -41,6 +41,7 @@ public sealed class PokemonCasinoState
     public int MatchesWon { get; set; }
     public int NormalBoostersAwarded { get; set; }
     public int RareBoostersAwarded { get; set; }
+    public int UltraRareBoostersAwarded { get; set; }
     public int LegendaryBoostersAwarded { get; set; }
     public bool ExoticChestAwarded { get; set; }
 }
@@ -485,6 +486,9 @@ public static class PokemonCasinoTableEndpoints
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Normal, "standard");
         if (reward.Rare > 0)
             await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.Rare, "rare");
+        // Prêmio do chefão nas três ligas de baixo.
+        if (reward.UltraRare > 0)
+            await CardGameEndpoints.GrantBoostersAsync(db, userId, reward.UltraRare, "ultra-rare");
         // O Lendário continua sendo o que moeda nenhuma compra — e sai de um lugar
         // só: o Hard da MASTER. Ver CasinoLeagueTables e ECONOMIA.md §6.
         if (reward.Legendary > 0)
@@ -494,6 +498,7 @@ public static class PokemonCasinoTableEndpoints
             await Lootboxes.GrantAsync(db, userId, LootboxCatalog.Exotic);
         state.NormalBoostersAwarded = reward.Normal;
         state.RareBoostersAwarded = reward.Rare;
+        state.UltraRareBoostersAwarded = reward.UltraRare;
         state.LegendaryBoostersAwarded = reward.Legendary;
         state.ExoticChestAwarded = reward.ExoticChest;
         state.RewardGranted = true;
@@ -574,6 +579,7 @@ public static class PokemonCasinoTableEndpoints
                 prize = level.Prize,
                 level.HouseBoss,
                 level.HousePowerUps,
+                level.HouseMaxPower,
             }).ToArray(),
         }).ToArray();
 

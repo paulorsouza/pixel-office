@@ -109,6 +109,7 @@ api.MapWorkEndpoints();
 api.MapCardGameEndpoints();
 api.MapCasinoEndpoints();
 api.MapEquipmentEndpoints();
+api.MapCharacterEndpoints();
 
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
 static int? UserId(HttpRequest req) => Identity.UserId(req);
@@ -135,14 +136,23 @@ api.MapGet("/me/presence", async (HttpRequest req, IDbContextFactory<AppDb> f) =
     // jogador só descobriria contando moeda na mão.
     var effects = await EquipmentState.EffectsForAsync(db, uid);
     var multiplier = 1 + Math.Max(0, effects.PassiveCoinPercent) / 100.0;
+    var teamMultiplier = 1 + Math.Max(0, effects.TeamworkCoinPercent) / 100.0;
     return Results.Ok(new
     {
         minutesOnline = row?.MinutesOnline ?? 0,
         goldToday = row?.GoldAwarded ?? 0,
         goldCap = (int)Math.Floor(GameOptions.PresenceGoldDailyCap * multiplier),
-        goldPerMinute = GameOptions.PresenceGoldPerMinute * multiplier,
+        goldPerHour = GameOptions.PresenceGoldPerHour * multiplier,
         baseGoldCap = GameOptions.PresenceGoldDailyCap,
         equipmentBonusPercent = effects.PassiveCoinPercent,
+        // Equipe é a outra metade do "estar no escritório": o card de horas mostra as
+        // duas, senão o jogador vê a moeda subir mais rápido e não sabe por quê.
+        teamworkMinutes = row?.TeamworkMinutes ?? 0,
+        teamworkGoldToday = row?.TeamworkGoldAwarded ?? 0,
+        teamworkGoldCap = (int)Math.Floor(GameOptions.TeamworkGoldDailyCap * teamMultiplier),
+        teamworkMeetingPerHour = GameOptions.TeamworkMeetingGoldPerHour * teamMultiplier,
+        teamworkPairPerHour = GameOptions.TeamworkPairGoldPerHour * teamMultiplier,
+        teamworkBonusPercent = effects.TeamworkCoinPercent,
     });
 });
 

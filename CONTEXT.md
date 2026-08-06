@@ -206,12 +206,25 @@ Skate e patins usam uma base corporal estável em vez da corrida; as botas dos p
 sobre os sapatos para permanecerem visualmente presas aos pés.
 
 **Customização do personagem implementada:** o mesmo menu de `Tab` possui a aba `Personagem`, com
-prévia nas quatro direções e seleção persistente de pele, olhos, roupa, cabelo e acessório. O avatar
-é composto em tempo real por cinco folhas modulares LimeZu alinhadas, tanto no mundo quanto na ficha
-RPG. `assets/character/catalog.json` é a fonte de opções e frames; `src/CharacterSystem.js` concentra
-validação, `localStorage` (aparência é cosmética, então aqui o navegador ainda serve), UI e sprites
-sobrepostos. Caminhada, idle, moto e os outros equipamentos
+prévia nas quatro direções e **sete camadas** — pele, olhos, roupa, costas, cabelo, rosto e cabeça.
+O avatar é composto em tempo real por folhas modulares LimeZu alinhadas, tanto no mundo quanto na
+ficha RPG. `assets/character/catalog.json` é a fonte de opções e frames; `src/CharacterSystem.js`
+concentra validação, UI e sprites sobrepostos. Caminhada, idle, moto e os outros equipamentos
 continuam usando o mesmo corpo físico invisível para não duplicar colisão ou câmera.
+
+Três decisões que essa tela tomou quando o catálogo saiu de 23 para **435 opções**:
+
+- **A aparência mora na conta** (`Users.CharacterJson`, `GET/PUT /api/game/character`). Enquanto era
+  cosmético o `localStorage` bastava; deixou de bastar no minuto em que trocar de navegador ou entrar
+  pelo celular devolvia um estranho. O navegador continua guardando uma cópia, mas como CACHE do
+  primeiro frame e rede de segurança offline — a conta é quem manda.
+- **Textura sob demanda.** O `preload` leva só as sete peças que o avatar veste; o resto entra quando
+  alguém escolhe ou quando um vizinho aparece usando (`ensureCharacterTexture`). A carga é feita com
+  `Image` + `textures.addImage`, fora do loader do Phaser: o loader é da fase de `preload` e engole
+  pedidos feitos com a cena rodando.
+- **Modelo × cor.** O pack organiza as peças em silhueta × paleta, e a tela faz o mesmo: aba por
+  camada, grade de modelos, cartela de cores do modelo aberto. Uma lista única de 200 cabelos seria
+  ilegível em qualquer tela, e impossível no celular.
 
 **Inventário e decoração persistentes:** cada unidade de mobília é uma instância única no backend,
 com dono e localização (`inventory`, `placed` ou `chest`). O editor mostra apenas o estoque real,

@@ -10,7 +10,7 @@ import {
 import {
   createCharacterCustomizer,
   createCharacterVisual,
-  preloadCharacterAssets,
+  preloadCharacterSelection,
 } from './CharacterSystem.js';
 import {
   createRoomDecorationEditor,
@@ -242,6 +242,7 @@ const equipmentMenu = createEquipmentMenu(equipmentCatalog, {
   isBlocked: () => roomDecorationEditor?.isOpen() || false,
   loadEquipment: () => gameItems.equipment(),
   setSlot: (slot, instanceId) => gameItems.setEquipmentSlot(slot, instanceId),
+  setBagOrder: (instanceIds) => gameItems.setBagOrder(instanceIds),
   openLootbox: (instanceId) => gameItems.openLootbox(instanceId),
   onToast: (message) => proximityVoice.toast(message),
 });
@@ -259,8 +260,18 @@ const publishAppearance = (selection) => presence.setAppearance({
   character: selection || characterCustomizer.getSelection(),
   vehicle: activeVehicleId,
 });
+// A aparência mora na conta: trocar de navegador ou entrar pelo celular tem de
+// devolver a MESMA pessoa. O `localStorage` continua no meio do caminho como cache
+// do primeiro frame — ver o comentário do `createCharacterCustomizer`.
 const characterCustomizer = createCharacterCustomizer(characterCatalog, {
   onChange: (selection) => publishAppearance(selection),
+  load: () => gameItems.character(),
+  save: (selection) => gameItems.saveCharacter(selection),
+});
+// Outra aba do mesmo jogador trocou de roupa: adotar sem regravar evita as duas
+// abas ficarem se sobrescrevendo.
+gameItems.events.addEventListener('CharacterChanged', (event) => {
+  characterCustomizer.adopt(event.detail || {});
 });
 const query = new URLSearchParams(location.search);
 const requestedScene = query.get('scene') || location.hash.replace(/^#/, '');
@@ -439,7 +450,9 @@ class MapScene extends Phaser.Scene {
   }
 
   preload() {
-    preloadCharacterAssets(this, characterCatalog);
+    // Só as sete peças que este avatar veste. O resto do catálogo (435 folhas) entra
+    // sob demanda, quando alguém escolhe ou quando um vizinho aparece usando.
+    preloadCharacterSelection(this, characterCatalog, characterCustomizer.getSelection());
     preloadRoomDecorationAssets(this, furnitureCatalog);
     preloadMechanics(this, this.map);
     if (!this.textures.exists('tiles')) {

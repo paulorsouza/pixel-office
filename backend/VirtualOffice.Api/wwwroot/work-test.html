@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA — quadro, backlog e horas (sem backend)</title>
+<!--
+  Banca de testes da UI compartilhada. Serve para olhar e mexer no quadro, no
+  backlog e nas horas SEM Postgres e SEM Phaser: o `client` é injetado por
+  parâmetro nos módulos, então aqui ele é um fake em memória.
+
+  Rodar: qualquer servidor estático apontando para `wwwroot/`, e abrir
+  /work-test.html. Trocar `?theme=dark` para conferir o tema do jogo e
+  `?touch=1` para as afordâncias de toque.
+-->
+<link rel="stylesheet" href="/shared/work-ui.css">
+<style>
+  body { margin: 0; background: #f6f7f9; font-family: system-ui, sans-serif; }
+  body[data-theme="dark"] { background: #1b1216; }
+  .bar { display: flex; gap: 8px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #ddd; }
+  .bar button { padding: 6px 12px; }
+  /* Altura limitada de propósito: é assim que o painel do jogo é (janela com
+     tamanho próprio), e a camada de modal não-fixa se ancora nela. */
+  #app { padding: 16px; height: 78vh; overflow: auto; }
+  #log { font: 11px ui-monospace, monospace; padding: 8px 16px; color: #666; white-space: pre-wrap; max-height: 22vh; overflow: auto; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <button data-tab="board">Quadro</button>
+  <button data-tab="backlog">Backlog</button>
+  <button data-tab="hours">Horas</button>
+  <span id="who"></span>
+</div>
+<div id="app" class="wq"></div>
+<pre id="log"></pre>
+
+<script type="module">
+import { createFeedback, ensureWorkStyles } from "/shared/work-core.js";
+import { mountBoard } from "/shared/board.js";
+import { mountBacklog } from "/shared/backlog.js";
+import { mountTimesheet } from "/shared/timesheet.js";
+
+const params = new URLSearchParams(location.search);
+const app = document.getElementById("app");
+if (params.get("theme") === "dark") {
+  app.dataset.theme = "dark";
+  document.body.dataset.theme = "dark";
+}
+if (params.get("touch") === "1") document.documentElement.dataset.touch = "on";
+ensureWorkStyles("");
+
+const log = (...args) => {
+  document.getElementById("log").textContent =
+    `${args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")}\n`
+    + document.getElementById("log").textContent;
+};
+
+// ---------------------------------------------------------------- fake API
+const today = new Date();
+const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const shift = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
+
+const db = {
+  users: [
+    { id: 1, name: "Paulo Souza", color: "#7c5cff" },
+    { id: 2, name: "Ana Lúcia", color: "#0d9488" },
+    { id: 3, name: "Bruno Dias", color: "#d98a00" },
+  ],
+  labels: [
+    { id: 10, name: "frontend", color: "#2f6bff" },
+    { id: 11, name: "backend", color: "#7c5cff" },
+    { id: 12, name: "débito técnico", color: "#d98a00" },
+  ],
+  epics: [{ id: 20, name: "Cassino", color: "#db2777" }, { id: 21, name: "Onboarding", color: "#0891b2" }],
+  sprints: [{ id: 30, name: "Sprint 12", isActive: true }, { id: 31, name: "Sprint 13", isActive: false }],
+  items: [],
+  entries: [],
+  activities: [
+    { key: "task", name: "Desenvolvimento", icon: "💻", color: "#2f6bff", goldPerHour: 150, requiresWorkItem: true, defaultMinutes: 360, dailyTargetMinutes: 360, countsAsWork: true, allowsPair: false },
+    { key: "pair", name: "Pair programming", icon: "👥", color: "#7c5cff", goldPerHour: 225, requiresWorkItem: false, defaultMinutes: 60, dailyTargetMinutes: 0, countsAsWork: true, allowsPair: true },
+    { key: "estudo", name: "Estudo", icon: "📚", color: "#16a34a", goldPerHour: 275, requiresWorkItem: false, defaultMinutes: 30, dailyTargetMinutes: 30, countsAsWork: true, allowsPair: false },
+    { key: "reuniao", name: "Reunião", icon: "📅", color: "#d98a00", goldPerHour: 100, requiresWorkItem: false, defaultMinutes: 60, dailyTargetMinutes: 0, countsAsWork: true, allowsPair: false },
+    { key: "review", name: "Code review", icon: "🔍", color: "#0891b2", goldPerHour: 200, requiresWorkItem: false, defaultMinutes: 30, dailyTargetMinutes: 0, countsAsWork: true, allowsPair: true },
+    { key: "outro", name: "Outro", icon: "📌", color: "#8b929d", goldPerHour: 75, requiresWorkItem: false, defaultMinutes: 30, dailyTargetMinutes: 0, countsAsWork: true, allowsPair: false },
+  ],
+  seq: { Task: 0, Bug: 0, Atendimento: 0 },
+  entrySeq: 0,
+  activeTaskId: null,
+};
+
+const card = (w) => ({
+  ...w,
+  assignee: db.users.find((u) => u.id === w.assigneeId) ?? null,
+  epic: db.epics.find((e) => e.id === w.epicId) ?? null,
+  sprint: db.sprints.find((s) => s.id === w.sprintId) ?? null,
+  labels: (w.labelIds ?? []).map((id) => db.labels.find((l) => l.id === id)).filter(Boolean),
+  checklist: { total: 0, done: 0 },
+  commentCount: 0,
+  loggedMinutes: db.entries.filter((e) => e.workItemId === w.id).reduce((s, e) => s + e.minutes, 0),
+});
+
+function seedItem(title, over = {}) {
+  const type = over.type ?? "Task";
+  db.seq[type] += 1;
+  const prefix = type === "Bug" ? "BUG" : type === "Atendimento" ? "ATD" : "TSK";
+  const item = {
+    id: db.items.length + 1, code: `${prefix}-${db.seq[type]}`, title, description: "",
+    type, status: "Backlog", priority: "Medium", epicId: null, sprintId: 30, assigneeId: null,
+    estimateHours: null, dueUtc: null, isBlocked: false, blockedReason: "", archivedUtc: null,
+    labelIds: [], boardOrder: db.items.length * 1000, ...over,
+  };
+  db.items.push(item);
+  return item;
+}
+seedItem("Refazer a tela de login", { status: "InProgress", assigneeId: 1, priority: "High", labelIds: [10] });
+seedItem("Cache do catálogo", { status: "Todo", assigneeId: 2, epicId: 20 });
+seedItem("Erro ao salvar avatar", { type: "Bug", status: "Todo", priority: "Urgent", assigneeId: 1 });
+seedItem("Cliente sem acesso ao painel", { type: "Atendimento", status: "Done", assigneeId: 3 });
+seedItem("Migrar fila de e-mail", { status: "Backlog", estimateHours: 8 });
+db.activeTaskId = 1;
+
+function addEntry({ date, minutes, category, workItemId = 0, note = "", pairUserId = 0 }) {
+  db.entrySeq += 1;
+  const entry = {
+    id: db.entrySeq, date, minutes, category, note,
+    workItemId: workItemId || null, pairUserId: pairUserId || null,
+    goldAwarded: Math.round((db.activities.find((a) => a.key === category)?.goldPerHour ?? 0) * minutes / 60),
+    startUtc: new Date(`${date}T12:00:00Z`).toISOString(),
+    source: "manual",
+  };
+  db.entries.push(entry);
+  return entry;
+}
+addEntry({ date: key(shift(-1)), minutes: 360, category: "task", workItemId: 1 });
+addEntry({ date: key(shift(-1)), minutes: 30, category: "estudo" });
+addEntry({ date: key(shift(-2)), minutes: 120, category: "reuniao", note: "planning" });
+
+const entryOut = (e) => ({
+  id: e.id, category: e.category, note: e.note, startUtc: e.startUtc, endUtc: e.startUtc,
+  source: e.source, goldAwarded: e.goldAwarded, minutes: e.minutes, date: e.date,
+  workItem: e.workItemId ? (({ id, code, title }) => ({ id, code, title }))(db.items.find((w) => w.id === e.workItemId)) : null,
+  pair: e.pairUserId ? db.users.find((u) => u.id === e.pairUserId) : null,
+});
+
+const client = {
+  base: "", userId: 1,
+  async get(path) {
+    log("GET", path);
+    const [route, search] = path.split("?");
+    const q = new URLSearchParams(search ?? "");
+    if (route === "/api/users") return db.users;
+    if (route === "/api/labels") return db.labels;
+    if (route === "/api/epics") return db.epics;
+    if (route === "/api/sprints") return db.sprints;
+    if (route === "/api/activity-types") return db.activities;
+    if (route === "/api/me") {
+      const active = db.items.find((w) => w.id === db.activeTaskId);
+      return { user: db.users[0], coins: 1234, activeTask: active ? { id: active.id, code: active.code, title: active.title } : null };
+    }
+    if (route === "/api/workitems") return db.items.map(card);
+    if (route === "/api/board") {
+      let items = db.items.filter((w) => q.get("includeArchived") === "true" || !w.archivedUtc);
+      if (q.get("type")) items = items.filter((w) => w.type === q.get("type"));
+      if (q.get("priority")) items = items.filter((w) => w.priority === q.get("priority"));
+      if (q.get("assigneeId")) items = items.filter((w) => String(w.assigneeId ?? 0) === q.get("assigneeId"));
+      if (q.get("q")) items = items.filter((w) => (w.title + w.code).toLowerCase().includes(q.get("q").toLowerCase()));
+      return { items: items.map(card) };
+    }
+    if (route.startsWith("/api/workitems/")) {
+      const w = db.items.find((x) => x.id === Number(route.split("/").pop()));
+      return { card: card(w), checklist: [], comments: [], events: [] };
+    }
+    if (route === "/api/timesheet") {
+      const from = q.get("from").slice(0, 10);
+      const to = q.get("to").slice(0, 10);
+      const inRange = db.entries.filter((e) => e.date >= from && e.date < to);
+      const byActivity = [...new Set(inRange.map((e) => e.category))].map((k) => {
+        const rows = inRange.filter((e) => e.category === k);
+        const a = db.activities.find((x) => x.key === k) ?? {};
+        return {
+          activityKey: k, name: a.name ?? k, color: a.color ?? "#888", icon: a.icon ?? "📌",
+          minutes: rows.reduce((s, e) => s + e.minutes, 0),
+          days: rows.reduce((acc, e) => ({ ...acc, [e.date]: (acc[e.date] ?? 0) + e.minutes }), {}),
+        };
+      });
+      return {
+        from, to, dayTotals: inRange.reduce((acc, e) => ({ ...acc, [e.date]: (acc[e.date] ?? 0) + e.minutes }), {}),
+        byActivity, totalMinutes: inRange.reduce((s, e) => s + e.minutes, 0),
+        goldEarned: inRange.reduce((s, e) => s + e.goldAwarded, 0),
+        running: null, entries: inRange.slice().sort((a, b) => b.date.localeCompare(a.date)).map(entryOut),
+      };
+    }
+    throw new Error(`rota não simulada: ${path}`);
+  },
+  async post(path, body) {
+    log("POST", path, body);
+    if (path === "/api/workitems") {
+      const item = seedItem(body.title, {
+        type: body.type, status: body.status ?? (body.sprintId ? "Todo" : "Backlog"),
+        priority: body.priority, assigneeId: body.assigneeId || null, epicId: body.epicId || null,
+        sprintId: body.sprintId || null, estimateHours: body.estimateHours || null,
+        dueUtc: body.dueUtc ?? null, labelIds: body.labelIds ?? [],
+      });
+      return card(item);
+    }
+    if (path === "/api/timeentries" || path === "/api/timeentries/quick") {
+      const activity = db.activities.find((a) => a.key === (body.activityKey ?? "task"));
+      const minutes = body.minutes > 0 ? body.minutes : activity.defaultMinutes;
+      const workItemId = body.workItemId || (path.endsWith("quick") ? db.activeTaskId : 0);
+      if (activity.requiresWorkItem && !workItemId) throw new Error(`${activity.name} precisa de uma atividade do quadro.`);
+      const e = addEntry({
+        date: (body.date ?? new Date().toISOString()).slice(0, 10),
+        minutes, category: activity.key, workItemId, note: body.note ?? "", pairUserId: body.pairUserId ?? 0,
+      });
+      return { id: e.id, minutes, gold: e.goldAwarded, coins: 1234 };
+    }
+    if (path.startsWith("/api/workitems/") && path.endsWith("/move")) {
+      const w = db.items.find((x) => x.id === Number(path.split("/")[3]));
+      w.status = body.status ?? w.status;
+      return { card: card(w), reward: null };
+    }
+    throw new Error(`rota não simulada: ${path}`);
+  },
+  async patch(path, body) {
+    log("PATCH", path, body);
+    if (path.startsWith("/api/timeentries/")) {
+      const e = db.entries.find((x) => x.id === Number(path.split("/").pop()));
+      Object.assign(e, {
+        minutes: body.minutes > 0 ? body.minutes : e.minutes,
+        category: body.activityKey ?? e.category,
+        note: body.note ?? e.note,
+        workItemId: body.workItemId || null,
+        pairUserId: body.pairUserId || null,
+      });
+      e.goldAwarded = Math.round((db.activities.find((a) => a.key === e.category)?.goldPerHour ?? 0) * e.minutes / 60);
+      return { id: e.id, goldAwarded: e.goldAwarded };
+    }
+    if (path.startsWith("/api/workitems/")) {
+      const w = db.items.find((x) => x.id === Number(path.split("/").pop()));
+      Object.assign(w, body, { labelIds: body.labelIds ?? w.labelIds });
+      if (body.archived) w.archivedUtc = new Date().toISOString();
+      return { card: card(w), reward: null };
+    }
+    throw new Error(`rota não simulada: ${path}`);
+  },
+  async del(path) {
+    log("DELETE", path);
+    if (path.startsWith("/api/timeentries/")) {
+      db.entries = db.entries.filter((e) => e.id !== Number(path.split("/").pop()));
+      return null;
+    }
+    throw new Error(`rota não simulada: ${path}`);
+  },
+};
+
+// ------------------------------------------------------------------ montagem
+const feedback = createFeedback(app, { fixed: false });
+const ctx = { client, feedback, currentUserId: 1, activeTaskId: db.activeTaskId,
+  onReward: (r) => log("reward", r ?? null), onActiveTaskChange: (w) => log("ativa", w.code) };
+let mounted = null;
+const host = document.createElement("div");
+app.append(host);
+
+function show(tab) {
+  mounted?.destroy?.();
+  host.replaceChildren();
+  mounted = tab === "board" ? mountBoard(host, ctx)
+    : tab === "backlog" ? mountBacklog(host, ctx)
+    : mountTimesheet(host, ctx);
+  document.getElementById("who").textContent = `aba: ${tab}`;
+  window.__mounted = mounted;
+}
+for (const b of document.querySelectorAll("[data-tab]")) b.onclick = () => show(b.dataset.tab);
+window.__db = db;
+show(params.get("tab") ?? "board");
+</script>
+</body>
+</html>
