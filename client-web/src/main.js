@@ -37,6 +37,7 @@ import { createGearSections } from './hud/GearSections.js';
 import { createWorkSections } from './hud/WorkSections.js';
 import { createKeyboardGuard } from './hud/KeyboardGuard.js';
 import { createChatPanel } from './hud/ChatPanel.js';
+import { createChatBubbles } from './ChatBubbles.js';
 import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
@@ -297,6 +298,10 @@ createDevMapSync(() => window.__scene?.currentSceneId);
 // A voz NÃO entra aqui de propósito: a barra da reunião já é permanente e é o
 // único lugar que conhece o estado do call — um segundo controle divergiria.
 const hud = createHudShell();
+// A HUD nasce ANTES da cena, e é a única parte do jogo que dá para conferir sem
+// o Phaser subir (ver hud-test.html). Exposta aqui, e não no `create()`, para
+// `isBlocking()` poder ser conferido mesmo com o mundo ainda carregando.
+window.__hud = hud;
 // Dono único do teclado da cena: campo de texto em foco devolve as letras ao
 // navegador, painel aberto congela o mundo. Ver o comentário do módulo.
 const keyboardGuard = createKeyboardGuard({
@@ -369,8 +374,16 @@ const chatPanel = createChatPanel({
   apiBase: gameItems.apiBase,
   token: () => auth.token(),
   userId: gameItems.userId,
-  onToast: (message) => proximityVoice.toast(message),
 });
+// O balão sobre a cabeça é o chat acontecendo NO MUNDO: dá para ver quem falou
+// sem abrir painel nenhum. Ele lê da mesma conexão — é a folha que repassa.
+const chatBubbles = createChatBubbles({
+  presence,
+  getScene: () => window.__scene ?? null,
+  selfUserId: Number(gameItems.userId) || 0,
+});
+chatPanel.onMessage = (message) => chatBubbles.show(message);
+window.__chatBubbles = chatBubbles;
 
 // O dock virou UM botão: "menus no canto" foi exatamente a reclamação. O que
 // existe é uma porta; tudo o que dá para abrir está atrás dela.
@@ -413,13 +426,36 @@ const dock = createDock(hud, [
 window.addEventListener('keydown', (event) => {
   const editing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)
     || document.activeElement?.isContentEditable;
+
+  // Esc digitando NÃO fecha o chat: devolve o teclado ao mundo e deixa a
+  // conversa na tela. Fechar era perder o rascunho e a rolagem só para poder
+  // andar — e andar é justamente o que o chat aberto já permite.
+  if (event.code === 'Escape' && chatPanel.isTyping()) {
+    event.preventDefault();
+    chatPanel.blur();
+    return;
+  }
   if (editing || event.repeat) return;
+
   if (event.code === 'Tab') {
     event.preventDefault();
     // Painel de móvel, editor de decoração e mesa de jogo estão na frente: o
     // menu não passa por cima deles.
     if (!mainMenu.isOpen() && window.__scene?.uiIsBlocking?.()) return;
     mainMenu.toggle('character');
+  } else if (event.code === 'Enter' || event.code === 'NumpadEnter') {
+    // Enter é a tecla de falar, como em todo jogo com chat. Fora dele o mundo
+    // não usa Enter para nada, então ela não disputa com ninguém — só sai do
+    // caminho quando há painel na frente (mesa de cartas, editor de sala).
+    if (window.__scene?.uiIsBlocking?.()) return;
+    event.preventDefault();
+    chatPanel.focus();
+  } else if (event.code === 'Escape' && chatPanel.isOpen()) {
+    // Com o cursor fora do campo, Esc fecha — e o menu tem precedência porque
+    // ele bloqueia a tela e o chat, não.
+    event.preventDefault();
+    if (mainMenu.isOpen()) mainMenu.close();
+    else chatPanel.close();
   } else if (event.code === 'Escape' && mainMenu.isOpen()) {
     event.preventDefault();
     mainMenu.close();
@@ -825,6 +861,9 @@ class MapScene extends Phaser.Scene {
     );
     this.clickToMove = createClickToMove(this, this.navigation, {
       isBlocked: this.uiIsBlocking,
+      // Clicar no mundo tira o cursor do campo de chat: o teclado volta a ser
+      // do jogo sem precisar fechar a conversa.
+      onWorldPointerDown: () => chatPanel.blur(),
       // Tocar sentado levanta e caminha; sem isto o comando parecia ignorado.
       onBeforeMove: () => { if (this.seated) this.standUp(); },
       onTap: (pointer) => cardGame.handleWorldTap(pointer),
@@ -857,7 +896,13 @@ class MapScene extends Phaser.Scene {
     // presença em rede: avatares remotos nesta cena + voz por proximidade
     presence.attach(this, this.currentSceneId, this.player);
     proximityVoice.attachScene(this.currentSceneId);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => presence.detach());
+    // Os balões são objetos DESTA cena: trocar de mapa destrói todos de uma vez,
+    // e a lista precisa esquecer sprites que já não existem.
+    chatBubbles.reset();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      presence.detach();
+      chatBubbles.reset();
+    });
 
     // fone das salas de reunião: pegar fixa o call daquela sala até soltar
     // o backend também conhece o fone: é ele que mantém o lançamento de horas da
@@ -892,6 +937,12 @@ class MapScene extends Phaser.Scene {
     // um painel que abre/fecha sozinho (recompensa, convite de duelo) não passa
     // por foco nenhum. Comparação de dois booleanos por frame.
     keyboardGuard.refresh();
+    // O chat é a única folha que não bloqueia o mundo, então ele fica de fora
+    // dos dois `return` abaixo: os balões precisam seguir os avatares mesmo com
+    // um painel na frente, e "está à vista?" muda quando o × ou o Esc fecham a
+    // folha por fora daqui. Os dois só escrevem quando algo mudou.
+    chatPanel.refresh();
+    chatBubbles.update();
     // A entrada de decoração é um item do menu: some quando a sala sob o avatar
     // não é decorável. `refresh` só redesenha quando a lista visível muda.
     //

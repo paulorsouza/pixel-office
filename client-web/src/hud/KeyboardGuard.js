@@ -19,7 +19,7 @@
 const EDITABLE_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 
 /** Campo em que a pessoa digita (ou escolhe) e que precisa das teclas cruas. */
-function isEditable(element) {
+export function isEditable(element) {
   if (!element) return false;
   return element.isContentEditable || EDITABLE_TAGS.has(element.tagName);
 }

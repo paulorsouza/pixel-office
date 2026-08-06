@@ -9,6 +9,8 @@
 // O chassi também é o dono das regiões da tela e da faixa de z-index (ver o
 // bloco "HUD v2" em `hud.css`). Nada de `position:fixed` novo solto por aí.
 
+import { isEditable } from './KeyboardGuard.js';
+
 export function createHudShell() {
   // { id, isOpen(), close(), blocking } — `blocking` falso é para a HUD que
   // convive com o jogo (a barra da reunião, por exemplo, não bloqueia o mundo).
@@ -26,6 +28,11 @@ export function createHudShell() {
   const sheets = new Set();
   const onKeyDown = (event) => {
     if (event.code !== 'Escape') return;
+    // Digitando, Esc é "sai do campo", não "fecha a folha": quem está escrevendo
+    // uma mensagem espera recuperar o teclado, não perder o rascunho. Quem trata
+    // esse caso é o dono do campo (no chat, o `ChatPanel`); aqui só saímos da
+    // frente — este handler roda ANTES dele, por ter sido registrado primeiro.
+    if (isEditable(document.activeElement)) return;
     const open = [...sheets].filter((sheet) => sheet.isOpen());
     if (!open.length) return;
     event.preventDefault();

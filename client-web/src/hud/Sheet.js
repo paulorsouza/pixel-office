@@ -5,7 +5,14 @@
 // `overflow:hidden` (o mundo é um canvas), então uma folha sem área rolável
 // própria simplesmente não rola — e no toque a rolagem ainda vazava para trás.
 
-export function createSheet(shell, { id, title, subtitle = '', onOpen } = {}) {
+/**
+ * @param options.blocking  false = o mundo continua respondendo com a folha
+ *   aberta. É o caso do chat: conversa é coisa que se acompanha ANDANDO, e
+ *   congelar o avatar para ler uma linha transformava o chat numa parada.
+ *   Clique dentro da folha não vaza para o mundo porque o Phaser escuta no
+ *   canvas, e a folha está por cima dele.
+ */
+export function createSheet(shell, { id, title, subtitle = '', onOpen, blocking = true } = {}) {
   const element = document.createElement('aside');
   element.className = 'hud-sheet';
   element.id = id;
@@ -38,6 +45,7 @@ export function createSheet(shell, { id, title, subtitle = '', onOpen } = {}) {
     setHeader,
     isOpen: () => !element.hidden,
     isSheet: true,
+    blocking,
     id,
     open() {
       if (!element.hidden) return;

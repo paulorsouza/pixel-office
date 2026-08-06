@@ -112,6 +112,15 @@ export function createPresence(options = {}) {
   // fone pego na reunião aparece junto do nome (quem está na call, mesmo fora da sala)
   const labelText = (rec) => `${rec.hasHeadset ? '🎧 ' : ''}${rec.name}`;
 
+  /** connectionId -> âncora da cadeira, para quem está sentado. */
+  function seatAnchors() {
+    const seats = new Map();
+    for (const claim of claims.values()) {
+      if (claim.kind === 'seat' && claim.data) seats.set(claim.key, claim.data);
+    }
+    return seats;
+  }
+
   function destroySprite(rec) {
     rec.avatar?.destroy(); rec.avatar = null;
     rec.label?.destroy(); rec.label = null;
@@ -242,16 +251,31 @@ export function createPresence(options = {}) {
       connection.invoke('Move', x, y, dir).catch(() => {});
     },
 
+    /**
+     * Onde desenhar algo NA CABEÇA de um avatar remoto desta cena — o balão de
+     * chat usa. Devolve a âncora do assento quando a pessoa está sentada, que é
+     * a mesma referência do rótulo com o nome; sem isso o balão de quem senta
+     * ficaria flutuando na última posição em que a pessoa andou.
+     *
+     * @returns {{x:number,y:number}|null} null = não está nesta cena
+     */
+    avatarAnchor(userId) {
+      const seats = seatAnchors();
+      for (const rec of remotes.values()) {
+        if (rec.userId !== userId || rec.scene !== sceneId) continue;
+        const seat = seats.get(rec.key);
+        return { x: seat ? seat.x : rec.x, y: seat ? seat.y : rec.y };
+      }
+      return null;
+    },
+
     // interpolação + animação dos avatares remotos
     interpolate(delta) {
       if (!scene) return;
       const now = performance.now();
       const t = Math.min(1, delta / 80);
       // quem está sentado é desenhado na âncora da cadeira (vem do claim, não do Move)
-      const seats = new Map();
-      for (const claim of claims.values()) {
-        if (claim.kind === 'seat' && claim.data) seats.set(claim.key, claim.data);
-      }
+      const seats = seatAnchors();
       for (const rec of remotes.values()) {
         if (!rec.avatar) continue;
         rec.x += (rec.tx - rec.x) * t;

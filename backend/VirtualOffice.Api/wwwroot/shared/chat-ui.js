@@ -295,7 +295,20 @@ export function mountChat(host, ctx) {
     element: root,
     /** Abre a PM com alguém (o jogo usa ao tocar num avatar). */
     async openDirect(user) { await store.openDirect(user); setView("thread"); },
-    focus() { input.focus(); },
+
+    /**
+     * Põe o cursor no campo. Troca para a conversa antes: em coluna única (a
+     * folha do jogo) o campo nem está na tela enquanto a lista está aberta, e
+     * um `focus()` seco não faria nada visível.
+     */
+    focus() {
+      setView("thread");
+      input.focus();
+    },
+
+    /** O campo está com o cursor? (Esc no mundo devolve o teclado ao jogo.) */
+    isTyping: () => document.activeElement === input,
+    blur() { if (document.activeElement === input) input.blur(); },
     refresh: schedule,
     destroy() {
       unsubscribe();

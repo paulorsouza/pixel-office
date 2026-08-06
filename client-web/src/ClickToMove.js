@@ -50,6 +50,11 @@ export function createClickToMove(scene, navigation, options = {}) {
   const pointersDown = () => scene.input.manager.pointers.filter((p) => p.isDown).length;
 
   const onPointerDown = (pointer) => {
+    // Tocar o MUNDO devolve o teclado ao mundo. Este handler está no canvas do
+    // Phaser, então ele só roda quando o toque não caiu num painel — é
+    // exatamente a definição de "clicou fora". Sem isto, com o chat aberto o
+    // avatar andava mas as teclas continuavam indo para o campo de texto.
+    options.onWorldPointerDown?.();
     // Segundo dedo na tela = pinça de zoom, não comando de movimento. Sem esta
     // marca, soltar os dedos da pinça mandava o avatar para o meio do gesto.
     if (pointersDown() > 1) gesture = 'pinch';

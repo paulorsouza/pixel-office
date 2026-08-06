@@ -31,9 +31,8 @@ async function loadModules(apiBase) {
  * @param options.apiBase   origem do backend (em dev o jogo está em outra porta)
  * @param options.token     função que devolve o JWT atual
  * @param options.userId    identidade de fallback quando não há token
- * @param options.onToast   aviso curto no mundo (PM que chega com a folha fechada)
  */
-export function createChatPanel({ shell, presence, apiBase, token, userId, onToast = () => {} }) {
+export function createChatPanel({ shell, presence, apiBase, token, userId }) {
   let store = null;
   let ui = null;
   let ready = null;
@@ -47,8 +46,27 @@ export function createChatPanel({ shell, presence, apiBase, token, userId, onToa
     id: 'hud-chat',
     title: 'Chat',
     subtitle: 'Global, prédio, sala e conversas privadas',
-    onOpen: (body) => { mounted = mount(body); },
+    // O mundo continua respondendo com o chat aberto: conversa é coisa que se
+    // acompanha andando. Quem tira o teclado do jogo é o foco do campo, não a
+    // folha — e disso cuida o `KeyboardGuard`.
+    blocking: false,
+    onOpen: (body) => {
+      mounted = mount(body);
+      store?.setVisible(true);
+    },
   });
+
+  // Fechar pelo × ou pelo Esc não passa por nenhum gancho da folha: o estado de
+  // "à vista" é observado, e não avisado. Sem isto, a folha fechada continuaria
+  // marcando tudo como lido e nenhuma notificação apareceria.
+  let wasOpen = false;
+  const syncVisibility = () => {
+    const open = sheet.isOpen();
+    if (open === wasOpen) return;
+    wasOpen = open;
+    store?.setVisible(open);
+    if (!open) ui?.blur();
+  };
 
   async function ensureStore() {
     ready ??= (async () => {
@@ -60,16 +78,68 @@ export function createChatPanel({ shell, presence, apiBase, token, userId, onToa
         transport: presence.chatTransport,
         currentUserId: Number(userId) || 0,
       });
-      // Mensagem em canal fechado: o badge conta sempre; o toast é só da PM,
-      // que é dirigida a você — o global tocando o tempo todo viraria ruído.
-      store.onIncoming = (message) => {
-        if (String(message.channel).startsWith('dm:')) onToast(`✉️ ${message.name}: ${message.text}`);
-      };
+      // Mensagem que não está à vista vira cartão no canto — clicar nele abre o
+      // chat já no canal certo. O badge do dock conta em paralelo.
+      store.onIncoming = (message) => notify(message);
+      store.onAnyMessage = (message) => panel.onMessage?.(message);
       await store.select('global');
       await store.refreshInbox();
+      // A folha nasce fechada: o estado tem de começar coerente, senão a primeira
+      // mensagem seria comida pelo "canal selecionado" antes de qualquer aviso.
+      store.setVisible(sheet.isOpen());
       return { modules, client };
     })();
     return ready;
+  }
+
+  // ---------------------------------------------------- aviso no canto
+  // Um toast comum não serve: ele conta o que aconteceu e some. Aqui o aviso é o
+  // caminho de volta — tocar nele abre o chat NO CANAL da mensagem, que é o que
+  // a pessoa quer fazer ao ver "fulano falou".
+  const NOTICE_MS = 7000;
+  const NOTICE_MAX = 3;
+  let noticeHost = null;
+
+  function ensureNoticeHost() {
+    if (noticeHost?.isConnected) return noticeHost;
+    noticeHost = document.createElement('div');
+    noticeHost.id = 'hud-chat-notices';
+    noticeHost.setAttribute('role', 'status');
+    noticeHost.setAttribute('aria-live', 'polite');
+    document.body.append(noticeHost);
+    return noticeHost;
+  }
+
+  const initials = (name) => {
+    const parts = String(name ?? '?').trim().split(/\s+/);
+    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+  };
+
+  function notify(message) {
+    // Com a folha aberta o cartão seria redundante (a barra lateral já marca o
+    // canal), e no celular ela é tela cheia — o aviso nasceria escondido.
+    if (sheet.isOpen()) return;
+    const host = ensureNoticeHost();
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'hud-chat-notice';
+    const direct = String(message.channel).startsWith('dm:');
+    card.innerHTML = '<i></i><span><b></b><small></small></span>';
+    const avatar = card.querySelector('i');
+    avatar.textContent = direct ? '✉' : initials(message.name);
+    avatar.style.background = message.color || '#7c5cff';
+    card.querySelector('b').textContent = direct ? `${message.name} · privado` : message.name;
+    card.querySelector('small').textContent = message.text;
+    card.setAttribute('aria-label', `${message.name}: ${message.text}. Abrir o chat.`);
+
+    const dismiss = () => { card.classList.add('bye'); setTimeout(() => card.remove(), 220); };
+    card.onclick = () => {
+      dismiss();
+      panel.openAt(message.channel);
+    };
+    host.append(card);
+    while (host.childElementCount > NOTICE_MAX) host.firstElementChild.remove();
+    setTimeout(dismiss, NOTICE_MS);
   }
 
   async function mount(body) {
@@ -90,14 +160,42 @@ export function createChatPanel({ shell, presence, apiBase, token, userId, onToa
     });
   }
 
-  return {
+  const panel = {
     id: 'chat',
     sheet,
+
+    /** Repassado a cada mensagem que chega, para o balão sobre a cabeça. */
+    onMessage: null,
+
     isOpen: () => sheet.isOpen(),
-    toggle: () => sheet.toggle(),
-    open: () => sheet.open(),
-    close: () => sheet.close(),
+    toggle: () => { sheet.toggle(); syncVisibility(); },
+    open: () => { sheet.open(); syncVisibility(); },
+    close: () => { sheet.close(); syncVisibility(); },
     unread: () => store?.unreadTotal() ?? 0,
+
+    /** Chamado todo quadro pelo jogo: o Esc e o × fecham por fora daqui. */
+    refresh: syncVisibility,
+
+    /** O cursor está no campo de mensagem? */
+    isTyping: () => Boolean(ui?.isTyping?.()),
+
+    /** Devolve o teclado ao mundo sem fechar a conversa. */
+    blur: () => ui?.blur?.(),
+
+    /** Abre a folha com o cursor já no campo — é o que a tecla Enter faz. */
+    async focus() {
+      panel.open();
+      await mounted;
+      ui?.focus();
+    },
+
+    /** Abre a folha num canal específico (o cartão de aviso usa). */
+    async openAt(channel) {
+      panel.open();
+      await mounted;
+      await store?.select(channel);
+      ui?.focus();
+    },
 
     /**
      * Onde o avatar está agora. Chamado a cada quadro; só vai à rede quando muda.
@@ -123,6 +221,10 @@ export function createChatPanel({ shell, presence, apiBase, token, userId, onToa
       ui?.destroy();
       store?.dispose();
       sheet.destroy();
+      noticeHost?.remove();
+      noticeHost = null;
     },
   };
+
+  return panel;
 }

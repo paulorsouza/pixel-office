@@ -48,6 +48,10 @@ export function createChatStore({ client, transport, currentUserId }) {
   let place = { building: null, buildingName: "", room: null, roomName: "" };
   let selected = "global";
   let disposed = false;
+  // A tela está À VISTA? "Canal selecionado" não é a mesma coisa: no jogo o chat
+  // fica fechado com o global selecionado, e sem esta distinção toda mensagem
+  // que chegasse seria marcada como lida por uma tela que ninguém está olhando.
+  let visible = true;
 
   const emit = () => { for (const listener of listeners) listener(); };
 
@@ -169,12 +173,15 @@ export function createChatStore({ client, transport, currentUserId }) {
       // Nome de quem não escreveu ainda só chega pela caixa de entrada.
       if (peerIsMe && !existing) refreshInbox();
     }
-    if (message.channel === selected) {
+    if (visible && message.channel === selected) {
       if (message.userId !== currentUserId) markRead(message.channel);
     } else if (message.userId !== currentUserId) {
       unread.set(message.channel, (unread.get(message.channel) || 0) + 1);
       store.onIncoming?.(message);
     }
+    // Toda mensagem, inclusive a minha e a do canal aberto: é o que alimenta o
+    // balão sobre a cabeça no jogo, que não tem nada a ver com "lida" ou "nova".
+    store.onAnyMessage?.(message);
     emit();
   });
 
@@ -205,6 +212,22 @@ export function createChatStore({ client, transport, currentUserId }) {
   const store = {
     /** Chamado quando chega mensagem em canal que não está aberto (badge/toast). */
     onIncoming: null,
+
+    /** Chamado para TODA mensagem que chega, inclusive a própria (balão no mundo). */
+    onAnyMessage: null,
+
+    /**
+     * A tela está à vista? Fechada, ela para de marcar como lido — senão o chat
+     * do jogo, que vive fechado com o global selecionado, comeria as novas antes
+     * de qualquer aviso aparecer. Voltar à vista quita o canal aberto.
+     */
+    setVisible(next) {
+      const value = Boolean(next);
+      if (value === visible) return;
+      visible = value;
+      if (visible) markRead(selected);
+      else emit();
+    },
 
     subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
 

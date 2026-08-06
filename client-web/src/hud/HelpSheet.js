@@ -17,6 +17,7 @@ const KEYBOARD = [
   ]],
   ['Menus', [
     [['Tab'], 'equipamentos e personagem'],
+    [['Enter'], 'falar no chat (Esc devolve o teclado ao jogo)'],
     [['💬'], 'chat: global, prédio, sala e conversas privadas'],
     [['1', '2', '3', '4'], 'trocar de veículo com o menu aberto'],
     [['0'], 'guardar o veículo'],

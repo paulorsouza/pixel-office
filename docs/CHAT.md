@@ -57,6 +57,49 @@ fora de ordem).
 Chat sem histórico é bilhete: quem entra depois precisa ver o que já foi dito, e uma PM tem de
 esperar o destinatário voltar. É por isso que isso está no banco e não em memória como a presença.
 
+## No jogo: o chat não para o mundo
+
+A folha do chat é a **única folha do chassi que não bloqueia** (`blocking: false` no
+`createSheet`). Conversa é coisa que se acompanha andando; congelar o avatar para ler uma linha
+transformava o chat numa parada. Clique dentro da folha não vaza para o mundo porque o Phaser
+escuta no canvas, e a folha está por cima dele.
+
+Quem tira o teclado do jogo é o **foco do campo**, não a folha — disso já cuidava o
+`KeyboardGuard`. As pontas soltas que sobravam viraram regra:
+
+| Ação | O que acontece |
+|---|---|
+| `Enter` no mundo | abre o chat com o cursor já no campo (é a tecla de falar) |
+| `Enter` no campo | envia (`Shift+Enter` quebra linha) |
+| `Esc` digitando | devolve o teclado ao mundo **sem fechar** — o rascunho e a rolagem ficam |
+| `Esc` fora do campo | fecha a folha |
+| clique no mundo | tira o cursor do campo e anda (o `pointerdown` do canvas é a definição de "clicou fora") |
+
+## Aviso no canto e balão na cabeça
+
+**Cartão no canto superior direito** quando chega mensagem com a folha fechada. Não é um toast:
+toast conta o que aconteceu e some; este **é o caminho de volta** — tocar nele abre o chat já no
+canal da mensagem. Os outros cantos têm dono (horas em cima à esquerda, dock embaixo à esquerda,
+barra da reunião embaixo ao centro).
+
+Isso exigiu separar duas coisas que estavam misturadas no store: **"canal selecionado" não é
+"canal à vista"**. No jogo o chat vive fechado com o global selecionado, e sem `setVisible()` toda
+mensagem que chegasse era marcada como lida por uma tela que ninguém estava olhando — nenhum aviso
+apareceria nunca.
+
+**Balão sobre a cabeça** de quem escreveu (`client-web/src/ChatBubbles.js`), alimentado por
+`store.onAnyMessage` — que dispara para toda mensagem, inclusive a própria, porque balão não tem
+nada a ver com "lida" ou "nova". Detalhes que valem:
+
+- **Só canal de lugar.** PM não vira balão: ela é privada, e desenhá-la sobre a cabeça de alguém —
+  mesmo que só na minha tela — ensinaria exatamente a coisa errada sobre o que é privado aqui.
+- **Texto aparado em 90 caracteres, com `…`.** Um parágrafo sobre a cabeça tapa o cenário e some
+  antes de ser lido. O corte respeita a palavra, exceto quando ela engoliria o balão inteiro.
+- **Reancorado a cada quadro** em vez de preso ao sprite: é o que mantém o balão colado em quem
+  anda, e o que faz ele sumir sozinho quando a pessoa troca de cena — a âncora deixa de existir.
+- Quem está sentado tem o balão na âncora da cadeira (`presence.avatarAnchor`), a mesma referência
+  do rótulo com o nome; sem isso o balão ficaria na última posição em que a pessoa andou.
+
 ## Arquivos
 
 | Arquivo | Papel |
@@ -68,7 +111,8 @@ esperar o destinatário voltar. É por isso que isso está no banco e não em me
 | `wwwroot/shared/chat-ui.js` | a tela |
 | `wwwroot/shared/chat-ui.css` | escopado em `.wq-chat`, tokens de `work-ui.css` |
 | `wwwroot/js/chat.js` | cola do app web |
-| `client-web/src/hud/ChatPanel.js` | cola do jogo (folha + dock + tema escuro) |
+| `client-web/src/hud/ChatPanel.js` | cola do jogo (folha + dock + aviso no canto + tema escuro) |
+| `client-web/src/ChatBubbles.js` | balão sobre a cabeça (texto aparado, só canal de lugar) |
 
 ## Detalhes que já custaram tempo
 

@@ -162,7 +162,13 @@ button{font:inherit}
 .equipment-slot-label{grid-column:1/-1;color:#d8aa80;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
 .equipment-slot-value{overflow:hidden;color:#fff2dd;font-size:8px;line-height:1.15;text-overflow:ellipsis}
 .equipment-slot-remove{position:absolute;right:3px;top:2px;color:#ffd7b6;font:900 11px Arial}
-.empty-slot-mark{display:grid;place-items:center;width:36px;height:36px;border:2px dashed #8a625a;color:#9f7366;background:#24181d;font-size:10px;font-weight:900}
+.empty-slot-mark{display:grid;place-items:center;width:38px;height:38px;border:2px dashed #8a625a;
+  color:#9f7366;background:#24181d;font-size:10px;font-weight:900}
+/* Fantasma: a silhueta do item mais simples do slot, apagada. Diz o que cabe ali
+   sem prometer que já está equipado. */
+.empty-slot-mark img{width:30px;height:30px;object-fit:contain;image-rendering:pixelated;
+  opacity:.33;filter:grayscale(1) brightness(1.4)}
+.equipment-slot:hover .empty-slot-mark img{opacity:.5}
 .slot-mouse{grid-area:1/1}.slot-amulet{grid-area:1/3}
 .slot-keyboard{grid-area:2/1}.slot-wallet{grid-area:2/3}
 .slot-phone{grid-area:3/1}.slot-vehicle{grid-area:3/3}
@@ -216,33 +222,59 @@ button{font:inherit}
 .inventory-item[data-rarity="legendary"],.inventory-item[data-rarity="exotic"]{
   box-shadow:inset 0 0 0 2px #695049,0 0 11px -2px var(--rarity),2px 3px #171015}
 .inventory-empty{grid-column:1/-1;margin:0;padding:24px 12px;color:#c69b7b;font:11px/1.5 Inter,system-ui,sans-serif;text-align:center}
-/* Baús ficam ACIMA da grade de itens: são a ação com prazo — o item já é seu e
-   espera; o baú fechado é o único card da bag que ainda esconde alguma coisa. */
-/* Quebra em vez de rolar: são cinco tipos de baú no máximo, e uma barra de
-   rolagem horizontal escondia o último — o mais raro, justamente. */
-.lootbox-row{display:flex;gap:8px;flex-wrap:wrap;padding:10px 10px 0}
-.lootbox-card{position:relative;display:flex;min-width:118px;flex:1 1 118px;align-items:center;flex-direction:column;gap:2px;
-  padding:8px 7px 7px;border:3px solid #2b1b20;border-top-width:4px;color:#f5e8d8;background:#3f2b26;
+/* ---- seção de baús ----
+   Deixou de ser uma fileira espremida no topo da bag. Lá o baú disputava espaço com
+   vinte itens que JÁ são do jogador; aqui ele é o assunto da tela, e o card tem
+   espaço para dizer o que é, o que pode sair e quantos você tem. */
+/* `relative` porque a revelação do prêmio (`position:absolute; inset:0`) mora aqui
+   dentro: sem âncora, ela escaparia para o primeiro ancestral posicionado e cobriria
+   a janela inteira do menu, incluindo a lista de seções. */
+#chest-panel-view{position:relative;display:flex;min-height:0;flex-direction:column;padding:12px;background:#1b1217}
+.chest-panel{display:flex;min-height:0;flex-direction:column}
+.lootbox-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:11px;
+  overflow-y:auto;min-height:0;padding:11px}
+.lootbox-card{position:relative;display:flex;min-height:200px;align-items:center;flex-direction:column;gap:4px;
+  padding:14px 10px 10px;border:3px solid #2b1b20;border-top-width:4px;border-top-color:var(--rarity,#9aa4b2);
+  color:#f5e8d8;background:radial-gradient(circle at 50% 26%,#ffffff10 0 22%,transparent 60%),#3f2b26;
   box-shadow:inset 0 0 0 2px #7d5a44,2px 3px #171015;cursor:pointer;text-align:center}
 .lootbox-card:hover,.lootbox-card:focus-visible{filter:brightness(1.14);transform:translateY(-2px);
-  outline:2px solid #e9ad6c;outline-offset:1px}
-.lootbox-card{border-top-color:var(--rarity,#9aa4b2)}
+  outline:2px solid var(--rarity,#e9ad6c);outline-offset:1px}
 .lootbox-card[data-rarity="legendary"],.lootbox-card[data-rarity="exotic"]{
-  box-shadow:inset 0 0 0 2px #7d5a44,0 0 12px -2px var(--rarity),2px 3px #171015}
-.lootbox-card strong{color:#fff0db;font-size:10px}
-/* As chances viram pastilhas coloridas por raridade: "5% lendária" some numa
-   linha de texto miúdo, e a chance é o produto que o baú vende. */
+  box-shadow:inset 0 0 0 2px #7d5a44,0 0 14px -2px var(--rarity),2px 3px #171015}
+.lootbox-card strong{color:#fff0db;font-size:11px}
+.lootbox-note{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  color:#c49a7c;font-size:8px;line-height:1.4}
+/* A arte cresceu de 34px de CSS para 64px de PNG: o baú é o herói da seção, e o
+   desenho é por tipo — os cinco eram a mesma caixa marrom com a borda pintada. */
+/* `flex:none` porque o card é uma coluna flex: sem isso a arte é o primeiro item a
+   encolher quando a altura aperta, e o baú de 64px virava uma tira de 20. */
+.lootbox-art{display:grid;flex:0 0 auto;width:64px;height:64px;place-items:center;
+  filter:drop-shadow(0 3px 4px #0007)}
+.lootbox-art img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.lootbox-card:hover .lootbox-art{animation:chest-shake .5s ease-in-out}
+@keyframes chest-shake{
+  25%{transform:translateX(-2px) rotate(-3deg)}
+  75%{transform:translateX(2px) rotate(3deg)}
+}
+/* A chance como BARRA: 5% de Lendária é uma lasquinha, e ver a lasquinha diz o que
+   o número não diz. As pastilhas continuam embaixo com o valor exato. */
+.lootbox-odds{display:flex;width:100%;height:7px;overflow:hidden;margin-top:2px;border:2px solid #2b1b20;background:#241820}
+.lootbox-odds i{display:block;min-width:2px;background:var(--rarity)}
 .lootbox-card small{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}
 .lootbox-card small i{padding:1px 4px;border:1px solid var(--rarity);color:var(--rarity);
   font:900 7px Inter,system-ui,sans-serif;font-style:normal}
+.lootbox-open{margin-top:auto;padding:5px 14px;border:2px solid #26181d;color:#2a1b20;
+  background:#efbc68;box-shadow:inset 0 -2px #a3653f;font-size:8px;font-weight:900;
+  letter-spacing:.08em;text-transform:uppercase}
+.lootbox-card:hover .lootbox-open{filter:brightness(1.1)}
 .lootbox-count{position:absolute;right:-3px;top:-6px;min-width:19px;padding:2px 4px;border:2px solid #2b1b20;
   color:#2a1b20;background:#f0bd67;box-shadow:1px 1px #1b1115;font-size:9px;font-weight:900}
-/* O baú da bag é o mesmo desenho do ícone do título — a peça já existe, reaproveitada. */
-.lootbox-art{position:relative;width:34px;height:26px;margin-bottom:3px;border:3px solid #25171b;background:#a96434;
-  box-shadow:inset 0 3px #dc9b56,inset 0 -4px #6f392c,2px 2px #211419}
-.lootbox-art::before{content:"";position:absolute;left:-3px;top:-10px;width:34px;height:11px;
-  border:3px solid #25171b;border-bottom:0;border-radius:8px 8px 0 0;background:#bd7540;box-shadow:inset 0 3px #e4a45b}
-.lootbox-art i{position:absolute;left:12px;top:4px;width:7px;height:10px;background:#f0bd5e;box-shadow:inset -2px -2px #9b5b31}
+/* Etiqueta de contagem na lista do menu: saber que há baú esperando sem abrir.
+   Fica no canto do BOTÃO (ver `.cg-nav button{position:relative}`) e usa a paleta
+   do menu, que é azul-escuro — a paleta marrom da bag destoaria aqui. */
+.cg-nav-badge{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  min-width:17px;padding:2px 5px;border-radius:9px;color:#1a1d2b;background:#f0bd67;
+  font:900 9px Inter,system-ui,sans-serif;text-align:center}
 
 /* ---- revelação do prêmio ----
    Cobre o painel por alguns segundos. Um item novo aparecendo calado numa grade
@@ -256,6 +288,14 @@ button{font:inherit}
 .equipment-reveal.on .reveal-card{animation:reveal-pop .42s cubic-bezier(.18,1.4,.5,1) both}
 @keyframes reveal-pop{from{transform:scale(.72) translateY(10px);opacity:0}to{transform:none;opacity:1}}
 .reveal-tier{color:#c69b7b;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+/* A arte do prêmio no cartão: é o objeto que acabou de sair do baú, e ele estava
+   sendo anunciado só por escrito. Sobe flutuando, com um halo da raridade atrás. */
+.reveal-art{display:grid;width:72px;height:72px;place-items:center;margin:2px 0}
+.reveal-art .item-glyph{width:72px;height:72px}
+.reveal-art .item-glyph::before{inset:2px;opacity:.28}
+.equipment-reveal.on .reveal-art{animation:reveal-float 2.4s ease-in-out .35s infinite}
+@keyframes reveal-float{50%{transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.equipment-reveal.on .reveal-art{animation:none}}
 .reveal-card strong{color:#fff0db;font-size:15px;text-shadow:2px 2px #2c1a1f}
 .reveal-card ul{margin:6px 0 0;padding:0;color:#8fbfdc;font:9px/1.45 Inter,system-ui,sans-serif;list-style:none}
 .reveal-note{margin:6px 0 0;max-width:190px;color:#9c7a68;font:9px/1.4 Inter,system-ui,sans-serif}
@@ -286,7 +326,7 @@ button{font:inherit}
 /* Escrita em voo: o painel inteiro fica inerte enquanto o PUT não volta, senão
    dois cliques rápidos disputam o mesmo slot e a UI mostra o resultado do perdedor. */
 .equipment-pending #equipment-list,.equipment-pending #equipment-slots{pointer-events:none;opacity:.62}
-.inventory-item-art{position:relative;display:grid;place-items:center;width:54px;height:54px;margin-bottom:3px}
+.inventory-item-art{position:relative;display:grid;flex:0 0 auto;place-items:center;width:54px;height:54px;margin-bottom:3px}
 .inventory-item strong{width:100%;overflow:hidden;color:#fff0db;font-size:9px;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
 .inventory-item small{display:flex;gap:1px;flex-direction:column;margin-top:1px;color:#8fbfdc;font-size:7px;line-height:1.3}
 .inventory-item small i{font-style:normal}
@@ -299,20 +339,30 @@ button{font:inherit}
 /* Pausado é ESTADO, não defeito: o item guarda o que contou e volta de onde parou. */
 .chest-clock.paused .chest-clock-bar i{background:#6f5a4a}
 .chest-clock.paused b{color:#8a7263;font-weight:400;font-style:italic}
-.inventory-equipped-mark{position:absolute;right:-2px;bottom:1px;display:none;width:16px;height:16px;place-items:center;
-  border:2px solid #2b1b20;color:#2a1b20;background:#f0bd67;box-shadow:1px 1px #1b1115;font-size:9px;font-weight:900}
-.inventory-item.equipped .inventory-equipped-mark{display:grid}
+/* "Equipado" escrito, e não um "E" de 16px no canto: a bag inteira é card, e o card
+   que está VESTIDO é a informação que se procura ali. Faixa no topo porque é onde a
+   varredura começa. */
+.inventory-equipped-mark{position:absolute;left:0;right:0;top:0;display:none;padding:2px 0;
+  color:#2a1b20;background:var(--rarity,#f0bd67);font-size:7px;font-weight:900;
+  letter-spacing:.1em;text-transform:uppercase}
+.inventory-item.equipped .inventory-equipped-mark{display:block}
+.inventory-item.equipped{padding-top:16px}
 
-.item-glyph{position:relative;display:block;width:48px;height:48px;border:3px solid #24171c;
-  background:linear-gradient(135deg,#fff4 0 16%,transparent 17%),var(--item-secondary,#77515a);
-  box-shadow:inset 0 0 0 2px var(--item-accent,#d39a68),inset -5px -5px #0003,2px 3px #1a1014}
-.item-glyph b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#20151a;
-  font:900 10px monospace;text-shadow:1px 1px #fff5}
-.slot-item-glyph{width:36px;height:36px}.slot-item-glyph b{font-size:8px}
+/* ---- arte do item ----
+   A moldura saiu. Ela era uma caixa de 48px com borda, gradiente e sombra interna,
+   e o sprite ficava PEQUENO lá dentro — a mesma "caixa com um desenho dentro" que o
+   desenho em CSS já era. Agora o item é o objeto e o fundo é só um halo da cor da
+   raridade, que faz o pixel art destacar sem competir com ele. */
+.item-glyph{position:relative;display:grid;width:52px;height:52px;place-items:center}
+.item-glyph::before{content:"";position:absolute;inset:4px;border-radius:50%;
+  background:var(--rarity,#9aa4b2);opacity:.2}
+.item-glyph b{position:relative;color:#f7e3ca;font:900 10px monospace}
+.slot-item-glyph{width:38px;height:38px}.slot-item-glyph b{font-size:8px}
 /* A arte é um PNG por item (assets/equipment/items/<id>.png, gerado por
    tools/generate-equipment-icons.mjs). Antes cada slot tinha um desenho em CSS aqui
    — trinta linhas de retângulos que davam UM contorno para os cinco mouses. */
-.item-glyph img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.item-glyph img{position:relative;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;
+  filter:drop-shadow(0 2px 3px #0009)}
 /* Voo do item até o encaixe ao equipar. `position:fixed` porque o card e o slot
    estão em painéis diferentes, cada um com a sua rolagem. */
 .equip-ghost{position:fixed;z-index:80;pointer-events:none;
@@ -616,8 +666,10 @@ button{font:inherit}
   .character-swatch{width:44px}
   /* O card do modelo desenha o avatar em `position:absolute`, então nada dentro
      dele empurra altura: o mínimo de 44px do dedo achatava a miniatura até sumir.
-     Aqui o piso é o do card, não o do toque. */
+     Aqui o piso é o do card, não o do toque. Mesma história no card de baú, que é
+     uma coluna flex e espremia a arte junto. */
   #equipment-menu .character-option{min-height:86px}
+  #equipment-menu .lootbox-card{min-height:200px}
 }
 html[data-touch="on"] #room-decoration-panel button,
 html[data-touch="on"] #equipment-menu button,
@@ -625,6 +677,7 @@ html[data-touch="on"] #furniture-interaction-close,
 html[data-touch="on"] .menu-view-tab{min-height:44px}
 html[data-touch="on"] .character-swatch{width:44px}
 html[data-touch="on"] #equipment-menu .character-option{min-height:86px}
+html[data-touch="on"] #equipment-menu .lootbox-card{min-height:200px}
 
 /* ==================================================================== HUD v2
    Dock de ícones + folhas. Faixas de z-index em uso, de baixo para cima:
@@ -685,6 +738,33 @@ html[data-decorating] #hud-dock{display:none}
    com o padding e o `overflow-y` dela, o campo rolava junto com as mensagens. */
 #hud-chat .hud-sheet-body{display:flex;overflow:hidden;padding:0}
 #hud-chat .hud-sheet-body>.wq-chat{flex:1;min-width:0;border:0;border-radius:0}
+
+/* Aviso de mensagem nova. Não é um toast: toast conta o que aconteceu e some,
+   este É o caminho de volta — tocar nele abre o chat no canal da mensagem.
+   Canto superior direito porque os outros cantos já têm dono: horas em cima à
+   esquerda, dock embaixo à esquerda, barra da reunião embaixo ao centro. */
+#hud-chat-notices{position:fixed;z-index:66;display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  right:calc(14px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));
+  /* Largura FIXA, não `max-width`: um `position:fixed` sem `left` encolhe para o
+     conteúdo, e cartões empilhados saíam cada um de um tamanho. */
+  width:min(330px,calc(100vw - 28px));pointer-events:none;font-family:Inter,system-ui,sans-serif}
+.hud-chat-notice{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;
+  border:1px solid #ffffff22;border-radius:12px;color:#eef0ff;background:#141726f2;
+  box-shadow:0 14px 40px #000a;backdrop-filter:blur(10px);cursor:pointer;text-align:left;font:inherit;
+  pointer-events:auto;animation:hud-chat-notice-in .18s ease-out;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.hud-chat-notice:hover{background:#1d2138f7}
+.hud-chat-notice:focus-visible{outline:2px solid #a797ff;outline-offset:2px}
+.hud-chat-notice.bye{opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s}
+.hud-chat-notice>i{display:grid;flex:0 0 30px;place-items:center;width:30px;height:30px;
+  border-radius:50%;color:#fff;font:700 11px/1 Inter,system-ui,sans-serif;font-style:normal}
+.hud-chat-notice>span{min-width:0;flex:1}
+.hud-chat-notice b{display:block;overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+/* Duas linhas e corta: o aviso anuncia, quem lê o resto é o chat. */
+.hud-chat-notice small{display:-webkit-box;overflow:hidden;color:#a9b1d6;font-size:11px;line-height:1.35;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2}
+@keyframes hud-chat-notice-in{from{opacity:0;transform:translateY(-8px)}}
+@media(pointer:coarse){.hud-chat-notice{min-height:52px}}
 
 .hud-menu-list{display:flex;flex-direction:column;gap:7px}
 .hud-menu-item{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 12px;
@@ -759,7 +839,9 @@ html[data-touch="on"] .hud-menu-item{min-height:44px}
 .cg-nav-group{margin:10px 0 1px;padding:0 10px;color:#7f8bb0;font-size:9px;
   font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .cg-nav-group:first-child{margin-top:0}
-.cg-nav button{display:flex;align-items:center;gap:10px;border:0;border-radius:10px;
+/* `relative` é a âncora da etiqueta de contagem: sem ela o contador de baús
+   posicionava contra a janela do menu e aparecia no canto, ao lado do X. */
+.cg-nav button{position:relative;display:flex;align-items:center;gap:10px;border:0;border-radius:10px;
       padding:10px;color:#aeb8d7;background:transparent;cursor:pointer;text-align:left;font:700 11px Inter,sans-serif}
 .cg-nav button:hover,.cg-nav button.on{color:#fff;background:#6c5df033}
 .cg-nav i{width:20px;color:#b8adff;font-style:normal;font-size:16px}
