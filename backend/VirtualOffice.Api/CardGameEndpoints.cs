@@ -586,6 +586,20 @@ public static class CardGameEndpoints
         return new(Math.Max(0, boosters), balance.Quantity, rewards.ToArray());
     }
 
+    /// <summary>
+    /// Os boosters que se abre sem alvo — todos menos o Especial, que precisa de uma
+    /// carta escolhida. É a lista que qualquer concessão em lote deve percorrer.
+    /// </summary>
+    public static IEnumerable<string> OpenableBoosterIds =>
+        BoosterDefinitions.Where(item => !item.IsSpecial).Select(item => item.Id);
+
+    /// <summary>Saldo atual de um tipo de booster (zero quando nunca teve).</summary>
+    public static async Task<int> BoosterBalanceOfAsync(AppDb db, int userId, string boosterId) =>
+        await db.CardGameBoosterBalances
+            .Where(row => row.UserId == userId && row.BoosterId == boosterId && row.TargetCardId == "")
+            .Select(row => row.Quantity)
+            .FirstOrDefaultAsync();
+
     public static async Task<int> GrantBoostersAsync(
         AppDb db,
         int userId,

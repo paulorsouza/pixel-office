@@ -104,6 +104,16 @@ public static class EquipmentEndpoints
                 // anunciar "você ganhou" apontando para o nada.
                 coins = result.Coins,
                 result.Duplicate,
+                // A caixa do beta entrega centenas de coisas: o que a tela anuncia
+                // é o resumo, não um prêmio.
+                beta = result.Beta is null ? null : new
+                {
+                    result.Beta.Equipment,
+                    result.Beta.Furniture,
+                    result.Beta.Chests,
+                    result.Beta.Boosters,
+                    result.Beta.BoosterKinds,
+                },
             },
             equipment = await SnapshotAsync(db, userId),
             coins = user.Coins,
@@ -232,6 +242,11 @@ public static class EquipmentEndpoints
                 // ação previsível quando o jogador clica cinco vezes seguidas.
                 instanceIds = group.Select(row => row.Id).Order().ToArray(),
                 odds = LootboxCatalog.Odds(group.First().Tier!),
+                // A cor da borda vinha da última linha das chances. A caixa do beta não
+                // tem chances (ela não sorteia), e sem isto ela nascia cinza de comum.
+                rarity = group.First().Tier!.Table.MaxBy(
+                    row => EquipmentCatalog.RarityRank(row.Rarity))!.Rarity,
+                everything = group.First().Tier!.GrantsEverything,
             })];
     }
 

@@ -4,6 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VirtualOffice.Api;
 
+/// <summary>
+/// O que a caixa de beta entregou. Não cabe em <see cref="LootboxResult.Item"/>:
+/// ali é um prêmio, aqui são centenas, e a tela anuncia o resumo.
+/// </summary>
+public sealed record LootboxBetaSummary(
+    int Equipment,
+    int Furniture,
+    int Chests,
+    int Boosters,
+    int BoosterKinds);
+
 /// <summary>Resultado de abrir um baú: ou saiu item, ou saiu moeda.</summary>
 public sealed record LootboxResult(
     string TierId,
@@ -15,7 +26,8 @@ public sealed record LootboxResult(
     /// devolveria zero para a UI.
     GameItemInstance? Instance,
     int Coins,
-    bool Duplicate);
+    bool Duplicate,
+    LootboxBetaSummary? Beta = null);
 
 /// <summary>
 /// Conceder e abrir baú. Todas as sete fontes do plano (§6.1) passam por
@@ -107,6 +119,7 @@ public static class Lootboxes
         var definition = await db.GameItemDefinitions.FindAsync(chest.DefinitionId);
         var tier = definition is null ? null : LootboxCatalog.FindByCatalogKey(definition.CatalogKey);
         if (tier is null) return null;
+        if (tier.GrantsEverything) return await OpenBetaBoxAsync(db, user, chest, tier);
 
         var ownedKeys = await db.GameItemInstances
             .Where(x => x.UserId == user.Id)
@@ -148,6 +161,77 @@ public static class Lootboxes
         var instance = new GameItemInstance { UserId = user.Id, DefinitionId = prizeDefinition.Id };
         db.GameItemInstances.Add(instance);
         return new LootboxResult(tier.Id, tier.Name, prize.Rarity, prize, instance, 0, duplicate);
+    }
+
+    /// <summary>
+    /// A caixa do beta: não sorteia, COMPLETA. Para cada definição do catálogo ela
+    /// enche o estoque até a meta — um de cada equipamento, veículo e baú (que são
+    /// únicos por jogador) e <see cref="LootboxCatalog.BetaFurniture"/> de cada móvel
+    /// —, mais <see cref="LootboxCatalog.BetaBoosters"/> boosters de cada tipo.
+    ///
+    /// Completar, e não somar, é o que a torna segura de abrir duas vezes: quem já tem
+    /// o item não ganha uma segunda cópia, e a bag não vira uma pilha de duplicatas.
+    ///
+    /// Booster não entra como instância: ele é saldo no perfil do cardgame, que é
+    /// quem sabe abrir. Mesmo caminho da compra no balcão.
+    /// </summary>
+    private static async Task<LootboxResult> OpenBetaBoxAsync(
+        AppDb db, User user, GameItemInstance chest, LootboxTier tier)
+    {
+        var owned = await db.GameItemInstances
+            .Where(x => x.UserId == user.Id)
+            .GroupBy(x => x.DefinitionId)
+            .Select(g => new { DefinitionId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.DefinitionId, x => x.Count);
+
+        var definitions = await db.GameItemDefinitions.ToListAsync();
+        var (equipment, furniture, chests) = (0, 0, 0);
+        foreach (var definition in definitions)
+        {
+            // A própria caixa não se reproduz, e booster não é objeto.
+            if (definition.CatalogKey == tier.CatalogKey || definition.ItemType == "booster") continue;
+            var target = definition.ItemType == "furniture" ? LootboxCatalog.BetaFurniture : 1;
+            // A unidade sendo aberta ainda está no inventário: sem descontá-la, a
+            // caixa acharia que já tem um baú de beta a menos do que precisa.
+            var have = owned.GetValueOrDefault(definition.Id, 0);
+            for (var index = have; index < target; index++)
+            {
+                db.GameItemInstances.Add(new GameItemInstance
+                {
+                    UserId = user.Id,
+                    DefinitionId = definition.Id,
+                });
+                if (definition.ItemType == "furniture") furniture++;
+                else if (definition.ItemType == LootboxCatalog.ItemType) chests++;
+                else equipment++;
+            }
+        }
+
+        var (boosters, boosterKinds) = (0, 0);
+        foreach (var boosterId in CardGameEndpoints.OpenableBoosterIds)
+        {
+            boosters += await GrantBetaBoostersAsync(db, user.Id, boosterId);
+            boosterKinds++;
+        }
+
+        db.GameItemInstances.Remove(chest);
+        return new LootboxResult(
+            tier.Id, tier.Name, EquipmentCatalog.Exotic, null, null, 0, false,
+            new LootboxBetaSummary(equipment, furniture, chests, boosters, boosterKinds));
+    }
+
+    /// <summary>
+    /// Completa o saldo de um tipo de booster até a meta da caixa e devolve quantos
+    /// entraram. Completar (e não somar) mantém a segunda abertura inofensiva, igual
+    /// aos itens.
+    /// </summary>
+    private static async Task<int> GrantBetaBoostersAsync(AppDb db, int userId, string boosterId)
+    {
+        var current = await CardGameEndpoints.BoosterBalanceOfAsync(db, userId, boosterId);
+        var missing = LootboxCatalog.BetaBoosters - current;
+        if (missing <= 0) return 0;
+        await CardGameEndpoints.GrantBoostersAsync(db, userId, missing, boosterId);
+        return missing;
     }
 
     /// <summary>Nome do campo do relógio dentro do <c>StateJson</c> da unidade.</summary>

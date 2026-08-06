@@ -117,6 +117,48 @@ api.MapChatEndpoints();
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
 static int? UserId(HttpRequest req) => Identity.UserId(req);
 
+// ---------- ferramentas de beta ----------
+// Distribui a Caixa do Beta Tester (o catálogo inteiro) sob demanda. Sem corpo, ou
+// com `userId` nulo, vale para todo mundo; com `userId`, só para aquela conta.
+//
+// A concessão é IDEMPOTENTE por chave, então repetir o POST não empilha caixas. Para
+// entregar uma leva nova (por exemplo, depois de entrar item novo no catálogo), mande
+// uma `key` diferente — é o mesmo mecanismo do bônus de boas-vindas.
+api.MapPost("/admin/beta-box", async (
+    BetaBoxRequest? body, HttpRequest req, IDbContextFactory<AppDb> f, IHubContext<OfficeHub> hub) =>
+{
+    if (UserId(req) is not int uid) return Results.Unauthorized();
+    await using var db = await f.CreateDbContextAsync();
+    // O papel vem do BANCO, não da claim: assim a checagem vale igual para o JWT e
+    // para o X-User-Id de dev, e não depende de o token estar atualizado.
+    var caller = await db.Users.FindAsync(uid);
+    if (caller is null) return Results.Unauthorized();
+    if (!AuthOptions.DevBypass && caller.AppRole != UserRole.Admin)
+        return Results.Json(new { error = "Só admin distribui caixa de beta." }, statusCode: 403);
+
+    var key = string.IsNullOrWhiteSpace(body?.Key) ? GameOptions.BetaBoxKey : body!.Key!.Trim();
+    var targets = body?.UserId is int only
+        ? await db.Users.Where(u => u.Id == only && !u.IsBot).ToListAsync()
+        : await db.Users.Where(u => !u.IsBot).ToListAsync();
+    if (targets.Count == 0) return Results.NotFound(new { error = "Nenhum jogador para receber." });
+
+    var granted = new List<int>();
+    foreach (var target in targets)
+        if (await Lootboxes.GrantOnceAsync(db, target, LootboxCatalog.Beta, key)) granted.Add(target.Id);
+    await db.SaveChangesAsync();
+    // A caixa entra na bag de quem já está com o jogo aberto, sem precisar recarregar.
+    foreach (var userId in granted)
+        await hub.Clients.Group(OfficeHub.UserGroup(userId)).SendAsync("InventoryChanged");
+
+    return Results.Ok(new
+    {
+        key,
+        granted = granted.Count,
+        skipped = targets.Count - granted.Count,
+        userIds = granted,
+    });
+});
+
 // ---------- usuários ----------
 api.MapGet("/users", async (IDbContextFactory<AppDb> f) =>
 {
@@ -1055,3 +1097,5 @@ record PlaceFurniture(int InventoryItemId, string SceneId, string RoomId, double
 record MoveFurniture(double X, double Y, bool FlipX);
 record ChestTransfer(int InventoryItemId);
 record WorkstationStart(int? WorkItemId, string? ActivityKey);
+/// <summary>`UserId` nulo = todo mundo; `Key` nulo = a chave configurada da rodada atual.</summary>
+record BetaBoxRequest(int? UserId, string? Key);

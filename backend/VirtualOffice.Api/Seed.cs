@@ -22,6 +22,26 @@ public static class Seed
         if (demoData && !await db.Users.AnyAsync()) await DemoAsync(db);
         await GameInventorySeed.RunAsync(db);
         await GrantWelcomeAsync(db);
+        await GrantBetaBoxAsync(db);
+    }
+
+    /// <summary>
+    /// Uma Caixa do Beta Tester para toda conta humana — inclusive as que já existiam.
+    /// Idempotente pela chave: reiniciar o servidor não distribui de novo.
+    ///
+    /// Fica no seed, e não no cadastro, porque o beta já tinha gente dentro quando a
+    /// caixa nasceu: entregar só a quem se cadastrar depois deixaria justamente os
+    /// testadores atuais de fora.
+    /// </summary>
+    private static async Task GrantBetaBoxAsync(AppDb db)
+    {
+        if (!GameOptions.BetaBoxForEveryone) return;
+        var users = await db.Users.Where(u => !u.IsBot).ToListAsync();
+        var granted = 0;
+        foreach (var user in users)
+            if (await Lootboxes.GrantOnceAsync(db, user, LootboxCatalog.Beta, GameOptions.BetaBoxKey))
+                granted++;
+        if (granted > 0) await db.SaveChangesAsync();
     }
 
     /// <summary>Bônus de boas-vindas do beta: idempotente e válido também para quem já existe.</summary>

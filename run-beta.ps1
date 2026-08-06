@@ -104,6 +104,11 @@ if ($betaEnv['DB_CONNECTION']) { $env:ConnectionStrings__Default = $betaEnv['DB_
 # Economia do beta: 10 mil moedas por usuario, concedidas uma unica vez.
 $env:Game__WelcomeGrantCoins = if ($betaEnv['GAME_WELCOME_GRANT_COINS']) { $betaEnv['GAME_WELCOME_GRANT_COINS'] } else { '10000' }
 if ($betaEnv['GAME_WELCOME_GRANT_KEY']) { $env:Game__WelcomeGrantKey = $betaEnv['GAME_WELCOME_GRANT_KEY'] }
+# Caixa do Beta Tester (o catalogo inteiro) para todo mundo: e o ambiente dos
+# testadores, entao aqui ela vem LIGADA. GAME_BETA_BOX=false no beta.env desliga.
+# Ver docs/PLANO_EQUIPAMENTOS.md 6.3.
+$env:Game__BetaBoxForEveryone = if ($betaEnv['GAME_BETA_BOX']) { $betaEnv['GAME_BETA_BOX'] } else { 'true' }
+if ($betaEnv['GAME_BETA_BOX_KEY']) { $env:Game__BetaBoxKey = $betaEnv['GAME_BETA_BOX_KEY'] }
 if ($betaEnv['LIVEKIT_URL'])        { $env:LiveKit__Url = $betaEnv['LIVEKIT_URL'] }
 if ($betaEnv['LIVEKIT_API_KEY'])    { $env:LiveKit__ApiKey = $betaEnv['LIVEKIT_API_KEY'] }
 if ($betaEnv['LIVEKIT_API_SECRET']) { $env:LiveKit__ApiSecret = $betaEnv['LIVEKIT_API_SECRET'] }

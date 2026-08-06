@@ -34,6 +34,12 @@ services:
       # --- economia (o beta abre com 10 mil moedas por usuário) ---
       Game__WelcomeGrantCoins: "${GAME_WELCOME_GRANT_COINS:-0}"
       Game__WelcomeGrantKey: "${GAME_WELCOME_GRANT_KEY:-beta-v1}"
+      # Caixa do Beta Tester (o catálogo inteiro) para todo mundo. DESLIGADA aqui:
+      # é ferramenta de teste, e ligada não sobra economia nenhuma para sentir.
+      # Ligue só num ambiente de teste; o endpoint /api/admin/beta-box continua
+      # dando a caixa sob demanda. Ver docs/PLANO_EQUIPAMENTOS.md §6.3.
+      Game__BetaBoxForEveryone: "${GAME_BETA_BOX:-false}"
+      Game__BetaBoxKey: "${GAME_BETA_BOX_KEY:-beta-box-v1}"
       Game__TimeZoneOffsetHours: "${GAME_TZ_OFFSET:--3}"
       # --- auth ---
       Auth__DevBypass: "${AUTH_DEV_BYPASS}"

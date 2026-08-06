@@ -262,11 +262,15 @@ export function createEquipmentMenu(catalog, options = {}) {
     if (!list.length) return;
     chestsRoot.innerHTML = list.map((chest) => `
       <button class="lootbox-card" type="button" data-chest-id="${chest.instanceIds[0]}"
-        data-rarity="${chest.odds?.at(-1)?.rarity || 'common'}"
+        data-rarity="${chest.rarity || chest.odds?.at(-1)?.rarity || 'common'}"
         aria-label="${escapeHtml(`${chest.name}: ${chest.description}`)}">
         <span class="lootbox-art" aria-hidden="true"><i></i></span>
         <strong>${escapeHtml(chest.name)}</strong>
-        <small>${chest.odds.map((o) => `<i data-rarity="${o.rarity}">${o.percent}%</i>`).join('')}</small>
+        <small>${chest.everything
+          // A caixa do beta não sorteia: onde os outros mostram chances, ela diz o
+          // que faz. Deixar o espaço vazio pareceria baú quebrado.
+          ? '<i data-rarity="exotic">tudo</i>'
+          : chest.odds.map((o) => `<i data-rarity="${o.rarity}">${o.percent}%</i>`).join('')}</small>
         <span class="lootbox-count">${chest.count}</span>
       </button>
     `).join('');
@@ -279,17 +283,35 @@ export function createEquipmentMenu(catalog, options = {}) {
    * Fecha no clique ou sozinho; `prefers-reduced-motion` corta a animação no CSS,
    * não aqui, para o cartão continuar aparecendo para quem desligou movimento.
    */
+  // Linhas do resumo da Caixa do Beta Tester. Ela não sorteia um prêmio: entrega
+  // centenas de coisas, e anunciar "você ganhou um mouse" seria mentir sobre o que
+  // acabou de acontecer. Zero não vira linha — quem abre a segunda caixa não precisa
+  // ler quatro "0 itens".
+  const betaLines = (beta) => [
+    [beta.boosters, `${beta.boosters} boosters (${beta.boosterKinds} tipos)`],
+    [beta.equipment, `${beta.equipment} equipamentos e veículos`],
+    [beta.furniture, `${beta.furniture} móveis`],
+    [beta.chests, `${beta.chests} baús`],
+  ].filter(([count]) => count > 0).map(([, label]) => label);
+
   let revealTimer = 0;
   const showReveal = (prize) => {
     if (!revealRoot) return;
     clearTimeout(revealTimer);
-    const rarity = prize.item ? prize.rarity : 'common';
+    const rarity = prize.beta || prize.item ? prize.rarity : 'common';
     revealRoot.dataset.rarity = rarity;
     revealRoot.hidden = false;
+    const beta = prize.beta
+      ? betaLines(prize.beta)
+      : null;
     revealRoot.innerHTML = `
       <div class="reveal-card" data-rarity="${rarity}">
         <span class="reveal-tier">${escapeHtml(prize.tierName)}</span>
-        ${prize.item ? `
+        ${beta ? `
+          <strong>${beta.length ? 'Catálogo liberado' : 'Você já tinha tudo'}</strong>
+          <span class="rarity-chip">Beta</span>
+          <ul>${beta.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+        ` : prize.item ? `
           <strong>${escapeHtml(prize.item.name)}</strong>
           <span class="rarity-chip">${escapeHtml(prize.rarityName)}</span>
           <ul>${(prize.item.effectLabels || []).map((l) => `<li>${escapeHtml(l)}</li>`).join('')}</ul>
@@ -304,7 +326,8 @@ export function createEquipmentMenu(catalog, options = {}) {
     revealRoot.classList.remove('on');
     void revealRoot.offsetWidth;
     revealRoot.classList.add('on');
-    revealTimer = setTimeout(() => { revealRoot.hidden = true; }, 4200);
+    // A caixa do beta lista quatro linhas: 4,2s não dá para ler.
+    revealTimer = setTimeout(() => { revealRoot.hidden = true; }, beta ? 8000 : 4200);
   };
 
   const renderEffects = () => {

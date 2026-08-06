@@ -42,6 +42,20 @@ public static class GameOptions
     public static string WelcomeGrantKey { get; private set; } = "beta-v1";
 
     /// <summary>
+    /// Dá uma Caixa do Beta Tester (o catálogo inteiro) a toda conta humana, no boot.
+    /// É ferramenta de teste, não conteúdo: com ela ligada ninguém mais sente a
+    /// economia, então quando o beta acabar isto vira <c>false</c> e pronto — a caixa
+    /// continua existindo para o endpoint de admin distribuir sob demanda.
+    /// </summary>
+    public static bool BetaBoxForEveryone { get; private set; } = true;
+
+    /// <summary>
+    /// Rodada da caixa. Mudar a chave entrega uma caixa nova a todo mundo (útil quando
+    /// entra item novo no catálogo); manter garante que reiniciar não repita.
+    /// </summary>
+    public static string BetaBoxKey { get; private set; } = "beta-box-v1";
+
+    /// <summary>
     /// Teto diário de gold vindo de lançamento de horas (anti-farm).
     ///
     /// Foram 400 por muito tempo, e a esse valor **uma hora e meia de estudo esgotava o
@@ -93,6 +107,8 @@ public static class GameOptions
         StartingCoins = section.GetValue("StartingCoins", StartingCoins);
         WelcomeGrantCoins = section.GetValue("WelcomeGrantCoins", WelcomeGrantCoins);
         WelcomeGrantKey = section.GetValue("WelcomeGrantKey", WelcomeGrantKey) ?? "beta-v1";
+        BetaBoxForEveryone = section.GetValue("BetaBoxForEveryone", BetaBoxForEveryone);
+        BetaBoxKey = section.GetValue("BetaBoxKey", BetaBoxKey) ?? "beta-box-v1";
         DailyGoldCapFromTime = section.GetValue("DailyGoldCapFromTime", DailyGoldCapFromTime);
         PresenceGoldPerHour = section.GetValue("PresenceGoldPerHour", PresenceGoldPerHour);
         PresenceGoldDailyCap = section.GetValue("PresenceGoldDailyCap", PresenceGoldDailyCap);

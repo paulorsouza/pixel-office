@@ -260,6 +260,7 @@ Nada de tabela nova para posse — o teto semanal também já existe (`StorePurc
 | `lootbox:rare` | Baú Raro | loja | 1.400 | 2 | Incomum 50% · Rara 45% · Lendária 5% |
 | `lootbox:legendary` | Baú Lendário | recompensa | — | — | Rara 62% · Lendária 33% · Exótica 5% |
 | `lootbox:exotic` | Baú Exótico | recompensa | — | — | Lendária 75% · Exótica 25% |
+| `lootbox:beta` | Caixa do Beta Tester | ferramenta de teste | — | — | não sorteia — entrega tudo (§6.3) |
 
 ### 6.1 De onde vêm os que não se compram
 
@@ -298,6 +299,37 @@ vezes; persistindo, o baú converte em moedas:
 | Exótica | 4.000 |
 
 Equipamento é **único por jogador**: dois mouses iguais não fazem sentido em um slot só.
+
+### 6.3 Caixa do Beta Tester (`lootbox:beta`)
+
+**Ferramenta de teste, não conteúdo.** Não tem preço, não sai de drop nenhum, não aparece em
+balcão e **não sorteia**: abrir COMPLETA o inventário até a meta.
+
+| O que | Meta |
+|---|---:|
+| Cada tipo de booster (13, o Especial fora — ele exige alvo) | 100 |
+| Cada equipamento, veículo e baú | 1 |
+| Cada móvel | 5 |
+
+Completar, e não somar, é o que a torna segura de abrir duas vezes: quem já tem o item não ganha
+uma segunda cópia, e a bag não vira pilha de duplicata. A segunda abertura anuncia só o que
+faltava — nada, se não faltava nada.
+
+**Como chega na mão de alguém:**
+
+- **No boot**, a toda conta humana, se `Game:BetaBoxForEveryone` (padrão `true`). Idempotente por
+  `Game:BetaBoxKey` — reiniciar não distribui de novo, e trocar a chave entrega uma leva nova
+  (útil quando entra item novo no catálogo). Fica no seed, e não no cadastro, porque o beta já
+  tinha gente dentro quando a caixa nasceu.
+- **Sob demanda**, por `POST /api/admin/beta-box` (Admin; em dev o `Auth:DevBypass` abre):
+  ```json
+  { "userId": 8, "key": "beta-box-v2" }
+  ```
+  Sem `userId`, vale para todo mundo; sem `key`, usa a chave configurada. A resposta diz quantos
+  receberam e quantos foram pulados por já terem aquela chave.
+
+**Quando o beta acabar**, `Game:BetaBoxForEveryone=false` desliga a distribuição automática e a
+caixa continua existindo para o endpoint entregar a quem for testar.
 
 ---
 
