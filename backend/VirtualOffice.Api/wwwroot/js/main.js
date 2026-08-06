@@ -1,4 +1,4 @@
-import { API, h, esc, avatar, initials, colorFor } from "./api.js";
+import { API, h, esc, avatar, initials, colorFor, toast } from "./api.js";
 import { renderBoard } from "./board.js";
 import { renderBacklog } from "./backlog.js";
 import { renderHours } from "./hours.js";
@@ -15,7 +15,7 @@ const PAGES = {
   goals: { title: "Objetivos", sub: "metas do dia e da semana", render: renderGoals },
   reports: { title: "Relatórios", sub: "horas do time", render: renderReports },
   meeting: { title: "Reunião", sub: "entre na call sem abrir o jogo", render: renderMeeting },
-  chat: { title: "Chat do jogo", sub: "quem está no escritório agora", render: renderChat },
+  chat: { title: "Chat", sub: "global, prédio, sala e conversas privadas", render: renderChat },
   profile: { title: "Perfil", sub: "nível, conquistas e itens", render: renderProfile },
 };
 
@@ -211,6 +211,9 @@ export const App = {
   },
 
   route() {
+    // Página que precisa se desmontar (o chat escuta o socket) avisa por aqui.
+    App.leaveView?.();
+    App.leaveView = null;
     const name = (location.hash.replace("#/", "") || "board").split("?")[0];
     const page = PAGES[name] ?? PAGES.board;
     document.querySelectorAll("#nav .nav-item").forEach((a) =>
@@ -229,6 +232,31 @@ export const App = {
   onBoardChanged: null,
   onTimeChanged: null,
   onObjectiveCompleted: null,
+  // Preenchido pela página que precisa se desmontar ao sair (ver `route`).
+  leaveView: null,
+
+  // Aviso de chat fora da página de chat. Sem isto, uma PM que chega enquanto
+  // você está no kanban só apareceria quando desse na telha de abrir o chat.
+  chatUnread: 0,
+  onChatMessage(message) {
+    if (!message || message.userId === App.me?.user?.id) return;
+    const onChatPage = location.hash.startsWith("#/chat");
+    if (onChatPage) return;
+    App.chatUnread += 1;
+    App.paintChatBadge();
+    if (String(message.channel).startsWith("dm:")) {
+      toast(`✉️ ${message.name}: ${message.text}`, "#7c5cff");
+    }
+  },
+  clearChatBadge() { App.chatUnread = 0; App.paintChatBadge(); },
+  paintChatBadge() {
+    const item = document.querySelector('#nav .nav-item[data-route="chat"]');
+    if (!item) return;
+    let badge = item.querySelector(".nav-badge");
+    if (!App.chatUnread) { badge?.remove(); return; }
+    if (!badge) { badge = h("span", { class: "nav-badge" }); item.append(badge); }
+    badge.textContent = App.chatUnread > 99 ? "99+" : String(App.chatUnread);
+  },
 
   // hub compartilhado (presença + chat do jogo)
   async connectHub() {
@@ -242,6 +270,7 @@ export const App = {
     App.hub.on("TimeChanged", () => App.onTimeChanged?.());
     App.hub.on("ObjectiveCompleted", (list) => App.onObjectiveCompleted?.(list));
     App.hub.on("RewardGranted", () => App.refreshMe());
+    App.hub.on("ChatMessage", (m) => App.onChatMessage(m));
     try {
       await App.hub.start();
       // com token o servidor deriva o usuário do JWT; o argumento é fallback de dev.

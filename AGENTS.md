@@ -38,6 +38,9 @@ Projeto **Office Quest / Tooq** — escritório virtual estilo Gather.town.
 - ✅ **Kanban / horas / objetivos** — a UI existe **uma vez só**, em `backend/.../wwwroot/shared/`,
   e roda no app web e dentro do jogo. Não reimplemente essas telas no `client-web`: ele importa
   esses módulos do backend. Ver [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md).
+- ✅ **Chat** (global / prédio / sala / PM) — mesma regra: a tela mora em
+  `wwwroot/shared/chat-*` e é hospedada pelo app web e pela folha 💬 do HUD. O servidor **não
+  conhece o mapa** — quem diz onde está é o cliente. Ver [`docs/CHAT.md`](docs/CHAT.md).
 - ✅ **Banco** — **Postgres só**, schema por migrations EF. Ver [`docs/BANCO_POSTGRES.md`](docs/BANCO_POSTGRES.md).
 
 ## Regras de trabalho

@@ -110,6 +110,9 @@ api.MapCardGameEndpoints();
 api.MapCasinoEndpoints();
 api.MapEquipmentEndpoints();
 api.MapCharacterEndpoints();
+// Chat global / por prédio / por sala / PM — histórico e não lidas. O tempo real
+// é do OfficeHub; a tela é a mesma de wwwroot/shared no app web e no jogo.
+api.MapChatEndpoints();
 
 // Identidade: primeiro o principal validado do JWT; em dev, o header simbólico X-User-Id.
 static int? UserId(HttpRequest req) => Identity.UserId(req);

@@ -23,6 +23,7 @@ import { createFloorPicker } from './FloorPicker.js';
 import {
   CAMPUS_SCENE,
   PERSONAL_WING_SCENE,
+  buildingOf,
   personalWingIndex,
   resolveSceneTarget,
 } from './FloorNavigation.js';
@@ -35,6 +36,7 @@ import { createMainMenu } from './hud/MainMenu.js';
 import { createGearSections } from './hud/GearSections.js';
 import { createWorkSections } from './hud/WorkSections.js';
 import { createKeyboardGuard } from './hud/KeyboardGuard.js';
+import { createChatPanel } from './hud/ChatPanel.js';
 import { createDevMapSync } from './DevMapSync.js';
 import { loadTiledSceneMaps } from './TiledRuntimeLoader.js';
 import { createGameItemsClient } from './GameItemsSystem.js';
@@ -358,6 +360,18 @@ mainMenu.register({
   render: (host, api) => renderHelp(host, api.setHeader),
 });
 
+// Chat: folha própria, não seção do menu. Conversa é coisa que se acompanha
+// COM o mundo do lado (e com o contador visível de fora); enterrada atrás do
+// menu, ninguém veria a mensagem chegar.
+const chatPanel = createChatPanel({
+  shell: hud,
+  presence,
+  apiBase: gameItems.apiBase,
+  token: () => auth.token(),
+  userId: gameItems.userId,
+  onToast: (message) => proximityVoice.toast(message),
+});
+
 // O dock virou UM botão: "menus no canto" foi exatamente a reclamação. O que
 // existe é uma porta; tudo o que dá para abrir está atrás dela.
 //
@@ -373,6 +387,14 @@ const dock = createDock(hud, [
     label: 'Menu',
     hint: 'Personagem, itens, trabalho e cartas',
     onSelect: () => mainMenu.toggle('character'),
+  },
+  {
+    id: 'chat',
+    icon: '💬',
+    label: 'Chat',
+    hint: 'Global, prédio, sala e conversas privadas',
+    badge: () => chatPanel.unread(),
+    onSelect: () => { mainMenu.close(); chatPanel.toggle(); },
   },
   {
     id: 'decorate',
@@ -830,6 +852,7 @@ class MapScene extends Phaser.Scene {
     window.__furnitureInteractions = this.furnitureInteractions;
     window.__presence = presence;
     window.__cardGame = cardGame;
+    window.__chat = chatPanel;
 
     // presença em rede: avatares remotos nesta cena + voz por proximidade
     presence.attach(this, this.currentSceneId, this.player);
@@ -1170,12 +1193,26 @@ class MapScene extends Phaser.Scene {
 
   // Cada sala fechada tem seu próprio call. Áreas abertas ou um prédio inteiro também
   // podem declarar `voice` no mapa; corredor e quintal continuam sem canal.
+  //
+  // O chat de prédio/sala sai DAQUI, do mesmo par de coordenadas: o canal em que
+  // se fala e o call em que se ouve não podem discordar sobre onde a pessoa está.
+  // A diferença é que a voz aceita zona aberta e o chat não — "sala" é sala.
   syncVoiceChannel() {
     const tile = this.map.tile || 16;
     const x = this.player.body.center.x / tile;
     const y = this.player.body.center.y / tile;
-    const area = roomAtPoint(this.map, x, y) || voiceZoneAtPoint(this.map, x, y);
+    const room = roomAtPoint(this.map, x, y);
+    const area = room || voiceZoneAtPoint(this.map, x, y);
     proximityVoice.updateLocation(area ? { id: area.id, name: area.name || area.id } : null);
+
+    const buildingId = buildingOf(this.currentSceneId);
+    chatPanel.setPlace({
+      buildingId,
+      buildingName: sceneMaps[buildingId]?.name || this.map.name,
+      sceneId: this.currentSceneId,
+      roomId: room?.id || null,
+      roomName: room?.name || room?.id || '',
+    });
   }
 
   // O elevador não tem destino fixo: pergunta o andar e só então troca de cena.

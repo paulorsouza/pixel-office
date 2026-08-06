@@ -31,6 +31,7 @@ Unity (ver §4).
 | **Auth** | `backend/.../Auth.cs`, `AuthEndpoints.cs` | ✅ Login Google (OIDC) + JWT próprio; papéis Member/Manager/Admin. `X-User-Id` sobrevive só via `Auth:DevBypass` (dev). Ver [`docs/PLANO_AUTH.md`](docs/PLANO_AUTH.md). |
 | **App web** (tasks/horas) | `backend/.../wwwroot` | ✅ Kanban, backlog, horas, objetivos, relatórios, perfil. ES modules, sem build. |
 | **UI de trabalho compartilhada** | `backend/.../wwwroot/shared` | ✅ Kanban/horas/objetivos existem **uma vez só** e rodam no app web e dentro do jogo. Ver [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md). |
+| **Chat** | `backend/.../Chat*.cs`, `wwwroot/shared/chat-*`, `client-web/src/hud/ChatPanel.js` | ✅ Global, por prédio, por sala e PM, com histórico e não lidas no Postgres. Mesma tela no app web e na folha do HUD. Ver [`docs/CHAT.md`](docs/CHAT.md). |
 | **LiveKit** | `livekit/` (local) ou **LiveKit Cloud** | ✅ SFU. Local (LAN) ou Cloud (entre redes). URL vem do backend (`LiveKit:Url`). |
 | **Contrato de mapa** | `backend/OfficeLayout.cs` | Server units = **28 por tile**. |
 | **Cliente do jogo** ⭐ | `client-web/` | ✅ Phaser 3, orientado a dados. Presença em rede, voz por proximidade, xadrez e cardgame social. |
@@ -534,6 +535,7 @@ paredes, pisos, móveis, exteriores, porta animada):
 - [`client-web/TUTORIAL.md`](client-web/TUTORIAL.md) — padrões de Phaser + debug no navegador.
 - [`docs/ECONOMIA.md`](docs/ECONOMIA.md) — **balanceamento**: de onde vem a moeda, os tetos, o que ela compra e o que reconferir ao mudar a renda.
 - [`docs/KANBAN_HORAS.md`](docs/KANBAN_HORAS.md) — quadro, lançamento de horas, objetivos, economia e a UI compartilhada.
+- [`docs/CHAT.md`](docs/CHAT.md) — chat global/prédio/sala/PM: canais, quem fala onde, histórico.
 - [`docs/CARDGAME.md`](docs/CARDGAME.md) — estado implementado do Tooq Triad, arquitetura, chances e testes.
 - [`docs/CASINO_NERD.md`](docs/CASINO_NERD.md) — prédio, cena, Arrange Dice, economia e testes.
 - [`docs/PLANO_CARDGAME_POKEMON.md`](docs/PLANO_CARDGAME_POKEMON.md) — regras e roadmap completo do cardgame.

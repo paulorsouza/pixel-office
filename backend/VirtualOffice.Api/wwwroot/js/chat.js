@@ -1,65 +1,100 @@
-import { API, h, esc, avatar } from "./api.js";
-import { App } from "./main.js";
+// Página de chat do app web.
+//
+// Nada de UI mora aqui: a tela é a de `shared/chat-*`, a MESMA que o jogo abre
+// na folha do HUD. O que este arquivo faz é ligar as pontas do app web — a
+// conexão do hub, o token e a origem — e escolher onde a pessoa fala quando ela
+// não está com o avatar no mundo.
 
-const online = new Map(); // key -> player
-const log = [];
+import { API, h } from "./api.js";
+import { App } from "./main.js";
+import { createWorkClient } from "../shared/work-core.js";
+import { createChatStore, ensureChatStyles } from "../shared/chat-core.js";
+import { mountChat } from "../shared/chat-ui.js";
+
+let mounted = null;
 
 export async function renderChat(view) {
-  online.clear(); log.length = 0;
-  view.innerHTML = "";
+  ensureChatStyles("");
+  mounted?.destroy();
+  mounted = null;
 
-  const onlineList = h("div", { id: "chat-online", class: "panel-pad" }, h("div", { class: "faint" }, "conectando…"));
-  const chatLog = h("div", { id: "chat-log", style: { flex: "1", overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" } });
-  const input = h("input", { class: "input", placeholder: "Mensagem para quem está por perto…  (Enter)", onkeydown: (e) => { if (e.key === "Enter") send(e.target); } });
-
-  view.append(h("div", { class: "grid", style: { gridTemplateColumns: "260px 1fr", height: "calc(100vh - 150px)" } },
-    h("div", { class: "panel", style: { overflow: "auto" } }, h("div", { class: "panel-head" }, "👥 No escritório"), onlineList),
-    h("div", { class: "panel", style: { display: "flex", flexDirection: "column" } },
-      h("div", { class: "panel-head" }, "💬 Chat de proximidade"),
-      chatLog,
-      h("div", { style: { padding: "12px", borderTop: "1px solid var(--border)", display: "flex", gap: "8px" } }, input,
-        h("button", { class: "btn primary", onclick: () => send(input) }, "Enviar")))));
-
-  if (!App.hub) { onlineList.innerHTML = `<div class="faint">Sem conexão com o jogo.</div>`; return; }
-
-  App.hub.off("Snapshot"); App.hub.off("PlayerJoined"); App.hub.off("PlayerLeft"); App.hub.off("Chat"); App.hub.off("Status");
-  App.hub.on("Snapshot", (ps) => { online.clear(); ps.forEach((p) => online.set(p.key, p)); drawOnline(); });
-  App.hub.on("PlayerJoined", (p) => { online.set(p.key, p); drawOnline(); });
-  App.hub.on("PlayerLeft", (k) => { online.delete(k); drawOnline(); });
-  App.hub.on("Status", (s) => { online.forEach((p) => { if (p.userId === s.userId) p.status = s.status; }); drawOnline(); });
-  App.hub.on("Chat", (m) => {
-    log.push(m); if (log.length > 60) log.shift();
-    const el = document.getElementById("chat-log");
-    if (el) { el.append(chatLine(m)); el.scrollTop = el.scrollHeight; }
-  });
-  try { await App.hub.invoke("Join", Number(API.uid) || 0, "panel"); } catch {}
-
-  function send(inp) {
-    const t = inp.value.trim(); if (!t) return;
-    App.hub.invoke("Chat", t).catch(() => {});
-    inp.value = "";
+  if (!App.hub) {
+    view.append(h("div", { class: "panel panel-pad" },
+      h("div", { class: "faint" }, "Sem conexão com o servidor — recarregue a página.")));
+    return;
   }
-}
 
-function drawOnline() {
-  const el = document.getElementById("chat-online");
-  if (!el) return;
-  const seen = new Set();
-  const rows = [...online.values()].filter((p) => (seen.has(p.userId) ? false : seen.add(p.userId)))
-    .map((p) => h("div", { style: { display: "flex", alignItems: "center", gap: "9px", padding: "7px 0" } },
-      avatar({ name: p.name, color: p.color }, "sm"),
-      h("span", {}, (p.isBot ? "🤖 " : "") + p.name),
-      h("span", { class: "spacer", style: { flex: "1" } }),
-      p.status && h("span", { class: "faint", style: { fontSize: "11px" } }, san(p.status))));
-  el.replaceChildren(...(rows.length ? rows : [h("div", { class: "faint" }, "Ninguém online.")]));
-}
+  const client = createWorkClient({
+    base: "",
+    token: () => API.token,
+    userId: API.uid,
+  });
+  const currentUserId = App.me?.user?.id ?? (Number(API.uid) || 0);
 
-function chatLine(m) {
-  return h("div", { style: { display: "flex", gap: "9px", alignItems: "baseline" } },
-    h("b", { style: { color: "var(--accent)" } }, m.name), h("span", {}, san(m.text)));
-}
+  // A conexão do app web é única e as páginas vão e voltam. Cada handler é
+  // desligado PELA REFERÊNCIA ao sair: um `off("ChatMessage")` seco derrubaria
+  // junto o aviso global de PM, que vive em `main.js` e não é desta página.
+  const bound = [];
+  const transport = {
+    on: (event, handler) => { bound.push([event, handler]); App.hub.on(event, handler); },
+    invoke: (method, ...args) => App.hub.invoke(method, ...args),
+  };
 
-function san(s) {
-  s = String(s ?? "").replace(/🔴/g, "[rec]").replace(/📅/g, "[reunião]").replace(/☕/g, "[café]");
-  return s.replace(/:(like|heart|laugh|coffee):/g, "👍");
+  const store = createChatStore({ client, transport, currentUserId });
+
+  // Altura medida, não calculada com números mágicos: a barra de navegação vira
+  // fileira no topo do celular e qualquer `calc(100vh - N)` erraria em um dos
+  // dois layouts. Aqui o painel simplesmente vai até o fim da janela.
+  const host = h("div", { style: { minHeight: "260px" } });
+  const fit = () => {
+    host.style.height = `${Math.max(260, window.innerHeight - host.getBoundingClientRect().top - 16)}px`;
+  };
+  view.replaceChildren(host);
+  fit();
+  window.addEventListener("resize", fit);
+
+  const ui = mountChat(host, {
+    store,
+    client,
+    currentUserId,
+    // Sem avatar não há "onde eu estou": aqui o prédio e a sala se escolhem.
+    canPickPlace: true,
+  });
+
+  // Onde começar: se o avatar desta conta está no mundo, o painel abre no mesmo
+  // prédio/sala — é a mesma pessoa nas duas janelas, e ter de reescolher o
+  // próprio lugar seria só burocracia.
+  try {
+    const directory = await store.directory();
+    if (directory?.you?.building) {
+      await store.setLocation({
+        buildingId: directory.you.building.replace(/^building:/, ""),
+        buildingName: directory.you.buildingName,
+        sceneId: directory.you.room ? directory.you.room.slice(5).split("|")[0] : null,
+        roomId: directory.you.room ? directory.you.room.slice(5).split("|").slice(1).join("|") : null,
+        roomName: directory.you.roomName,
+      });
+    } else {
+      await store.setLocation(null);
+    }
+  } catch {
+    await store.setLocation(null);
+  }
+
+  await store.select("global");
+  await store.refreshInbox();
+  // Estando no chat, o aviso do menu não tem o que avisar.
+  App.clearChatBadge();
+
+  mounted = {
+    destroy() {
+      ui.destroy();
+      store.dispose();
+      window.removeEventListener("resize", fit);
+      for (const [event, handler] of bound) App.hub.off(event, handler);
+    },
+  };
+  // Sair da página desmonta: o store escuta o socket e conta não lidas, e dois
+  // stores vivos contariam a mesma mensagem duas vezes.
+  App.leaveView = () => { mounted?.destroy(); mounted = null; };
 }

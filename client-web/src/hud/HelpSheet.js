@@ -17,6 +17,7 @@ const KEYBOARD = [
   ]],
   ['Menus', [
     [['Tab'], 'equipamentos e personagem'],
+    [['💬'], 'chat: global, prédio, sala e conversas privadas'],
     [['1', '2', '3', '4'], 'trocar de veículo com o menu aberto'],
     [['0'], 'guardar o veículo'],
     [['Esc'], 'fechar o que estiver aberto'],
@@ -39,6 +40,7 @@ const TOUCH = [
   ]],
   ['Menus', [
     [['☰'], 'abre este menu com tudo o que dá para fazer'],
+    [['💬'], 'chat: global, prédio, sala e conversas privadas'],
     [['×'], 'fecha a folha aberta'],
   ]],
 ];

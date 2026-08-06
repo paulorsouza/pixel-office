@@ -14,6 +14,21 @@ export function personalWingIndex(sceneRef) {
 }
 
 /**
+ * A que PRÉDIO uma cena pertence — o recorte do chat "por prédio".
+ *
+ * É a cena-template, com uma exceção que importa: os andares de salas pessoais
+ * são o mesmo prédio do campus (o térreo). Sem isso, subir de escada tiraria a
+ * pessoa da conversa do prédio em que ela continua estando.
+ *
+ * @returns {string} id do prédio, ou '' quando a cena não é um lugar (sem mapa)
+ */
+export function buildingOf(sceneRef) {
+  const template = String(sceneRef || '').split('@', 1)[0];
+  if (!template) return '';
+  return template === PERSONAL_WING_SCENE ? CAMPUS_SCENE : template;
+}
+
+/**
  * Cena de destino de um portal, já resolvendo andar.
  * @param {object} portal `{ targetScene, targetWing, floorDelta, wingDelta }`
  * @param {string} currentSceneId cena de origem

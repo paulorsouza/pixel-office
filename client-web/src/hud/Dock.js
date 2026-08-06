@@ -10,7 +10,10 @@
 // folha com uma linha ("Menu") em vez de abrir o menu. Removido.
 
 /**
- * @param items  [{ id, icon, label, hint, visible?(), onSelect() }]
+ * @param items  [{ id, icon, label, hint, visible?(), badge?(), onSelect() }]
+ *   `badge()` devolve um número; zero (ou ausente) esconde o contador. Ele é
+ *   atualizado FORA do `signature`: mudar de 2 para 3 não pode reconstruir o
+ *   botão, senão o clique se perde entre o pointerdown e o pointerup.
  */
 export function createDock(shell, items) {
   const host = shell.dockHost;
@@ -33,10 +36,20 @@ export function createDock(shell, items) {
     });
   };
 
+  function paintBadges() {
+    for (const item of items) {
+      const badge = host.querySelector(`[data-dock="${item.id}"] .hud-dock-badge`);
+      if (!badge) continue;
+      const count = item.badge?.() || 0;
+      badge.hidden = count === 0;
+      badge.textContent = count > 99 ? '99+' : String(count);
+    }
+  }
+
   function render() {
     const list = visibleItems();
     const next = list.map((item) => item.id).join(',');
-    if (next === signature) return;
+    if (next === signature) { paintBadges(); return; }
     signature = next;
     host.replaceChildren();
 
@@ -44,14 +57,16 @@ export function createDock(shell, items) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'hud-dock-btn';
+      button.dataset.dock = item.id;
       button.title = item.hint ? `${item.label} — ${item.hint}` : item.label;
       button.setAttribute('aria-label', item.label);
-      button.innerHTML = '<span></span>';
+      button.innerHTML = '<span></span><i class="hud-dock-badge" hidden></i>';
       button.prepend(item.icon);
       button.querySelector('span').textContent = item.label;
       bind(button, () => item.onSelect());
       host.append(button);
     }
+    paintBadges();
   }
 
   render();

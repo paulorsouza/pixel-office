@@ -24,13 +24,6 @@ public partial class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<O
     // propósito — a lista de "online" do app web depende do broadcast para todos.
     public static string SceneGroup(string sceneId) => $"game:scene:{sceneId}";
 
-    private static readonly string[] BotReplies =
-    [
-        "Boa! 👍", "Depois me chama numa call rapidinha?", "Tô terminando uma task aqui...",
-        "Alguém viu o bug do deploy?", "Café? ☕", "hahaha", "Manda na daily amanhã!",
-        "Consegui fechar a TSK-7 finalmente 🎉", "Esse sprint tá puxado, hein",
-    ];
-
     // Identidade da conexão: o JWT validado vence; o argumento só vale como fallback de dev.
     private int? ResolveUser(int fallback)
     {
@@ -450,34 +443,6 @@ public partial class OfficeHub(IDbContextFactory<AppDb> dbFactory, IHubContext<O
     private async Task CloseAutoIfKindAsync(AppDb db, PlayerState p, string kind)
     {
         if (p.AutoKind == kind) await CloseAutoEntryAsync(db, p);
-    }
-
-    public async Task Chat(string text)
-    {
-        if (!Presence.Players.TryGetValue(Context.ConnectionId, out var p)) return;
-        if (string.IsNullOrWhiteSpace(text)) return;
-        text = text.Trim();
-        if (text.Length > 300) text = text[..300];
-
-        var payload = new { key = p.Key, name = p.Name, text };
-        var near = Presence.Near(p).ToList();
-        var targets = near.Where(t => !t.IsBot).Select(t => t.Key).Append(p.Key).ToList();
-        await Clients.Clients(targets).SendAsync("Chat", payload);
-
-        // bots por perto respondem para dar vida ao protótipo
-        var bot = near.FirstOrDefault(t => t.IsBot);
-        if (bot is not null && Random.Shared.NextDouble() < 0.8)
-        {
-            var reply = BotReplies[Random.Shared.Next(BotReplies.Length)];
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(Random.Shared.Next(1200, 2600));
-                if (!Presence.Players.ContainsKey(bot.Key)) return;
-                var replyTargets = Presence.Near(bot).Where(t => !t.IsBot).Select(t => t.Key).ToList();
-                await hubContext.Clients.Clients(replyTargets)
-                    .SendAsync("Chat", new { key = bot.Key, name = bot.Name, text = reply });
-            });
-        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

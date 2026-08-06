@@ -32,6 +32,11 @@ export function createPresence(options = {}) {
   let lastSentAt = 0;
   let lastSent = { x: null, y: null, dir: null };
   let lastZone = '';
+  // Chat: os handlers ficam guardados porque a conexão pode nascer depois deles,
+  // e o último lugar declarado é reenviado ao reconectar — senão o avatar volta
+  // ao mundo mudo, ouvindo só o global.
+  const chatHandlers = [];
+  let chatLocation = null;
 
   const emit = (type, detail = {}) => events.dispatchEvent(new CustomEvent(type, { detail }));
 
@@ -177,6 +182,8 @@ export function createPresence(options = {}) {
       connection.on(name, (payload) => emit(name, payload));
     }
 
+    for (const [event, handler] of chatHandlers) connection.on(event, handler);
+
     // reconexão automática: reenvia cena e aparência, senão o avatar volta genérico
     connection.onreconnected(() => {
       if (evicted) { connection?.stop().catch(() => {}); return; }
@@ -184,6 +191,7 @@ export function createPresence(options = {}) {
       connection.invoke('Join', userId, 'world').catch(() => {});
       if (sceneId) connection.invoke('SetScene', sceneId).catch(() => {});
       if (myAppearance) connection.invoke('SetAppearance', myAppearance).catch(() => {});
+      if (chatLocation !== null) connection.invoke('ChatSetLocation', chatLocation).catch(() => {});
     });
 
     try {
@@ -192,6 +200,7 @@ export function createPresence(options = {}) {
       await connection.invoke('Join', userId, 'world').catch(() => {});
       if (sceneId) await connection.invoke('SetScene', sceneId).catch(() => {});
       if (myAppearance) await connection.invoke('SetAppearance', myAppearance).catch(() => {});
+      if (chatLocation !== null) await connection.invoke('ChatSetLocation', chatLocation).catch(() => {});
     } catch (error) {
       console.warn('Presença em rede indisponível; jogo segue offline.', error);
       connection = null;
@@ -286,6 +295,22 @@ export function createPresence(options = {}) {
       if (json === myAppearance) return;
       myAppearance = json;
       connection?.invoke('SetAppearance', json).catch(() => {});
+    },
+
+    // ---- chat (global / prédio / sala / PM) ----
+    // A conexão do hub é uma só; o painel de chat fala por este transporte em vez
+    // de abrir outro socket. A forma (`on`/`invoke`) é a que `shared/chat-core.js`
+    // espera, que é a mesma que o app web entrega com a conexão dele.
+    chatTransport: {
+      on(event, handler) {
+        chatHandlers.push([event, handler]);
+        connection?.on(event, handler);
+      },
+      invoke(method, ...args) {
+        if (method === 'ChatSetLocation') chatLocation = args[0] ?? null;
+        if (!connection) return Promise.resolve(false);
+        return connection.invoke(method, ...args);
+      },
     },
 
     // fone da reunião: mantém o lançamento de horas aberto ao circular fora da sala

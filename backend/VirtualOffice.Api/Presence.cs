@@ -42,6 +42,16 @@ public class PlayerState
     // banco, porque é estado do minuto: serve para avisar quando ENTRA e quando SAI da
     // companhia — o pago mesmo é contado em `PresenceDay`.
     public string TeamworkKind { get; set; } = "";
+
+    // ---- chat: em que canais de LUGAR esta conexão está ouvindo ----
+    // Guardado aqui (e não só nos grupos do SignalR) por dois motivos: é o que
+    // autoriza o envio — só se fala no prédio/sala em que se está — e é a fonte
+    // do diretório de canais ativos que o app web mostra para escolher.
+    public string ChatBuildingChannel { get; set; } = "";
+    public string ChatBuildingId { get; set; } = "";
+    public string ChatBuildingName { get; set; } = "";
+    public string ChatRoomChannel { get; set; } = "";
+    public string ChatRoomName { get; set; } = "";
 }
 
 /// <summary>

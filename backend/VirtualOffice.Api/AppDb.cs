@@ -34,6 +34,8 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
     public DbSet<CasinoRound> CasinoRounds => Set<CasinoRound>();
     public DbSet<PresenceDay> PresenceDays => Set<PresenceDay>();
     public DbSet<StorePurchaseQuota> StorePurchaseQuotas => Set<StorePurchaseQuota>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatRead> ChatReads => Set<ChatRead>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +84,12 @@ public class AppDb(DbContextOptions<AppDb> options) : DbContext(options)
         modelBuilder.Entity<PersonalRoom>().HasIndex(x => x.UserId).IsUnique();
         modelBuilder.Entity<PersonalRoom>().HasIndex(x => x.RoomKey).IsUnique();
         modelBuilder.Entity<PersonalRoom>().HasIndex(x => new { x.WingIndex, x.SlotIndex }).IsUnique();
+        // Toda leitura de chat é "as últimas N deste canal": o índice composto é o
+        // que impede a paginação de virar varredura da tabela inteira.
+        modelBuilder.Entity<ChatMessage>().HasIndex(x => new { x.Channel, x.Id });
+        // Uma marca de leitura por usuário/canal — é o que torna o upsert seguro
+        // com duas janelas abertas na mesma conversa.
+        modelBuilder.Entity<ChatRead>().HasIndex(x => new { x.UserId, x.Channel }).IsUnique();
         modelBuilder.Entity<User>().HasIndex(x => x.GoogleSubject);
         // Username é único entre quem tem login local; nulos (bots/seed) não colidem.
         modelBuilder.Entity<User>().HasIndex(x => x.Username).IsUnique();

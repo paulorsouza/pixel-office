@@ -650,6 +650,12 @@ html[data-decorating] #hud-dock{display:none}
 .hud-dock-btn:hover{transform:translateY(-2px);background:#232842f0}
 .hud-dock-btn.on{color:#fff;border-color:#a797ff88;background:#2f2a5ef0}
 .hud-dock-btn:focus-visible{outline:2px solid #a797ff;outline-offset:2px}
+/* Não lidas do chat. Mora no botão porque é ele que fica visível com a folha
+   fechada — que é justamente quando a mensagem precisa se anunciar. */
+.hud-dock-badge{position:absolute;top:-5px;right:-5px;display:grid;place-items:center;
+  min-width:18px;height:18px;padding:0 5px;border:1px solid #171923;border-radius:999px;
+  color:#fff;background:#e5484d;font:700 10px Inter,system-ui,sans-serif;font-style:normal}
+.hud-dock-badge[hidden]{display:none}
 /* Rótulo só no ponteiro fino: no toque não há hover, e lá o dock é a folha. */
 .hud-dock-btn>span{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
   padding:4px 8px;border-radius:7px;color:#e9ecff;background:#0f1220f2;box-shadow:0 6px 16px #0006;
@@ -673,6 +679,12 @@ html[data-decorating] #hud-dock{display:none}
    vazar a rolagem para o body (que é `overflow:hidden` e simplesmente trava). */
 .hud-sheet-body{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;padding:14px 15px}
+
+/* O chat é a única folha cujo conteúdo tem rolagem PRÓPRIA (o log) e uma barra
+   presa embaixo (o campo). A folha entrega a área inteira e sai do caminho —
+   com o padding e o `overflow-y` dela, o campo rolava junto com as mensagens. */
+#hud-chat .hud-sheet-body{display:flex;overflow:hidden;padding:0}
+#hud-chat .hud-sheet-body>.wq-chat{flex:1;min-width:0;border:0;border-radius:0}
 
 .hud-menu-list{display:flex;flex-direction:column;gap:7px}
 .hud-menu-item{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 12px;

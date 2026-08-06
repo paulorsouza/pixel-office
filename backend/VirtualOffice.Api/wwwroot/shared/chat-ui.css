@@ -1,0 +1,155 @@
+/* ===========================================================================
+   Chat compartilhado — global, prédio, sala e PM.
+   Serve o app web e a folha do jogo, então tudo é escopado em `.wq-chat` e usa
+   os tokens de `work-ui.css` (que precisa vir antes). O tema escuro do jogo já
+   entra de graça: os tokens são os mesmos.
+
+   Estreito é decidido por `[data-narrow="on"]`, escrito pelo JS a partir da
+   LARGURA DO CONTAINER — `@media` mediria a janela, e no jogo esta tela é uma
+   folha de 420px num monitor de 1920.
+   =========================================================================== */
+
+.wq-chat {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--wq-r);
+  background: var(--wq-surface);
+  border: 1px solid var(--wq-border);
+}
+
+/* ---------- coluna dos canais ---------- */
+.wq-chat-side {
+  display: flex; flex-direction: column; gap: 2px;
+  width: 232px; flex: 0 0 232px;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 10px;
+  border-right: 1px solid var(--wq-border);
+  background: var(--wq-surface-2);
+}
+.wq-chat-group {
+  padding: 10px 6px 4px;
+  color: var(--wq-text-3);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.wq-chat-item {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; min-height: 44px; padding: 7px 9px;
+  border-radius: var(--wq-r-sm);
+  text-align: left; color: inherit;
+}
+.wq-chat-item:hover { background: var(--wq-surface-3); }
+.wq-chat-item.on { background: var(--wq-accent-weak); }
+.wq-chat-item.on b { color: var(--wq-accent); }
+.wq-chat-item-text { min-width: 0; flex: 1; }
+.wq-chat-item-text b { display: block; font-size: 13px; font-weight: 600; }
+.wq-chat-item-text small {
+  display: block; overflow: hidden;
+  color: var(--wq-text-3); font-size: 11px; text-overflow: ellipsis; white-space: nowrap;
+}
+.wq-chat-icon {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; flex: 0 0 28px;
+  border-radius: var(--wq-r-sm);
+  background: var(--wq-surface); font-size: 15px;
+}
+.wq-chat-badge {
+  display: inline-grid; place-items: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: var(--wq-r-full);
+  background: var(--wq-red); color: #fff;
+  font-size: 11px; font-weight: 700;
+}
+.wq-chat-ghost {
+  min-height: 40px; padding: 0 9px; margin-top: 2px;
+  border-radius: var(--wq-r-sm);
+  color: var(--wq-text-2); font-size: 12.5px; font-weight: 600; text-align: left;
+}
+.wq-chat-ghost:hover { background: var(--wq-surface-3); color: var(--wq-text); }
+.wq-chat-empty { padding: 10px 8px; color: var(--wq-text-3); font-size: 12.5px; }
+
+/* ---------- conversa ---------- */
+.wq-chat-main { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.wq-chat-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--wq-border);
+}
+.wq-chat-head-text { min-width: 0; }
+.wq-chat-head b { display: block; font-size: 14px; }
+.wq-chat-head small { display: block; color: var(--wq-text-3); font-size: 11.5px; }
+.wq-chat-back {
+  display: none; place-items: center;
+  width: 34px; height: 34px; flex: 0 0 34px;
+  border-radius: var(--wq-r-sm);
+  color: var(--wq-text-2); font-size: 22px; line-height: 1;
+}
+.wq-chat-back:hover { background: var(--wq-surface-2); }
+
+.wq-chat-log {
+  display: flex; flex-direction: column; gap: 3px;
+  min-height: 0; flex: 1;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: 12px 14px;
+}
+.wq-chat-day {
+  align-self: center; margin: 10px 0 6px; padding: 2px 10px;
+  border-radius: var(--wq-r-full);
+  background: var(--wq-surface-2); color: var(--wq-text-3);
+  font-size: 11px; font-weight: 600;
+}
+.wq-chat-more {
+  align-self: center; margin-bottom: 8px; min-height: 30px; padding: 0 12px;
+  border-radius: var(--wq-r-full);
+  background: var(--wq-surface-2); color: var(--wq-text-2); font-size: 12px; font-weight: 600;
+}
+.wq-chat-msg { display: flex; gap: 8px; align-items: flex-start; max-width: 100%; }
+.wq-chat-msg.grouped { padding-left: 34px; }
+.wq-chat-msg.mine { flex-direction: row-reverse; }
+.wq-chat-msg.mine.grouped { padding-left: 0; padding-right: 34px; }
+.wq-chat-bubble {
+  max-width: min(78%, 560px);
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--wq-surface-2);
+}
+.wq-chat-msg.mine .wq-chat-bubble { background: var(--wq-accent-weak); }
+.wq-chat-author { display: flex; gap: 7px; align-items: baseline; margin-bottom: 1px; }
+.wq-chat-author b { font-size: 12.5px; font-weight: 700; }
+.wq-chat-author time { color: var(--wq-text-3); font-size: 10.5px; }
+.wq-chat-bubble p { font-size: 13.5px; overflow-wrap: anywhere; white-space: pre-wrap; }
+
+/* ---------- campo ---------- */
+.wq-chat-composer {
+  display: flex; gap: 8px; align-items: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--wq-border);
+  background: var(--wq-surface);
+}
+.wq-chat-input {
+  min-height: 40px; max-height: 120px; flex: 1; padding: 9px 10px;
+  border: 1px solid var(--wq-border-strong); border-radius: var(--wq-r-sm);
+  background: var(--wq-surface); color: var(--wq-text);
+  resize: none; line-height: 1.4;
+}
+.wq-chat-input:focus { outline: 2px solid var(--wq-accent); outline-offset: -1px; }
+.wq-chat-send { height: 40px; }
+
+.wq-chat-picker { display: flex; flex-direction: column; gap: 2px; }
+
+/* ---------- uma coluna só ---------- */
+.wq-chat[data-narrow="on"] { position: relative; }
+.wq-chat[data-narrow="on"] .wq-chat-side { width: 100%; flex: 1; border-right: 0; }
+.wq-chat[data-narrow="on"] .wq-chat-main { display: none; }
+.wq-chat[data-narrow="on"][data-view="thread"] .wq-chat-side { display: none; }
+.wq-chat[data-narrow="on"][data-view="thread"] .wq-chat-main { display: flex; }
+.wq-chat[data-narrow="on"] .wq-chat-back { display: grid; }
+.wq-chat[data-narrow="on"] .wq-chat-bubble { max-width: 88%; }
+
+/* Alvo de toque: por ponteiro, não por largura — um tablet largo continua sendo
+   dedo, e um monitor estreito continua sendo mouse. */
+@media (pointer: coarse) {
+  .wq-chat-item, .wq-chat-ghost, .wq-chat-back, .wq-chat-send { min-height: 44px; }
+  .wq-chat-back { width: 44px; flex-basis: 44px; }
+}
